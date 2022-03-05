@@ -9,7 +9,6 @@
 
 import sys
 from asyncio import Lock, sleep
-from base64 import b64decode
 from contextlib import suppress
 from os import close, execl, getpid
 from secrets import choice
@@ -23,7 +22,6 @@ from . import (
     HELP,
     DEVS,
     Var,
-    LOGS,
     hl,
     kasta_cmd,
     Runner,
@@ -108,19 +106,13 @@ async def pushing(e):
         cfg["HEROKU_API"] = cfg["HEROKU_API_KEY"]
         del cfg["HEROKU_API_KEY"]
     """
-    await e.eor(f"`[PUSH] Pulling...`")
     await Runner(f"git pull -f && git reset --hard origin/{UPSTREAM_BRANCH}")
     await ignores()
-    await e.eor(f"`[PUSH] Deploying...`")
-    api = "Z2l0IHB1c2ggLWYgaHR0cHM6Ly9oZXJva3U6ezF9QGdpdC5oZXJva3UuY29tL3syfS5naXQgSEVBRDptYWlu"
-    decrypt = str(b64decode(api).decode("utf-8"))
-    push = decrypt.replace("{1}", Var.HEROKU_API).replace("{2}", Var.HEROKU_APP_NAME)
+    await e.eor(f"`[PUSH] Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command.")
+    push = f"git push -f https://heroku:{Var.HEROKU_API}@git.heroku.com/{Var.HEROKU_APP_NAME}.git HEAD:main"
     _, err = await Runner(push)
     if err:
-        LOGS.warning(err)
         await e.eor(f"`[PUSH] Deploy Failed: {err}`\nTry again later or view logs for more info.")
-    else:
-        await e.eor(f"`[PUSH] Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command.")
     build = app.builds(order_by="created_at", sort="desc")[0]
     if build.status == "failed":
         await e.eor("`[PUSH] Build Failed...`\nTry again later or view logs for more info.")
@@ -172,7 +164,7 @@ async def _(e):
             repo.create_head("main", origin.refs.main)
             repo.heads.main.set_tracking_branch(origin.refs.main)
             repo.heads.main.checkout(True)
-        await Runner(f"git fetch origin {UPSTREAM_BRANCH} &> /dev/null")
+        await Runner(f"git fetch origin {UPSTREAM_BRANCH}")
         if is_deploy:
             if is_devs:
                 await sleep(choice((2, 3, 4)))
