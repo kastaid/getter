@@ -45,10 +45,6 @@ async def ignores() -> None:
     return await Runner(f"rm -rf -- {rems}")
 
 
-async def force_pull() -> None:
-    return await Runner(f"git pull -f && git reset --hard origin/{UPSTREAM_BRANCH}")
-
-
 async def force_push() -> str:
     api = "Z2l0IHB1c2ggLWYgaHR0cHM6Ly9oZXJva3U6ezF9QGdpdC5oZXJva3UuY29tL3syfS5naXQgSEVBRDptYWlu"
     decrypt = str(b64decode(api).decode("utf-8"))
@@ -91,7 +87,7 @@ async def show_changelog(e, changelog):
 
 
 async def pulling(e):
-    await force_pull()
+    await Runner("git pull -f")
     await ignores()
     await Runner("pip3 install --no-cache-dir -U -r requirements.txt")
     await e.eor(f"`[PULL] Updated Successfully...`\nWait for a few seconds, then run `{hl}ping` command.")
@@ -122,7 +118,7 @@ async def pushing(e):
         cfg["HEROKU_API"] = cfg["HEROKU_API_KEY"]
         del cfg["HEROKU_API_KEY"]
     """
-    await force_pull()
+    await Runner("git pull -f")
     await ignores()
     await e.eor(f"`[PUSH] Deploying...`")
     push = await force_push()
