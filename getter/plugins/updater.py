@@ -43,6 +43,10 @@ async def ignores() -> None:
     return await Runner(f"rm -rf -- {rems}")
 
 
+async def force_pull() -> None:
+    return await Runner(f"git pull -f && git reset --hard origin/{UPSTREAM_BRANCH}")
+
+
 def verify(repo, diff) -> bool:
     v = ""
     for c in repo.iter_commits(diff):
@@ -75,7 +79,9 @@ async def show_changelog(e, changelog):
 
 
 async def pulling(e):
-    await Runner("git stash &> /dev/null && git pull -f && pip3 install --no-cache-dir -U -r requirements.txt")
+    await force_pull()
+    await ignores()
+    await Runner("pip3 install --no-cache-dir -U -r requirements.txt")
     await e.eor(f"`[PULL] Updated Successfully...`\nWait for a few seconds, then run `{hl}ping` command.")
     with suppress(psu.NoSuchProcess, psu.AccessDenied, psu.ZombieProcess):
         c_p = psu.Process(getpid())
@@ -104,7 +110,8 @@ async def pushing(e):
         cfg["HEROKU_API"] = cfg["HEROKU_API_KEY"]
         del cfg["HEROKU_API_KEY"]
     """
-    await Runner("git stash &> /dev/null && git pull")
+    await force_pull()
+    await ignores()
     await e.eor(f"`[PUSH] Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command.")
     x = [
         "/",
