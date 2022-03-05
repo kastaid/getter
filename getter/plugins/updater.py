@@ -110,11 +110,8 @@ async def pushing(e):
     await e.eor(f"`[PUSH] Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command.")
     push = f"git push -f https://heroku:{Var.HEROKU_API}@git.heroku.com/{Var.HEROKU_APP_NAME}.git HEAD:main"
     _, err = await Runner(push)
-    if err and err.strip().startswith("Everything up-to-date"):
-        await Runner("git add . && git commit --allow-empty -m 'Update'")
-        await Runner(push)
-    elif err:
-        await e.eod(f"`[PUSH] Deploy Failed: {err}`\nTry again later or view logs for more info.")
+    if err:
+        await e.eor(f"`[PUSH] Deploy Failed: {err.strip()}`\nTry again later or view logs for more info.")
     build = app.builds(order_by="created_at", sort="desc")[0]
     if build.status == "failed":
         await e.eod("`[PUSH] Build Failed...`\nTry again later or view logs for more info.")
