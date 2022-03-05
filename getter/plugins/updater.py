@@ -118,7 +118,7 @@ async def pushing(e):
         cfg["HEROKU_API"] = cfg["HEROKU_API_KEY"]
         del cfg["HEROKU_API_KEY"]
     """
-    await Runner("git pull -f")
+    await Runner(f"git pull -f && git reset --hard origin/{UPSTREAM_BRANCH}")
     await ignores()
     await e.eor(f"`[PUSH] Deploying...`")
     push = await force_push()
