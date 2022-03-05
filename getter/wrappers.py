@@ -8,6 +8,7 @@
 # ================================================================
 
 from asyncio import sleep
+from contextlib import suppress
 from telethon.tl.custom import Message
 from telethon.tl.types import MessageService
 
@@ -16,9 +17,27 @@ async def eor(e, text=None, **args):
     time = args.get("time", None)
     edit_time = args.get("edit_time", None)
     force_reply = args.get("force_reply", False)
+    _ = e if force_reply else None
+    args["reply_to"] = e.reply_to_msg_id or _
     if len(text) > 4096:
-        args["parse_mode"] = "markdown"
-        text = "`Text too long or large size.`"
+        from getter import Root
+        from getter.utils import md_to_text
+
+        text = md_to_text(text)
+        file = "message_output.txt"
+        with open(file, "w+") as f:
+            f.write(text)
+        with suppress(BaseException):
+            await e.client.send_file(
+                e.chat_id,
+                file=file,
+                caption="Message too long or large size.",
+                force_document=True,
+                allow_cache=False,
+                reply_to=args["reply_to"],
+            )
+        (Root / file).unlink(missing_ok=True)
+        return await e.try_delete()
     if "time" in args:
         del args["time"]
     if "edit_time" in args:
@@ -41,8 +60,6 @@ async def eor(e, text=None, **args):
         except BaseException:
             return
     else:
-        _ = e if force_reply else None
-        args["reply_to"] = e.reply_to_msg_id or _
         res = await e.client.send_message(e.chat_id, text, **args)
     if time:
         await sleep(time)
@@ -58,9 +75,27 @@ async def eod(e, text=None, **kwargs):
 async def eos(e, text=None, **args):
     edit = args.get("edit", False)
     force_reply = args.get("force_reply", False)
+    _ = e if force_reply else None
+    args["reply_to"] = e.reply_to_msg_id or _
     if len(text) > 4096:
-        args["parse_mode"] = "markdown"
-        text = "`Text too long or large size.`"
+        from getter import Root
+        from getter.utils import md_to_text
+
+        text = md_to_text(text)
+        file = "message_output.txt"
+        with open(file, "w+") as f:
+            f.write(text)
+        with suppress(BaseException):
+            await e.client.send_file(
+                e.chat_id,
+                file=file,
+                caption="Message too long or large size.",
+                force_document=True,
+                allow_cache=False,
+                reply_to=args["reply_to"],
+            )
+        (Root / file).unlink(missing_ok=True)
+        return await e.try_delete()
     if "edit" in args:
         del args["edit"]
     if "force_reply" in args:
@@ -81,17 +116,13 @@ async def eos(e, text=None, **args):
         except BaseException:
             return
     else:
-        _ = e if force_reply else None
-        args["reply_to"] = e.reply_to_msg_id or _
         await _try_delete(e)
         await e.client.send_message(e.chat_id, text, **args)
 
 
 async def _try_delete(e):
-    try:
+    with suppress(BaseException):
         return await e.delete()
-    except BaseException:
-        pass
 
 
 setattr(Message, "eor", eor)  # noqa: B010

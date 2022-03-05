@@ -30,11 +30,14 @@ from . import (
 UPDATE_LOCK = Lock()
 UPSTREAM_REPO = "https://github.com/kastaid/getter.git"
 UPSTREAM_BRANCH = "main"
-help_text = f"""❯ `{hl}update <now|pull|one> <force|f>`
+help_text = f"""❯ `{hl}update <now|pull>`
 Temporary update as locally.
 
-❯ `{hl}update <deploy|push|all>`
+❯ `{hl}update <deploy|push>`
 Permanently update as heroku.
+
+❯ `{hl}update <force|f>`
+Forced update as locally.
 """
 
 
@@ -118,8 +121,8 @@ async def pushing(e):
     return
 
 
-@kasta_cmd(pattern="update(?: |$)(now|deploy|pull|push|one|all)?(?: |$)(.*)")
-@kasta_cmd(own=True, senders=DEVS, pattern="getterup(?: |$)(now|deploy|pull|push|one|all)?(?: |$)(.*)")
+@kasta_cmd(pattern="update(?: |$)(force|f|now|deploy|pull|push)?(?: |$)(.*)")
+@kasta_cmd(own=True, senders=DEVS, pattern="getterup(?: |$)(force|f|now|deploy|pull|push)?(?: |$)(.*)")
 async def _(e):
     is_devs = True if not (hasattr(e, "out") and e.out) else False
     if UPDATE_LOCK.locked():
@@ -128,14 +131,14 @@ async def _(e):
     async with UPDATE_LOCK:
         mode = e.pattern_match.group(1)
         opt = e.pattern_match.group(2)
-        is_deploy = is_now = force_now = False
-        if mode in ["deploy", "push", "all"]:
-            is_deploy = True
-        if mode in ["now", "pull", "one"]:
+        is_force = is_now = is_deploy = False
+        if not Var.DEV_MODE and mode in ["force", "f"]:
+            is_force = True
+        if mode in ["now", "pull"]:
             is_now = True
-        if not Var.DEV_MODE and is_now and opt in ["force", "f"]:
-            force_now = True
-        if is_devs and opt and not force_now:
+        if mode in ["deploy", "push"]:
+            is_deploy = True
+        if is_devs and opt:
             user_id = version = None
             try:
                 user_id = int(opt)
@@ -174,18 +177,18 @@ async def _(e):
             verif = verify(repo, f"HEAD..origin/{UPSTREAM_BRANCH}")
         except BaseException:
             verif = None
-        if not (verif or force_now):
+        if not (verif or is_force):
             await Kst.eor(f"`Getter v{__version__} up-to-date as {UPSTREAM_BRANCH}`")
             return
-        if not (mode or force_now):
+        if not (mode or is_force):
             changelog = generate_changelog(repo, f"HEAD..origin/{UPSTREAM_BRANCH}")
             await show_changelog(Kst, changelog)
             await Kst.reply(help_text, silent=True)
             return
-        if force_now:
+        if is_force:
             await Kst.eor("`[PULL] Force-Syncing to latest source code...`")
             await sleep(2)
-        if is_now:
+        if is_now or is_force:
             await Kst.eor("`[PULL] Updating ~ Please Wait...`")
             await pulling(Kst)
         return
@@ -208,11 +211,14 @@ HELP.update(
             """❯ `{i}update`
 Checks for updates, also displaying the changelog.
 
-❯ `{i}update <now|pull|one> <force|f>`
+❯ `{i}update <now|pull>`
 Temporary update as locally.
 
-❯ `{i}update <deploy|push|all>`
+❯ `{i}update <deploy|push>`
 Permanently update as heroku.
+
+❯ `{i}update <force|f>`
+Forced update as locally.
 
 ❯ `{i}repo`
 Get repo link.
