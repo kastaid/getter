@@ -23,6 +23,7 @@ from . import (
     HELP,
     DEVS,
     Var,
+    LOGS,
     hl,
     kasta_cmd,
     Runner,
@@ -42,14 +43,6 @@ Permanently update as heroku, will forced deploy.
 async def ignores() -> None:
     rems = ".github docs README.md LICENSE scripts run.py requirements-dev.txt setup.cfg .editorconfig .deepsource.toml session.py"
     return await Runner(f"rm -rf -- {rems}")
-
-
-async def force_push() -> str:
-    api = "Z2l0IHB1c2ggLWYgaHR0cHM6Ly9oZXJva3U6ezF9QGdpdC5oZXJva3UuY29tL3syfS5naXQgSEVBRDptYWlu"
-    decrypt = str(b64decode(api).decode("utf-8"))
-    push = decrypt.replace("{1}", Var.HEROKU_API).replace("{2}", Var.HEROKU_APP_NAME)
-    _, err = await Runner(push)
-    return err or ""
 
 
 def verify(repo, diff) -> bool:
@@ -115,13 +108,19 @@ async def pushing(e):
         cfg["HEROKU_API"] = cfg["HEROKU_API_KEY"]
         del cfg["HEROKU_API_KEY"]
     """
+    await e.eor(f"`[PUSH] Pulling...`")
     await Runner(f"git pull -f && git reset --hard origin/{UPSTREAM_BRANCH}")
     await ignores()
-    push = await force_push()
-    if not push:
-        await e.eor(f"`[PUSH] Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command.")
+    await e.eor(f"`[PUSH] Deploying...`")
+    api = "Z2l0IHB1c2ggLWYgaHR0cHM6Ly9oZXJva3U6ezF9QGdpdC5oZXJva3UuY29tL3syfS5naXQgSEVBRDptYWlu"
+    decrypt = str(b64decode(api).decode("utf-8"))
+    push = decrypt.replace("{1}", Var.HEROKU_API).replace("{2}", Var.HEROKU_APP_NAME)
+    _, err = await Runner(push)
+    if err:
+        LOGS.warning(err)
+        await e.eor(f"`[PUSH] Deploy Failed: {err}`\nTry again later or view logs for more info.")
     else:
-        await e.eor(f"`[PUSH] Deploy Failed: {push}`\nTry again later or view logs for more info.")
+        await e.eor(f"`[PUSH] Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command.")
     build = app.builds(order_by="created_at", sort="desc")[0]
     if build.status == "failed":
         await e.eor("`[PUSH] Build Failed...`\nTry again later or view logs for more info.")
