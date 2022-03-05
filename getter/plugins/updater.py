@@ -166,7 +166,7 @@ async def _(e):
             repo.create_head("main", origin.refs.main)
             repo.heads.main.set_tracking_branch(origin.refs.main)
             repo.heads.main.checkout(True)
-        await Runner(f"git fetch origin {UPSTREAM_BRANCH}")
+        await Runner(f"git fetch origin {UPSTREAM_BRANCH} &> /dev/null")
         if is_deploy:
             if is_devs:
                 await sleep(choice((2, 3, 4)))
