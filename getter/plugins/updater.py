@@ -95,7 +95,7 @@ async def pushing(e):
         return
     try:
         heroku_conn = from_key(Var.HEROKU_API)
-        app = heroku_conn.app(Var.HEROKU_APP_NAME)
+        app = heroku_conn.apps()[Var.HEROKU_APP_NAME]
     except Exception as err:
         await e.eod(f"**ERROR**\n`{err}`")
         return
@@ -110,11 +110,14 @@ async def pushing(e):
     await e.eor(f"`[PUSH] Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command.")
     push = f"git push -f https://heroku:{Var.HEROKU_API}@git.heroku.com/{Var.HEROKU_APP_NAME}.git HEAD:main"
     _, err = await Runner(push)
-    if err:
-        await e.eor(f"`[PUSH] Deploy Failed: {err}`\nTry again later or view logs for more info.")
+    if err and err.strip().startswith("Everything up-to-date"):
+        await Runner("git add . && git commit --allow-empty -m 'Update'")
+        await Runner(push)
+    elif err:
+        await e.eod(f"`[PUSH] Deploy Failed: {err}`\nTry again later or view logs for more info.")
     build = app.builds(order_by="created_at", sort="desc")[0]
     if build.status == "failed":
-        await e.eor("`[PUSH] Build Failed...`\nTry again later or view logs for more info.")
+        await e.eod("`[PUSH] Build Failed...`\nTry again later or view logs for more info.")
     return
 
 
@@ -175,7 +178,7 @@ async def _(e):
         except BaseException:
             verif = None
         if not (verif or force_now):
-            await Kst.eor(f"`Getter v{__version__} up-to-date as {UPSTREAM_BRANCH}`", time=15)
+            await Kst.eor(f"`Getter v{__version__} up-to-date as {UPSTREAM_BRANCH}`")
             return
         if not (mode or force_now):
             changelog = generate_changelog(repo, f"HEAD..origin/{UPSTREAM_BRANCH}")

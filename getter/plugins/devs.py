@@ -46,7 +46,7 @@ async def heroku_logs(e):
         return
     try:
         heroku_conn = from_key(Var.HEROKU_API)
-        app = heroku_conn.app(Var.HEROKU_APP_NAME)
+        app = heroku_conn.apps()[Var.HEROKU_APP_NAME]
     except Exception as err:
         await e.eor(f"**ERROR**\n`{err}`")
         return
@@ -151,7 +151,7 @@ async def _(e):
         return restart_app()
     try:
         heroku_conn = from_key(Var.HEROKU_API)
-        app = heroku_conn.app(Var.HEROKU_APP_NAME)
+        app = heroku_conn.apps()[Var.HEROKU_APP_NAME]
         app.restart()
     except Exception as err:
         msg = await Kst.eor(f"**ERROR**\n`{err}`")
