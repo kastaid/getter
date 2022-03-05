@@ -68,7 +68,7 @@ def generate_changelog(repo, diff) -> str:
     ch = f"<b>Getter v{__version__} updates for <a href={rep}/tree/{UPSTREAM_BRANCH}>[{UPSTREAM_BRANCH}]</a>:</b>"
     date = "%d/%m/%Y %H:%M:%S"
     for c in repo.iter_commits(diff):
-        chlog += f"\n\n<b>#{c.count()}</b> [<code>{c.committed_datetime.strftime(date)}</code>] (`{c.hexsha}`)\n<b><a href={rep.rstrip('/')}/commit/{c}>[{c.summary}]</a></b> ~ <code>{c.author}</code>"
+        chlog += f"\n\n<b>#{c.count()}</b> [<code>{c.committed_datetime.strftime(date)}</code>]\n<code>{c.hexsha}</code>\n<b><a href={rep.rstrip('/')}/commit/{c}>[{c.summary}]</a></b> ~ <code>{c.author}</code>"
     if chlog:
         return str(ch + chlog)
     return chlog
@@ -122,10 +122,10 @@ async def pushing(e):
     await ignores()
     await e.eor(f"`[PUSH] Deploying...`")
     push = await force_push()
-    if not push:
-        await e.eor(f"`[PUSH] Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command.")
+    if push:
+        await e.eor("`[PUSH] Deploy Failed: {push}`\nTry again later or view logs for more info.")
     else:
-        await e.eor("`[PUSH] Deploy Failed...`\nTry again later or view logs for more info.")
+        await e.eor(f"`[PUSH] Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command.")
     build = app.builds(order_by="created_at", sort="desc")[0]
     if build.status == "failed":
         await e.eor("`[PUSH] Build Failed...`\nTry again later or view logs for more info.")
