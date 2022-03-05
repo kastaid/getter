@@ -37,21 +37,6 @@ Temporary update as locally if available from repo.
 ❯ `{hl}update <deploy|push|all>`
 Permanently update as heroku, will forced deploy.
 """
-XCB = [
-    "/",
-    "@",
-    ".",
-    "com",
-    ":",
-    "git",
-    "heroku",
-    "push",
-    Var.HEROKU_API,
-    "https",
-    Var.HEROKU_APP_NAME,
-    "HEAD",
-    "main",
-]
 
 
 async def ignores() -> None:
@@ -60,7 +45,7 @@ async def ignores() -> None:
 
 
 async def force_pull() -> None:
-    return await Runner(f"git pull -f && git reset --hard origin/{UPSTREAM_BRANCH}")
+    return await Runner(f"git pull -f origin {UPSTREAM_BRANCH} && git reset --hard origin/{UPSTREAM_BRANCH}")
 
 
 def verify(repo, diff) -> bool:
@@ -129,7 +114,7 @@ async def pushing(e):
     await force_pull()
     await ignores()
     await e.eor(f"`[PUSH] Deploying...`")
-    push = f"{XCB[5]} {XCB[7]} {XCB[9]}{XCB[4]}{XCB[0]*2}{XCB[6]}{XCB[4]}{XCB[8]}{XCB[1]}{XCB[5]}{XCB[2]}{XCB[6]}{XCB[2]}{XCB[3]}{XCB[0]}{XCB[10]}{XCB[2]}{XCB[5]} {XCB[11]}{XCB[4]}{XCB[12]}"
+    push = f"git push -f https://heroku:{Var.HEROKU_API}@git.heroku.com/{Var.HEROKU_APP_NAME}.git HEAD:main"
     out, err = await Runner(push)
     if err:
         LOGS.error(err)
