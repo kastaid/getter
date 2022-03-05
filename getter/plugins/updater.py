@@ -75,7 +75,7 @@ async def show_changelog(e, changelog):
 
 
 async def pulling(e):
-    await Runner("git pull -f")
+    await Runner(f"git pull -f && git reset --hard origin/{UPSTREAM_BRANCH}")
     await ignores()
     await Runner("pip3 install --no-cache-dir -U -r requirements.txt")
     await e.eor(f"`[PULL] Updated Successfully...`\nWait for a few seconds, then run `{hl}ping` command.")
