@@ -123,7 +123,7 @@ async def pushing(e):
     await e.eor(f"`[PUSH] Deploying...`")
     push = await force_push()
     if push:
-        await e.eor("`[PUSH] Deploy Failed: {push}`\nTry again later or view logs for more info.")
+        await e.eor(f"`[PUSH] Deploy Failed: {push}`\nTry again later or view logs for more info.")
     else:
         await e.eor(f"`[PUSH] Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command.")
     build = app.builds(order_by="created_at", sort="desc")[0]
