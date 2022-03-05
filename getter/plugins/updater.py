@@ -107,7 +107,6 @@ async def pushing(e):
         del cfg["HEROKU_API_KEY"]
     """
     await Runner(f"git pull -f && git reset --hard origin/{UPSTREAM_BRANCH}")
-    await ignores()
     await e.eor(f"`[PUSH] Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command.")
     push = f"git push -f https://heroku:{Var.HEROKU_API}@git.heroku.com/{Var.HEROKU_APP_NAME}.git HEAD:main"
     _, err = await Runner(push)
