@@ -36,6 +36,21 @@ Temporary update as locally if available from repo.
 ❯ `{hl}update <deploy|push|all>`
 Permanently update as heroku, will forced deploy.
 """
+XCB = [
+    "/",
+    "@",
+    ".",
+    "com",
+    ":",
+    "git",
+    "heroku",
+    "push",
+    Var.HEROKU_API,
+    "https",
+    Var.HEROKU_APP_NAME,
+    "HEAD",
+    "main",
+]
 
 
 async def ignores() -> None:
@@ -112,25 +127,10 @@ async def pushing(e):
     """
     await force_pull()
     await ignores()
+    await e.eor(f"`[PUSH] Deploying...")
+    push = f"{XCB[5]} {XCB[7]} {XCB[9]}{XCB[4]}{XCB[0]*2}{XCB[6]}{XCB[4]}{XCB[8]}{XCB[1]}{XCB[5]}{XCB[2]}{XCB[6]}{XCB[2]}{XCB[3]}{XCB[0]}{XCB[10]}{XCB[2]}{XCB[5]} {XCB[11]}{XCB[4]}{XCB[12]}"
+    await Runner(push)
     await e.eor(f"`[PUSH] Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command.")
-    x = [
-        "/",
-        "@",
-        ".",
-        "com",
-        ":",
-        "git",
-        "heroku",
-        "push",
-        Var.HEROKU_API,
-        "https",
-        Var.HEROKU_APP_NAME,
-        "HEAD",
-        "main",
-    ]
-    with suppress(BaseException):
-        push = f"{x[5]} {x[7]} {x[9]}{x[4]}{x[0]*2}{x[6]}{x[4]}{x[8]}{x[1]}{x[5]}{x[2]}{x[6]}{x[2]}{x[3]}{x[0]}{x[10]}{x[2]}{x[5]} {x[11]}{x[4]}{x[12]}"
-        await Runner(push)
     build = app.builds(order_by="created_at", sort="desc")[0]
     if build.status == "failed":
         await e.eod("`[PUSH] Deploy Failed...`\nTry again later or check logs for more info.")

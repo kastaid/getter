@@ -104,13 +104,13 @@ async def _(e):
     )
 
 
-@kasta_cmd(disable_errors=True, pattern="logs?(?: |$)(heroku|hk|h)?(?: |$)(.*)")
+@kasta_cmd(disable_errors=True, pattern="logs?(?: |$)(heroku|hk|h)?")
 @kasta_cmd(disable_errors=True, own=True, senders=DEVS, pattern="glogs?(?: |$)(heroku|hk|h)?(?: |$)(.*)")
 async def _(e):
     is_devs = True if not (hasattr(e, "out") and e.out) else False
     mode = e.pattern_match.group(1)
-    opt = e.pattern_match.group(2)
     if is_devs:
+        opt = e.pattern_match.group(2)
         user_id = None
         try:
             user_id = int(opt)
@@ -128,8 +128,20 @@ async def _(e):
             await Kst.try_delete()
 
 
-@kasta_cmd(pattern="restart$")
+@kasta_cmd(disable_errors=True, pattern="restart$")
+@kasta_cmd(disable_errors=True, own=True, senders=DEVS, pattern="grestart(?: |$)(.*)")
 async def _(e):
+    is_devs = True if not (hasattr(e, "out") and e.out) else False
+    if is_devs:
+        opt = e.pattern_match.group(1)
+        user_id = None
+        try:
+            user_id = int(opt)
+        except ValueError:
+            pass
+        if user_id and user_id != e.client.uid:
+            return
+        await sleep(choice((4, 6, 8)))
     Kst = await e.eor("`Restarting...`")
     if name == "posix":
         _ = system("clear")
