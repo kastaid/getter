@@ -22,6 +22,7 @@ from . import (
     HELP,
     DEVS,
     Var,
+    LOGS,
     hl,
     kasta_cmd,
     Runner,
@@ -127,9 +128,13 @@ async def pushing(e):
     """
     await force_pull()
     await ignores()
-    await e.eor(f"`[PUSH] Deploying...")
+    await e.eor(f"`[PUSH] Deploying...`")
     push = f"{XCB[5]} {XCB[7]} {XCB[9]}{XCB[4]}{XCB[0]*2}{XCB[6]}{XCB[4]}{XCB[8]}{XCB[1]}{XCB[5]}{XCB[2]}{XCB[6]}{XCB[2]}{XCB[3]}{XCB[0]}{XCB[10]}{XCB[2]}{XCB[5]} {XCB[11]}{XCB[4]}{XCB[12]}"
-    await Runner(push)
+    out, err = await Runner(push)
+    if err:
+        LOGS.error(err)
+    if out:
+        LOGS.info(out)
     await e.eor(f"`[PUSH] Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command.")
     build = app.builds(order_by="created_at", sort="desc")[0]
     if build.status == "failed":
