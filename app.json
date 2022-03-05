@@ -1,0 +1,45 @@
+{
+    "formation": {
+        "worker": {
+            "quantity": 1,
+            "size": "free"
+        }
+    },
+    "env": {
+        "API_ID": {
+            "description": "Get this value from \"my.telegram.org\" at API development tools.",
+            "required": true
+        },
+        "API_HASH": {
+            "description": "Get this value from \"my.telegram.org\" at API development tools.",
+            "required": true
+        },
+        "STRING_SESSION": {
+            "description": "Telethon Session from \"t.me/strgen_bot\" or \"replit.com/@notudope/strgen\"",
+            "required": true
+        },
+        "HANDLER": {
+            "description": "Initial command handler (prefix), default (.)",
+            "required": true,
+            "value": "."
+        },
+        "TZ": {
+            "description": "Set local timezone: Continent/Country, default: Asia/Jakarta. Get list from \"en.wikipedia.org/wiki/List_of_tz_database_time_zones\"",
+            "required": true,
+            "value": "Asia/Jakarta"
+        },
+        "HEROKU_APP_NAME": {
+            "description": "Input this Heroku app name.",
+            "required": true
+        },
+        "HEROKU_API": {
+            "description": "Get a Heroku API Key from \"dashboard.heroku.com/account\"",
+            "required": true
+        }
+    },
+    "buildpacks": [
+        {
+            "url": "heroku/python"
+        }
+    ]
+}
