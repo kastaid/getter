@@ -23,7 +23,6 @@ from . import (
     HELP,
     DEVS,
     Var,
-    LOGS,
     hl,
     kasta_cmd,
     Runner,
@@ -50,8 +49,6 @@ async def force_push() -> str:
     decrypt = str(b64decode(api).decode("utf-8"))
     push = decrypt.replace("{1}", Var.HEROKU_API).replace("{2}", Var.HEROKU_APP_NAME)
     _, err = await Runner(push)
-    if err:
-        LOGS.warning(err)
     return err or ""
 
 
@@ -120,12 +117,11 @@ async def pushing(e):
     """
     await Runner(f"git pull -f && git reset --hard origin/{UPSTREAM_BRANCH}")
     await ignores()
-    await e.eor(f"`[PUSH] Deploying...`")
     push = await force_push()
-    if push:
-        await e.eor(f"`[PUSH] Deploy Failed: {push}`\nTry again later or view logs for more info.")
-    else:
+    if not push:
         await e.eor(f"`[PUSH] Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command.")
+    else:
+        await e.eor(f"`[PUSH] Deploy Failed: {push}`\nTry again later or view logs for more info.")
     build = app.builds(order_by="created_at", sort="desc")[0]
     if build.status == "failed":
         await e.eor("`[PUSH] Build Failed...`\nTry again later or view logs for more info.")
