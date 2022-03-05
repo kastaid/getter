@@ -9,6 +9,7 @@
 
 import sys
 from asyncio import Lock, sleep
+from base64 import b64decode
 from contextlib import suppress
 from os import close, execl, getpid
 from secrets import choice
@@ -45,7 +46,17 @@ async def ignores() -> None:
 
 
 async def force_pull() -> None:
-    return await Runner(f"git pull -f origin {UPSTREAM_BRANCH} && git reset --hard origin/{UPSTREAM_BRANCH}")
+    return await Runner(f"git pull -f && git reset --hard origin/{UPSTREAM_BRANCH}")
+
+
+async def force_push() -> str:
+    api = "Z2l0IHB1c2ggLWYgaHR0cHM6Ly9oZXJva3U6ezF9QGdpdC5oZXJva3UuY29tL3syfS5naXQgSEVBRDptYWlu"
+    decrypt = str(b64decode(api).decode("utf-8"))
+    push = decrypt.replace("{1}", Var.HEROKU_API).replace("{2}", Var.HEROKU_APP_NAME)
+    _, err = await Runner(push)
+    if err:
+        LOGS.warning(err)
+    return err or ""
 
 
 def verify(repo, diff) -> bool:
@@ -61,7 +72,7 @@ def generate_changelog(repo, diff) -> str:
     ch = f"<b>Getter v{__version__} updates for <a href={rep}/tree/{UPSTREAM_BRANCH}>[{UPSTREAM_BRANCH}]</a>:</b>"
     date = "%d/%m/%Y %H:%M:%S"
     for c in repo.iter_commits(diff):
-        chlog += f"\n\n<b>#{c.count()}</b> [<code>{c.committed_datetime.strftime(date)}</code>]\n<b><a href={rep.rstrip('/')}/commit/{c}>[{c.summary}]</a></b> ~ <code>{c.author}</code>"
+        chlog += f"\n\n<b>#{c.count()}</b> [<code>{c.committed_datetime.strftime(date)}</code>] (`{c.hexsha}`)\n<b><a href={rep.rstrip('/')}/commit/{c}>[{c.summary}]</a></b> ~ <code>{c.author}</code>"
     if chlog:
         return str(ch + chlog)
     return chlog
@@ -114,16 +125,14 @@ async def pushing(e):
     await force_pull()
     await ignores()
     await e.eor(f"`[PUSH] Deploying...`")
-    push = f"git push -f https://heroku:{Var.HEROKU_API}@git.heroku.com/{Var.HEROKU_APP_NAME}.git HEAD:main"
-    out, err = await Runner(push)
-    if err:
-        LOGS.error(err)
-    if out:
-        LOGS.info(out)
-    await e.eor(f"`[PUSH] Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command.")
+    push = await force_push()
+    if not push:
+        await e.eor(f"`[PUSH] Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command.")
+    else:
+        await e.eor("`[PUSH] Deploy Failed...`\nTry again later or view logs for more info.")
     build = app.builds(order_by="created_at", sort="desc")[0]
     if build.status == "failed":
-        await e.eod("`[PUSH] Deploy Failed...`\nTry again later or check logs for more info.")
+        await e.eor("`[PUSH] Build Failed...`\nTry again later or view logs for more info.")
     return
 
 
