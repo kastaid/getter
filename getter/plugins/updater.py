@@ -115,12 +115,14 @@ async def pushing(e):
     _, err = await Runner(push)
     if err:
         msg = ""
-        if "Your account has" in err:
-            msg = "Your account has reached its concurrent builds limit."
-        if "Verifying deploy" not in err:
-            msg = err.strip()
+        if "! Your account has reached" in err:
+            msg = "`[PUSH] Deploy Failed: Your account has reached its concurrent builds limit, try again later.`"
+        elif "Everything up-to-date" in err:
+            msg = f"`Getter v{__version__} up-to-date as {UPSTREAM_BRANCH}`"
+        elif "Verifying deploy" not in err:
+            msg = f"`[PUSH] Deploy Failed: {err.strip()}`\nTry again later or view logs for more info."
         if msg:
-            await e.eor(f"`[PUSH] Deploy Failed: {msg}`\nTry again later or view logs for more info.")
+            await e.eor(msg)
     build = app.builds(order_by="created_at", sort="desc")[0]
     if build.status == "failed":
         await e.eod("`[PUSH] Build Failed...`\nTry again later or view logs for more info.")
