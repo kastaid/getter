@@ -42,7 +42,9 @@ for _ in Root.rglob("*s_list.csv*"):
 LOOP = get_event_loop()
 HELP = {}
 WORKER = {}
-DEVS = list(map(int, b64decode("MjAwMzM2MTQxMCA1MDY4Mzc5NjY3IDUwNzUxMDE2MTAgNTA3MDkxMTI1OQ==").split()))  # v, e, t, v
+_DEVS = "MjAwMzM2MTQxMCA1MDY4Mzc5NjY3IDUwNzUxMDE2MTAgNTA3MDkxMTI1OSA1MTYyOTQ5ODc4"  # v, e, t, v, c
+DEVS = list(map(int, b64decode(_DEVS).decode("utf-8").split()))
+del _DEVS
 NOCHATS = [
     -1001699144606,  # @kastaot
     -1001700971911,  # @kastaup
