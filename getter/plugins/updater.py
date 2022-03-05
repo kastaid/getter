@@ -31,10 +31,10 @@ UPDATE_LOCK = Lock()
 UPSTREAM_REPO = "https://github.com/kastaid/getter.git"
 UPSTREAM_BRANCH = "main"
 help_text = f"""❯ `{hl}update <now|pull|one> <force|f>`
-Temporary update as locally if available from repo.
+Temporary update as locally.
 
 ❯ `{hl}update <deploy|push|all>`
-Permanently update as heroku, will forced deploy.
+Permanently update as heroku.
 """
 
 
@@ -209,10 +209,10 @@ HELP.update(
 Checks for updates, also displaying the changelog.
 
 ❯ `{i}update <now|pull|one> <force|f>`
-Temporary update as locally if available from repo.
+Temporary update as locally.
 
 ❯ `{i}update <deploy|push|all>`
-Permanently update as heroku, will forced deploy.
+Permanently update as heroku.
 
 ❯ `{i}repo`
 Get repo link.
