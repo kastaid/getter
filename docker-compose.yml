@@ -2,8 +2,6 @@ version: "3.9"
 services:
   worker:
     build: .
-    env_file:
-      - config.env
     environment:
       API_ID: $API_ID
       API_HASH: $API_HASH
