@@ -193,29 +193,30 @@ async def _morse(e):
         Kst = (await e.get_reply_message()).text
     if not Kst:
         return await e.try_delete()
-    _ = "encode" if cmd == "morse" else "decode"
+    _ = "en" if cmd == "morse" else "de"
     msg = await e.eor("`...`")
-    base_url = f"https://apis.xditya.me/morse/{_}?text=" + Kst
-    text = await Searcher(base_url, re_content=False)
+    base_url = f"https://notapi.vercel.app/api/morse?{_}=" + Kst
+    text = await Searcher(base_url, re_json=True)
     if not text:
         return await msg.eod("`Try again now!`")
-    await msg.eor(text)
+    await msg.eor(text.get("result"))
 
 
 @kasta_cmd(disable_errors=True, pattern="(roman|unroman)(?: |$)(.*)")
 async def _roman(e):
+    cmd = e.pattern_match.group(1)
     Kst = e.pattern_match.group(2)
     if not Kst and e.is_reply:
         Kst = (await e.get_reply_message()).text
     if not Kst:
         return await e.try_delete()
+    _ = "en" if cmd == "roman" else "de"
     msg = await e.eor("`...`")
-    base_url = "https://romans.justyy.workers.dev/api/romans/?cached&n=" + Kst
+    base_url = "https://notapi.vercel.app/api/romans?{_}=" + Kst
     text = await Searcher(base_url, re_json=True)
     if not text:
         return await msg.eod("`Try again now!`")
-    text = str(text.get("result"))
-    await msg.eor(text)
+    await msg.eor(text.get("result"))
 
 
 HELP.update(

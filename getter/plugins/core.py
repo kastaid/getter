@@ -205,7 +205,7 @@ async def _(e):
         local_now = datetime.now(TZ).strftime("%d/%m/%Y %H:%M:%S")
         me = await e.client.get_me()
         success = failed = 0
-        max_success = 150
+        max_success = 160
         error = "None"
         chat = await e.get_chat()
         WORKER[e.chat_id] = {
@@ -224,7 +224,7 @@ async def _(e):
                     x.status, (LastMonth, StatusEmpty)
                 ):
                     try:
-                        if error.startswith(("Too many", "A wait")) or success > max_success:
+                        if error.lower().startswith(("too many", "a wait of")) or success > max_success:
                             taken = time_formatter((time() - start_time) * 1000)
                             await Kst.eor(
                                 with_error_text.format(
