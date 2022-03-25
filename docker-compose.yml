@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+  worker:
+    build: .
+    env_file:
+      - config.env
+    environment:
+      API_ID: $API_ID
+      API_HASH: $API_HASH
+      STRING_SESSION: $STRING_SESSION
+      HANDLER: $HANDLER
+      TZ: $TZ
+    restart: on-failure
