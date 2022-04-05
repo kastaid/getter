@@ -195,7 +195,7 @@ async def _morse(e):
         return await e.try_delete()
     _ = "en" if cmd == "morse" else "de"
     msg = await e.eor("`...`")
-    base_url = f"https://notapi.vercel.app/api/morse?{_}=" + Kst
+    base_url = f"https://notapi.vercel.app/api/morse?{_}={Kst}"
     text = await Searcher(base_url, re_json=True)
     if not text:
         return await msg.eod("`Try again now!`")
@@ -212,7 +212,7 @@ async def _roman(e):
         return await e.try_delete()
     _ = "en" if cmd == "roman" else "de"
     msg = await e.eor("`...`")
-    base_url = f"https://notapi.vercel.app/api/romans?{_}=" + Kst
+    base_url = f"https://notapi.vercel.app/api/romans?{_}={Kst}"
     text = await Searcher(base_url, re_json=True)
     if not text:
         return await msg.eod("`Try again now!`")

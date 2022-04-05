@@ -23,8 +23,7 @@ from telethon.errors import (
     UserChannelsTooMuchError,
     YouBlockedUserError,
 )
-from telethon.tl.functions.channels import GetFullChannelRequest
-from telethon.tl.functions.channels import InviteToChannelRequest as InviteUser
+from telethon.tl.functions.channels import GetFullChannelRequest, InviteToChannelRequest
 from telethon.tl.functions.contacts import UnblockRequest
 from telethon.tl.functions.messages import GetFullChatRequest
 from telethon.tl.types import ChannelParticipantsAdmins as Admins
@@ -205,7 +204,7 @@ async def _(e):
         local_now = datetime.now(TZ).strftime("%d/%m/%Y %H:%M:%S")
         me = await e.client.get_me()
         success = failed = 0
-        max_success = 160
+        max_success = 300
         error = "None"
         chat = await e.get_chat()
         WORKER[e.chat_id] = {
@@ -224,7 +223,7 @@ async def _(e):
                     x.status, (LastMonth, StatusEmpty)
                 ):
                     try:
-                        if error.lower().startswith(("too many", "a wait of")) or success > max_success:
+                        if error.startswith(("Too many", "A wait of")) or success > max_success:
                             taken = time_formatter((time() - start_time) * 1000)
                             await Kst.eor(
                                 with_error_text.format(
@@ -238,7 +237,7 @@ async def _(e):
                                 parse_mode="html",
                             )
                             return
-                        await e.client(InviteUser(channel=chat, users=[x.id]))
+                        await e.client(InviteToChannelRequest(channel=e.chat_id, users=[x.id]))
                         success += 1
                         WORKER[e.chat_id].update({"success": success})
                         await Kst.eor(
@@ -437,7 +436,6 @@ async def _(e):
         csv_file = mode + "_list.csv"
         start_time = time()
         local_now = datetime.now(TZ).strftime("%d/%m/%Y %H:%M:%S")
-        chat = await e.get_chat()
         try:
             await Kst.eor(f"`Reading {csv_file} file...`")
             async with aiopen(file=csv_file, mode="r", encoding="utf-8") as f:
@@ -451,6 +449,7 @@ async def _(e):
             )
             return
         success = 0
+        chat = await e.get_chat()
         WORKER[e.chat_id] = {
             "mode": "add",
             "current": chat.title,
@@ -466,7 +465,7 @@ async def _(e):
                 await sleep(900)
             try:
                 adding = InputPeerUser(user["user_id"], user["hash"])
-                await e.client(InviteUser(channel=chat, users=[adding]))
+                await e.client(InviteToChannelRequest(channel=e.chat_id, users=[adding]))
                 success += 1
                 WORKER[e.chat_id].update({"success": success})
                 await Kst.eor(f"`Adding {success} {mode}...`")
