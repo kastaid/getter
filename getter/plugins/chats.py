@@ -171,9 +171,8 @@ async def _(e):
         resp = []
         while True:
             try:
-                res = await conv.get_response(timeout=5)
+                res = await conv.get_response(timeout=2)
             except AsyncTimeout:
-                await Kst.try_delete()
                 break
             resp.append(res.text)
         await e.client.send_read_acknowledge(conv.chat_id)

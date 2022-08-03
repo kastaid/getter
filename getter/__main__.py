@@ -72,6 +72,9 @@ async def autous() -> None:
         await App(JoinChannelRequest(channel="@kastaup"))
     with suppress(BaseException):
         await asyncio.sleep(2)
+        await App(JoinChannelRequest(channel="@tongkronganvirtuals"))
+    with suppress(BaseException):
+        await asyncio.sleep(2)
         await App(
             UpdateNotifySettingsRequest(
                 peer="@kastaup",

@@ -224,6 +224,8 @@ async def _(e):
                 ):
                     try:
                         if error.startswith(("Too many", "A wait of")) or success > max_success:
+                            if WORKER.get(e.chat_id):
+                                WORKER.pop(e.chat_id)
                             taken = time_formatter((time() - start_time) * 1000)
                             await Kst.eor(
                                 with_error_text.format(
