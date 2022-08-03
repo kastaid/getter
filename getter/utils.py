@@ -13,7 +13,7 @@ from re import IGNORECASE, match, sub
 from typing import Union
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup
-from emoji import get_emoji_regexp
+from emoji import replace_emoji
 from markdown import markdown
 from telethon.tl.types import MessageEntityMentionName, MessageEntityPre
 from telethon.utils import add_surrogate, get_display_name
@@ -50,7 +50,7 @@ def parse_pre(text: str) -> str:
 
 
 def deEmojify(inputString: str) -> str:
-    return get_emoji_regexp().sub("", inputString)
+    return replace_emoji(inputString, "")
 
 
 def humanbytes(size: Union[int, float]) -> str:
