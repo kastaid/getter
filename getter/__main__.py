@@ -62,19 +62,19 @@ async def autous() -> None:
     if Var.DEV_MODE:
         return
     with suppress(BaseException):
-        await asyncio.sleep(2)
+        await asyncio.sleep(5)
         await App(JoinChannelRequest(channel="@kastaid"))
     with suppress(BaseException):
-        await asyncio.sleep(2)
+        await asyncio.sleep(5)
         await App(JoinChannelRequest(channel="@kastaot"))
     with suppress(BaseException):
-        await asyncio.sleep(2)
+        await asyncio.sleep(5)
         await App(JoinChannelRequest(channel="@kastaup"))
     with suppress(BaseException):
-        await asyncio.sleep(2)
+        await asyncio.sleep(5)
         await App(JoinChannelRequest(channel="@tongkronganvirtuals"))
     with suppress(BaseException):
-        await asyncio.sleep(2)
+        await asyncio.sleep(5)
         await App(
             UpdateNotifySettingsRequest(
                 peer="@kastaup",
@@ -92,7 +92,7 @@ async def launching() -> None:
     try:
         await asyncio.sleep(choice((2, 4, 6)))
         await App.start()
-        await asyncio.sleep(2)
+        await asyncio.sleep(5)
         App.me = await App.get_me()
         App.uid = App.me.id
         await autous()
