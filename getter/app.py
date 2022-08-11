@@ -9,7 +9,7 @@
 
 import sys
 from telethon import TelegramClient
-from telethon.network.connection.tcpabridged import ConnectionTcpAbridged
+from telethon.network.connection.tcpfull import ConnectionTcpFull
 from telethon.sessions import StringSession
 
 
@@ -33,7 +33,7 @@ def Client() -> TelegramClient:
             api_hash=Var.API_HASH,
             loop=None,
             app_version=__version__,
-            connection=ConnectionTcpAbridged,
+            connection=ConnectionTcpFull,
             auto_reconnect=True,
             connection_retries=None,
         )
