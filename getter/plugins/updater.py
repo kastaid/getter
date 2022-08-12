@@ -33,7 +33,6 @@ from . import (
     Runner,
     MAX_MESSAGE_LEN,
     Heroku,
-    LOGS,
 )
 
 UPDATE_LOCK = Lock()
@@ -138,7 +137,8 @@ async def Pulling(kst, state) -> None:
         await force_pull()
         await ignores()
         await update_packages()
-    up = rf"\\**#Getter**// `{state}Updated Successfully...`\nWait for a few seconds, then run `{hl}ping` command."
+    up = rf"""\\**#Getter**// `{state}Updated Successfully...`
+Wait for a few seconds, then run `{hl}ping` command."""
     await kst.eor(up)
     with suppress(BaseException):
         proc = psutil.Process(os.getpid())
@@ -167,17 +167,9 @@ async def Pushing(kst, state, repo) -> None:
         cfg["HEROKU_API"] = cfg["HEROKU_API_KEY"]
         del cfg["HEROKU_API_KEY"]
     """
-
     info = app.info
-    buildpacks = app.buildpacks()
-
-    LOGS.info(type(info))
-    LOGS.info(info)
-
-    LOGS.info(type(buildpacks))
-    LOGS.info(buildpacks)
-
-    if False:
+    if "container" not in str(info.stack):
+        # buildpacks = app.buildpacks()
         app.update_buildpacks(
             [
                 "https://github.com/heroku/heroku-buildpack-python",
@@ -186,9 +178,9 @@ async def Pushing(kst, state, repo) -> None:
                 "https://github.com/heroku/heroku-buildpack-chromedriver",
             ]
         )
-
     await force_pull()
-    up = rf"\\**#Getter**// `{state}Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command."
+    up = rf"""\\**#Getter**// `{state}Updated Successfully...`
+Wait for a few minutes, then run `{hl}ping` command."""
     await kst.eor(up)
 
     """
@@ -214,13 +206,12 @@ async def Pushing(kst, state, repo) -> None:
         remote = repo.create_remote("heroku", url)
     with suppress(BaseException):
         remote.push(refspec="HEAD:refs/heads/main", force=True)
-
     build = app.builds(order_by="created_at", sort="desc")[0]
-    LOGS.info(type(build))
-    LOGS.info(build)
-
-    if build.status == "failed":
-        await kst.eod(rf"\\**#Getter**// `{state}Update Failed...`\nTry again later or view logs for more info.")
+    if build.status != "succeeded":
+        await kst.eod(
+            rf"""\\**#Getter**// `{state}Update Failed...`
+Try again later or view logs for more info."""
+        )
 
 
 @kasta_cmd(
