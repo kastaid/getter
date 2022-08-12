@@ -7,11 +7,11 @@
 # < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
 # ================================================================
 
+import asyncio
 import html
 import math
-from asyncio import sleep
+import time
 from asyncio.exceptions import TimeoutError as AsyncTimeout
-from time import time, perf_counter
 from cache import AsyncTTL
 from cachetools import TTLCache
 from telethon.errors.rpcerrorlist import YouBlockedUserError
@@ -43,10 +43,10 @@ from . import (
     Searcher,
 )
 
-ROSE_LANG_CACHE = TTLCache(maxsize=512, ttl=(120 * 30), timer=perf_counter)  # 1 hours
-ROSE_STAT_CACHE = TTLCache(maxsize=512, ttl=120, timer=perf_counter)  # 2 mins
-SPAMWATCH_CACHE = TTLCache(maxsize=512, ttl=120, timer=perf_counter)  # 2 mins
-CAS_CACHE = TTLCache(maxsize=512, ttl=120, timer=perf_counter)  # 2 mins
+ROSE_LANG_CACHE = TTLCache(maxsize=512, ttl=(120 * 30), timer=time.perf_counter)  # 1 hours
+ROSE_STAT_CACHE = TTLCache(maxsize=512, ttl=120, timer=time.perf_counter)  # 2 mins
+SPAMWATCH_CACHE = TTLCache(maxsize=512, ttl=120, timer=time.perf_counter)  # 2 mins
+CAS_CACHE = TTLCache(maxsize=512, ttl=120, timer=time.perf_counter)  # 2 mins
 
 
 @kasta_cmd(
@@ -123,7 +123,7 @@ async def _(kst):
 )
 async def _(kst):
     msg = await kst.eor("`Collecting stats...`")
-    start_time = time()
+    start_time = time.time()
     private_chats = 0
     bots = 0
     groups = 0
@@ -155,7 +155,7 @@ async def _(kst):
                 bots += 1
         unread_mentions += dialog.unread_mentions_count
         unread += dialog.unread_count
-    stop_time = time() - start_time
+    stop_time = time.time() - start_time
     try:
         ct = (await kst.client(GetBlockedRequest(1, 0))).count
     except AttributeError:
@@ -495,7 +495,7 @@ async def get_rose_fban(kst, user_id: int) -> bool:
                 await conv.get_response()
             await conv.send_message(f"/fedstat {user_id}")
         while True:
-            await sleep(1.5)
+            await asyncio.sleep(1.5)
             resp = await conv.get_response()
             if not resp.message.lower().startswith("checking fbans"):
                 break

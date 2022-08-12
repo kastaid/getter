@@ -7,10 +7,10 @@
 # < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
 # ================================================================
 
+import datetime
 import math
 import shutil
-from datetime import datetime
-from time import time
+import time
 from . import (
     choice,
     StartTime,
@@ -26,9 +26,9 @@ from . import (
 dyno_text = """
 **⚙️  Dyno Usage**
  -> **Dyno usage for** `{}`:
-     •  `{}h`  `{}m`  `{}%`
+     •  `{}h  {}m  {}%`
  -> **Dyno hours quota remaining this month:**
-     •  `{}h`  `{}m`  `{}%`
+     •  `{}h  {}m  {}%`
 """
 
 usage_text = """
@@ -66,8 +66,8 @@ USERAGENTS = [
 def default_usage() -> str:
     import psutil
 
-    app_uptime = time_formatter((time() - StartTime) * 1000)
-    system_uptime = datetime.fromtimestamp(psutil.boot_time()).strftime("%d/%m/%Y %H:%M:%S")
+    app_uptime = time_formatter((time.time() - StartTime) * 1000)
+    system_uptime = datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%d/%m/%Y %H:%M:%S")
     total, used, free = shutil.disk_usage(".")
     try:
         cpu_freq = psutil.cpu_freq().current
@@ -140,18 +140,14 @@ async def heroku_usage() -> str:
         AppPercentage = math.floor(Apps[0]["quota_used"] * 100 / quota)
     AppHours = math.floor(AppQuotaUsed / 60)
     AppMinutes = math.floor(AppQuotaUsed % 60)
-    usage = (
-        default_usage()
-        + "\n\n"
-        + dyno_text.format(
-            Var.HEROKU_APP_NAME,
-            AppHours,
-            AppMinutes,
-            AppPercentage,
-            hours,
-            minutes,
-            percentage,
-        )
+    usage = default_usage() + dyno_text.format(
+        Var.HEROKU_APP_NAME,
+        AppHours,
+        AppMinutes,
+        AppPercentage,
+        hours,
+        minutes,
+        percentage,
     )
     return usage
 

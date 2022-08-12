@@ -7,8 +7,8 @@
 # < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
 # ================================================================
 
+import time
 from platform import python_version
-from time import time
 from telethon.version import __version__ as telethonver
 from . import (
     __version__ as getterver,
@@ -20,6 +20,7 @@ from . import (
     Var,
     display_name,
     time_formatter,
+    HerokuStack,
 )
 
 help_text = """
@@ -29,6 +30,7 @@ help_text = """
 ┣  <b>User</b> – <code>{}</code>
 ┣  <b>ID</b> – <code>{}</code>
 ┣  <b>Heroku App</b> – <code>{}</code>
+┣  <b>Heroku Stack</b> – <code>{}</code>
 ┣  <b>Getter Version</b> – <code>{}</code>
 ┣  <b>Python Version</b> – <code>{}</code>
 ┣  <b>Telethon Version</b> – <code>{} Layer: {}</code>
@@ -65,7 +67,7 @@ async def _(kst):
         else:
             await msg.eor(f"**📦 Invalid Plugin ➞** `{args}`\nType ```{hl}help``` to see valid plugin names.")
     else:
-        uptime = time_formatter((time() - StartTime) * 1000)
+        uptime = time_formatter((time.time() - StartTime) * 1000)
         plugins = ""
         for _ in HELP:
             plugins += f"<code>{_}</code>  ★  "
@@ -74,7 +76,8 @@ async def _(kst):
         text = help_text.format(
             display_name(me),
             kst.client.uid,
-            Var.HEROKU_APP_NAME or "None",
+            Var.HEROKU_APP_NAME or "none",
+            HerokuStack(),
             getterver,
             python_version(),
             telethonver,

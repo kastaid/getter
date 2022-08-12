@@ -218,11 +218,11 @@ async def kebab_(kst):
 
 
 @kasta_cmd(
-    pattern=r"spoiler(?: |$)([\s\S]*)",
+    pattern=r"(spoiler|sp)(?: |$)([\s\S]*)",
     no_crash=True,
 )
 async def spoiler_(kst):
-    match = kst.pattern_match.group(1)
+    match = kst.pattern_match.group(2)
     if match and not kst.is_reply:
         text = kst.text.split(" ", maxsplit=1)[1]
     elif not match and kst.is_reply:
@@ -235,7 +235,7 @@ async def spoiler_(kst):
 
 @kasta_cmd(
     pattern="(b64encode|b64e)(?: |$)(.*)",
-    no_crash=True,
+    no_crash=False,
 )
 async def b64encode_(kst):
     match = kst.pattern_match.group(2)
@@ -251,7 +251,7 @@ async def b64encode_(kst):
 
 @kasta_cmd(
     pattern="(b64decode|b64d)(?: |$)(.*)",
-    no_crash=True,
+    no_crash=False,
 )
 async def b64decode_(kst):
     match = kst.pattern_match.group(2)
@@ -263,7 +263,7 @@ async def b64decode_(kst):
         return await kst.try_delete()
     try:
         text = b64decode(text).decode("utf-8", "replace")
-    except binascii.Error as err:
+    except (binascii.Error, ValueError) as err:
         text = f"Invalid Base64 data: {err}"
     await kst.eor(text, parse_mode=parse_pre)
 
@@ -359,7 +359,7 @@ Convert text to snake case.
 ❯ `{i}kebab <text/reply>`
 Convert text to kebab case.
 
-❯ `{i}spoiler <text/reply>`
+❯ `{i}spoiler|{i}sp <text/reply>`
 Create a spoiler message.
 
 ❯ `{i}b64encode|{i}b64e <text/reply>`

@@ -7,11 +7,11 @@
 # < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
 # ================================================================
 
-from asyncio import Lock, sleep
+import asyncio
+import datetime
+import time
 from contextlib import suppress
 from csv import reader as csv_read
-from datetime import datetime
-from time import time
 from aiocsv import AsyncDictReader, AsyncWriter
 from aiofiles import open as aiopen
 from telethon.errors.rpcerrorlist import (
@@ -49,9 +49,9 @@ from . import (
     time_formatter,
 )
 
-INVITING_LOCK = Lock()
-SCRAPING_LOCK = Lock()
-ADDING_LOCK = Lock()
+INVITING_LOCK = asyncio.Lock()
+SCRAPING_LOCK = asyncio.Lock()
+ADDING_LOCK = asyncio.Lock()
 spamb = "@SpamBot"
 
 with_error_text = """
@@ -170,7 +170,7 @@ async def limit(kst, conv):
 )
 async def _(kst):
     if not kst.out:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     msg = await kst.eor("`Checking...`", silent=True)
     async with kst.client.conversation(spamb) as conv:
         resp = await limit(kst, conv)
@@ -192,7 +192,7 @@ async def _(kst):
     if is_devs and kst.client.uid in DEVS:
         return
     if is_devs:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     if WORKER.get(kst.chat_id) or INVITING_LOCK.locked():
         await kst.eor("`Please wait until previous INVITE finished...`", time=5, silent=True)
         return
@@ -201,8 +201,8 @@ async def _(kst):
         group = await get_groupinfo(kst, msg)
         if not group:
             return
-        start_time = time()
-        local_now = datetime.now(TZ).strftime("%d/%m/%Y %H:%M:%S")
+        start_time = time.time()
+        local_now = datetime.datetime.now(TZ).strftime("%d/%m/%Y %H:%M:%S")
         me = await kst.client.get_me()
         success = failed = 0
         max_success = 300
@@ -226,7 +226,7 @@ async def _(kst):
                         if error.lower().startswith(("too many", "a wait of")) or success > max_success:
                             if WORKER.get(kst.chat_id):
                                 WORKER.pop(kst.chat_id)
-                            taken = time_formatter((time() - start_time) * 1000)
+                            taken = time_formatter((time.time() - start_time) * 1000)
                             await msg.eor(
                                 with_error_text.format(
                                     error,
@@ -266,7 +266,7 @@ async def _(kst):
         with suppress(BaseException):
             if WORKER.get(kst.chat_id):
                 WORKER.pop(kst.chat_id)
-        taken = time_formatter((time() - start_time) * 1000)
+        taken = time_formatter((time.time() - start_time) * 1000)
         await msg.eor(
             done_text.format(
                 success,
@@ -296,8 +296,8 @@ async def _(kst):
             return await msg.try_delete()
         args = kst.pattern_match.group(1).split(" ")
         is_append = True if len(args) > 1 and args[1].lower() in ("append", "a") else False
-        start_time = time()
-        local_now = datetime.now(TZ).strftime("%d/%m/%Y %H:%M:%S")
+        start_time = time.time()
+        local_now = datetime.datetime.now(TZ).strftime("%d/%m/%Y %H:%M:%S")
         members = admins = bots = 0
         members_file = "members_list.csv"
         admins_file = "admins_list.csv"
@@ -361,7 +361,7 @@ async def _(kst):
                         bots += 1
                     except BaseException:
                         pass
-        taken = time_formatter((time() - start_time) * 1000)
+        taken = time_formatter((time.time() - start_time) * 1000)
         await msg.eor("`Uploading CSV Files...`")
         await kst.client.send_file(
             kst.chat_id,
@@ -441,8 +441,8 @@ async def _(kst):
         elif args.startswith("bot"):
             mode = "bots"
         csv_file = mode + "_list.csv"
-        start_time = time()
-        local_now = datetime.now(TZ).strftime("%d/%m/%Y %H:%M:%S")
+        start_time = time.time()
+        local_now = datetime.datetime.now(TZ).strftime("%d/%m/%Y %H:%M:%S")
         try:
             await msg.eor(f"`Reading {csv_file} file...`")
             async with aiopen(csv_file, mode="r") as f:
@@ -468,20 +468,20 @@ async def _(kst):
                 return
             if success == 30:
                 await msg.eor(f"`🔄 Reached 30 members, wait until {900/60} minutes...`")
-                await sleep(900)
+                await asyncio.sleep(900)
             try:
                 adding = InputPeerUser(user["user_id"], user["hash"])
                 await kst.client(InviteToChannelRequest(channel=kst.chat_id, users=[adding]))
                 success += 1
                 WORKER[kst.chat_id].update({"success": success})
                 await msg.eor(f"`Adding {success} {mode}...`")
-                await sleep(choice((4, 5, 6)))
+                await asyncio.sleep(choice((4, 5, 6)))
             except BaseException:
                 pass
         with suppress(BaseException):
             if WORKER.get(kst.chat_id):
                 WORKER.pop(kst.chat_id)
-        taken = time_formatter((time() - start_time) * 1000)
+        taken = time_formatter((time.time() - start_time) * 1000)
         await msg.eor(f"`✅ Completed adding {success} {mode} in {taken}` at `{local_now}`")
 
 
@@ -497,7 +497,7 @@ async def _(kst):
 )
 async def _(kst):
     if not kst.out:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     if not WORKER.get(kst.chat_id):
         return await kst.eod(no_process_text, silent=True)
     msg = await kst.eor(cancel_text, silent=True)

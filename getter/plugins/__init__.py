@@ -9,6 +9,7 @@
 
 from secrets import choice
 from textwrap import shorten
+from cachetools import cached, LRUCache
 from heroku3 import from_key
 from telethon import events
 from getter import (
@@ -139,3 +140,14 @@ def Heroku() -> None:
     except BaseException as err:
         LOGS.exception(err)
     return _conn
+
+
+@cached(cache=LRUCache(maxsize=512))
+def HerokuStack() -> str:
+    try:
+        heroku_conn = Heroku()
+        app = heroku_conn.app(Var.HEROKU_APP_NAME)
+        stack = app.info.stack.name
+    except BaseException:
+        stack = "none"
+    return stack

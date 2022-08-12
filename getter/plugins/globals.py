@@ -7,10 +7,10 @@
 # < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
 # ================================================================
 
-from asyncio import sleep
+import asyncio
+import time
 from contextlib import suppress
 from io import BytesIO
-from time import time
 from telethon.errors import FloodWaitError
 from telethon.tl.functions.contacts import BlockRequest, UnblockRequest
 from telethon.tl.functions.messages import ReportSpamRequest
@@ -39,28 +39,28 @@ from . import (
 )
 async def _(kst):
     if not kst.out:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     msg = await kst.eor("`Gbanning...`", silent=True)
     user, reason = await get_user(kst)
     if not user:
-        return await msg.eor("`Reply to some message or add their id.`", time=5)
+        return await msg.eor("`Reply to some message or add their id.`", time=8)
     if user.id == kst.client.uid:
-        return await msg.eor("`I can't gban myself.`", time=3)
+        return await msg.eor("`I can't gban myself.`", time=5)
     if user.id in DEVS:
-        return await msg.eor("`I can't gban our Developers.`", time=3)
+        return await msg.eor("`I can't gban our Developers.`", time=5)
     userlink = mentionuser(user.id, display_name(user), sep="➥ ", html=True)
     success = failed = 0
     async for gg in kst.client.iter_dialogs():
         if gg.is_group or gg.is_channel:
             try:
                 await kst.client.edit_permissions(gg.id, user.id, view_messages=False)
-                await sleep(0.5)
+                await asyncio.sleep(0.5)
                 success += 1
             except FloodWaitError as fw:
-                await sleep(fw.seconds + 10)
+                await asyncio.sleep(fw.seconds + 10)
                 try:
                     await kst.client.edit_permissions(gg.id, user.id, view_messages=False)
-                    await sleep(0.5)
+                    await asyncio.sleep(0.5)
                     success += 1
                 except BaseException:
                     failed += 1
@@ -96,11 +96,11 @@ async def _(kst):
 )
 async def _(kst):
     if not kst.out:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     msg = await kst.eor("`UnGbanning...`", silent=True)
     user, _ = await get_user(kst)
     if not user:
-        return await msg.eor("`Reply to some message or add their id.`", time=5)
+        return await msg.eor("`Reply to some message or add their id.`", time=8)
     msg = await msg.eor("`Force UnGbanning...`")
     userlink = mentionuser(user.id, display_name(user), sep="➥ ", html=True)
     success = failed = 0
@@ -108,13 +108,13 @@ async def _(kst):
         if gg.is_group or gg.is_channel:
             try:
                 await kst.client.edit_permissions(gg.id, user.id, view_messages=True)
-                await sleep(0.5)
+                await asyncio.sleep(0.5)
                 success += 1
             except FloodWaitError as fw:
-                await sleep(fw.seconds + 10)
+                await asyncio.sleep(fw.seconds + 10)
                 try:
                     await kst.client.edit_permissions(gg.id, user.id, view_messages=True)
-                    await sleep(0.5)
+                    await asyncio.sleep(0.5)
                     success += 1
                 except BaseException:
                     failed += 1
@@ -142,28 +142,28 @@ async def _(kst):
 )
 async def _(kst):
     if not kst.out:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     msg = await kst.eor("`Gkicking...`", silent=True)
     user, _ = await get_user(kst)
     if not user:
-        return await msg.eor("`Reply to some message or add their id.`", time=5)
+        return await msg.eor("`Reply to some message or add their id.`", time=8)
     if user.id == kst.client.uid:
-        return await msg.eor("`I can't gkick myself.`", time=3)
+        return await msg.eor("`I can't gkick myself.`", time=5)
     if user.id in DEVS:
-        return await msg.eor("`I can't gkick our Developers.`", time=3)
+        return await msg.eor("`I can't gkick our Developers.`", time=5)
     userlink = mentionuser(user.id, display_name(user), sep="➥ ", html=True)
     success = failed = 0
     async for gg in kst.client.iter_dialogs():
         if gg.is_group or gg.is_channel:
             try:
                 await kst.client.kick_participant(gg.id, user.id)
-                await sleep(0.5)
+                await asyncio.sleep(0.5)
                 success += 1
             except FloodWaitError as fw:
-                await sleep(fw.seconds + 10)
+                await asyncio.sleep(fw.seconds + 10)
                 try:
                     await kst.client.kick_participant(gg.id, user.id)
-                    await sleep(0.5)
+                    await asyncio.sleep(0.5)
                     success += 1
                 except BaseException:
                     failed += 1
@@ -187,7 +187,7 @@ async def _(kst):
 )
 async def _(kst):
     if not kst.out:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     is_admin = True if kst.text and kst.text[2:7] == "admin" or kst.text[3:8] == "admin" else False
     match = kst.pattern_match.group(2)
     if match:
@@ -196,7 +196,7 @@ async def _(kst):
         content = await kst.get_reply_message()
     else:
         return await kst.eod("`Give some text to Gcast or reply message.`", silent=True)
-    start_time = time()
+    start_time = time.time()
     msg = await kst.eor(
         "⚡ __**Gcasting to {}...**__".format(
             "groups as admin" if is_admin else "all groups",
@@ -218,13 +218,13 @@ async def _(kst):
             ):
                 try:
                     await kst.client.send_message(chat, content)
-                    await sleep(choice((2, 3, 4, 5)))
+                    await asyncio.sleep(choice((2, 3, 4, 5)))
                     success += 1
                 except FloodWaitError as fw:
-                    await sleep(fw.seconds + 10)
+                    await asyncio.sleep(fw.seconds + 10)
                     try:
                         await kst.client.send_message(chat, content)
-                        await sleep(choice((2, 3, 4, 5)))
+                        await asyncio.sleep(choice((2, 3, 4, 5)))
                         success += 1
                     except Exception as err:
                         error += f"• {err}\n"
@@ -232,7 +232,7 @@ async def _(kst):
                 except Exception as err:
                     error += "• " + str(err) + "\n"
                     failed += 1
-    taken = time_formatter((time() - start_time) * 1000)
+    taken = time_formatter((time.time() - start_time) * 1000)
     text = r"\\**#Gcast**// `{}` in [`+{}-{}`] {}.".format(
         taken,
         success,
@@ -264,7 +264,7 @@ async def _(kst):
 )
 async def _(kst):
     if not kst.out:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     match = kst.pattern_match.group(1)
     if match:
         content = match
@@ -272,7 +272,7 @@ async def _(kst):
         content = await kst.get_reply_message()
     else:
         return await kst.eod("`Give some text to Gucast or reply message.`", silent=True)
-    start_time = time()
+    start_time = time.time()
     msg = await kst.eor(
         "⚡ __**Gucasting in all pm users...**__",
         silent=True,
@@ -290,19 +290,19 @@ async def _(kst):
             if chat not in DND:
                 try:
                     await kst.client.send_message(chat, content)
-                    await sleep(choice((2, 3, 4, 5)))
+                    await asyncio.sleep(choice((2, 3, 4, 5)))
                     success += 1
                 except FloodWaitError as fw:
-                    await sleep(fw.seconds + 10)
+                    await asyncio.sleep(fw.seconds + 10)
                     try:
                         await kst.client.send_message(chat, content)
-                        await sleep(choice((2, 3, 4, 5)))
+                        await asyncio.sleep(choice((2, 3, 4, 5)))
                         success += 1
                     except BaseException:
                         failed += 1
                 except BaseException:
                     failed += 1
-    taken = time_formatter((time() - start_time) * 1000)
+    taken = time_formatter((time.time() - start_time) * 1000)
     text = r"\\**#Gucast**// `{}` in [`+{}-{}`] users.".format(
         taken,
         success,

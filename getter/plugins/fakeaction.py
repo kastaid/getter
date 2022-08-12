@@ -7,7 +7,7 @@
 # < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
 # ================================================================
 
-from asyncio import sleep
+import asyncio
 from . import HELP, DEVS, kasta_cmd
 
 
@@ -30,7 +30,7 @@ async def _(kst):
     act = kst.pattern_match.group(1).capitalize()
     await kst.eor(f'Starting "Fake {act}" for `{sec}` seconds.', time=3)
     async with kst.client.action(kst.chat_id, action):
-        await sleep(int(sec))
+        await asyncio.sleep(int(sec))
 
 
 HELP.update(

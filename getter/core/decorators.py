@@ -7,11 +7,11 @@
 # < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
 # ================================================================
 
+import asyncio
+import datetime
 import re
 import sys
-from asyncio import sleep
 from contextlib import suppress
-from datetime import datetime, timezone
 from io import BytesIO
 from platform import python_version
 from traceback import format_exc
@@ -38,7 +38,12 @@ from telethon.errors.rpcerrorlist import (
 from telethon.events import MessageEdited, NewMessage, StopPropagation
 from telethon.tl.custom.message import Message
 from telethon.version import __version__ as telethonver
-from getter import __version__ as getterver, DEVS, MAX_MESSAGE_LEN
+from getter import (
+    __layer__,
+    __version__ as getterver,
+    DEVS,
+    MAX_MESSAGE_LEN,
+)
 from getter.config import Var, HANDLER
 from getter.core.app import App
 from getter.core.functions import (
@@ -129,12 +134,12 @@ def kasta_cmd(
                 return await eod(kst, "`Use this in Group/Channel.`")
             try:
                 await fun(kst)
-            except FloodWaitError as err:
-                FLOOD_WAIT = err.seconds
+            except FloodWaitError as fw:
+                FLOOD_WAIT = fw.seconds
                 FLOOD_WAIT_HUMAN = time_formatter((FLOOD_WAIT + 10) * 1000)
                 LOGS.warning(f"A FloodWait Error of {FLOOD_WAIT}. Sleeping for {FLOOD_WAIT_HUMAN} and try again.")
                 await _try_delete(kst)
-                await sleep(FLOOD_WAIT + 10)
+                await asyncio.sleep(FLOOD_WAIT + 10)
                 return
             except (
                 MessageIdInvalidError,
@@ -156,11 +161,11 @@ def kasta_cmd(
             except Exception as err:
                 LOGS.exception(f"[KASTA_CMD] - {err}")
                 if not no_crash:
-                    date = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M:%S")
+                    date = datetime.datetime.now(datetime.timezone.utc).strftime("%d/%m/%Y %H:%M:%S")
                     ftext = r"\\**#Getter**// **Client Error:** Forward this to @kastaot"
                     ftext += "\n\n**Getter Version:** `" + str(getterver)
                     ftext += "`\n**Python Version:** `" + str(python_version())
-                    ftext += "`\n**Telethon Version:** `" + str(telethonver) + "`\n\n"
+                    ftext += "`\n**Telethon Version:** `" + str(telethonver) + " Layer: " + str(__layer__) + "`\n\n"
                     ftext += "--------START GETTER CRASH LOG--------"
                     ftext += "\n\n**Date:** `" + date
                     ftext += "`\n**Chat:** `" + str(kst.chat_id) + " " + display_name(chat) + "`"
