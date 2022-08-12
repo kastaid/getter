@@ -160,7 +160,7 @@ async def Pushing(kst, state, repo) -> None:
         heroku_conn = Heroku()
         app = heroku_conn.app(Var.HEROKU_APP_NAME)
     except Exception as err:
-        if "401 client error: unauthorized" in err.lower():
+        if str(err).lower().startswith("401 client error: unauthorized"):
             msg = "HEROKU_API invalid or expired... Please re-check."
         else:
             msg = err
