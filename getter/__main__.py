@@ -10,11 +10,11 @@
 import asyncio
 import signal
 import sys
+import time
 from contextlib import suppress
 from importlib import import_module
 from platform import python_version
 from secrets import choice
-from time import time
 from typing import List, Tuple
 from telethon.errors import ApiIdInvalidError, AuthKeyDuplicatedError, PhoneNumberInvalidError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
@@ -148,7 +148,7 @@ async def main() -> None:
     LOGS.info(">> Launching...")
     await launching()
     LOGS.info(">> Load Plugins...")
-    load = time()
+    load = time.time()
     plugins, basepath = all_plugins()
     for plugin in plugins:
         try:
@@ -156,7 +156,7 @@ async def main() -> None:
             LOGS.success("[+] " + plugin)
         except Exception as err:
             LOGS.exception("[-] {} : {}".format(plugin, err))
-    loaded_time = time_formatter((time() - load) * 1000)
+    loaded_time = time_formatter((time.time() - load) * 1000)
     loaded_msg = ">> Loaded Plugins {} (took {}) : {}".format(
         len(plugins),
         loaded_time,
@@ -165,7 +165,7 @@ async def main() -> None:
     LOGS.info(loaded_msg)
     await asyncio.sleep(1)
     do_not_remove_credit()
-    launch_time = time_formatter((time() - StartTime) * 1000)
+    launch_time = time_formatter((time.time() - StartTime) * 1000)
     python_msg = ">> Python Version - {}".format(
         python_version(),
     )

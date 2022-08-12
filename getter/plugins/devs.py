@@ -7,12 +7,12 @@
 # < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
 # ================================================================
 
+import asyncio
 import html
 import json
 import os
 import sys
 import time
-from asyncio import sleep
 from contextlib import suppress
 from io import BytesIO
 from pathlib import Path
@@ -100,12 +100,12 @@ async def _(kst):
             pass
         if user_id and user_id != kst.client.uid:
             return
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     msg = await kst.eor("`Getting...`", silent=True)
     if mode in ("heroku", "hk", "h"):
         return await heroku_logs(msg)
     else:
-        await sleep(3)
+        await asyncio.sleep(3)
         await msg.try_delete()
     if mode == "carbon":
         code = logs = ""
@@ -135,7 +135,7 @@ async def _(kst):
                     allow_cache=False,
                     silent=True,
                 )
-                await sleep(3)
+                await asyncio.sleep(3)
             (Root / logs).unlink(missing_ok=True)
     elif mode == "open":
         logs = ""
@@ -145,7 +145,7 @@ async def _(kst):
             if not logs:
                 continue
             await msg.sod(f"`{logs}`")
-            await sleep(3)
+            await asyncio.sleep(3)
     else:
         with suppress(BaseException):
             for file in get_terminal_logs():
@@ -157,7 +157,7 @@ async def _(kst):
                     allow_cache=False,
                     silent=True,
                 )
-                await sleep(3)
+                await asyncio.sleep(3)
 
 
 @kasta_cmd(
@@ -181,10 +181,10 @@ async def _(kst):
             pass
         if user_id and user_id != kst.client.uid:
             return
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     msg = await kst.eor("`Restarting...`", silent=True)
     os.system("clear")
-    await sleep(1)
+    await asyncio.sleep(1)
     await msg.eor(r"\\**#Getter**// `Restarting... Wait for a few minutes.`")
     if not (Var.HEROKU_API and Var.HEROKU_APP_NAME):
         await restart_app()

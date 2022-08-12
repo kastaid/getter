@@ -9,17 +9,17 @@
 
 import multiprocessing
 import sys
+import time
 from asyncio import get_event_loop
 from base64 import b64decode
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from platform import python_version
 from shutil import rmtree
-from time import time
 from telethon.tl.alltlobjects import LAYER as __layer__
 from version import __version__
 
-StartTime = time()
+StartTime = time.time()
 __license__ = "GNU Affero General Public License v3.0"
 __copyright__ = "Getter Copyright (C) 2022 kastaid"
 

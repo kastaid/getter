@@ -7,14 +7,14 @@
 # < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
 # ================================================================
 
+import datetime
 import logging
 import sys
-from datetime import date
 from loguru import logger as LOGS
 
 LOGS.remove(0)
 LOGS.add(
-    "logs/getter-{}.log".format(date.today().strftime("%d-%m-%Y")),
+    "logs/getter-{}.log".format(datetime.date.today().strftime("%d-%m-%Y")),
     format="{time:DD/MM/YY HH:mm:ss} | {level: <8} | {name: ^15} | {function: ^15} | {line: >3} : {message}",
     rotation="1 days",
     encoding="utf8",

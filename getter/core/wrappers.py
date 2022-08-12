@@ -7,7 +7,7 @@
 # < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
 # ================================================================
 
-from asyncio import sleep
+import asyncio
 from contextlib import suppress
 from aiofiles import open as aiopen
 from telethon.tl.types import MessageService
@@ -52,7 +52,7 @@ async def eor(e, text=None, **args):
         if "reply_to" in args:
             del args["reply_to"]
         if edit_time:
-            await sleep(edit_time)
+            await asyncio.sleep(edit_time)
         try:
             res = await e.edit(text, **args)
         except BaseException:
@@ -60,7 +60,7 @@ async def eor(e, text=None, **args):
     else:
         res = await e.client.send_message(e.chat_id, text, **args)
     if time:
-        await sleep(time)
+        await asyncio.sleep(time)
         return await _try_delete(res)
     return res
 
@@ -106,7 +106,7 @@ async def sod(e, text=None, **args):
         args.update({"silent": True})
     res = await e.client.send_message(e.chat_id, text, **args)
     if time:
-        await sleep(time)
+        await asyncio.sleep(time)
         return await _try_delete(res)
     return res
 

@@ -7,7 +7,7 @@
 # < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
 # ================================================================
 
-from asyncio import sleep
+import asyncio
 from contextlib import suppress
 from telethon.tl.functions.channels import LeaveChannelRequest
 from . import (
@@ -57,7 +57,7 @@ async def _(kst):
     ):
         await msg.try_delete()
         total += 1
-        await sleep(0.2)
+        await asyncio.sleep(0.2)
     await rep.try_delete()
     await kst.sod(f"`Purged {total}`", time=2, silent=True)
 
@@ -75,7 +75,7 @@ async def _(kst):
 async def _(kst):
     num = kst.pattern_match.group(1)
     if not kst.out:
-        await sleep(choice((1, 2, 3)))
+        await asyncio.sleep(choice((1, 2, 3)))
     if num and not kst.is_reply:
         total = 0
         limit = int(num) if num.isdecimal() else None
@@ -120,7 +120,7 @@ async def _(kst):
     ):
         await msg.try_delete()
         total += 1
-        await sleep(0.2)
+        await asyncio.sleep(0.2)
     await kst.sod(f"`Purged {total} messages from {display_name(user)}`", time=5, silent=True)
 
 
@@ -173,7 +173,7 @@ async def _(kst):
         delay = 5 if delay and int(delay) < 5 else delay
         for _ in range(count):
             await kst.respond(msg)
-            await sleep(delay)
+            await asyncio.sleep(delay)
     except BaseException:
         pass
 

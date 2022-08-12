@@ -7,12 +7,12 @@
 # < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
 # ================================================================
 
+import asyncio
+import datetime
 import os
 import sys
-from asyncio import Lock, sleep
+import time
 from contextlib import suppress
-from datetime import datetime, timezone
-from time import perf_counter, time
 from aiofiles import open as aiopen
 from git import Repo
 from git.exc import GitCommandError, InvalidGitRepositoryError, NoSuchPathError
@@ -33,9 +33,10 @@ from . import (
     Runner,
     MAX_MESSAGE_LEN,
     Heroku,
+    HerokuStack,
 )
 
-UPDATE_LOCK = Lock()
+UPDATE_LOCK = asyncio.Lock()
 UPSTREAM_REPO = "https://github.com/kastaid/getter.git"
 UPSTREAM_BRANCH = "main"
 help_text = f"""❯ `{hl}update <now|pull>`
@@ -50,6 +51,7 @@ Force temporary update as locally.
 test_text = """
 <b>ID:</b> <code>{}</code>
 <b>Heroku App:</b> <code>{}</code>
+<b>Heroku Stack:</b> <code>{}</code>
 <b>Getter Version:</b> <code>{}</code>
 <b>Speed:</b> <code>{}ms</code>
 <b>Uptime:</b> <code>{}</code>
@@ -158,7 +160,13 @@ async def Pushing(kst, state, repo) -> None:
         heroku_conn = Heroku()
         app = heroku_conn.app(Var.HEROKU_APP_NAME)
     except Exception as err:
-        await kst.eor(f"**ERROR:**\n`{err}`")
+        if "401 client error: unauthorized" in err.lower():
+            msg = "HEROKU_API invalid or expired... Please re-check."
+        else:
+            msg = err
+        up = rf"""\\**#Getter**// **Heroku Error:**
+`{msg}`"""
+        await kst.eor(up)
         return
     """
     # migration new vars
@@ -167,8 +175,7 @@ async def Pushing(kst, state, repo) -> None:
         cfg["HEROKU_API"] = cfg["HEROKU_API_KEY"]
         del cfg["HEROKU_API_KEY"]
     """
-    info = app.info
-    if "container" not in str(info.stack):
+    if HerokuStack() != "container":
         # buildpacks = app.buildpacks()
         app.update_buildpacks(
             [
@@ -208,10 +215,9 @@ Wait for a few minutes, then run `{hl}ping` command."""
         remote.push(refspec="HEAD:refs/heads/main", force=True)
     build = app.builds(order_by="created_at", sort="desc")[0]
     if build.status != "succeeded":
-        await kst.eod(
-            rf"""\\**#Getter**// `{state}Update Failed...`
+        up = rf"""\\**#Getter**// `{state}Update Failed...`
 Try again later or view logs for more info."""
-        )
+        await kst.eod(up)
 
 
 @kasta_cmd(
@@ -255,7 +261,7 @@ async def _(kst):
             if not user_id and version == __version__:
                 return
         if is_devs:
-            await sleep(choice((5, 7, 9)))
+            await asyncio.sleep(choice((5, 7, 9)))
         msg = await kst.eor(f"`{state}Fetching...`", silent=True)
         try:
             repo = Repo()
@@ -275,7 +281,7 @@ async def _(kst):
         await Runner(f"git fetch origin {UPSTREAM_BRANCH}")
         if is_deploy:
             if is_devs:
-                await sleep(5)
+                await asyncio.sleep(5)
             await msg.eor(f"`{state}Updating ~ Please Wait...`")
             await Pushing(msg, state, repo)
             return
@@ -291,7 +297,7 @@ async def _(kst):
             await show_changelog(msg, changelog)
             return
         if is_force:
-            await sleep(3)
+            await asyncio.sleep(3)
         if is_now or is_force:
             await msg.eor(f"`{state}Updating ~ Please Wait...`")
             await Pulling(msg, state)
@@ -336,17 +342,18 @@ async def _(kst):
                 return
             clean = True
         if not clean:
-            await sleep(choice((4, 6, 8)))
-    start = perf_counter()
+            await asyncio.sleep(choice((4, 6, 8)))
+    start = time.perf_counter()
     # http://www.timebie.com/std/utc
-    utc_now = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M:%S")
-    msg = await kst.eor("`Processing...`", silent=True)
-    end = perf_counter()
+    utc_now = datetime.datetime.now(datetime.timezone.utc).strftime("%d/%m/%Y %H:%M:%S")
+    msg = await kst.eor("`Processing...`", silent=True, force_reply=True)
+    end = time.perf_counter()
     speed = end - start
-    uptime = time_formatter((time() - StartTime) * 1000)
+    uptime = time_formatter((time.time() - StartTime) * 1000)
     text = test_text.format(
         kst.client.uid,
-        Var.HEROKU_APP_NAME or "None",
+        Var.HEROKU_APP_NAME or "none",
+        HerokuStack(),
         __version__,
         round(speed, 3),
         uptime,
@@ -355,7 +362,6 @@ async def _(kst):
     await msg.eor(
         text,
         parse_mode="html",
-        force_reply=True,
         time=15 if clean else 0,
     )
 

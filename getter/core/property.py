@@ -7,9 +7,9 @@
 # < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
 # ================================================================
 
+import asyncio
 import re
 import sys
-from asyncio import sleep
 from base64 import b64decode
 from typing import Union, List, Set
 from cache import AsyncTTL
@@ -48,7 +48,7 @@ async def get_blacklisted(
         count += 1
         if not res:
             if count != attempts:
-                await sleep(1)
+                await asyncio.sleep(1)
                 continue
             ids = fallbacks
             break
