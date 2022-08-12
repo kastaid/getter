@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.9", "3.10"]
+        python-version: ['3.9', '3.10']
     steps:
       - uses: actions/checkout@v2
         with:
@@ -26,10 +26,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Cache pip
         uses: actions/cache@v2
-        if: startsWith(runner.os, "Linux")
+        if: startsWith(runner.os, 'Linux')
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles("**/requirements-dev.txt") }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements-dev.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
       - name: Install dependencies
@@ -42,12 +42,12 @@ jobs:
       - name: Beautify shell scripts
         uses: illvart/beautysh-action@latest
         with:
-          args: "*.sh --indent-size 2 &>/dev/null"
+          args: '*.sh --indent-size 2 &>/dev/null'
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "[action] ci: auto-fixes"
-          commit_options: "--no-verify"
+          commit_message: '[action] ci: auto-fixes'
+          commit_options: '--no-verify'
           commit_user_name: kastaid
           commit_user_email: kastaid@protonmail.com
           commit_author: kastaid <kastaid@protonmail.com>
