@@ -1,10 +1,4 @@
 {
-    "formation": {
-        "worker": {
-            "quantity": 1,
-            "size": "free"
-        }
-    },
     "env": {
         "API_ID": {
             "description": "Get this value from \"my.telegram.org\" at API development tools.",
@@ -37,9 +31,25 @@
             "required": true
         }
     },
+    "addons": [],
     "buildpacks": [
         {
             "url": "heroku/python"
+        },
+        {
+            "url": "https://github.com/heroku/heroku-buildpack-apt"
+        },
+        {
+            "url": "https://github.com/heroku/heroku-buildpack-google-chrome"
+        },
+        {
+            "url": "https://github.com/heroku/heroku-buildpack-chromedriver"
         }
-    ]
+    ],
+    "formation": {
+        "worker": {
+            "quantity": 1,
+            "size": "free"
+        }
+    }
 }

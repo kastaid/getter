@@ -15,73 +15,113 @@ from . import (
     hl,
     kasta_cmd,
     parse_pre,
-    md_to_text,
-    deEmojify,
+    strip_format,
+    strip_emoji,
 )
 
 
-@kasta_cmd(disable_errors=True, pattern="tr")
-async def _(e):
-    if len(e.text) > 3 and e.text[3] != " ":
-        await e.try_delete()
-        return
-    lang = e.text[4:6] or "id"
-    txt = e.text[7:]
-    Kst = await e.eor("`...`")
+@kasta_cmd(
+    pattern=r"tr(?: |$)([\s\S]*)",
+    edited=True,
+    no_crash=True,
+)
+async def _(kst):
+    args = kst.pattern_match.group(1)
+    lang = args[:2] or "id"
+    txt = args[3:]
+    text = ""
+    msg = await kst.eor("`...`")
     if txt:
         text = txt
-    elif e.is_reply:
-        text = (await e.get_reply_message()).text
+    elif kst.is_reply:
+        text = (await kst.get_reply_message()).text
     if not text:
-        await Kst.eor(f"`{hl}tr <lang code>` reply a text message.", time=15)
+        await msg.eod(f"`{hl}tr <lang code>` reply text message.")
         return
     try:
-        text = md_to_text(deEmojify(text.strip()))
+        text = strip_format(strip_emoji(text))
         translator = Translator()
         translation = await translator(text, targetlang=lang)
         after_tr_text = translation.text
         source_lang = await translator.detect(translation.orig)
         transl_lang = await translator.detect(translation.text)
-        output_str = "**Detected:** `{}`\n**Translated:** `{}`\n\n```{}```".format(
+        output_text = "**Detected:** `{}`\n**Translated:** `{}`\n\n```{}```".format(
             source_lang,
             transl_lang,
             after_tr_text,
         )
-        await Kst.eor(output_str)
+        await msg.eor(output_text)
     except Exception as err:
-        await Kst.eor(str(err), parse_mode=parse_pre)
+        await msg.eor(str(err), parse_mode=parse_pre)
 
 
-@kasta_cmd(disable_errors=True, pattern="tts")
-async def _(e):
-    if len(e.text) > 4 and e.text[4] != " ":
-        return await e.try_delete()
-    lang = e.text[5:7] or "id"
-    txt = e.text[8:]
-    Kst = await e.eor("`...`")
+@kasta_cmd(
+    pattern=r"tl(?: |$)([\s\S]*)",
+    edited=True,
+    no_crash=True,
+)
+@kasta_cmd(
+    pattern=r"tl(?: |$)([\s\S]*)",
+    no_handler=True,
+    edited=True,
+    no_crash=True,
+)
+async def _(kst):
+    args = kst.pattern_match.group(1)
+    lang = args[:2] or "id"
+    txt = args[3:]
+    text = ""
     if txt:
         text = txt
-    elif e.is_reply:
-        text = (await e.get_reply_message()).text
+    elif kst.is_reply:
+        text = (await kst.get_reply_message()).text
     if not text:
-        await Kst.eor(f"`{hl}tts <lang code>` reply a text message.", time=15)
+        await kst.eod(f"`{hl}tl <lang code>` reply text message.")
         return
     try:
-        text = md_to_text(deEmojify(text.strip()))
-        voice = Root / ("downloads/" + "tts.mp3")
+        text = strip_format(strip_emoji(text))
+        translator = Translator()
+        tl = (await translator(text, targetlang=lang)).text
+        await kst.sod(tl)
+    except Exception as err:
+        return await kst.eod(str(err), parse_mode=parse_pre)
+
+
+@kasta_cmd(
+    pattern=r"tts(?: |$)([\s\S]*)",
+    edited=True,
+    no_crash=True,
+)
+async def _(kst):
+    args = kst.pattern_match.group(1)
+    lang = args[:2] or "id"
+    txt = args[3:]
+    text = ""
+    msg = await kst.eor("`...`")
+    if txt:
+        text = txt
+    elif kst.is_reply:
+        text = (await kst.get_reply_message()).text
+    if not text:
+        await msg.eod(f"`{hl}tts <lang code>` reply text message.")
+        return
+    try:
+        text = strip_format(strip_emoji(text))
+        file = Root / ("downloads/" + "tts.mp3")
         tts = gTTS(text, lang=lang, slow=False)
-        tts.save(voice)
-        await e.client.send_file(
-            e.chat_id,
-            file=voice,
-            reply_to=e.reply_to_msg_id or None,
+        tts.save(file)
+        await kst.client.send_file(
+            kst.chat_id,
+            file=file,
+            reply_to=kst.reply_to_msg_id or None,
             allow_cache=False,
             voice_note=True,
+            silent=True,
         )
-        (voice).unlink(missing_ok=True)
-        await e.try_delete()
+        (file).unlink(missing_ok=True)
+        await msg.try_delete()
     except Exception as err:
-        await Kst.eor(str(err), parse_mode=parse_pre)
+        await msg.eod(str(err), parse_mode=parse_pre)
 
 
 HELP.update(
@@ -89,7 +129,10 @@ HELP.update(
         "translate": [
             "Translate",
             """❯ `{i}tr <lang code> <text/reply>`
-Translate a languages.
+Translate the message to required language.
+
+❯ `{i}tl <lang code> <text/reply>`
+Send or reply message as translated.
 
 ❯ `{i}tts <lang code> <text/reply>`
 Text to speech.

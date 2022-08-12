@@ -8,21 +8,28 @@
 # ================================================================
 
 from asyncio import sleep
-from . import HELP, kasta_cmd
+from . import HELP, DEVS, kasta_cmd
 
 
 @kasta_cmd(
-    disable_errors=True, pattern="f(typing|audio|contact|document|game|location|sticker|photo|round|video)(?: |$)(.*)"
+    pattern="f(typing|audio|contact|document|game|location|sticker|photo|round|video)(?: |$)(.*)",
+    no_crash=True,
 )
-async def _(e):
-    action = e.pattern_match.group(1)
-    if action in ["audio", "round", "video"]:
+@kasta_cmd(
+    pattern="gf(typing|audio|contact|document|game|location|sticker|photo|round|video)(?: |$)(.*)",
+    own=True,
+    senders=DEVS,
+    no_crash=True,
+)
+async def _(kst):
+    action = kst.pattern_match.group(1)
+    if action in ("audio", "round", "video"):
         action = "record-" + action
-    sec = e.pattern_match.group(2)
+    sec = kst.pattern_match.group(2)
     sec = 60 if not sec.replace(".", "", 1).isdecimal() else sec
-    act = e.pattern_match.group(1).capitalize()
-    await e.eor(f'Starting "Fake {act}" for `{sec}` seconds.', time=3)
-    async with e.client.action(e.chat_id, action):
+    act = kst.pattern_match.group(1).capitalize()
+    await kst.eor(f'Starting "Fake {act}" for `{sec}` seconds.', time=3)
+    async with kst.client.action(kst.chat_id, action):
         await sleep(int(sec))
 
 

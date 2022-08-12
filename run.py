@@ -8,10 +8,10 @@
 # ================================================================
 
 import argparse
+import shlex
 import sys
 from contextlib import suppress
 from pathlib import Path
-from shlex import split
 from subprocess import run
 from version import __version__
 
@@ -27,7 +27,7 @@ nocache = f"{python} -B"
 app = f"{python} -m getter"
 app_watch = f"{python} -m scripts.autoreload {app}"
 
-black = "brunette --config=setup.cfg ."
+black = "black --line-length 120 --exclude version.py ."
 isort = "isort --settings-file=setup.cfg ."
 flake8 = "flake8 --config=setup.cfg ."
 prettyjson = f"{nocache} -m scripts.prettyjson"
@@ -35,7 +35,7 @@ prettyjson = f"{nocache} -m scripts.prettyjson"
 
 def run_command(cmd) -> None:
     try:
-        proc = run(split(cmd), shell=False)
+        proc = run(shlex.split(cmd), shell=False)
         if proc.returncode != 0:
             print(f"Exit code {proc.returncode}")
             sys.exit(1)
@@ -52,14 +52,14 @@ def clean() -> None:
 
 
 def lint() -> None:
-    print(f"{CYAN}> {black}{RST}")
-    run_command(black)
-    print(f"{CYAN}> {isort}{RST}")
-    run_command(isort)
-    print(f"{CYAN}> {flake8}{RST}")
-    run_command(flake8)
-    print(f"{CYAN}> {prettyjson}{RST}")
+    print(f"{CYAN}>> {prettyjson}{RST}")
     run_command(prettyjson)
+    print(f"{CYAN}>> {black}{RST}")
+    run_command(black)
+    print(f"{CYAN}>> {isort}{RST}")
+    run_command(isort)
+    print(f"{CYAN}>> {flake8}{RST}")
+    run_command(flake8)
 
 
 class CapitalisedHelpFormatter(argparse.HelpFormatter):
@@ -82,40 +82,49 @@ parser.add_argument("-d", "--dev", help="run in development mode", action="store
 parser.add_argument("-w", "--watch", help="run and watch in development mode", action="store_true")
 parser.add_argument("-l", "--lint", help="run linting and format code", action="store_true")
 parser.add_argument("-c", "--clean", help="remove python caches", action="store_true")
-parser.add_argument("-v", "--version", help="show this program version", action="version", version=__version__)
-parser.add_argument("-h", "--help", help="show this help information", default=argparse.SUPPRESS, action="help")
+parser.add_argument(
+    "-v",
+    "--version",
+    help="show this program version",
+    action="version",
+    version=__version__,
+)
+parser.add_argument(
+    "-h",
+    "--help",
+    help="show this help information",
+    default=argparse.SUPPRESS,
+    action="help",
+)
 
 
 def main() -> None:
     args = parser.parse_args()
     if args.prod:
-        print(f"{BOLD}{GREEN}[ PRODUCTION MODE ]{RST}")
+        print(f"{BOLD}{GREEN}PRODUCTION MODE...{RST}")
         clean()
-        print(f"{BOLD}{BLUE}> {app}{RST}")
+        print(f"{BOLD}{BLUE}>> {app}{RST}")
         run_command(app)
     elif args.dev:
-        print(f"{BOLD}{GREEN}[ DEVELOPMENT MODE ]{RST}")
+        print(f"{BOLD}{GREEN}DEVELOPMENT MODE...{RST}")
         clean()
         lint()
-        print(f"{BOLD}{BLUE}> {app}{RST}")
+        print(f"{BOLD}{BLUE}>> {app}{RST}")
         run_command(app)
     elif args.watch:
-        print(f"{BOLD}{GREEN}[ WATCHED DEVELOPMENT MODE ]{RST}")
+        print(f"{BOLD}{GREEN}WATCHED DEVELOPMENT MODE...{RST}")
         clean()
-        print(f"{BOLD}{BLUE}> {app_watch}{RST}")
+        print(f"{BOLD}{BLUE}>> {app_watch}{RST}")
         run_command(app_watch)
     elif args.lint:
         print(f"{BOLD}{YELLOW}Run linting and format code...{RST}")
         clean()
         lint()
-        sys.exit(0)
     elif args.clean:
         clean()
-        sys.exit(0)
     else:
         print(f"{python} -m run --help")
-        sys.exit(0)
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()

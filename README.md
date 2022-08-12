@@ -4,6 +4,7 @@
 
 <p align="center">
     <a href="https://github.com/kastaid/getter/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/workflow/status/kastaid/getter/CI?logo=github&label=CI" /></a>
+    <a href="https://www.codefactor.io/repository/github/kastaid/getter"><img alt="CodeFactor" src="https://www.codefactor.io/repository/github/kastaid/getter/badge" /></a>
     <a href="https://app.codacy.com/gh/kastaid/getter/dashboard"><img alt="Codacy grade" src="https://img.shields.io/codacy/grade/2f86ed8f8534424c8d4cdaa197dc5ce2?logo=codacy" /></a>
     <a href="https://github.com/kastaid/getter/blob/main/LICENSE"><img alt="LICENSE" src="https://img.shields.io/github/license/kastaid/getter" /></a>
     <a href="https://telegram.me/kastaid"><img alt="Telegram" src="https://img.shields.io/badge/kastaid-blue?logo=telegram" /></a>
@@ -58,7 +59,7 @@
 
 ### STRING_SESSION
 
-Generate `STRING_SESSION` using [@strgen_bot](https://telegram.me/strgen_bot) or [replit](https://replit.com/@notudope/strgen) or run locally `python3 session.py`
+Generate `STRING_SESSION` using [@strgen_bot](https://telegram.me/strgen_bot) or [replit](https://replit.com/@notudope/strgen) or run locally `python3 strgen.py`
 
 ### Deploy
 
@@ -100,7 +101,7 @@ async def hello_world_example(event):
 <kbd>This Example Works Only In Personal Chats.</kbd>
 ```python
 from . import kasta_cmd
-@kasta_cmd(pattern="hi", func=lambda x: x.is_private)
+@kasta_cmd(pattern="hi", func=lambda e: e.is_private)
 async def hello_world_example(event):
     await event.eor("Hello **World**.")
 ```
@@ -108,7 +109,7 @@ async def hello_world_example(event):
 <kbd>This Example Works Only In Channels.</kbd>
 ```python
 from . import kasta_cmd
-@kasta_cmd(pattern="hi", func=lambda x: x.is_channel and x.chat.broadcast)
+@kasta_cmd(pattern="hi", func=lambda e: e.is_channel and e.chat.broadcast)
 async def hello_world_example(event):
     await event.eor("Hello **World**.")
 ```
@@ -116,7 +117,7 @@ async def hello_world_example(event):
 <kbd>This Example Works Only In Groups.</kbd>
 ```python
 from . import kasta_cmd
-@kasta_cmd(pattern="hi", func=lambda x: x.is_group)
+@kasta_cmd(pattern="hi", func=lambda e: e.is_group)
 async def hello_world_example(event):
     await event.eor("Hello **World**.")
 ```
@@ -124,7 +125,7 @@ async def hello_world_example(event):
 <kbd>This Example Works Only In Groups or Channels.</kbd>
 ```python
 from . import kasta_cmd
-@kasta_cmd(pattern="hi", func=lambda x: not x.is_private)
+@kasta_cmd(pattern="hi", func=lambda e: not e.is_private)
 async def hello_world_example(event):
     await event.eor("Hello **World**.")
 ```

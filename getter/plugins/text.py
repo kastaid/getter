@@ -7,10 +7,13 @@
 # < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
 # ================================================================
 
+import binascii
+import re
+import sys
 from base64 import b64encode, b64decode
-from binascii import Error as AsciiError
-from re import sub, findall
+import aiohttp
 from . import (
+    __version__ as getterver,
     HELP,
     kasta_cmd,
     parse_pre,
@@ -19,20 +22,20 @@ from . import (
 
 
 def camel(s: str) -> str:
-    s = sub(r"(_|-)+", " ", s).title().replace(" ", "")
+    s = re.sub(r"(_|-)+", " ", s).title().replace(" ", "")
     return "".join([s[0].lower(), s[1:]])
 
 
 def snake(s: str) -> str:
-    return "_".join(sub("([A-Z][a-z]+)", r" \1", sub("([A-Z]+)", r" \1", s.replace("-", " "))).split()).lower()
+    return "_".join(re.sub("([A-Z][a-z]+)", r" \1", re.sub("([A-Z]+)", r" \1", s.replace("-", " "))).split()).lower()
 
 
 def kebab(s: str) -> str:
     return "-".join(
-        sub(
+        re.sub(
             r"(\s|_|-)+",
             " ",
-            sub(
+            re.sub(
                 r"[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+",
                 lambda mo: " " + mo.group(0).lower(),
                 s,
@@ -41,182 +44,282 @@ def kebab(s: str) -> str:
     )
 
 
-@kasta_cmd(disable_errors=True, pattern="noformat$")
-async def _noformat(e):
-    rep = await e.get_reply_message()
-    if not e.is_reply or not (hasattr(rep, "text") and rep.text):
-        return await e.try_delete()
-    await e.eor(rep.text, parse_mode=parse_pre)
+@kasta_cmd(
+    pattern="noformat$",
+    func=lambda e: e.is_reply,
+    no_crash=True,
+)
+async def noformat_(kst):
+    rep = await kst.get_reply_message()
+    if not (hasattr(rep, "text") and rep.text):
+        return await kst.try_delete()
+    text = rep.text
+    await kst.eor(text, parse_mode=parse_pre)
 
 
-@kasta_cmd(disable_errors=True, pattern="nospace$")
-async def _nospace(e):
-    rep = await e.get_reply_message()
-    if not e.is_reply or not (hasattr(rep, "text") and rep.text):
-        return await e.try_delete()
-    await e.eor("".join(rep.text.split()))
+@kasta_cmd(
+    pattern="nospace$",
+    func=lambda e: e.is_reply,
+    no_crash=True,
+)
+async def nospace_(kst):
+    rep = await kst.get_reply_message()
+    if not (hasattr(rep, "text") and rep.text):
+        return await kst.try_delete()
+    text = "".join(rep.text.split())
+    await kst.eor(text)
 
 
-@kasta_cmd(disable_errors=True, pattern="repeat(?: |$)(.*)")
-async def _repeat(e):
-    count = e.pattern_match.group(1)
-    rep = await e.get_reply_message()
-    if not e.is_reply or not (hasattr(rep, "text") and rep.text):
-        return await e.try_delete()
+@kasta_cmd(
+    pattern="repeat(?: |$)(.*)",
+    func=lambda e: e.is_reply,
+    no_crash=True,
+)
+async def repeat_(kst):
+    count = kst.pattern_match.group(1)
+    rep = await kst.get_reply_message()
+    if not (hasattr(rep, "text") and rep.text):
+        return await kst.try_delete()
     count = int(count) if count.isdecimal() else 1
     txt = rep.text
     text = txt + "\n"
     for _ in range(0, count - 1):
         text += txt + "\n"
-    await e.eor(text)
+    await kst.eor(text)
 
 
-@kasta_cmd(disable_errors=True, pattern=r"count(?:\s|$)([\s\S]*)")
-async def _count(e):
-    Kst = e.pattern_match.group(1)
-    if not Kst and e.is_reply:
-        Kst = (await e.get_reply_message()).text
-    if not Kst:
-        return await e.try_delete()
-    count = len(findall(r"(\S+)", Kst))
+@kasta_cmd(
+    pattern=r"count(?: |$)([\s\S]*)",
+    no_crash=True,
+)
+async def count_(kst):
+    match = kst.pattern_match.group(1)
+    if match and not kst.is_reply:
+        text = match
+    elif not match and kst.is_reply:
+        text = (await kst.get_reply_message()).text
+    else:
+        return await kst.try_delete()
+    count = len(re.findall(r"(\S+)", text))
     text = f"**Count:** `{count}`"
-    await e.eor(text)
+    await kst.eor(text)
 
 
-@kasta_cmd(disable_errors=True, pattern=r"upper(?:\s|$)([\s\S]*)")
-async def _upper(e):
-    Kst = e.pattern_match.group(1)
-    if not Kst and e.is_reply:
-        Kst = (await e.get_reply_message()).text
-    if not Kst:
-        return await e.try_delete()
-    text = Kst.upper()
-    await e.eor(text)
+@kasta_cmd(
+    pattern=r"upper(?: |$)([\s\S]*)",
+    no_crash=True,
+)
+async def upper_(kst):
+    match = kst.pattern_match.group(1)
+    if match and not kst.is_reply:
+        text = kst.text.split(" ", maxsplit=1)[1]
+    elif not match and kst.is_reply:
+        text = (await kst.get_reply_message()).text
+    else:
+        return await kst.try_delete()
+    text = text.upper()
+    await kst.eor(text)
 
 
-@kasta_cmd(disable_errors=True, pattern=r"lower(?:\s|$)([\s\S]*)")
-async def _lower(e):
-    Kst = e.pattern_match.group(1)
-    if not Kst and e.is_reply:
-        Kst = (await e.get_reply_message()).text
-    if not Kst:
-        return await e.try_delete()
-    text = Kst.lower()
-    await e.eor(text)
+@kasta_cmd(
+    pattern=r"lower(?: |$)([\s\S]*)",
+    no_crash=True,
+)
+async def lower_(kst):
+    match = kst.pattern_match.group(1)
+    if match and not kst.is_reply:
+        text = kst.text.split(" ", maxsplit=1)[1]
+    elif not match and kst.is_reply:
+        text = (await kst.get_reply_message()).text
+    else:
+        return await kst.try_delete()
+    text = text.lower()
+    await kst.eor(text)
 
 
-@kasta_cmd(disable_errors=True, pattern=r"title(?:\s|$)([\s\S]*)")
-async def _title(e):
-    Kst = e.pattern_match.group(1)
-    if not Kst and e.is_reply:
-        Kst = (await e.get_reply_message()).text
-    if not Kst:
-        return await e.try_delete()
-    text = Kst.title()
-    await e.eor(text)
+@kasta_cmd(
+    pattern=r"title(?: |$)([\s\S]*)",
+    no_crash=True,
+)
+async def title_(kst):
+    match = kst.pattern_match.group(1)
+    if match and not kst.is_reply:
+        text = kst.text.split(" ", maxsplit=1)[1]
+    elif not match and kst.is_reply:
+        text = (await kst.get_reply_message()).text
+    else:
+        return await kst.try_delete()
+    text = text.title()
+    await kst.eor(text)
 
 
-@kasta_cmd(disable_errors=True, pattern=r"capital(?:\s|$)([\s\S]*)")
-async def _capital(e):
-    Kst = e.pattern_match.group(1)
-    if not Kst and e.is_reply:
-        Kst = (await e.get_reply_message()).text
-    if not Kst:
-        return await e.try_delete()
-    text = Kst.capitalize()
-    await e.eor(text)
+@kasta_cmd(
+    pattern=r"capital(?: |$)([\s\S]*)",
+    no_crash=True,
+)
+async def capital_(kst):
+    match = kst.pattern_match.group(1)
+    if match and not kst.is_reply:
+        text = kst.text.split(" ", maxsplit=1)[1]
+    elif not match and kst.is_reply:
+        text = (await kst.get_reply_message()).text
+    else:
+        return await kst.try_delete()
+    text = text.capitalize()
+    await kst.eor(text)
 
 
-@kasta_cmd(disable_errors=True, pattern=r"camel(?:\s|$)([\s\S]*)")
-async def _camel(e):
-    Kst = e.pattern_match.group(1)
-    if not Kst and e.is_reply:
-        Kst = (await e.get_reply_message()).text
-    if not Kst:
-        return await e.try_delete()
-    text = camel(Kst)
-    await e.eor(text)
+@kasta_cmd(
+    pattern=r"camel(?: |$)([\s\S]*)",
+    no_crash=True,
+)
+async def camel_(kst):
+    match = kst.pattern_match.group(1)
+    if match and not kst.is_reply:
+        text = kst.text.split(" ", maxsplit=1)[1]
+    elif not match and kst.is_reply:
+        text = (await kst.get_reply_message()).text
+    else:
+        return await kst.try_delete()
+    text = camel(text)
+    await kst.eor(text)
 
 
-@kasta_cmd(disable_errors=True, pattern=r"snake(?:\s|$)([\s\S]*)")
-async def _snake(e):
-    Kst = e.pattern_match.group(1)
-    if not Kst and e.is_reply:
-        Kst = (await e.get_reply_message()).text
-    if not Kst:
-        return await e.try_delete()
-    text = snake(Kst)
-    await e.eor(text)
+@kasta_cmd(
+    pattern=r"snake(?: |$)([\s\S]*)",
+    no_crash=True,
+)
+async def snake_(kst):
+    match = kst.pattern_match.group(1)
+    if match and not kst.is_reply:
+        text = kst.text.split(" ", maxsplit=1)[1]
+    elif not match and kst.is_reply:
+        text = (await kst.get_reply_message()).text
+    else:
+        return await kst.try_delete()
+    text = snake(text)
+    await kst.eor(text)
 
 
-@kasta_cmd(disable_errors=True, pattern=r"kebab(?:\s|$)([\s\S]*)")
-async def _kebab(e):
-    Kst = e.pattern_match.group(1)
-    if not Kst and e.is_reply:
-        Kst = (await e.get_reply_message()).text
-    if not Kst:
-        return await e.try_delete()
-    text = kebab(Kst)
-    await e.eor(text)
+@kasta_cmd(
+    pattern=r"kebab(?: |$)([\s\S]*)",
+    no_crash=True,
+)
+async def kebab_(kst):
+    match = kst.pattern_match.group(1)
+    if match and not kst.is_reply:
+        text = kst.text.split(" ", maxsplit=1)[1]
+    elif not match and kst.is_reply:
+        text = (await kst.get_reply_message()).text
+    else:
+        return await kst.try_delete()
+    text = kebab(text)
+    await kst.eor(text)
 
 
-@kasta_cmd(disable_errors=True, pattern="(b64encode|b64e)(?: |$)(.*)")
-async def _b64encode(e):
-    Kst = e.pattern_match.group(2)
-    if not Kst and e.is_reply:
-        Kst = (await e.get_reply_message()).text
-    if not Kst:
-        return await e.try_delete()
-    text = b64encode(Kst.encode("utf-8")).decode()
-    await e.eor(text, parse_mode=parse_pre)
+@kasta_cmd(
+    pattern=r"spoiler(?: |$)([\s\S]*)",
+    no_crash=True,
+)
+async def spoiler_(kst):
+    match = kst.pattern_match.group(1)
+    if match and not kst.is_reply:
+        text = kst.text.split(" ", maxsplit=1)[1]
+    elif not match and kst.is_reply:
+        text = (await kst.get_reply_message()).text
+    else:
+        return await kst.try_delete()
+    text = f"||{text}||"
+    await kst.eor(text)
 
 
-@kasta_cmd(disable_errors=True, pattern="(b64decode|b64d)(?: |$)(.*)")
-async def _b64decode(e):
-    Kst = e.pattern_match.group(2)
-    if not Kst and e.is_reply:
-        Kst = (await e.get_reply_message()).text
-    if not Kst:
-        return await e.try_delete()
+@kasta_cmd(
+    pattern="(b64encode|b64e)(?: |$)(.*)",
+    no_crash=True,
+)
+async def b64encode_(kst):
+    match = kst.pattern_match.group(2)
+    if match and not kst.is_reply:
+        text = kst.text.split(" ", maxsplit=1)[1]
+    elif not match and kst.is_reply:
+        text = (await kst.get_reply_message()).text
+    else:
+        return await kst.try_delete()
+    text = b64encode(text.encode("utf-8")).decode()
+    await kst.eor(text, parse_mode=parse_pre)
+
+
+@kasta_cmd(
+    pattern="(b64decode|b64d)(?: |$)(.*)",
+    no_crash=True,
+)
+async def b64decode_(kst):
+    match = kst.pattern_match.group(2)
+    if match and not kst.is_reply:
+        text = kst.text.split(" ", maxsplit=1)[1]
+    elif not match and kst.is_reply:
+        text = (await kst.get_reply_message()).text
+    else:
+        return await kst.try_delete()
     try:
-        text = b64decode(Kst).decode("utf-8", "replace")
-    except AsciiError as err:
+        text = b64decode(text).decode("utf-8", "replace")
+    except binascii.Error as err:
         text = f"Invalid Base64 data: {err}"
-    await e.eor(text, parse_mode=parse_pre)
+    await kst.eor(text, parse_mode=parse_pre)
 
 
-@kasta_cmd(disable_errors=True, pattern="(morse|unmorse)(?: |$)(.*)")
-async def _morse(e):
-    cmd = e.pattern_match.group(1)
-    Kst = e.pattern_match.group(2)
-    if not Kst and e.is_reply:
-        Kst = (await e.get_reply_message()).text
-    if not Kst:
-        return await e.try_delete()
-    _ = "en" if cmd == "morse" else "de"
-    msg = await e.eor("`...`")
-    base_url = f"https://notapi.vercel.app/api/morse?{_}={Kst}"
-    text = await Searcher(base_url, re_json=True)
-    if not text:
+@kasta_cmd(
+    pattern="(morse|unmorse)(?: |$)(.*)",
+    no_crash=True,
+)
+async def morse_(kst):
+    cmd = kst.pattern_match.group(1)
+    match = kst.pattern_match.group(2)
+    if match and not kst.is_reply:
+        text = kst.text.split(" ", maxsplit=1)[1]
+    elif not match and kst.is_reply:
+        text = (await kst.get_reply_message()).text
+    else:
+        return await kst.try_delete()
+    api = "en" if cmd == "morse" else "de"
+    msg = await kst.eor("`...`")
+    headers = {
+        "User-Agent": "Python/{0[0]}.{0[1]} aiohttp/{1} getter/{2}".format(
+            sys.version_info, aiohttp.__version__, getterver
+        )
+    }
+    url = f"https://notapi.vercel.app/api/morse?{api}={text}"
+    res = await Searcher(url=url, headers=headers, re_json=True)
+    if not res:
         return await msg.eod("`Try again now!`")
-    await msg.eor(text.get("result"))
+    await msg.eor(res.get("result"))
 
 
-@kasta_cmd(disable_errors=True, pattern="(roman|unroman)(?: |$)(.*)")
-async def _roman(e):
-    cmd = e.pattern_match.group(1)
-    Kst = e.pattern_match.group(2)
-    if not Kst and e.is_reply:
-        Kst = (await e.get_reply_message()).text
-    if not Kst:
-        return await e.try_delete()
-    _ = "en" if cmd == "roman" else "de"
-    msg = await e.eor("`...`")
-    base_url = f"https://notapi.vercel.app/api/romans?{_}={Kst}"
-    text = await Searcher(base_url, re_json=True)
-    if not text:
+@kasta_cmd(
+    pattern="(roman|unroman)(?: |$)(.*)",
+    no_crash=True,
+)
+async def roman_(kst):
+    cmd = kst.pattern_match.group(1)
+    match = kst.pattern_match.group(2)
+    if match and not kst.is_reply:
+        text = kst.text.split(" ", maxsplit=1)[1]
+    elif not match and kst.is_reply:
+        text = (await kst.get_reply_message()).text
+    else:
+        return await kst.try_delete()
+    api = "en" if cmd == "roman" else "de"
+    msg = await kst.eor("`...`")
+    headers = {
+        "User-Agent": "Python/{0[0]}.{0[1]} aiohttp/{1} getter/{2}".format(
+            sys.version_info, aiohttp.__version__, getterver
+        )
+    }
+    url = f"https://notapi.vercel.app/api/romans?{api}={text}"
+    res = await Searcher(url=url, headers=headers, re_json=True)
+    if not res:
         return await msg.eod("`Try again now!`")
-    await msg.eor(text.get("result"))
+    await msg.eor(res.get("result"))
 
 
 HELP.update(
@@ -256,6 +359,9 @@ Convert text to snake case.
 ❯ `{i}kebab <text/reply>`
 Convert text to kebab case.
 
+❯ `{i}spoiler <text/reply>`
+Create a spoiler message.
+
 ❯ `{i}b64encode|{i}b64e <text/reply>`
 Encode text into Base64.
 
@@ -269,7 +375,7 @@ Encode text into Morse code.
 Decode Morse code.
 
 ❯ `{i}roman <text/reply>`
-Convert an number to roman numeral.
+Convert any number less than 4000 to roman numerals.
 
 ❯ `{i}unroman <text/reply>`
 Convert roman numeral to number.

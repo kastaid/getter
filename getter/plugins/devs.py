@@ -7,177 +7,580 @@
 # < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
 # ================================================================
 
+import html
+import json
+import os
 import sys
+import time
 from asyncio import sleep
 from contextlib import suppress
 from io import BytesIO
-from os import (
-    close,
-    execl,
-    name,
-    system,
-    getpid,
-)
-from secrets import choice
-from time import time
-import psutil as psu
-from heroku3 import from_key
+from pathlib import Path
+from aiofiles import open as aiopen
 from telethon import functions
 from . import (
+    choice,
     StartTime,
     Root,
     Var,
     DEVS,
     HELP,
-    hl,
-    eor,
     kasta_cmd,
-    parse_pre,
+    strip_format,
+    humanbytes,
     time_formatter,
+    get_doc_mime,
+    Runner,
+    Carbon,
+    MAX_MESSAGE_LEN,
+    CARBON_PRESETS,
+    DEFAULT_SHELL_BLACKLIST,
+    get_blacklisted,
+    Heroku,
 )
 
 
-async def heroku_logs(e):
-    if not Var.HEROKU_API:
-        await e.eor("Please set `HEROKU_API` in Config Vars.")
-        return
-    if not Var.HEROKU_APP_NAME:
-        await e.eor("Please set `HEROKU_APP_NAME` in Config Vars.")
-        return
-    try:
-        heroku_conn = from_key(Var.HEROKU_API)
-        app = heroku_conn.apps()[Var.HEROKU_APP_NAME]
-    except Exception as err:
-        await e.eor(f"**ERROR**\n`{err}`")
-        return
-    await e.eor("`Downloading Logs...`")
-    logs = app.get_log()
-    with open("app-heroku.log", "w") as f:
-        f.write(logs)
-    await e.client.send_file(
-        e.chat_id,
-        file="app-heroku.log",
-        caption="Heroku Logs",
-        force_document=True,
-        allow_cache=False,
-    )
-    (Root / "app-heroku.log").unlink(missing_ok=True)
-    await e.try_delete()
+@kasta_cmd(
+    pattern="dea(c|k)$",
+)
+async def _(kst):
+    msg = "**[Delete Telegram Account](https://telegram.org/deactivate)**"
+    await kst.sod(msg)
 
 
-def restart_app():
-    with suppress(psu.NoSuchProcess, psu.AccessDenied, psu.ZombieProcess):
-        c_p = psu.Process(getpid())
-        [close(h.fd) for h in c_p.open_files() + c_p.connections()]
-    execl(sys.executable, sys.executable, "-m", "getter")
-    return
-
-
-@kasta_cmd(pattern="dea(c|k)$")
-async def _(e):
-    Kst = "[Delete Telegram Account](https://telegram.org/deactivate)"
-    await e.eor(Kst)
-
-
-@kasta_cmd(pattern="dc$")
-async def _(e):
-    result = await e.client(functions.help.GetNearestDcRequest())
-    await e.eor(
-        f"**Country:** `{result.country}`\n"
-        f"**Nearest Datacenter:** `{result.nearest_dc}`\n"
-        f"**This Datacenter:** `{result.this_dc}`"
+@kasta_cmd(
+    pattern="dc$",
+)
+async def _(kst):
+    res = await kst.client(functions.help.GetNearestDcRequest())
+    await kst.eor(
+        f"**Country:** `{res.country}`\n"
+        f"**Nearest Datacenter:** `{res.nearest_dc}`\n"
+        f"**This Datacenter:** `{res.this_dc}`",
     )
 
 
-@kasta_cmd(disable_errors=True, pattern="ping|([pP]ing)$")
-async def _(e):
-    if hasattr(e, "text") and e.text.lower() not in [f"{hl}ping", "ping"]:
-        return
-    start = time()
-    Kst = await eor(e, "Ping !")
-    end = round((time() - start) * 1000)
-    uptime = time_formatter((time() - StartTime) * 1000)
-    await eor(
-        Kst,
-        f"🏓 Pong !!\n<b>Speed</b> - <code>{end}ms</code>\n<b>Uptime</b> - <code>{uptime}</code>",
+@kasta_cmd(
+    pattern="ping$|([p]ing)$",
+    ignore_case=True,
+    edited=True,
+    no_crash=True,
+)
+async def _(kst):
+    start = time.perf_counter()
+    msg = await kst.eor("Ping !")
+    end = time.perf_counter()
+    speed = end - start
+    uptime = time_formatter((time.time() - StartTime) * 1000)
+    await msg.eor(
+        f"🏓 Pong !!\n<b>Speed</b> - <code>{round(speed, 3)}ms</code>\n<b>Uptime</b> - <code>{uptime}</code>",
         parse_mode="html",
     )
 
 
-@kasta_cmd(disable_errors=True, pattern="logs?(?: |$)(heroku|hk|h)?")
-@kasta_cmd(disable_errors=True, own=True, senders=DEVS, pattern="glogs?(?: |$)(heroku|hk|h)?(?: |$)(.*)")
-async def _(e):
-    is_devs = True if not (hasattr(e, "out") and e.out) else False
-    mode = e.pattern_match.group(1)
+@kasta_cmd(
+    pattern="logs?(?: |$)(heroku|hk|h|carbon|open)?",
+    no_crash=True,
+)
+@kasta_cmd(
+    pattern="glogs?(?: |$)(heroku|hk|h|carbon|open)?(?: |$)(.*)",
+    no_crash=True,
+    own=True,
+    senders=DEVS,
+)
+async def _(kst):
+    is_devs = True if not kst.out else False
+    mode = kst.pattern_match.group(1)
     if is_devs:
-        opt = e.pattern_match.group(2)
+        opt = kst.pattern_match.group(2)
         user_id = None
         try:
             user_id = int(opt)
         except ValueError:
             pass
-        if user_id and user_id != e.client.uid:
+        if user_id and user_id != kst.client.uid:
             return
         await sleep(choice((4, 6, 8)))
-    with suppress(BaseException):
-        Kst = await e.eor("`Getting...`", silent=True)
-        if mode in ["heroku", "hk", "h"]:
-            await heroku_logs(Kst)
-        else:
-            await Kst.reply("Terminal Logs", file="app.log", silent=True)
-            await Kst.try_delete()
-
-
-@kasta_cmd(disable_errors=True, pattern="restart$")
-@kasta_cmd(disable_errors=True, own=True, senders=DEVS, pattern="grestart(?: |$)(.*)")
-async def _(e):
-    is_devs = True if not (hasattr(e, "out") and e.out) else False
-    if is_devs:
-        opt = e.pattern_match.group(1)
-        user_id = None
-        try:
-            user_id = int(opt)
-        except ValueError:
-            pass
-        if user_id and user_id != e.client.uid:
-            return
-        await sleep(choice((4, 6, 8)))
-    Kst = await e.eor("`Restarting...`")
-    if name == "posix":
-        _ = system("clear")
-    await sleep(1)
-    await Kst.eor("`Restarting the app, please wait for a minute!`")
-    if not (Var.HEROKU_API and Var.HEROKU_APP_NAME):
-        return restart_app()
-    try:
-        heroku_conn = from_key(Var.HEROKU_API)
-        app = heroku_conn.apps()[Var.HEROKU_APP_NAME]
-        app.restart()
-    except Exception as err:
-        msg = await Kst.eor(f"**ERROR**\n`{err}`")
-        await msg.reply("`Restarting as locally...`", silent=True)
-        return restart_app()
-
-
-@kasta_cmd(disable_errors=True, pattern="json$")
-async def _(e):
-    with suppress(BaseException):
-        chat_id = e.chat_id or e.from_id
-        Kst = (await e.get_reply_message()).stringify() if e.reply_to_msg_id else e.stringify()
-        reply_to = e.reply_to_msg_id if e.reply_to_msg_id else e.id
-        if len(Kst) > 4096:
-            with BytesIO(str.encode(Kst)) as file:
-                file.name = "json_output.txt"
-                await e.client.send_file(
-                    chat_id,
-                    file=file,
+    msg = await kst.eor("`Getting...`", silent=True)
+    if mode in ("heroku", "hk", "h"):
+        return await heroku_logs(msg)
+    else:
+        await sleep(3)
+        await msg.try_delete()
+    if mode == "carbon":
+        code = logs = ""
+        theme, backgroundColor = choice(CARBON_PRESETS)
+        for file in get_terminal_logs():
+            async with aiopen(file, mode="r") as f:
+                code = await f.read()
+            if not code:
+                continue
+            logs = await Carbon(
+                file_name="carbon-getter-log",
+                download=True,
+                code=code.strip()[-2500:],
+                fontFamily="Hack",
+                theme=theme,
+                backgroundColor=backgroundColor,
+                dropShadow=True,
+            )
+            if not logs:
+                continue
+            with suppress(BaseException):
+                await kst.client.send_file(
+                    kst.chat_id,
+                    file=logs,
+                    caption=r"\\**#Getter**// `Carbon Terminal Logs`",
                     force_document=True,
                     allow_cache=False,
-                    reply_to=reply_to,
+                    silent=True,
                 )
-            await e.try_delete()
+                await sleep(3)
+            (Root / logs).unlink(missing_ok=True)
+    elif mode == "open":
+        logs = ""
+        for file in get_terminal_logs():
+            async with aiopen(file, mode="r") as f:
+                logs = await f.read()
+            if not logs:
+                continue
+            await msg.sod(f"`{logs}`")
+            await sleep(3)
+    else:
+        with suppress(BaseException):
+            for file in get_terminal_logs():
+                await kst.client.send_file(
+                    kst.chat_id,
+                    file=file,
+                    caption=r"\\**#Getter**// `Terminal Logs`",
+                    force_document=True,
+                    allow_cache=False,
+                    silent=True,
+                )
+                await sleep(3)
+
+
+@kasta_cmd(
+    pattern="restart$",
+    no_crash=True,
+)
+@kasta_cmd(
+    pattern="grestart(?: |$)(.*)",
+    no_crash=True,
+    own=True,
+    senders=DEVS,
+)
+async def _(kst):
+    is_devs = True if not kst.out else False
+    if is_devs:
+        opt = kst.pattern_match.group(1)
+        user_id = None
+        try:
+            user_id = int(opt)
+        except ValueError:
+            pass
+        if user_id and user_id != kst.client.uid:
+            return
+        await sleep(choice((4, 6, 8)))
+    msg = await kst.eor("`Restarting...`", silent=True)
+    os.system("clear")
+    await sleep(1)
+    await msg.eor(r"\\**#Getter**// `Restarting... Wait for a few minutes.`")
+    if not (Var.HEROKU_API and Var.HEROKU_APP_NAME):
+        await restart_app()
+        return
+    try:
+        heroku_conn = Heroku()
+        app = heroku_conn.app(Var.HEROKU_APP_NAME)
+        app.restart()
+    except Exception as err:
+        rep = await msg.eor(f"**ERROR:**\n`{err}`")
+        await rep.reply(r"\\**#Getter**// `Restarting as locally...`", silent=True)
+        await restart_app()
+
+
+@kasta_cmd(
+    pattern="sleep(?: |$)(.*)",
+    no_crash=True,
+)
+async def _(kst):
+    sec = kst.pattern_match.group(1)
+    counter = int(sec) if sec.replace(".", "", 1).isdecimal() else 5
+    counter = 5 if counter > 50 else counter
+    await kst.eor("`Sleep...`")
+    time.sleep(counter)
+    await kst.eor("`wake-up`", time=5)
+
+
+@kasta_cmd(
+    pattern="raw(?: |$)(.*)",
+    no_crash=True,
+)
+async def _(kst):
+    match = kst.pattern_match.group(1)
+    msg = await kst.get_reply_message() if kst.is_reply else kst
+    if match == "json":
+        text = json.dumps(todict(msg), indent=2, default=str, sort_keys=False)
+    else:
+        text = f"{msg.stringify()}"
+    if len(text) > MAX_MESSAGE_LEN:
+        with suppress(BaseException):
+            with BytesIO(str.encode(text)) as file:
+                file.name = f"raw_output.txt"
+                await kst.client.send_file(
+                    kst.chat_id,
+                    file=file,
+                    caption=r"\\**#Getter**// `Message Raw Data`",
+                    force_document=True,
+                    allow_cache=False,
+                    reply_to=kst.reply_to_msg_id or kst.id,
+                    silent=True,
+                )
+        await kst.try_delete()
+    else:
+        await kst.eor(f"<pre>{html.escape(text)}</pre>", parse_mode="html")
+
+
+@kasta_cmd(
+    pattern=r"carbon(?: |$)([\s\S]*)",
+    no_crash=True,
+)
+async def _(kst):
+    msg = await kst.eor("`Processing...`")
+    if kst.is_reply:
+        rep = await kst.get_reply_message()
+        if rep.media and bool([x for x in ("text", "application") if x in get_doc_mime(rep.media)]):
+            file = await kst.client.download_media(rep)
+            code = None
+            async with aiopen(file, mode="r") as f:
+                code = await f.read()
+            if not code:
+                return await msg.try_delete()
+            (Root / file).unlink(missing_ok=True)
         else:
-            await e.eor(Kst, parse_mode=parse_pre)
+            code = rep.message
+    else:
+        code = kst.pattern_match.group(1)
+    if not code:
+        return await msg.eod("`Reply to text message or readable file.`")
+    theme, backgroundColor = choice(CARBON_PRESETS)
+    windowTheme = choice(("none", "sharp", "bw"))
+    carbon = await Carbon(
+        code=code.strip(),
+        file_name="carbon",
+        download=True,
+        fontFamily="Fira Code",
+        theme=theme,
+        backgroundColor=backgroundColor,
+        dropShadow=True if windowTheme != "bw" else False,
+        windowTheme=windowTheme,
+    )
+    if not carbon:
+        return await msg.try_delete()
+    with suppress(BaseException):
+        await kst.client.send_file(
+            kst.chat_id,
+            file=carbon,
+            force_document=True,
+            allow_cache=False,
+            reply_to=kst.reply_to_msg_id or kst.id,
+            silent=True,
+        )
+    await msg.try_delete()
+    (Root / carbon).unlink(missing_ok=True)
+
+
+@kasta_cmd(
+    pattern="sysinfo$",
+)
+async def _(kst):
+    msg = await kst.eor("`Processing...`")
+    file = "neofetch.txt"
+    (Root / file).unlink(missing_ok=True)
+    _, _, ret, _ = await Runner(f"neofetch|sed 's/\x1B\\[[0-9;\\?]*[a-zA-Z]//g'>>{file}")
+    if ret != 0:
+        return await msg.try_delete()
+    info = ""
+    async with aiopen(file, mode="r") as f:
+        info = await f.read()
+    if not info:
+        return await msg.try_delete()
+    theme, backgroundColor = choice(CARBON_PRESETS)
+    neofetch = await Carbon(
+        code=info.replace("\n\n", "").strip(),
+        file_name="neofetch",
+        fontFamily="Hack",
+        theme=theme,
+        backgroundColor=backgroundColor,
+        dropShadow=True,
+    )
+    if not neofetch:
+        return await msg.try_delete()
+    with suppress(BaseException):
+        await kst.reply(file=neofetch, silent=True)
+    await msg.try_delete()
+    (Root / file).unlink(missing_ok=True)
+
+
+@kasta_cmd(
+    pattern="ls(?: |$)(.*)",
+)
+async def _(kst):
+    cat = kst.pattern_match.group(1)
+    if not cat:
+        cat = "*"
+    elif cat.endswith("/"):
+        cat += "*"
+    elif "*" not in cat:
+        cat += "/*"
+    msg = await kst.eor("`Loading...`")
+    try:
+        paths = sorted(Path(".").glob(cat))
+    except BaseException:
+        paths = None
+    if not paths:
+        return await msg.eor("`No such directory or empty or incorrect.`", time=5)
+    _symlinks = []
+    _folders = []
+    _shells = []
+    _dockers = []
+    _pyfiles = []
+    _jsons = []
+    _texts = []
+    _audios = []
+    _videos = []
+    _pics = []
+    _apks = []
+    _exes = []
+    _archives = []
+    _books = []
+    _others = []
+    _otherfiles = []
+    for p in paths:
+        if p.is_symlink():
+            _symlinks.append(("🔗", p))
+        elif p.is_dir():
+            _folders.append(("📂", p))
+        elif "docker" in str(p).lower():
+            _dockers.append(("🐋", p))
+        elif p.suffix in (".sh", ".bash", ".zsh", ".fish"):
+            _shells.append(("💻", p))
+        elif p.suffix == ".py":
+            _pyfiles.append(("🐍", p))
+        elif p.suffix in (".json", ".ini", ".cfg", ".yml", ".yaml", ".toml", ".csv"):
+            _jsons.append(("🔮", p))
+        elif p.suffix in (".txt", ".text", ".log"):
+            _texts.append(("📃", p))
+        elif p.suffix in (".mp3", ".ogg", ".m4a", ".opus", ".flac", ".wav"):
+            _audios.append(("🔊", p))
+        elif p.suffix in (".mkv", ".mp4", ".avi", ".gif", "webm", ".mov", ".flv"):
+            _videos.append(("🎥", p))
+        elif p.suffix in (".jpg", ".jpeg", ".png", ".svg", ".webp", ".bmp", ".ico"):
+            _pics.append(("🖼", p))
+        elif p.suffix in (".apk", ".xapk", ".apks", ".sapk"):
+            _apks.append(("📲", p))
+        elif p.suffix in (".exe", ".iso"):
+            _exes.append(("⚙", p))
+        elif p.suffix in (
+            ".zip",
+            ".rar",
+            ".7z",
+            ".tar",
+            ".gz",
+            ".bz2",
+            ".xz",
+            ".lz4",
+            ".zst",
+        ):
+            _archives.append(("🗜", p))
+        elif p.suffix in (".pdf", ".epub", ".doc"):
+            _books.append(("📚", p))
+        elif p.is_file():
+            _others.append(("🏷️", p))
+        else:
+            _otherfiles.append(("📒", p))
+    lists = [
+        *sorted(_symlinks),
+        *sorted(_folders),
+        *sorted(_shells),
+        *sorted(_dockers),
+        *sorted(_pyfiles),
+        *sorted(_jsons),
+        *sorted(_texts),
+        *sorted(_audios),
+        *sorted(_videos),
+        *sorted(_pics),
+        *sorted(_apks),
+        *sorted(_exes),
+        *sorted(_archives),
+        *sorted(_books),
+        *sorted(_others),
+        *sorted(_otherfiles),
+    ]
+    directory = ""
+    sfile, sfolder = 0, 0
+    cfile, cfolder = 0, 0
+    for emoji, path in lists:
+        try:
+            if path.is_dir():
+                size = 0
+                for p in path.rglob("*"):
+                    size += p.stat().st_size
+                directory += emoji + f" `{path.name}`" + "  `" + humanbytes(size) + "`\n"
+                sfolder += size
+                cfolder += 1
+            else:
+                directory += emoji + f" `{path.name}`" + "  `" + humanbytes(path.stat().st_size) + "`\n"
+                sfile += path.stat().st_size
+                cfile += 1
+        except BaseException:
+            pass
+    hfolder, hfile, htotal = (
+        humanbytes(sfolder),
+        humanbytes(sfile),
+        humanbytes(sfolder + sfile),
+    )
+    directory += f"""
+**Folders:**  `{cfolder}`  /  `{hfolder}`
+**Files:**  `{cfile}`  /  `{hfile}`
+**Total:**  `{cfile + cfolder}`  /  `{htotal}`
+"""
+    if len(directory) > MAX_MESSAGE_LEN:
+        directory = strip_format(directory)
+        file = "directory_output.txt"
+        async with aiopen(file, mode="w") as f:
+            await f.write(directory)
+        with suppress(BaseException):
+            await kst.client.send_file(
+                kst.chat_id,
+                file=file,
+                caption=rf"\\**#Getter**// `Directory {cat}`",
+                force_document=True,
+                allow_cache=False,
+                reply_to=kst.reply_to_msg_id or kst.id,
+                silent=True,
+            )
+        await msg.try_delete()
+        (Root / file).unlink(missing_ok=True)
+    else:
+        await msg.eor(directory)
+
+
+@kasta_cmd(
+    pattern=r"(shell|sh)(?: |$)([\s\S]*)",
+)
+async def _(kst):
+    cmd = kst.pattern_match.group(2)
+    if not cmd:
+        return await kst.try_delete()
+    msg = await kst.eor("`Running...`")
+    SHELL_BLACKLIST = await get_blacklisted(
+        url="https://raw.githubusercontent.com/kastaid/resources/main/shellblacklist.json",
+        is_json=True,
+        attempts=6,
+        fallbacks=DEFAULT_SHELL_BLACKLIST,
+    )
+    if bool([x for x in cmd.lower().split() if x.startswith(tuple(SHELL_BLACKLIST))]) and kst.client.uid not in DEVS:
+        return await msg.eod("`Command not allowed.`")
+    stdout, stderr, ret, _ = await Runner(cmd)
+    icon = "❯" if ret == 0 else "❮"
+    shell = f"**{icon}**  ```{cmd}```\n\n"
+    err = out = ""
+    if stderr:
+        err = f"**ERROR:**\n```{stderr}```\n\n"
+    if stdout:
+        out = f"**OUTPUT:**\n```{stdout}```"
+    if not (stderr or stdout):
+        out = "**OUTPUT:**\n`success`"
+    shell += err + out
+    if len(shell) > MAX_MESSAGE_LEN:
+        shell = strip_format(shell)
+        with suppress(BaseException):
+            with BytesIO(str.encode(shell)) as file:
+                file.name = "shell_output.txt"
+                caption = f"`{cmd}`" if len(cmd) < 998 else "`Shell Output`"
+                await kst.client.send_file(
+                    kst.chat_id,
+                    file=file,
+                    caption=rf"\\**#Getter**// {caption}",
+                    force_document=True,
+                    allow_cache=False,
+                    reply_to=kst.reply_to_msg_id or kst.id,
+                    silent=True,
+                )
+        await msg.try_delete()
+    else:
+        await msg.eor(shell)
+
+
+def get_terminal_logs():
+    return sorted((Root / "logs").rglob("getter-*.log"))
+
+
+async def heroku_logs(kst) -> None:
+    if not Var.HEROKU_API:
+        await kst.eor("Please set `HEROKU_API` in Config Vars.")
+        return
+    if not Var.HEROKU_APP_NAME:
+        await kst.eor("Please set `HEROKU_APP_NAME` in Config Vars.")
+        return
+    try:
+        heroku_conn = Heroku()
+        app = heroku_conn.app(Var.HEROKU_APP_NAME)
+        logs = app.get_log()
+    except Exception as err:
+        await kst.eor(f"**ERROR:**\n`{err}`")
+        return
+    await kst.eor("`Downloading Logs...`")
+    file = "getter-heroku.log"
+    async with aiopen(file, mode="w") as f:
+        await f.write(logs)
+    with suppress(BaseException):
+        await kst.client.send_file(
+            kst.chat_id,
+            file=file,
+            caption=r"\\**#Getter**// `Heroku Logs`",
+            force_document=True,
+            allow_cache=False,
+            silent=True,
+        )
+    await kst.try_delete()
+    (Root / file).unlink(missing_ok=True)
+
+
+async def restart_app() -> None:
+    import psutil
+
+    with suppress(BaseException):
+        proc = psutil.Process(os.getpid())
+        for p in proc.open_files() + proc.connections():
+            os.close(p.fd)
+    os.execl(sys.executable, sys.executable, "-m", "getter")
+
+
+def todict(obj, classkey=None):
+    if isinstance(obj, dict):
+        data = {}
+        for (k, v) in obj.items():
+            data[k] = todict(v, classkey)
+        return data
+    elif hasattr(obj, "_ast"):
+        return todict(obj._ast())
+    elif hasattr(obj, "__iter__") and not isinstance(obj, str):
+        return [todict(v, classkey) for v in obj]
+    elif hasattr(obj, "__dict__"):
+        data = dict(  # noqa: C404
+            [
+                (key, todict(val, classkey))
+                for key, val in obj.__dict__.items()
+                if not callable(val) and not key.startswith("_")
+            ]
+        )
+        if classkey and hasattr(obj, "__class__"):
+            data[classkey] = obj.__class__.__name__
+        return data
+    else:
+        return obj
 
 
 HELP.update(
@@ -196,14 +599,55 @@ Check response time.
 ❯ `{i}logs`
 Get the full terminal logs.
 
+❯ `{i}logs open`
+Open logs as text message.
+
+❯ `{i}logs carbon`
+Get the carbonized terminal logs.
+
 ❯ `{i}logs <heroku|hk|h>`
 Get the latest 100 lines of heroku logs.
 
 ❯ `{i}restart`
 Restart the app.
 
-❯ `{i}json <reply>`
-Get the json encoding of the message.
+❯ `{i}sleep <time/in seconds>`
+Sleep the bot in few seconds (max 50).
+
+❯ `{i}raw <json> <reply>`
+Get the raw data of message.
+
+❯ `{i}carbon <text/reply>`
+Carbonise the text with random presets.
+
+❯ `{i}sysinfo`
+Shows System Info.
+
+❯ `{i}ls <path>`
+View all files and folders inside a directory.
+
+❯ `{i}shell|{i}sh <cmds>`
+Run the linux commands.
+
+**Command Snippets:**
+`echo Hello, World!`
+`python --version`
+`python -c 'import time;print(time.ctime())'`
+`cat /etc/os-release`
+`uname -a`
+`pwd`
+`printenv`
+`date '+%a, %b %d %Y %T %Z'`
+`date +'%A, %B %-d, %Y'`
+`ls -lAFh`
+`tree`
+`df -h`
+`du -sh * | sort -hr`
+`top -bn1 > output.txt && cat output.txt`
+`free -h`
+`command -v sh`
+`grep -rnliF --color=auto kasta_cmd`
+`cat LICENSE`
 """,
         ]
     }

@@ -7,16 +7,18 @@
 # < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
 # ================================================================
 
+import os
 import sys
 from asyncio import Lock, sleep
 from contextlib import suppress
-from os import close, execl, getpid
-from secrets import choice
-import psutil as psu
+from datetime import datetime, timezone
+from time import perf_counter, time
+from aiofiles import open as aiopen
 from git import Repo
 from git.exc import GitCommandError, InvalidGitRepositoryError, NoSuchPathError
-from heroku3 import from_key
 from . import (
+    choice,
+    StartTime,
     __version__,
     Root,
     HELP,
@@ -24,7 +26,14 @@ from . import (
     Var,
     hl,
     kasta_cmd,
+    strip_format,
+    time_formatter,
+    get_random_hex,
+    make_async,
     Runner,
+    MAX_MESSAGE_LEN,
+    Heroku,
+    LOGS,
 )
 
 UPDATE_LOCK = Lock()
@@ -37,13 +46,43 @@ Temporary update as locally.
 Permanently update as heroku.
 
 ❯ `{hl}update <force|f>`
-Forced update as locally.
+Force temporary update as locally.
+"""
+test_text = """
+<b>ID:</b> <code>{}</code>
+<b>Heroku App:</b> <code>{}</code>
+<b>Getter Version:</b> <code>{}</code>
+<b>Speed:</b> <code>{}ms</code>
+<b>Uptime:</b> <code>{}</code>
+<b>UTC Now:</b> <code>{}</code>
 """
 
 
 async def ignores() -> None:
-    rems = ".github docs README.md LICENSE scripts run.py requirements-dev.txt setup.cfg .editorconfig .deepsource.toml session.py"
-    return await Runner(f"rm -rf -- {rems}")
+    rems = " ".join(
+        [
+            ".github",
+            "docs",
+            "README.md",
+        ]
+    )
+    backup_dir = Root / "backup/" / get_random_hex()
+    await Runner(f"mkdir -p {backup_dir} && mv -f {rems} -t {backup_dir}")
+
+
+async def update_packages() -> None:
+    reqs = Root / "requirements.txt"
+    await Runner(f"{sys.executable} -m pip install --no-cache-dir -U -r {reqs}")
+
+
+async def force_pull() -> None:
+    await Runner(f"git pull --force && git reset --hard origin/{UPSTREAM_BRANCH}")
+
+
+async def force_push() -> str:
+    push = f"git push --force https://heroku:{Var.HEROKU_API}@git.heroku.com/{Var.HEROKU_APP_NAME}.git HEAD:main"
+    _, err, _, _ = await Runner(push)
+    return err
 
 
 def verify(repo, diff) -> bool:
@@ -53,10 +92,11 @@ def verify(repo, diff) -> bool:
     return bool(v)
 
 
+@make_async
 def generate_changelog(repo, diff) -> str:
     chlog = ""
     rep = UPSTREAM_REPO.replace(".git", "")
-    ch = f"<b>Getter v{__version__} updates for <a href={rep}/tree/{UPSTREAM_BRANCH}>[{UPSTREAM_BRANCH}]</a>:</b>"
+    ch = rf"\\<b>#Getter</b>// <b>v{__version__} New UPDATE available for <a href={rep}/tree/{UPSTREAM_BRANCH}>[{UPSTREAM_BRANCH}]</a>:</b>"
     date = "%d/%m/%Y %H:%M:%S"
     for c in repo.iter_commits(diff):
         chlog += f"\n\n<b>#{c.count()}</b> [<code>{c.committed_datetime.strftime(date)}</code>]\n<code>{c.hexsha}</code>\n<b><a href={rep.rstrip('/')}/commit/{c}>[{c.summary}]</a></b> ~ <code>{c.author}</code>"
@@ -65,42 +105,60 @@ def generate_changelog(repo, diff) -> str:
     return chlog
 
 
-async def show_changelog(e, changelog):
-    file = "changelog_output.txt"
-    if len(changelog) > 4096:
-        await e.eor("View the file to see it.")
-        with open(file, "w+") as f:
-            f.write(changelog)
-        await e.reply(file=file, silent=True)
+async def show_changelog(kst, changelog) -> None:
+    if len(changelog) > MAX_MESSAGE_LEN:
+        changelog = strip_format(changelog)
+        file = "changelog_output.txt"
+        async with aiopen(file, mode="w") as f:
+            await f.write(changelog)
+        try:
+            chat = await kst.get_input_chat()
+            chlog = await kst.client.send_file(
+                chat,
+                file=file,
+                caption=r"\\**#Getter**// `View this file to see changelog.`",
+                force_document=True,
+                allow_cache=False,
+                reply_to=kst.reply_to_msg_id or None,
+                silent=True,
+            )
+        except Exception as err:
+            chlog = await kst.eor(f"**ERROR:**\n`{err}`")
         (Root / file).unlink(missing_ok=True)
     else:
-        await e.eor(changelog, parse_mode="html")
+        chlog = await kst.eor(changelog, parse_mode="html")
+    await kst.try_delete()
+    await chlog.reply(help_text, silent=True)
 
 
-async def pulling(e):
-    await Runner(f"git pull -f && git reset --hard origin/{UPSTREAM_BRANCH}")
-    await ignores()
-    await Runner("pip3 install --no-cache-dir -U -r requirements.txt")
-    await e.eor(f"`[PULL] Updated Successfully...`\nWait for a few seconds, then run `{hl}ping` command.")
-    with suppress(psu.NoSuchProcess, psu.AccessDenied, psu.ZombieProcess):
-        c_p = psu.Process(getpid())
-        [close(h.fd) for h in c_p.open_files() + c_p.connections()]
-    execl(sys.executable, sys.executable, "-m", "getter")
-    return
+async def Pulling(kst, state) -> None:
+    import psutil
+
+    if not Var.DEV_MODE:
+        await force_pull()
+        await ignores()
+        await update_packages()
+    up = rf"\\**#Getter**// `{state}Updated Successfully...`\nWait for a few seconds, then run `{hl}ping` command."
+    await kst.eor(up)
+    with suppress(BaseException):
+        proc = psutil.Process(os.getpid())
+        for p in proc.open_files() + proc.connections():
+            os.close(p.fd)
+    os.execl(sys.executable, sys.executable, "-m", "getter")
 
 
-async def pushing(e):
+async def Pushing(kst, state, repo) -> None:
     if not Var.HEROKU_API:
-        await e.eod("Please set `HEROKU_API` in Config Vars.")
+        await kst.eod("Please set `HEROKU_API` in Config Vars.")
         return
     if not Var.HEROKU_APP_NAME:
-        await e.eod("Please set `HEROKU_APP_NAME` in Config Vars.")
+        await kst.eod("Please set `HEROKU_APP_NAME` in Config Vars.")
         return
     try:
-        heroku_conn = from_key(Var.HEROKU_API)
-        app = heroku_conn.apps()[Var.HEROKU_APP_NAME]
+        heroku_conn = Heroku()
+        app = heroku_conn.app(Var.HEROKU_APP_NAME)
     except Exception as err:
-        await e.eod(f"**ERROR**\n`{err}`")
+        await kst.eor(f"**ERROR:**\n`{err}`")
         return
     """
     # migration new vars
@@ -109,63 +167,112 @@ async def pushing(e):
         cfg["HEROKU_API"] = cfg["HEROKU_API_KEY"]
         del cfg["HEROKU_API_KEY"]
     """
-    await Runner(f"git pull -f && git reset --hard origin/{UPSTREAM_BRANCH}")
-    await e.eor(f"`[PUSH] Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command.")
-    push = f"git push -f https://heroku:{Var.HEROKU_API}@git.heroku.com/{Var.HEROKU_APP_NAME}.git HEAD:main"
-    _, err = await Runner(push)
+
+    info = app.info
+    buildpacks = app.buildpacks()
+
+    LOGS.info(type(info))
+    LOGS.info(info)
+
+    LOGS.info(type(buildpacks))
+    LOGS.info(buildpacks)
+
+    if False:
+        app.update_buildpacks(
+            [
+                "https://github.com/heroku/heroku-buildpack-python",
+                "https://github.com/heroku/heroku-buildpack-apt",
+                "https://github.com/heroku/heroku-buildpack-google-chrome",
+                "https://github.com/heroku/heroku-buildpack-chromedriver",
+            ]
+        )
+
+    await force_pull()
+    up = rf"\\**#Getter**// `{state}Updated Successfully...`\nWait for a few minutes, then run `{hl}ping` command."
+    await kst.eor(up)
+
+    """
+    err = await force_push()
     if err:
         msg = ""
-        if "! Your account has reached" in err:
-            msg = "`[PUSH] Deploy Failed: Your account has reached its concurrent builds limit, try again later.`"
-        elif "Everything up-to-date" in err:
-            msg = f"`Getter v{__version__} up-to-date as {UPSTREAM_BRANCH}`"
-        elif "Verifying deploy" not in err:
-            msg = f"`[PUSH] Deploy Failed: {err.strip()}`\nTry again later or view logs for more info."
+        err = err.lower()
+        if "account has reached" in err:
+            msg = rf"\\**#Getter**// `{state}Update Failed: Your account has reached its concurrent builds limit, try again later.`"
+        elif "everything up-to-date" in err:
+            msg = rf"\\**#Getter**// `v{__version__} up-to-date as {UPSTREAM_BRANCH}`"
+        elif "verifying deploy" not in err:
+            msg = rf"\\**#Getter**// `{state}Update Failed: {err.strip()}`\nTry again later or view logs for more info."
         if msg:
-            await e.eor(msg)
+            await kst.eor(msg)
+    """
+
+    url = app.git_url.replace("https://", f"https://api:{Var.HEROKU_API}@")
+    if "heroku" in repo.remotes:
+        remote = repo.remote("heroku")
+        remote.set_url(url)
+    else:
+        remote = repo.create_remote("heroku", url)
+    with suppress(BaseException):
+        remote.push(refspec="HEAD:refs/heads/main", force=True)
+
     build = app.builds(order_by="created_at", sort="desc")[0]
+    LOGS.info(type(build))
+    LOGS.info(build)
+
     if build.status == "failed":
-        await e.eod("`[PUSH] Build Failed...`\nTry again later or view logs for more info.")
-    return
+        await kst.eod(rf"\\**#Getter**// `{state}Update Failed...`\nTry again later or view logs for more info.")
 
 
-@kasta_cmd(pattern="update(?: |$)(force|f|now|deploy|pull|push)?(?: |$)(.*)")
-@kasta_cmd(own=True, senders=DEVS, pattern="getterup(?: |$)(force|f|now|deploy|pull|push)?(?: |$)(.*)")
-async def _(e):
-    is_devs = True if not (hasattr(e, "out") and e.out) else False
-    if UPDATE_LOCK.locked():
-        await e.eor("`Please wait until previous UPDATE finished...`", time=5, silent=True)
+@kasta_cmd(
+    pattern="update(?: |$)(force|f|now|deploy|pull|push)?(?: |$)(.*)",
+)
+@kasta_cmd(
+    pattern="getterup(?: |$)(force|f|now|deploy|pull|push)?(?: |$)(.*)",
+    edited=True,
+    own=True,
+    senders=DEVS,
+)
+async def _(kst):
+    is_devs = True if not kst.out else False
+    if not is_devs and UPDATE_LOCK.locked():
+        await kst.eor("`Please wait until previous UPDATE finished...`", time=5, silent=True)
         return
     async with UPDATE_LOCK:
-        mode = e.pattern_match.group(1)
-        opt = e.pattern_match.group(2)
+        mode = kst.pattern_match.group(1)
+        opt = kst.pattern_match.group(2)
         is_force = is_now = is_deploy = False
-        if not Var.DEV_MODE and mode in ["force", "f"]:
+        state = ""
+        if not Var.DEV_MODE and mode in ("force", "f"):
             is_force = True
-        if mode in ["now", "pull"]:
+            state = "[FORCE] "
+        elif mode in ("now", "pull"):
             is_now = True
-        if mode in ["deploy", "push"]:
+            state = "[NOW] "
+        elif mode in ("deploy", "push"):
             is_deploy = True
+            state = "[DEPLOY] "
+        else:
+            state = "[CHECK] "
         if is_devs and opt:
             user_id = version = None
             try:
                 user_id = int(opt)
             except ValueError:
                 version = opt
-            if not version and user_id != e.client.uid:
+            if not version and user_id != kst.client.uid:
                 return
             if not user_id and version == __version__:
                 return
         if is_devs:
-            await sleep(choice((4, 6, 8)))
-        Kst = await e.eor("`Fetching...`", silent=True)
+            await sleep(choice((5, 7, 9)))
+        msg = await kst.eor(f"`{state}Fetching...`", silent=True)
         try:
             repo = Repo()
         except NoSuchPathError as err:
-            await Kst.eor(f"`Directory not found : {err}`")
+            await msg.eor(f"`{state}Directory not found : {err}`")
             return
         except GitCommandError as err:
-            await Kst.eor(f"`Early failure : {err}`")
+            await msg.eor(f"`{state}Early failure : {err}`")
             return
         except InvalidGitRepositoryError:
             repo = Repo.init()
@@ -174,41 +281,91 @@ async def _(e):
             repo.create_head("main", origin.refs.main)
             repo.heads.main.set_tracking_branch(origin.refs.main)
             repo.heads.main.checkout(True)
-        await Runner(f"git fetch origin {UPSTREAM_BRANCH} &> /dev/null")
+        await Runner(f"git fetch origin {UPSTREAM_BRANCH}")
         if is_deploy:
             if is_devs:
-                await sleep(choice((2, 3, 4)))
-            await Kst.eor("`[PUSH] Updating ~ Please Wait...`")
-            await pushing(Kst)
+                await sleep(5)
+            await msg.eor(f"`{state}Updating ~ Please Wait...`")
+            await Pushing(msg, state, repo)
             return
         try:
             verif = verify(repo, f"HEAD..origin/{UPSTREAM_BRANCH}")
         except BaseException:
             verif = None
         if not (verif or is_force):
-            await Kst.eor(f"`Getter v{__version__} up-to-date as {UPSTREAM_BRANCH}`")
+            await msg.eor(rf"\\**#Getter**// `v{__version__} up-to-date as {UPSTREAM_BRANCH}`")
             return
         if not (mode or is_force):
-            changelog = generate_changelog(repo, f"HEAD..origin/{UPSTREAM_BRANCH}")
-            await show_changelog(Kst, changelog)
-            await Kst.reply(help_text, silent=True)
+            changelog = await generate_changelog(repo, f"HEAD..origin/{UPSTREAM_BRANCH}")
+            await show_changelog(msg, changelog)
             return
         if is_force:
-            await Kst.eor("`[PULL] Force-Syncing to latest source code...`")
-            await sleep(2)
+            await sleep(3)
         if is_now or is_force:
-            await Kst.eor("`[PULL] Updating ~ Please Wait...`")
-            await pulling(Kst)
+            await msg.eor(f"`{state}Updating ~ Please Wait...`")
+            await Pulling(msg, state)
         return
 
 
-@kasta_cmd(pattern="repo$")
-async def _(e):
-    await e.eor(
+@kasta_cmd(
+    pattern="repo$",
+)
+async def _(kst):
+    await kst.eor(
         """
 • **Repo:** [GitHub](https://kasta.vercel.app/repo?c=getter)
 • **Deploy:** [View at @kastaid](https://kasta.vercel.app/getter_deploy)
 """,
+    )
+
+
+@kasta_cmd(
+    pattern="test$",
+)
+@kasta_cmd(
+    pattern="gtest(?: |$)(.*)",
+    edited=True,
+    own=True,
+    senders=DEVS,
+)
+async def _(kst):
+    is_devs = True if not kst.out else False
+    clean = False
+    if is_devs:
+        opt = kst.pattern_match.group(1)
+        if opt:
+            user_id = version = None
+            try:
+                user_id = int(opt)
+            except ValueError:
+                version = opt
+            if not version and user_id != kst.client.uid:
+                return
+            if not user_id and version == __version__:
+                return
+            clean = True
+        if not clean:
+            await sleep(choice((4, 6, 8)))
+    start = perf_counter()
+    # http://www.timebie.com/std/utc
+    utc_now = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M:%S")
+    msg = await kst.eor("`Processing...`", silent=True)
+    end = perf_counter()
+    speed = end - start
+    uptime = time_formatter((time() - StartTime) * 1000)
+    text = test_text.format(
+        kst.client.uid,
+        Var.HEROKU_APP_NAME or "None",
+        __version__,
+        round(speed, 3),
+        uptime,
+        utc_now,
+    )
+    await msg.eor(
+        text,
+        parse_mode="html",
+        force_reply=True,
+        time=15 if clean else 0,
     )
 
 
@@ -226,10 +383,13 @@ Temporary update as locally.
 Permanently update as heroku.
 
 ❯ `{i}update <force|f>`
-Forced update as locally.
+Force temporary update as locally.
 
 ❯ `{i}repo`
 Get repo link.
+
+❯ `{i}test`
+Check the response.
 """,
         ]
     }
