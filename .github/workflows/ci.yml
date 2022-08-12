@@ -11,54 +11,46 @@ on:
 jobs:
   linter:
     name: Run linting and format code
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.9", "3.10"]
     steps:
       - uses: actions/checkout@v2
         with:
           ref: ${{ github.head_ref }}
-          
-      - name: Setup Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
-          python-version: 3.10.2
-          
+          python-version: ${{ matrix.python-version }}
       - name: Cache pip
         uses: actions/cache@v2
+        if: startsWith(runner.os, "Linux")
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements-dev.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles("**/requirements-dev.txt") }}
           restore-keys: |
             ${{ runner.os }}-pip-
-
-      - name: Install Python dependencies
+      - name: Install dependencies
         run: |
-          python3 -m pip install --upgrade pip setuptools wheel
+          python3 -m pip install -U pip
           pip3 install -r requirements.txt
-          pip3 install -r requirements-dev.txt
-          
+          if [ -f requirements-dev.txt ]; then pip3 install -r requirements-dev.txt; fi
       - name: Linting and format code
         run: python3 -m run --lint
-
       - name: Beautify shell scripts
         uses: illvart/beautysh-action@latest
         with:
-          args: '*.sh --indent-size 2 &>/dev/null'
-
+          args: "*.sh --indent-size 2 &>/dev/null"
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_user_name: notudope
-          commit_user_email: notudope@gmail.com
-          commit_author: notudope <notudope@gmail.com>
-          commit_message: '[auto] ci: apply changes'
+          commit_message: "[action] ci: auto-fixes"
+          commit_options: "--no-verify"
+          commit_user_name: kastaid
+          commit_user_email: kastaid@protonmail.com
+          commit_author: kastaid <kastaid@protonmail.com>
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  shellcheck:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.head_ref }}
           
-      - name: Check for install script errors
-        uses: ludeeus/action-shellcheck@1.1.0

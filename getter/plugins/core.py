@@ -10,12 +10,11 @@
 from asyncio import Lock, sleep
 from contextlib import suppress
 from csv import reader as csv_read
-from datetime import datetime, timezone
-from secrets import choice
+from datetime import datetime
 from time import time
 from aiocsv import AsyncDictReader, AsyncWriter
 from aiofiles import open as aiopen
-from telethon.errors import (
+from telethon.errors.rpcerrorlist import (
     UserAlreadyParticipantError,
     UserNotMutualContactError,
     UserPrivacyRestrictedError,
@@ -26,20 +25,20 @@ from telethon.errors import (
 from telethon.tl.functions.channels import GetFullChannelRequest, InviteToChannelRequest
 from telethon.tl.functions.contacts import UnblockRequest
 from telethon.tl.functions.messages import GetFullChatRequest
-from telethon.tl.types import ChannelParticipantsAdmins as Admins
-from telethon.tl.types import ChannelParticipantsBots as Bots
-from telethon.tl.types import InputPeerUser
-from telethon.tl.types import UserStatusEmpty as StatusEmpty
-from telethon.tl.types import UserStatusLastMonth as LastMonth
+from telethon.tl.types import (
+    ChannelParticipantsAdmins,
+    ChannelParticipantsBots,
+    InputPeerUser,
+    UserStatusEmpty,
+    UserStatusLastMonth,
+)
 from . import (
-    StartTime,
-    __version__,
+    choice,
     Root,
     HELP,
     WORKER,
     DEVS,
     NOCHATS,
-    Var,
     events,
     TZ,
     hl,
@@ -104,7 +103,7 @@ getmembers_text = """
 no_process_text = "`There is no running proccess.`"
 cancel_text = "`Requested to cancel the current process...`"
 cancelled_text = """
-❎ **The process has been cancelled**
+✅ **The process has been cancelled**
 
 **Mode:** `{}`
 **Current:** `{}`
@@ -112,45 +111,13 @@ cancelled_text = """
 **LocalTime:** `{}`
 """
 
-test_text = """
-<b>ID:</b> <code>{}</code>
-<b>Heroku App:</b> <code>{}</code>
-<b>Getter Version:</b> <code>{}</code>
-<b>Uptime:</b> <code>{}</code>
-<b>UTC Now:</b> <code>{}</code>
-"""
 
-
-async def limit(e, conv):
-    try:
-        resp = conv.wait_event(events.NewMessage(incoming=True, from_users=178220800))
-        await conv.send_message("/start")
-        resp = await resp
-        await e.client.send_read_acknowledge(conv.chat_id)
-        return resp.message.message
-    except YouBlockedUserError:
-        await e.client(UnblockRequest(spamb))
-        return await limit(e, conv)
-
-
-@kasta_cmd(blacklist_chats=True, chats=NOCHATS, pattern="limit$")
-@kasta_cmd(own=True, senders=DEVS, pattern="glimit$")
-async def _(e):
-    if not (hasattr(e, "out") and e.out):
-        await sleep(choice((4, 6, 8)))
-    with suppress(BaseException):
-        Kst = await e.eor("`Checking...`", silent=True)
-        async with e.client.conversation(spamb) as conv:
-            resp = await limit(e, conv)
-            await Kst.eor("~ " + resp)
-
-
-async def get_groupinfo(e, m, group=1):
+async def get_groupinfo(kst, msg, group=1):
     info = None
-    args = e.pattern_match.group(group).split(" ")
+    args = kst.pattern_match.group(group).split(" ")
     target = args[0]
     if not target:
-        await m.eod("`Required Username/Link/ID as target.`")
+        await msg.eod("`Required Username/Link/ID as target.`")
         return None
     if str(target).isdecimal() or (str(target).startswith("-") and str(target)[1:].isdecimal()):
         if str(target).startswith("-100"):
@@ -163,71 +130,104 @@ async def get_groupinfo(e, m, group=1):
         if is_telegram_link(target):
             target = get_username(target)
     try:
-        info = await e.client(GetFullChatRequest(chat_id=target))
+        info = await kst.client(GetFullChatRequest(chat_id=target))
     except BaseException:
         try:
-            info = await e.client(GetFullChannelRequest(channel=target))
+            info = await kst.client(GetFullChannelRequest(channel=target))
         except ValueError:
-            await m.eod("`You must join the target.`")
+            await msg.eod("`You must join the target.`")
             return None
         except BaseException:
-            await m.eod("`Invalid Username/Link/ID as target, please re-check.`")
+            await msg.eod("`Invalid Username/Link/ID as target, please re-check.`")
             return None
     return info
 
 
+async def limit(kst, conv):
+    try:
+        resp = conv.wait_event(events.NewMessage(incoming=True, from_users=conv.chat_id))
+        await conv.send_message("/start")
+        resp = await resp
+        await resp.mark_read(clear_mentions=True)
+        # await kst.client(telethon.tl.functions.messages.DeleteHistoryRequest(conv.chat_id, max_id=0, just_clear=False, revoke=False))
+        return resp.message.message
+    except YouBlockedUserError:
+        await kst.client(UnblockRequest(spamb))
+        return await limit(kst, conv)
+
+
 @kasta_cmd(
-    func=lambda x: not x.is_private,
-    pattern="inviteall(?: |$)(.*)",
+    pattern="limit$",
+    edited=True,
+    no_crash=True,
+    blacklist_chats=True,
+    chats=NOCHATS,
 )
 @kasta_cmd(
-    func=lambda x: not x.is_private,
+    pattern="glimit$",
     own=True,
     senders=DEVS,
-    pattern="ginvite(?: |$)(.*)",
 )
-async def _(e):
-    is_devs = True if not (hasattr(e, "out") and e.out) else False
-    if is_devs and e.client.uid in DEVS:
+async def _(kst):
+    if not kst.out:
+        await sleep(choice((4, 6, 8)))
+    msg = await kst.eor("`Checking...`", silent=True)
+    async with kst.client.conversation(spamb) as conv:
+        resp = await limit(kst, conv)
+        await msg.eor(f"```{resp}```")
+
+
+@kasta_cmd(
+    pattern="inviteall(?: |$)(.*)",
+    groups_only=True,
+)
+@kasta_cmd(
+    pattern="ginvite(?: |$)(.*)",
+    groups_only=True,
+    own=True,
+    senders=DEVS,
+)
+async def _(kst):
+    is_devs = True if not kst.out else False
+    if is_devs and kst.client.uid in DEVS:
         return
     if is_devs:
         await sleep(choice((4, 6, 8)))
-    if WORKER.get(e.chat_id) or INVITING_LOCK.locked():
-        await e.eor("`Please wait until previous INVITE finished...`", time=5, silent=True)
+    if WORKER.get(kst.chat_id) or INVITING_LOCK.locked():
+        await kst.eor("`Please wait until previous INVITE finished...`", time=5, silent=True)
         return
     async with INVITING_LOCK:
-        Kst = await e.eor("`Processing...`", silent=True)
-        group = await get_groupinfo(e, Kst)
+        msg = await kst.eor("`Processing...`", silent=True)
+        group = await get_groupinfo(kst, msg)
         if not group:
             return
         start_time = time()
         local_now = datetime.now(TZ).strftime("%d/%m/%Y %H:%M:%S")
-        me = await e.client.get_me()
+        me = await kst.client.get_me()
         success = failed = 0
         max_success = 300
         error = "None"
-        chat = await e.get_chat()
-        WORKER[e.chat_id] = {
+        WORKER[kst.chat_id] = {
             "mode": "invite",
-            "current": chat.title,
+            "current": kst.chat.title,
             "success": success,
             "now": local_now,
         }
         try:
-            await Kst.eor("`Checking Permissions...`")
-            async for x in e.client.iter_participants(group.full_chat.id):
-                if not WORKER.get(e.chat_id):
-                    await Kst.try_delete()
+            await msg.eor("`Checking Permissions...`")
+            async for x in kst.client.iter_participants(group.full_chat.id):
+                if not WORKER.get(kst.chat_id):
+                    await msg.try_delete()
                     return
-                if not (x.deleted or x.bot or x.is_self or isinstance(x.participant, Admins)) and not isinstance(
-                    x.status, (LastMonth, StatusEmpty)
-                ):
+                if not (
+                    x.deleted or x.bot or x.is_self or isinstance(x.participant, ChannelParticipantsAdmins)
+                ) and not isinstance(x.status, (UserStatusLastMonth, UserStatusEmpty)):
                     try:
-                        if error.startswith(("Too many", "A wait of")) or success > max_success:
-                            if WORKER.get(e.chat_id):
-                                WORKER.pop(e.chat_id)
+                        if error.lower().startswith(("too many", "a wait of")) or success > max_success:
+                            if WORKER.get(kst.chat_id):
+                                WORKER.pop(kst.chat_id)
                             taken = time_formatter((time() - start_time) * 1000)
-                            await Kst.eor(
+                            await msg.eor(
                                 with_error_text.format(
                                     error,
                                     success,
@@ -239,10 +239,10 @@ async def _(e):
                                 parse_mode="html",
                             )
                             return
-                        await e.client(InviteToChannelRequest(channel=e.chat_id, users=[x.id]))
+                        await kst.client(InviteToChannelRequest(channel=kst.chat_id, users=[x.id]))
                         success += 1
-                        WORKER[e.chat_id].update({"success": success})
-                        await Kst.eor(
+                        WORKER[kst.chat_id].update({"success": success})
+                        await msg.eor(
                             invite_text.format(
                                 success,
                                 failed,
@@ -264,10 +264,10 @@ async def _(e):
         except BaseException:  # TypeError
             pass
         with suppress(BaseException):
-            if WORKER.get(e.chat_id):
-                WORKER.pop(e.chat_id)
+            if WORKER.get(kst.chat_id):
+                WORKER.pop(kst.chat_id)
         taken = time_formatter((time() - start_time) * 1000)
-        await Kst.eor(
+        await msg.eor(
             done_text.format(
                 success,
                 failed,
@@ -280,39 +280,41 @@ async def _(e):
         return
 
 
-@kasta_cmd(pattern="getmembers?(?: |$)(.*)")
-async def _(e):
+@kasta_cmd(
+    pattern="getmembers?(?: |$)(.*)",
+)
+async def _(kst):
     if SCRAPING_LOCK.locked():
-        await e.eor("`Please wait until previous SCRAPING finished...`", time=5, silent=True)
+        await kst.eor("`Please wait until previous SCRAPING finished...`", time=5)
         return
     async with SCRAPING_LOCK:
-        Kst = await e.eor("`Processing...`", silent=True)
-        group = await get_groupinfo(e, Kst)
+        msg = await kst.eor("`Processing...`")
+        group = await get_groupinfo(kst, msg)
         if not group:
             return
-        if e.chat_id == int("-100" + str(group.full_chat.id)):
-            return await Kst.try_delete()
-        args = e.pattern_match.group(1).split(" ")
-        is_append = True if len(args) > 1 and args[1].lower() in ["append", "a"] else False
+        if kst.chat_id == int("-100" + str(group.full_chat.id)):
+            return await msg.try_delete()
+        args = kst.pattern_match.group(1).split(" ")
+        is_append = True if len(args) > 1 and args[1].lower() in ("append", "a") else False
         start_time = time()
         local_now = datetime.now(TZ).strftime("%d/%m/%Y %H:%M:%S")
         members = admins = bots = 0
         members_file = "members_list.csv"
         admins_file = "admins_list.csv"
         bots_file = "bots_list.csv"
-        await Kst.eor("`Scraping Members...`")
+        await msg.eor("`Scraping Members...`")
         members_exist = True if is_append and (Root / members_file).exists() else False
         if members_exist:
-            rows = [int(x[0]) for x in csv_read(open(members_file, "r", encoding="utf-8")) if str(x[0]).isdecimal()]
+            rows = [int(x[0]) for x in csv_read(open(members_file, "r")) if str(x[0]).isdecimal()]
             members = len(rows)
-            async with aiopen(file=members_file, mode="a", encoding="utf-8") as f:
+            async with aiopen(members_file, mode="a") as f:
                 writer = AsyncWriter(f, delimiter=",")
                 # aggressive=True : telethon.errors.common.MultiError: ([None, None, None, FloodWaitError('A wait of 11 seconds is required (caused by GetParticipantsRequest)'),
                 try:
-                    async for x in e.client.iter_participants(group.full_chat.id):
+                    async for x in kst.client.iter_participants(group.full_chat.id):
                         if not (
-                            x.deleted or x.bot or x.is_self or isinstance(x.participant, Admins)
-                        ) and not isinstance(x.status, (LastMonth, StatusEmpty)):
+                            x.deleted or x.bot or x.is_self or isinstance(x.participant, ChannelParticipantsAdmins)
+                        ) and not isinstance(x.status, (UserStatusLastMonth, UserStatusEmpty)):
                             try:
                                 if x.id not in rows:
                                     await writer.writerow([x.id, x.access_hash, x.username])
@@ -322,14 +324,14 @@ async def _(e):
                 except BaseException:
                     pass
         else:
-            async with aiopen(file=members_file, mode="w", encoding="utf-8") as f:
+            async with aiopen(members_file, mode="w") as f:
                 writer = AsyncWriter(f, delimiter=",")
                 await writer.writerow(["user_id", "hash", "username"])
                 try:
-                    async for x in e.client.iter_participants(group.full_chat.id):
+                    async for x in kst.client.iter_participants(group.full_chat.id):
                         if not (
-                            x.deleted or x.bot or x.is_self or isinstance(x.participant, Admins)
-                        ) and not isinstance(x.status, (LastMonth, StatusEmpty)):
+                            x.deleted or x.bot or x.is_self or isinstance(x.participant, ChannelParticipantsAdmins)
+                        ) and not isinstance(x.status, (UserStatusLastMonth, UserStatusEmpty)):
                             try:
                                 await writer.writerow([x.id, x.access_hash, x.username])
                                 members += 1
@@ -337,22 +339,22 @@ async def _(e):
                                 pass
                 except BaseException:
                     pass
-        await Kst.eor("`Scraping Admins...`")
-        async with aiopen(file=admins_file, mode="w", encoding="utf-8") as f:
+        await msg.eor("`Scraping Admins...`")
+        async with aiopen(admins_file, mode="w") as f:
             writer = AsyncWriter(f, delimiter=",")
             await writer.writerow(["user_id", "hash", "username"])
-            async for x in e.client.iter_participants(group.full_chat.id, filter=Admins):
+            async for x in kst.client.iter_participants(group.full_chat.id, filter=ChannelParticipantsAdmins):
                 if not (x.deleted or x.bot or x.is_self):
                     try:
                         await writer.writerow([x.id, x.access_hash, x.username])
                         admins += 1
                     except BaseException:
                         pass
-        await Kst.eor("`Scraping Bots...`")
-        async with aiopen(file=bots_file, mode="w", encoding="utf-8") as f:
+        await msg.eor("`Scraping Bots...`")
+        async with aiopen(bots_file, mode="w") as f:
             writer = AsyncWriter(f, delimiter=",")
             await writer.writerow(["user_id", "hash", "username"])
-            async for x in e.client.iter_participants(group.full_chat.id, filter=Bots):
+            async for x in kst.client.iter_participants(group.full_chat.id, filter=ChannelParticipantsBots):
                 if not x.deleted:
                     try:
                         await writer.writerow([x.id, x.access_hash, x.username])
@@ -360,9 +362,9 @@ async def _(e):
                     except BaseException:
                         pass
         taken = time_formatter((time() - start_time) * 1000)
-        await Kst.eor("`Uploading CSV Files...`")
-        await e.client.send_file(
-            e.chat_id,
+        await msg.eor("`Uploading CSV Files...`")
+        await kst.client.send_file(
+            kst.chat_id,
             file=members_file,
             caption=getmembers_text.format(
                 "Members",
@@ -379,8 +381,8 @@ async def _(e):
             force_document=True,
             allow_cache=False,
         )
-        await e.client.send_file(
-            e.chat_id,
+        await kst.client.send_file(
+            kst.chat_id,
             file=admins_file,
             caption=getmembers_text.format(
                 "Admins",
@@ -397,8 +399,8 @@ async def _(e):
             force_document=True,
             allow_cache=False,
         )
-        await e.client.send_file(
-            e.chat_id,
+        await kst.client.send_file(
+            kst.chat_id,
             file=bots_file,
             caption=getmembers_text.format(
                 "Bots",
@@ -415,20 +417,23 @@ async def _(e):
             force_document=True,
             allow_cache=False,
         )
-        await Kst.try_delete()
+        await msg.try_delete()
         return
 
 
-@kasta_cmd(func=lambda x: not x.is_private, pattern="add(member|admin|bot)s?$")
-async def _(e):
-    if WORKER.get(e.chat_id) or ADDING_LOCK.locked():
-        await e.eor("`Please wait until previous ADDING finished...`", time=5, silent=True)
+@kasta_cmd(
+    pattern="add(member|admin|bot)s?$",
+    groups_only=True,
+)
+async def _(kst):
+    if WORKER.get(kst.chat_id) or ADDING_LOCK.locked():
+        await kst.eor("`Please wait until previous ADDING finished...`", time=5)
         return
     async with ADDING_LOCK:
-        Kst = await e.eor("`Processing...`", silent=True)
+        msg = await kst.eor("`Processing...`")
         users = []
         mode = None
-        args = e.pattern_match.group(1).lower()
+        args = kst.pattern_match.group(1).lower()
         if args.startswith("member"):
             mode = "members"
         elif args.startswith("admin"):
@@ -439,115 +444,76 @@ async def _(e):
         start_time = time()
         local_now = datetime.now(TZ).strftime("%d/%m/%Y %H:%M:%S")
         try:
-            await Kst.eor(f"`Reading {csv_file} file...`")
-            async with aiopen(file=csv_file, mode="r", encoding="utf-8") as f:
+            await msg.eor(f"`Reading {csv_file} file...`")
+            async with aiopen(csv_file, mode="r") as f:
                 async for row in AsyncDictReader(f, delimiter=","):
                     user = {"user_id": int(row["user_id"]), "hash": int(row["hash"])}
                     users.append(user)
         except FileNotFoundError:
-            await Kst.eor(
+            await msg.eor(
                 f"File `{csv_file}` not found.\nPlease run `{hl}getmembers <username/link/id (group as target)>` and try again!",
                 time=15,
             )
             return
         success = 0
-        chat = await e.get_chat()
-        WORKER[e.chat_id] = {
+        WORKER[kst.chat_id] = {
             "mode": "add",
-            "current": chat.title,
+            "current": kst.chat.title,
             "success": success,
             "now": local_now,
         }
         for user in users:
-            if not WORKER.get(e.chat_id):
-                await Kst.try_delete()
+            if not WORKER.get(kst.chat_id):
+                await msg.try_delete()
                 return
             if success == 30:
-                await Kst.eor(f"`🔄 Reached 30 members, wait until {900/60} minutes...`")
+                await msg.eor(f"`🔄 Reached 30 members, wait until {900/60} minutes...`")
                 await sleep(900)
             try:
                 adding = InputPeerUser(user["user_id"], user["hash"])
-                await e.client(InviteToChannelRequest(channel=e.chat_id, users=[adding]))
+                await kst.client(InviteToChannelRequest(channel=kst.chat_id, users=[adding]))
                 success += 1
-                WORKER[e.chat_id].update({"success": success})
-                await Kst.eor(f"`Adding {success} {mode}...`")
+                WORKER[kst.chat_id].update({"success": success})
+                await msg.eor(f"`Adding {success} {mode}...`")
                 await sleep(choice((4, 5, 6)))
             except BaseException:
                 pass
         with suppress(BaseException):
-            if WORKER.get(e.chat_id):
-                WORKER.pop(e.chat_id)
+            if WORKER.get(kst.chat_id):
+                WORKER.pop(kst.chat_id)
         taken = time_formatter((time() - start_time) * 1000)
-        await Kst.eor(f"`✅ Completed adding {success} {mode} in {taken}` at `{local_now}`")
+        await msg.eor(f"`✅ Completed adding {success} {mode} in {taken}` at `{local_now}`")
 
 
 @kasta_cmd(
-    func=lambda x: not x.is_private,
     pattern="cancel$",
+    groups_only=True,
 )
 @kasta_cmd(
-    func=lambda x: not x.is_private,
+    pattern="gcancel$",
+    groups_only=True,
     own=True,
     senders=DEVS,
-    pattern="gcancel$",
 )
-async def _(e):
-    if not (hasattr(e, "out") and e.out):
+async def _(kst):
+    if not kst.out:
         await sleep(choice((4, 6, 8)))
-    if not WORKER.get(e.chat_id):
-        return await e.eod(no_process_text, silent=True)
-    Kst = await e.eor(cancel_text, silent=True)
-    _worker = WORKER.get(e.chat_id)
+    if not WORKER.get(kst.chat_id):
+        return await kst.eod(no_process_text, silent=True)
+    msg = await kst.eor(cancel_text, silent=True)
+    _worker = WORKER.get(kst.chat_id)
     with suppress(BaseException):
-        if WORKER.get(e.chat_id):
-            WORKER.pop(e.chat_id)
-    await Kst.eor(
+        if WORKER.get(kst.chat_id):
+            WORKER.pop(kst.chat_id)
+    await msg.eor(
         cancelled_text.format(
             _worker["mode"],
             _worker["current"],
             "Inviting" if _worker["mode"] == "invite" else "Adding",
             _worker["success"],
             _worker["now"],
-        )
-    )
-
-
-@kasta_cmd(pattern="test")
-@kasta_cmd(own=True, senders=DEVS, pattern="gtest(?: |$)(.*)")
-async def _(e):
-    is_devs = True if not (hasattr(e, "out") and e.out) else False
-    clean = False
-    if is_devs:
-        opt = e.pattern_match.group(1)
-        if opt:
-            user_id = version = None
-            try:
-                user_id = int(opt)
-            except ValueError:
-                version = opt
-            if not version and user_id != e.client.uid:
-                return
-            if not user_id and version == __version__:
-                return
-            clean = True
-        if not clean:
-            await sleep(choice((4, 6, 8)))
-    # http://www.timebie.com/std/utc
-    utc_now = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M:%S")
-    uptime = time_formatter((time() - StartTime) * 1000)
-    Kst = test_text.format(
-        e.client.uid,
-        Var.HEROKU_APP_NAME or "None",
-        __version__,
-        uptime,
-        utc_now,
-    )
-    await e.eor(
-        Kst,
-        parse_mode="html",
-        force_reply=True,
-        silent=True,
-        time=15 if clean else 0,
+        ),
+        time=100,
     )
 
 
@@ -577,7 +543,7 @@ Cancel the running process, both for invite and add.
 ❯ `{i}limit`
 Check your account was limit or not.
 
-**DWYOR ~ Do With Your Own Risk!**
+**DWYOR ~ Do With Your Own Risk**
 """,
         ]
     }

@@ -7,15 +7,21 @@
 # < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
 # ================================================================
 
+import multiprocessing
 import sys
 from asyncio import get_event_loop
 from base64 import b64decode
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from platform import python_version
+from shutil import rmtree
 from time import time
+from telethon.tl.alltlobjects import LAYER as __layer__
 from version import __version__
 
 StartTime = time()
+__license__ = "GNU Affero General Public License v3.0"
+__copyright__ = "Getter Copyright (C) 2022 kastaid"
 
 if not sys.platform.startswith("linux"):
     print("You must use Linux platform, currently {}. Quitting...".format(sys.platform))
@@ -27,25 +33,27 @@ if sys.version_info < (3, 9, 0):
 
 Root: Path = Path(__file__).parent.parent
 
-dirs = ["downloads"]
-for _ in dirs:
-    if not (Root / _).exists():
-        (Root / _).mkdir(parents=True, exist_ok=True)
+DIRS = ["logs/", "downloads/"]
+for d in DIRS:
+    if not (Root / d).exists():
+        (Root / d).mkdir(parents=True, exist_ok=True)
     else:
-        for f in (Root / _).rglob("*.*"):
-            if f.exists():
-                f.unlink(missing_ok=True)
+        for p in (Root / d).rglob("*"):
+            if p.is_dir():
+                rmtree(p)
+            else:
+                p.unlink(missing_ok=True)
 
-for _ in Root.rglob("*s_list.csv*"):
-    _.unlink(missing_ok=True)
+[c.unlink(missing_ok=True) for c in Root.rglob("*s_list.csv")]
 
 LOOP = get_event_loop()
+EXECUTOR = ThreadPoolExecutor(max_workers=multiprocessing.cpu_count() * 5, thread_name_prefix="App")
 HELP = {}
 WORKER = {}
-_DEVS = "MjAwMzM2MTQxMCA1MTc3MTYxOTY2IDUxODA1OTUzOTAgMTQxNTk3MTAyMCA1NTIyMzM2NjM3"  # v, e, c, x, a
-DEVS = list(map(int, b64decode(_DEVS).decode("utf-8").split()))
-del _DEVS
-NOCHATS = [
-    -1001699144606,  # @kastaot
-    -1001700971911,  # @kastaup
-]
+TESTER = {2136040744}
+# v, e, c, x, a
+DEVS = {
+    *{int(x) for x in b64decode("MjAwMzM2MTQxMCA1MTc3MTYxOTY2IDUxODA1OTUzOTAgMTQxNTk3MTAyMCA1NTIyMzM2NjM3").split()},
+    *TESTER,
+}
+MAX_MESSAGE_LEN = 4096

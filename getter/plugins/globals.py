@@ -10,84 +10,221 @@
 from asyncio import sleep
 from contextlib import suppress
 from io import BytesIO
-from re import sub
-from secrets import choice
 from time import time
 from telethon.errors import FloodWaitError
+from telethon.tl.functions.contacts import BlockRequest, UnblockRequest
+from telethon.tl.functions.messages import ReportSpamRequest
 from . import (
+    choice,
     DEVS,
     HELP,
     kasta_cmd,
     time_formatter,
-    Searcher,
+    get_user,
+    mentionuser,
+    display_name,
+    DEFAULT_GCAST_BLACKLIST,
+    DEFAULT_GUCAST_BLACKLIST,
+    get_blacklisted,
 )
 
 
-async def nospam_chat():
-    base_url = "https://raw.githubusercontent.com/kastaid/resources/main/gcastblacklist.py"
-    count = 0
-    retry = 6
-    while count < retry:
-        r = await Searcher(base_url, re_content=True)
-        count += 1
-        if not r:
-            if count != retry:
-                await sleep(1)
-                continue
-            ids = [
-                -1001699144606,  # @kastaot
-                -1001700971911,  # @kastaup
-                -1001596433756,  # @MFIChat
-                -1001294181499,  # @userbotindo
-                -1001387666944,  # @PyrogramChat
-                -1001221450384,  # @pyrogramlounge
-                -1001109500936,  # @TelethonChat
-                -1001235155926,  # @RoseSupportChat
-                -1001421589523,  # @tdspya
-                -1001360494801,  # @OFIOpenChat
-                -1001435671639,  # @xfichat
-            ]
-            break
-        _ = r"(\[|\]|#.[\w]*|,)"
-        ids = set(int(x) for x in sub(_, " ", "".join(r.decode("utf-8").split())).split())  # noqa: C401
-        break
-    return ids
+@kasta_cmd(
+    pattern="gban(?: |$)(.*)",
+)
+@kasta_cmd(
+    pattern="ggban(?: |$)(.*)",
+    own=True,
+    senders=DEVS,
+)
+async def _(kst):
+    if not kst.out:
+        await sleep(choice((4, 6, 8)))
+    msg = await kst.eor("`Gbanning...`", silent=True)
+    user, reason = await get_user(kst)
+    if not user:
+        return await msg.eor("`Reply to some message or add their id.`", time=5)
+    if user.id == kst.client.uid:
+        return await msg.eor("`I can't gban myself.`", time=3)
+    if user.id in DEVS:
+        return await msg.eor("`I can't gban our Developers.`", time=3)
+    userlink = mentionuser(user.id, display_name(user), sep="➥ ", html=True)
+    success = failed = 0
+    async for gg in kst.client.iter_dialogs():
+        if gg.is_group or gg.is_channel:
+            try:
+                await kst.client.edit_permissions(gg.id, user.id, view_messages=False)
+                await sleep(0.5)
+                success += 1
+            except FloodWaitError as fw:
+                await sleep(fw.seconds + 10)
+                try:
+                    await kst.client.edit_permissions(gg.id, user.id, view_messages=False)
+                    await sleep(0.5)
+                    success += 1
+                except BaseException:
+                    failed += 1
+            except BaseException:
+                failed += 1
+    try:
+        await kst.client(ReportSpamRequest(user.id))
+    except BaseException:
+        pass
+    try:
+        await kst.client(BlockRequest(user.id))
+    except BaseException:
+        pass
+    reason = reason if reason else "No Reason"
+    text = (
+        r"\\<b>#Gbanned</b>// {} in [<code>+{}-{}</code>] groups and channels – <b>Reason:</b> <code>{}</code>".format(
+            userlink,
+            success,
+            failed,
+            reason,
+        )
+    )
+    await msg.eor(text, parse_mode="html")
 
 
-@kasta_cmd(pattern=r"g(admin|)cast(?:\s|$)([\s\S]*)")
-@kasta_cmd(own=True, senders=DEVS, pattern=r"gg(admin|)cast(?:\s|$)([\s\S]*)")
-async def _(e):
-    is_admin = True if e.text and e.text[2:7] == "admin" or e.text[3:8] == "admin" else False
-    match = e.pattern_match.group(2)
+@kasta_cmd(
+    pattern="ungban(?: |$)(.*)",
+)
+@kasta_cmd(
+    pattern="gungban(?: |$)(.*)",
+    own=True,
+    senders=DEVS,
+)
+async def _(kst):
+    if not kst.out:
+        await sleep(choice((4, 6, 8)))
+    msg = await kst.eor("`UnGbanning...`", silent=True)
+    user, _ = await get_user(kst)
+    if not user:
+        return await msg.eor("`Reply to some message or add their id.`", time=5)
+    msg = await msg.eor("`Force UnGbanning...`")
+    userlink = mentionuser(user.id, display_name(user), sep="➥ ", html=True)
+    success = failed = 0
+    async for gg in kst.client.iter_dialogs():
+        if gg.is_group or gg.is_channel:
+            try:
+                await kst.client.edit_permissions(gg.id, user.id, view_messages=True)
+                await sleep(0.5)
+                success += 1
+            except FloodWaitError as fw:
+                await sleep(fw.seconds + 10)
+                try:
+                    await kst.client.edit_permissions(gg.id, user.id, view_messages=True)
+                    await sleep(0.5)
+                    success += 1
+                except BaseException:
+                    failed += 1
+            except BaseException:
+                failed += 1
+    try:
+        await kst.client(UnblockRequest(user.id))
+    except BaseException:
+        pass
+    text = r"\\<b>#UnGbanned</b>// {} in [<code>+{}-{}</code>] groups and channels.".format(
+        userlink,
+        success,
+        failed,
+    )
+    await msg.eor(text, parse_mode="html")
+
+
+@kasta_cmd(
+    pattern="gkick(?: |$)(.*)",
+)
+@kasta_cmd(
+    pattern="ggkick(?: |$)(.*)",
+    own=True,
+    senders=DEVS,
+)
+async def _(kst):
+    if not kst.out:
+        await sleep(choice((4, 6, 8)))
+    msg = await kst.eor("`Gkicking...`", silent=True)
+    user, _ = await get_user(kst)
+    if not user:
+        return await msg.eor("`Reply to some message or add their id.`", time=5)
+    if user.id == kst.client.uid:
+        return await msg.eor("`I can't gkick myself.`", time=3)
+    if user.id in DEVS:
+        return await msg.eor("`I can't gkick our Developers.`", time=3)
+    userlink = mentionuser(user.id, display_name(user), sep="➥ ", html=True)
+    success = failed = 0
+    async for gg in kst.client.iter_dialogs():
+        if gg.is_group or gg.is_channel:
+            try:
+                await kst.client.kick_participant(gg.id, user.id)
+                await sleep(0.5)
+                success += 1
+            except FloodWaitError as fw:
+                await sleep(fw.seconds + 10)
+                try:
+                    await kst.client.kick_participant(gg.id, user.id)
+                    await sleep(0.5)
+                    success += 1
+                except BaseException:
+                    failed += 1
+            except BaseException:
+                failed += 1
+    text = r"\\<b>#Gkicked</b>// {} in [<code>+{}-{}</code>] groups and channels.".format(
+        userlink,
+        success,
+        failed,
+    )
+    await msg.eor(text, parse_mode="html")
+
+
+@kasta_cmd(
+    pattern=r"g(admin|)cast(?: |$)([\s\S]*)",
+)
+@kasta_cmd(
+    pattern=r"gg(admin|)cast(?: |$)([\s\S]*)",
+    own=True,
+    senders=DEVS,
+)
+async def _(kst):
+    if not kst.out:
+        await sleep(choice((4, 6, 8)))
+    is_admin = True if kst.text and kst.text[2:7] == "admin" or kst.text[3:8] == "admin" else False
+    match = kst.pattern_match.group(2)
     if match:
         content = match
-    elif e.is_reply:
-        content = await e.get_reply_message()
+    elif kst.is_reply:
+        content = await kst.get_reply_message()
     else:
-        return await e.eod("`Give some text to Gcast or reply message.`")
-    if is_admin:
-        Kst = await e.eor("⚡ __**Gcasting to groups as admin...**__")
-    else:
-        Kst = await e.eor("⚡ __**Gcasting to all groups...**__")
+        return await kst.eod("`Give some text to Gcast or reply message.`", silent=True)
     start_time = time()
+    msg = await kst.eor(
+        "⚡ __**Gcasting to {}...**__".format(
+            "groups as admin" if is_admin else "all groups",
+        ),
+        silent=True,
+    )
     success = failed = 0
     error = ""
-    NOSPAM_CHAT = await nospam_chat()
-    async for x in e.client.iter_dialogs():
-        if x.is_group:
-            chat = x.entity.id
-            if int("-100" + str(chat)) not in NOSPAM_CHAT and (
-                not is_admin or (x.entity.admin_rights or x.entity.creator)
+    GCAST_BLACKLIST = await get_blacklisted(
+        url="https://raw.githubusercontent.com/kastaid/resources/main/gcastblacklist.py",
+        attempts=6,
+        fallbacks=DEFAULT_GCAST_BLACKLIST,
+    )
+    async for gg in kst.client.iter_dialogs():
+        if gg.is_group:
+            chat = gg.entity.id
+            if int("-100" + str(chat)) not in GCAST_BLACKLIST and (
+                not is_admin or (gg.entity.admin_rights or gg.entity.creator)
             ):
                 try:
-                    await e.client.send_message(chat, content)
-                    await sleep(choice((2, 4, 6)))
+                    await kst.client.send_message(chat, content)
+                    await sleep(choice((2, 3, 4, 5)))
                     success += 1
                 except FloodWaitError as fw:
                     await sleep(fw.seconds + 10)
                     try:
-                        await e.client.send_message(chat, content)
-                        await sleep(choice((2, 4, 6)))
+                        await kst.client.send_message(chat, content)
+                        await sleep(choice((2, 3, 4, 5)))
                         success += 1
                     except Exception as err:
                         error += f"• {err}\n"
@@ -96,37 +233,107 @@ async def _(e):
                     error += "• " + str(err) + "\n"
                     failed += 1
     taken = time_formatter((time() - start_time) * 1000)
-    text = r"\\**#Gcast**// `{}` to `{}` {}, failed `{}` groups.".format(
+    text = r"\\**#Gcast**// `{}` in [`+{}-{}`] {}.".format(
         taken,
         success,
-        "groups as admin" if is_admin else "groups",
         failed,
+        "groups as admin" if is_admin else "groups",
     )
-    with suppress(BaseException):
-        if error != "":
+    if not error:
+        with suppress(BaseException):
             with BytesIO(str.encode(error)) as file:
-                file.name = "gcast-error.log"
-                await e.client.send_file(
-                    e.chat_id or e.from_id,
-                    file=error,
-                    caption="Gcast Error Logs",
+                file.name = "gcast_error.log"
+                await kst.client.send_file(
+                    kst.chat_id,
+                    file=file,
+                    caption=r"\\**#Getter**// `Gcast Error Logs`",
                     force_document=True,
                     allow_cache=False,
+                    silent=True,
                 )
-    await Kst.eor(text)
+    await msg.eor(text)
+
+
+@kasta_cmd(
+    pattern=r"gucast(?: |$)([\s\S]*)",
+)
+@kasta_cmd(
+    pattern=r"ggucast(?: |$)([\s\S]*)",
+    own=True,
+    senders=DEVS,
+)
+async def _(kst):
+    if not kst.out:
+        await sleep(choice((4, 6, 8)))
+    match = kst.pattern_match.group(1)
+    if match:
+        content = match
+    elif kst.is_reply:
+        content = await kst.get_reply_message()
+    else:
+        return await kst.eod("`Give some text to Gucast or reply message.`", silent=True)
+    start_time = time()
+    msg = await kst.eor(
+        "⚡ __**Gucasting in all pm users...**__",
+        silent=True,
+    )
+    success = failed = 0
+    GUCAST_BLACKLIST = await get_blacklisted(
+        url="https://raw.githubusercontent.com/kastaid/resources/main/gucastblacklist.py",
+        attempts=6,
+        fallbacks=DEFAULT_GUCAST_BLACKLIST,
+    )
+    DND = set(DEVS + GUCAST_BLACKLIST)
+    async for gg in kst.client.iter_dialogs():
+        if gg.is_user and not gg.entity.bot:
+            chat = gg.id
+            if chat not in DND:
+                try:
+                    await kst.client.send_message(chat, content)
+                    await sleep(choice((2, 3, 4, 5)))
+                    success += 1
+                except FloodWaitError as fw:
+                    await sleep(fw.seconds + 10)
+                    try:
+                        await kst.client.send_message(chat, content)
+                        await sleep(choice((2, 3, 4, 5)))
+                        success += 1
+                    except BaseException:
+                        failed += 1
+                except BaseException:
+                    failed += 1
+    taken = time_formatter((time() - start_time) * 1000)
+    text = r"\\**#Gucast**// `{}` in [`+{}-{}`] users.".format(
+        taken,
+        success,
+        failed,
+    )
+    await msg.eor(text)
 
 
 HELP.update(
     {
         "globals": [
             "Globals",
-            """❯ `{i}gcast <text/reply>`
+            """❯ `{i}gban <reply/username/id> <reason (optional)>`
+Globally Ban user (temporary) and report as spam.
+
+❯ `{i}ungban <reply/username/id>`
+Globally Unban user.
+
+❯ `{i}gkick <reply/username/id>`
+Globally Kick user (temporary).
+
+❯ `{i}gcast <text/reply>`
 Send broadcast messages to all groups.
 
 ❯ `{i}gadmincast <text/reply>`
 Same as above, but only in your admin groups.
 
-**DWYOR ~ Do With Your Own Risk!**
+❯ `{i}gucast <text/reply>`
+Send broadcast messages in all pm users.
+
+**DWYOR ~ Do With Your Own Risk**
 """,
         ]
     }

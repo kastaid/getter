@@ -12,24 +12,33 @@ import signal
 import sys
 from contextlib import suppress
 from importlib import import_module
+from platform import python_version
 from secrets import choice
 from time import time
+from typing import List, Tuple
 from telethon.errors import ApiIdInvalidError, AuthKeyDuplicatedError, PhoneNumberInvalidError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
 from telethon.tl.functions.channels import JoinChannelRequest
 from telethon.tl.types import InputPeerNotifySettings
+from telethon.version import __version__ as telethonver
 from getter import (
     StartTime,
     __version__,
+    __layer__,
+    __license__,
+    __copyright__,
     Root,
     LOOP,
+    EXECUTOR,
+    DEVS,
 )
-from getter.app import App
-from getter.config import Var
+from getter.config import Var, HANDLER
+from getter.core.app import App
+from getter.core.functions import time_formatter
+from getter.core.property import do_not_remove_credit, get_blacklisted
 from getter.logger import LOGS
-from getter.utils import time_formatter
 
-success_msg = ">> Visit @kastaid for updates !!"
+success_msg = ">> Visit @kastaid for Updates !!"
 
 if Var.DEV_MODE:
     LOGS.warning(
@@ -43,14 +52,14 @@ async def shutdown(signum: str) -> None:
         await App.disconnect()
     tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
     [task.cancel() for task in tasks]
-    LOGS.warning("Cancelling outstanding tasks : {}".format(len(tasks)))
     await asyncio.gather(*tasks, return_exceptions=True)
+    EXECUTOR.shutdown(wait=False)
     await LOOP.shutdown_asyncgens()
     LOOP.stop()
 
 
 def trap() -> None:
-    for signame in {"SIGINT", "SIGTERM", "SIGABRT"}:
+    for signame in ("SIGINT", "SIGTERM", "SIGABRT"):
         sig = getattr(signal, signame)
         LOOP.add_signal_handler(sig, lambda s=sig: asyncio.create_task(shutdown(s.name)))
 
@@ -58,30 +67,29 @@ def trap() -> None:
 trap()
 
 
-async def autous() -> None:
-    if Var.DEV_MODE:
+async def autous(user_id: int) -> None:
+    if Var.DEV_MODE and user_id in DEVS:
         return
     with suppress(BaseException):
-        await asyncio.sleep(5)
         await App(JoinChannelRequest(channel="@kastaid"))
-    with suppress(BaseException):
         await asyncio.sleep(5)
-        await App(JoinChannelRequest(channel="@kastaot"))
     with suppress(BaseException):
-        await asyncio.sleep(5)
         await App(JoinChannelRequest(channel="@kastaup"))
-    with suppress(BaseException):
         await asyncio.sleep(5)
+    with suppress(BaseException):
+        await App(JoinChannelRequest(channel="@kastaot"))
+        await asyncio.sleep(5)
+    with suppress(BaseException):
         await App(JoinChannelRequest(channel="@tongkronganvirtuals"))
-    with suppress(BaseException):
         await asyncio.sleep(5)
+    with suppress(BaseException):
         await App(
             UpdateNotifySettingsRequest(
                 peer="@kastaup",
                 settings=InputPeerNotifySettings(
                     show_previews=False,
                     silent=True,
-                    mute_until=2 ** 31 - 1,
+                    mute_until=2**31 - 1,
                     sound="",
                 ),
             )
@@ -90,41 +98,97 @@ async def autous() -> None:
 
 async def launching() -> None:
     try:
-        await asyncio.sleep(choice((2, 4, 6)))
+        do_not_remove_credit()
+        await asyncio.sleep(choice((4, 6, 8)))
         await App.start()
         await asyncio.sleep(5)
         App.me = await App.get_me()
         App.uid = App.me.id
-        await autous()
-    except ApiIdInvalidError:
-        LOGS.error("API_ID and API_HASH combination does not match, please re-check! Quitting...")
+        App.me.phone = None
+        await asyncio.sleep(5)
+        if App.uid not in DEVS:
+            KASTA_BLACKLIST = await get_blacklisted(
+                url="https://raw.githubusercontent.com/kastaid/resources/main/kastablacklist.py",
+                attempts=6,
+                fallbacks=[],
+            )
+            if App.uid in KASTA_BLACKLIST:
+                LOGS.error(
+                    "({} - {}) YOU ARE BLACKLISTED !!".format(
+                        App.me.first_name,
+                        App.uid,
+                    )
+                )
+                sys.exit(1)
+        LOGS.info(
+            "Logged in as ({} - {})".format(
+                App.me.first_name,
+                App.uid,
+            )
+        )
+        await autous(App.uid)
+    except (ValueError, ApiIdInvalidError):
+        LOGS.critical("API_ID and API_HASH combination does not match, please re-check! Quitting...")
         sys.exit(1)
     except (AuthKeyDuplicatedError, PhoneNumberInvalidError, EOFError):
-        LOGS.error("STRING_SESSION expired, please create new! Quitting...")
+        LOGS.critical("STRING_SESSION expired, please create new! Quitting...")
         sys.exit(1)
     except Exception as e:
         LOGS.exception("[LAUNCHING] - {}".format(e))
         sys.exit(1)
 
 
-def all_plugins():
-    return sorted(
-        [f.stem for f in (Root / "getter/plugins").rglob("*.py") if f.is_file() and not str(f).endswith("__init__.py")]
-    )
+def all_plugins() -> Tuple[List[str], str]:
+    basepath = "getter/plugins/"
+    plugins = [p.stem for p in (Root / basepath).rglob("*.py") if not str(p).endswith(("__.py", "_draft.py"))]
+    return (sorted(plugins), basepath.replace("/", "."))
 
 
 async def main() -> None:
     LOGS.info(">> Launching...")
     await launching()
     LOGS.info(">> Load Plugins...")
-    plugins = all_plugins()
-    [import_module("getter.plugins." + p) for p in plugins]
-    LOGS.info(">> Loaded Plugins {} : {}".format(len(plugins), str(plugins)))
+    load = time()
+    plugins, basepath = all_plugins()
+    for plugin in plugins:
+        try:
+            import_module(basepath + plugin)
+            LOGS.success("[+] " + plugin)
+        except Exception as err:
+            LOGS.exception("[-] {} : {}".format(plugin, err))
+    loaded_time = time_formatter((time() - load) * 1000)
+    loaded_msg = ">> Loaded Plugins {} (took {}) : {}".format(
+        len(plugins),
+        loaded_time,
+        tuple(plugins),
+    )
+    LOGS.info(loaded_msg)
+    await asyncio.sleep(1)
+    do_not_remove_credit()
     launch_time = time_formatter((time() - StartTime) * 1000)
-    launch_msg = ">> 🚀 Getter v{} launch {} in {}".format(__version__, App.uid, launch_time)
+    python_msg = ">> Python Version - {}".format(
+        python_version(),
+    )
+    telethon_msg = ">> Telethon Version - {} [Layer: {}]".format(
+        telethonver,
+        __layer__,
+    )
+    launch_msg = ">> 🚀 Getter v{} launch ({} - {}) in {} with handler [{}ping]".format(
+        __version__,
+        App.me.first_name,
+        App.uid,
+        launch_time,
+        HANDLER,
+    )
+    LOGS.info(python_msg)
+    LOGS.info(telethon_msg)
     LOGS.info(launch_msg)
-    await asyncio.sleep(2)
-    LOGS.info(success_msg)
+    await asyncio.sleep(1)
+    LOGS.info(__license__)
+    await asyncio.sleep(1)
+    LOGS.info(__copyright__)
+    await asyncio.sleep(1)
+    LOGS.success(success_msg)
     await App.run_until_disconnected()
 
 
@@ -132,20 +196,16 @@ if __name__ == "__main__":
     try:
         LOOP.run_until_complete(main())
     except (
-        NotImplementedError,
         KeyboardInterrupt,
-        SystemExit,
-        RuntimeError,
         ConnectionError,
-        RecursionError,
-        asyncio.CancelledError,
+        asyncio.exceptions.CancelledError,
     ):
         pass
-    except (ModuleNotFoundError, ImportError) as e:
-        LOGS.exception("[MAIN_MODULE_IMPORT] : {}".format(e))
+    except (ModuleNotFoundError, ImportError) as err:
+        LOGS.exception("[MAIN_MODULE_IMPORT] : {}".format(err))
         sys.exit(1)
-    except Exception as e:
-        LOGS.exception("[MAIN_ERROR] : {}".format(e))
+    except Exception as err:
+        LOGS.exception("[MAIN_ERROR] : {}".format(err))
     finally:
-        LOGS.info("[MAIN] - App Stopped...")
+        LOGS.warning("[MAIN] - App Stopped...")
         sys.exit(0)

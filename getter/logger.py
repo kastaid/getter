@@ -8,25 +8,23 @@
 # ================================================================
 
 import logging
-from sys import stderr
+import sys
+from datetime import date
 from loguru import logger as LOGS
-from getter import Root
 
-_log_ = "app.log"
-(Root / _log_).unlink(missing_ok=True)
-
-# Logging at the start to catch everything
-fmt = "{time:DD/MM/YY, HH:mm:ss} [{level}] || {name}:{line} : {message}"
 LOGS.remove(0)
 LOGS.add(
-    _log_,
-    format=fmt,
-    rotation="2 days",
-    retention="2 days",
+    "logs/getter-{}.log".format(date.today().strftime("%d-%m-%Y")),
+    format="{time:DD/MM/YY HH:mm:ss} | {level: <8} | {name: ^15} | {function: ^15} | {line: >3} : {message}",
+    rotation="1 days",
     encoding="utf8",
-    enqueue=True,
 )
-LOGS.add(stderr, level="INFO", format=fmt, colorize=False)
+LOGS.add(
+    sys.stderr,
+    format="{time:DD/MM/YY HH:mm:ss} | {level} | {name}:{function}:{line} | {message}",
+    level="INFO",
+    colorize=False,
+)
 LOGS.opt(lazy=True, colors=False)
 
 
@@ -43,15 +41,7 @@ class InterceptHandler(logging.Handler):
         LOGS.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
 
-class LogFilter(logging.Filter):
-    def filter(self, record):
-        if record.funcName == "send":
-            return False
-        return True
-
-
 logging.getLogger("asyncio").setLevel(logging.ERROR)
 logging.getLogger("urllib3").disabled = True
 logging.getLogger("telethon").setLevel(logging.ERROR)
-logging.getLogger("telethon.network.mtprotosender").addFilter(LogFilter())
 logging.basicConfig(handlers=[InterceptHandler()], level="INFO")

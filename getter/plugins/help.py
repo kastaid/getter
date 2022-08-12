@@ -9,15 +9,16 @@
 
 from platform import python_version
 from time import time
-from telethon import version
+from telethon.version import __version__ as telethonver
 from . import (
+    __version__ as getterver,
+    __layer__,
     StartTime,
-    __version__,
     HELP,
-    display_name,
     hl,
     kasta_cmd,
     Var,
+    display_name,
     time_formatter,
 )
 
@@ -30,7 +31,7 @@ help_text = """
 ┣  <b>Heroku App</b> – <code>{}</code>
 ┣  <b>Getter Version</b> – <code>{}</code>
 ┣  <b>Python Version</b> – <code>{}</code>
-┣  <b>Telethon Version</b> – <code>{}</code>
+┣  <b>Telethon Version</b> – <code>{} Layer: {}</code>
 ┣  <b>Uptime</b> – <code>{}</code>
 ┣  <b>Handler</b> – <code>{}</code>
 ┣  <b>Plugins</b> – <code>{}</code>
@@ -44,35 +45,40 @@ help_text = """
 """
 
 
-@kasta_cmd(disable_errors=True, pattern="help(?: |$)(.*)")
-async def _(e):
-    args = e.pattern_match.group(1).lower()
-    Kst = await e.eor("`Loading...`")
+@kasta_cmd(
+    pattern="help(?: |$)(.*)",
+    edited=True,
+    no_crash=True,
+)
+async def _(kst):
+    args = kst.pattern_match.group(1).lower()
+    msg = await kst.eor("`Loading...`")
     if args:
         if args in HELP:
-            _ = "📦 **Plugin {}** <`{}help {}`>\n\n{}".format(
+            _ = "**📦 Getter Plugin {}** <`{}help {}`>\n\n{}".format(
                 HELP[args][0],
                 hl,
                 args,
                 HELP[args][1].replace("{i}", hl),
             )
-            await Kst.eor(_)
+            await msg.eor(_)
         else:
-            await Kst.eor(f"❌ **Invalid Plugin** ➞ `{args}`\nType ```{hl}help``` to see valid plugin names.")
+            await msg.eor(f"**📦 Invalid Plugin ➞** `{args}`\nType ```{hl}help``` to see valid plugin names.")
     else:
         uptime = time_formatter((time() - StartTime) * 1000)
         plugins = ""
         for _ in HELP:
             plugins += f"<code>{_}</code>  ★  "
         plugins = plugins[:-3]
-        me = await e.client.get_me()
+        me = await kst.client.get_me()
         text = help_text.format(
             display_name(me),
-            e.client.uid,
+            kst.client.uid,
             Var.HEROKU_APP_NAME or "None",
-            __version__,
+            getterver,
             python_version(),
-            version.__version__,
+            telethonver,
+            __layer__,
             uptime,
             hl,
             len(HELP),
@@ -80,4 +86,4 @@ async def _(e):
             plugins,
             hl,
         )
-        await Kst.eor(text, parse_mode="html")
+        await msg.eor(text, parse_mode="html")

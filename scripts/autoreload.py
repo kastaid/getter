@@ -7,19 +7,22 @@
 # < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
 # ================================================================
 
+import os
+import signal
 import sys
 from contextlib import suppress
-from os import getpid, kill
-from pathlib import Path
-from signal import (
-    SIG_DFL,
-    SIGINT,
-    SIGTERM,
-    signal,
-)
 from subprocess import CalledProcessError, Popen, check_call
 from time import sleep
 from typing import Generator
+from . import (
+    Root,
+    EXTS,
+    WAIT_FOR,
+    RST,
+    BOLD,
+    RED,
+    YELLOW,
+)
 
 try:
     import psutil as psu
@@ -29,66 +32,56 @@ except ModuleNotFoundError:
 finally:
     import psutil as psu
 
-RST = "\x1b[0m"
-BOLD = "\x1b[1m"
-RED = "\x1b[31m"
-YELLOW = "\x1b[33m"
-
-wait = 1
-Root: Path = Path(__file__).parent.parent
-
 
 def file_times() -> Generator[int, None, None]:
-    ext = [".py", ".yml", ".env"]
     with suppress(BaseException):
-        for f in filter(lambda p: p.suffix in ext, (Root).rglob("*")):
+        for f in filter(lambda p: p.suffix in EXTS, Root.rglob("*")):
             yield f.stat().st_mtime
 
 
-def print_stdout(process) -> None:
-    stdout = process.stdout
-    if stdout:
-        print(stdout)
+def print_stdout(procs) -> None:
+    out = procs.stdout
+    if out:
+        print(out)
 
 
-def kill_process_tree(process) -> None:
+def kill_process_tree(procs) -> None:
     with suppress(psu.NoSuchProcess):
-        parent = psu.Process(process.pid)
-        children = parent.children(recursive=True)
-        children.append(parent)
-        for p in children:
-            p.send_signal(SIGTERM)
-    process.terminate()
+        parent = psu.Process(procs.pid)
+        child = parent.children(recursive=True)
+        child.append(parent)
+        for p in child:
+            p.send_signal(signal.SIGTERM)
+    procs.terminate()
 
 
 def main() -> None:
     if len(sys.argv) <= 1:
         print("python3 -m scripts.autoreload [command]")
         sys.exit(0)
-    command = " ".join(sys.argv[1:])
-    process = Popen(command, shell=True)
+    cmd = " ".join(sys.argv[1:])
+    procs = Popen(cmd, shell=True)
     last_mtime = max(file_times())
     try:
         while True:
             max_mtime = max(file_times())
-            print_stdout(process)
+            print_stdout(procs)
             if max_mtime > last_mtime:
                 last_mtime = max_mtime
-                print(f"{BOLD}{YELLOW}Kill process [{process.pid}] and restarting [{process.args}]{RST}")
-                kill_process_tree(process)
-                process = Popen(command, shell=True)
-            sleep(wait)
-    except CalledProcessError as e:
-        kill_process_tree(process)
-        sys.exit(e.returncode)
+                print(f"{BOLD}{YELLOW}Restarting >> {procs.args}{RST}")
+                kill_process_tree(procs)
+                procs = Popen(cmd, shell=True)
+            sleep(WAIT_FOR)
+    except CalledProcessError as err:
+        kill_process_tree(procs)
+        sys.exit(err.returncode)
     except BaseException:
-        print("internal error!", file=sys.stderr)
-        raise
+        print(f"{BOLD}{RED}Watch interrupted.{RST}")
     except KeyboardInterrupt:
-        print(f"{BOLD}{RED}Kill process [{process.pid}]{RST}")
-        kill_process_tree(process)
-        signal(SIGINT, SIG_DFL)
-        kill(getpid(), SIGINT)
+        print(f"{BOLD}{RED}Kill process [{procs.pid}]{RST}")
+        kill_process_tree(procs)
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+        os.kill(os.getpid(), signal.SIGINT)
 
 
 if __name__ == "__main__":

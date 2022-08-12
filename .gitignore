@@ -136,5 +136,9 @@ config.env
 *.db-*
 *.session*
 
-*_output.txt
+logs
+backup
+*output.txt
+neofetch*
+carbon*
 *s_list.csv

@@ -9,35 +9,35 @@
 
 from asyncio import sleep
 from contextlib import suppress
-from telethon.tl.custom import Message
+from aiofiles import open as aiopen
 from telethon.tl.types import MessageService
+from getter import Root, MAX_MESSAGE_LEN
+from getter.core.functions import strip_format
 
 
 async def eor(e, text=None, **args):
     time = args.get("time", None)
     edit_time = args.get("edit_time", None)
     force_reply = args.get("force_reply", False)
-    _ = e if force_reply else None
-    args["reply_to"] = e.reply_to_msg_id or _
-    if len(text) > 4096:
-        from getter import Root
-        from getter.utils import md_to_text
-
-        text = md_to_text(text)
+    args["reply_to"] = e.reply_to_msg_id or (e if force_reply else None)
+    if len(text) > MAX_MESSAGE_LEN:
+        text = strip_format(text)
         file = "message_output.txt"
-        with open(file, "w+") as f:
-            f.write(text)
+        async with aiopen(file, mode="w") as f:
+            await f.write(text)
         with suppress(BaseException):
+            chat = await e.get_chat()
             await e.client.send_file(
-                e.chat_id,
+                chat,
                 file=file,
-                caption="Message too long or large size.",
+                caption=r"\\**#Getter**// `Message Too Long`",
                 force_document=True,
                 allow_cache=False,
                 reply_to=args["reply_to"],
+                silent=True,
             )
-        (Root / file).unlink(missing_ok=True)
-        return await e.try_delete()
+        await _try_delete(e)
+        return (Root / file).unlink(missing_ok=True)
     if "time" in args:
         del args["time"]
     if "edit_time" in args:
@@ -46,16 +46,14 @@ async def eor(e, text=None, **args):
         del args["force_reply"]
     if "link_preview" not in args:
         args.update({"link_preview": False})
-    if hasattr(e, "out") and e.out and not isinstance(e, MessageService):
+    if e.out and not isinstance(e, MessageService):
         if "silent" in args:
             del args["silent"]
+        if "reply_to" in args:
+            del args["reply_to"]
         if edit_time:
             await sleep(edit_time)
         try:
-            try:
-                del args["reply_to"]
-            except KeyError:
-                pass
             res = await e.edit(text, **args)
         except BaseException:
             return
@@ -72,60 +70,47 @@ async def eod(e, text=None, **kwargs):
     return await eor(e, text, **kwargs)
 
 
-async def eos(e, text=None, **args):
-    edit = args.get("edit", False)
+async def sod(e, text=None, **args):
+    delete = args.get("delete", True)
+    time = args.get("time", None)
     force_reply = args.get("force_reply", False)
-    _ = e if force_reply else None
-    args["reply_to"] = e.reply_to_msg_id or _
-    if len(text) > 4096:
-        from getter import Root
-        from getter.utils import md_to_text
-
-        text = md_to_text(text)
+    args["reply_to"] = e.reply_to_msg_id or (e if force_reply else None)
+    if delete:
+        await _try_delete(e)
+    if len(text) > MAX_MESSAGE_LEN:
+        text = strip_format(text)
         file = "message_output.txt"
-        with open(file, "w+") as f:
-            f.write(text)
+        async with aiopen(file, mode="w") as f:
+            await f.write(text)
         with suppress(BaseException):
             await e.client.send_file(
                 e.chat_id,
                 file=file,
-                caption="Message too long or large size.",
+                caption=r"\\**#Getter**// `Message Too Long`",
                 force_document=True,
                 allow_cache=False,
                 reply_to=args["reply_to"],
+                silent=True,
             )
-        (Root / file).unlink(missing_ok=True)
-        return await e.try_delete()
-    if "edit" in args:
-        del args["edit"]
+        await _try_delete(e)
+        return (Root / file).unlink(missing_ok=True)
+    if "delete" in args:
+        del args["delete"]
+    if "time" in args:
+        del args["time"]
     if "force_reply" in args:
         del args["force_reply"]
     if "link_preview" not in args:
         args.update({"link_preview": False})
     if "silent" not in args:
         args.update({"silent": True})
-    if edit:
-        if "silent" in args:
-            del args["silent"]
-        try:
-            try:
-                del args["reply_to"]
-            except KeyError:
-                pass
-            await e.edit(text, **args)
-        except BaseException:
-            return
-    else:
-        await _try_delete(e)
-        await e.client.send_message(e.chat_id, text, **args)
+    res = await e.client.send_message(e.chat_id, text, **args)
+    if time:
+        await sleep(time)
+        return await _try_delete(res)
+    return res
 
 
 async def _try_delete(e):
     with suppress(BaseException):
         return await e.delete()
-
-
-setattr(Message, "eor", eor)  # noqa: B010
-setattr(Message, "eod", eod)  # noqa: B010
-setattr(Message, "eos", eos)  # noqa: B010
-setattr(Message, "try_delete", _try_delete)  # noqa: B010

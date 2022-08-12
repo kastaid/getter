@@ -8,16 +8,18 @@
 # ================================================================
 
 import sys
-from telethon import TelegramClient
+from telethon.client.telegramclient import TelegramClient
 from telethon.network.connection.tcpfull import ConnectionTcpFull
-from telethon.sessions import StringSession
+from telethon.sessions.string import StringSession
 
 
 def Client() -> TelegramClient:
-    from getter import __version__
+    from getter import __version__, LOOP
     from getter.config import Var
+    from getter.core.property import do_not_remove_credit
     from getter.logger import LOGS
 
+    do_not_remove_credit()
     if Var.STRING_SESSION:
         if len(Var.STRING_SESSION) != 353:
             LOGS.error("STRING_SESSION wrong. Copy paste correctly! Quitting...")
@@ -31,15 +33,15 @@ def Client() -> TelegramClient:
             session=session,
             api_id=Var.API_ID,
             api_hash=Var.API_HASH,
-            loop=None,
+            loop=LOOP,
             app_version=__version__,
             connection=ConnectionTcpFull,
-            auto_reconnect=True,
             connection_retries=None,
+            auto_reconnect=True,
         )
         client.parse_mode = "markdown"
-    except Exception as e:
-        LOGS.exception("[APP] - {}".format(e))
+    except Exception as err:
+        LOGS.exception("[APP] - {}".format(err))
         sys.exit(1)
     return client
 

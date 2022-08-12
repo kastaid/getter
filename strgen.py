@@ -16,13 +16,22 @@ try:
     import telethon as tl
 except ModuleNotFoundError:
     print("Installing Telethon...")
-    # python3 -m pip install --no-cache-dir Telethon==1.24.0
-    check_call([sys.executable, "-m", "pip", "install", "--no-cache-dir", "Telethon==1.24.0"])
+    # python3 -m pip install --no-cache-dir https://github.com/notudope/Telethon/archive/main.zip
+    check_call(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--no-cache-dir",
+            "https://github.com/notudope/Telethon/archive/main.zip",
+        ]
+    )
 finally:
     import telethon as tl
 
 
-help = """
+usage = """
 Please go-to "my.telegram.org" (to get API_ID and API_HASH):
 ~ Login using your Telegram account.
 ~ Click on API development tools.
@@ -52,16 +61,20 @@ Generated !! Check your Telegram "Saved Messages" to copy STRING_SESSION or copy
 ~ Follow our channel https://t.me/kastaid
 """
 
-print(help)
+print(usage)
 
 try:
     API_ID = int(input("Enter your API_ID here: "))
 except ValueError:
-    print(">> API_ID must be an integer.\nQuitting...")
+    print(">>> API_ID must be an integer.\nQuitting...")
     sys.exit(0)
 API_HASH = input("Enter your API_HASH here: ")
 
-client = tl.TelegramClient(tl.sessions.StringSession(), api_id=API_ID, api_hash=API_HASH)
+client = tl.TelegramClient(
+    tl.sessions.StringSession(),
+    api_id=API_ID,
+    api_hash=API_HASH,
+)
 
 
 async def main() -> None:
@@ -76,13 +89,13 @@ async def main() -> None:
         print(generated)
         sys.exit(0)
     except tl.errors.ApiIdInvalidError:
-        print(">> Your API_ID or API_HASH combination is invalid. Kindly recheck.\nQuitting...")
+        print(">>> Your API_ID or API_HASH combination is invalid. Kindly recheck.\nQuitting...")
         sys.exit(0)
     except ValueError:
-        print(">> API_HASH must not be empty!\nQuitting...")
+        print(">>> API_HASH must not be empty!\nQuitting...")
         sys.exit(0)
     except tl.errors.PhoneNumberInvalidError:
-        print(">> The phone number is invalid!\nQuitting...")
+        print(">>> The phone number is invalid!\nQuitting...")
         sys.exit(0)
 
 

@@ -16,7 +16,8 @@ load_dotenv(find_dotenv("config.env"))
 
 
 def tobool(val):
-    """Convert a string representation of truth to true (1) or false (0).
+    """
+    Convert a string representation of truth to true (1) or false (0).
     https://github.com/python/cpython/blob/main/Lib/distutils/util.py
     """
     val = val.lower()
@@ -29,14 +30,14 @@ def tobool(val):
 
 
 class Var:
-    DEV_MODE = tobool(getenv("DEV_MODE", "False"))
-    STRING_SESSION = str(getenv("STRING_SESSION" "")).strip()
-    API_ID = int(str(getenv("API_ID", "0")).strip())
-    API_HASH = str(getenv("API_HASH", "")).strip()
-    HANDLER = str(getenv("HANDLER", ".")).strip()
-    TZ = str(getenv("TZ", "Asia/Jakarta")).strip()
-    HEROKU_APP_NAME = str(getenv("HEROKU_APP_NAME", "")).strip()
-    HEROKU_API = str(getenv("HEROKU_API", "")).strip()
+    DEV_MODE: bool = tobool(getenv("DEV_MODE", default="false").strip())
+    STRING_SESSION: str = getenv("STRING_SESSION", default="").strip()
+    API_ID: int = int(getenv("API_ID", default="0").strip())
+    API_HASH: str = getenv("API_HASH", default="").strip()
+    HANDLER: str = getenv("HANDLER", default=".").strip()
+    TZ: str = getenv("TZ", default="Asia/Jakarta").strip()
+    HEROKU_APP_NAME: str = getenv("HEROKU_APP_NAME", default="").strip()
+    HEROKU_API: str = getenv("HEROKU_API", default="").strip()
 
 
 try:
