@@ -11,7 +11,6 @@ import asyncio
 import html
 import math
 import time
-from asyncio.exceptions import TimeoutError as AsyncTimeout
 from cache import AsyncTTL
 from cachetools import TTLCache
 from telethon.errors.rpcerrorlist import YouBlockedUserError
@@ -72,9 +71,9 @@ async def _(kst):
         while True:
             try:
                 resp = await conv.get_response(timeout=2)
-            except AsyncTimeout:
+            except asyncio.exceptions.TimeoutError:
                 break
-            text.append(resp.text)
+            text.append(resp.message)
         if resp:
             await resp.mark_read(clear_mentions=True)
             # await kst.client(telethon.tl.functions.messages.DeleteHistoryRequest(conv.chat_id, max_id=0, just_clear=False, revoke=True))
@@ -87,6 +86,8 @@ async def _(kst):
     names, usernames = await sglist(text)
     if names:
         for x in names:
+            if x.startswith("⚠️"):
+                break
             await msg.sod(
                 x,
                 force_reply=True,
@@ -94,11 +95,46 @@ async def _(kst):
             )
     if usernames:
         for x in usernames:
+            if x.startswith("⚠️"):
+                break
             await msg.sod(
                 x,
                 force_reply=True,
                 parse_mode=parse_pre,
             )
+
+
+@kasta_cmd(
+    pattern="created(?: |$)(.*)",
+    no_crash=True,
+)
+async def _(kst):
+    msg = await kst.eor("`Checking...`")
+    user, _ = await get_user(kst, 1)
+    if user:
+        user_id = user.id
+    else:
+        user_id = kst.client.uid
+    created = "@creationdatebot"
+    resp = None
+    async with kst.client.conversation(created) as conv:
+        try:
+            await conv.send_message(f"/id {user_id}")
+        except YouBlockedUserError:
+            await kst.client(UnblockRequest(created))
+            await conv.send_message(f"/id {user_id}")
+        text = ""
+        while True:
+            try:
+                resp = await conv.get_response(timeout=2)
+            except asyncio.exceptions.TimeoutError:
+                break
+            text += resp.message
+        if resp:
+            await resp.mark_read(clear_mentions=True)
+    if not text:
+        return await msg.eod("`Bot did not respond.`")
+    await msg.eor(text, parse_mode=parse_pre)
 
 
 @kasta_cmd(
@@ -561,6 +597,9 @@ HELP.update(
             "Info",
             """❯ `{i}sg <reply/username/id>`
 Get names and usernames by sangmata.
+
+❯ `{i}created <reply/username/id>`
+Get creation date by creationdatebot.
 
 ❯ `{i}total <reply/username>`
 Get total user messages.

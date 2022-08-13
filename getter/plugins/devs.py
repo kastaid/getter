@@ -493,10 +493,9 @@ async def _(kst):
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.binary_location = CHROME_BIN
-    msg = await msg.eor("`Starting Chrome...`")
+    msg = await msg.eor("`Taking Screenshot...`")
     driver = webdriver.Chrome(executable_path=CHROME_DRIVER, chrome_options=chrome_options)
     driver.get(toss)
-    msg = await msg.eor("`Calculating page dimensions...`")
     height = driver.execute_script(
         "return Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);"
     )
@@ -505,7 +504,7 @@ async def _(kst):
     )
     driver.set_window_size(width + 100, height + 100)
     ss_png = driver.get_screenshot_as_png()
-    msg = await msg.eor("`Stoppping Chrome...`")
+    msg = await msg.eor("`Screenshot Taked...`")
     driver.close()
     taken = time_formatter((time.time() - start_time) * 1000)
     with suppress(BaseException):

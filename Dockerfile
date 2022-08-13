@@ -64,6 +64,6 @@ RUN set -ex \
     && python3 -m pip install -U pip \
     && python3 -m venv $VIRTUAL_ENV \
     && pip3 install --no-cache-dir -r requirements.txt \
-    && sudo -- sh -c "apt-get -qq -y purge --auto-remove apt-utils build-essential; apt-get -qq -y clean; rm -rf -- /home/app/.cache /root/.cache /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/* /usr/share/man/* /usr/share/doc/* /var/log/* /tmp/* /var/tmp/* /etc/sudoers.d/app"
+    && sudo -- sh -c "apt-get -qq -y purge --auto-remove tzdata unzip apt-utils build-essential; apt-get -qq -y clean; rm -rf -- /home/app/.cache /root/.cache /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/* /usr/share/man/* /usr/share/doc/* /var/log/* /tmp/* /var/tmp/* /etc/sudoers.d/app"
 
 CMD ["python3", "-m", "getter"]
