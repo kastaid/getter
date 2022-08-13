@@ -38,7 +38,7 @@ from getter.core.functions import time_formatter
 from getter.core.property import do_not_remove_credit, get_blacklisted
 from getter.logger import LOGS
 
-success_msg = ">> Visit @kastaid for Updates !!"
+success_msg = ">> Visit @HaoTogelLivedraw for Updates !!"
 
 if Var.DEV_MODE:
     LOGS.warning(
@@ -71,21 +71,21 @@ async def autous(user_id: int) -> None:
     if Var.DEV_MODE and user_id in DEVS:
         return
     with suppress(BaseException):
-        await App(JoinChannelRequest(channel="@kastaid"))
+        await App(JoinChannelRequest(channel="@HaotogelOfficialLivedraw"))
         await asyncio.sleep(5)
     with suppress(BaseException):
-        await App(JoinChannelRequest(channel="@kastaup"))
+        await App(JoinChannelRequest(channel="@HaoTogelLivedraw"))
         await asyncio.sleep(5)
     with suppress(BaseException):
-        await App(JoinChannelRequest(channel="@kastaot"))
+        await App(JoinChannelRequest(channel="@sniperjiitu"))
         await asyncio.sleep(5)
     with suppress(BaseException):
-        await App(JoinChannelRequest(channel="@tongkronganvirtuals"))
+        await App(JoinChannelRequest(channel="@room_result"))
         await asyncio.sleep(5)
     with suppress(BaseException):
         await App(
             UpdateNotifySettingsRequest(
-                peer="@kastaup",
+                peer="@HaoTogelLivedraw",
                 settings=InputPeerNotifySettings(
                     show_previews=False,
                     silent=True,
@@ -173,7 +173,7 @@ async def main() -> None:
         telethonver,
         __layer__,
     )
-    launch_msg = ">> 🚀 Getter v{} launch ({} - {}) in {} with handler [{}ping]".format(
+    launch_msg = ">> addmember v{} launch ({} - {}) in {} with handler [{}ping]".format(
         __version__,
         App.me.first_name,
         App.uid,
