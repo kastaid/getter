@@ -493,7 +493,7 @@ async def _(kst):
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.binary_location = CHROME_BIN
-    msg = await msg.eor("`Starting Chrome bin...`")
+    msg = await msg.eor("`Starting Chrome...`")
     driver = webdriver.Chrome(executable_path=CHROME_DRIVER, chrome_options=chrome_options)
     driver.get(toss)
     msg = await msg.eor("`Calculating page dimensions...`")
@@ -505,12 +505,12 @@ async def _(kst):
     )
     driver.set_window_size(width + 100, height + 100)
     ss_png = driver.get_screenshot_as_png()
-    msg = await msg.eor("`Stoppping Chrome bin...`")
+    msg = await msg.eor("`Stoppping Chrome...`")
     driver.close()
     taken = time_formatter((time.time() - start_time) * 1000)
     with suppress(BaseException):
         with BytesIO(ss_png) as file:
-            file.name = f"{to_ss}.PNG"
+            file.name = f"{to_ss}.png"
             caption = rf"""\\**#Getter**//
 **URL:** `{to_ss}`
 **Taken:** `{taken}`"""
@@ -687,7 +687,7 @@ Shows System Info.
 View all files and folders inside a directory.
 
 ❯ `{i}ss <link>`
-Take a screenshot of a website.
+Take a full screenshot of a website.
 
 ❯ `{i}shell|{i}sh <cmds>`
 Run the linux commands.
