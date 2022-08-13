@@ -66,14 +66,10 @@ async def _(kst):
                     failed += 1
             except BaseException:
                 failed += 1
-    try:
+    with suppress(BaseException):
         await kst.client(ReportSpamRequest(user.id))
-    except BaseException:
-        pass
-    try:
+    with suppress(BaseException):
         await kst.client(BlockRequest(user.id))
-    except BaseException:
-        pass
     reason = reason if reason else "No Reason"
     text = (
         r"\\<b>#Gbanned</b>// {} in [<code>+{}-{}</code>] groups and channels – <b>Reason:</b> <code>{}</code>".format(
@@ -120,10 +116,8 @@ async def _(kst):
                     failed += 1
             except BaseException:
                 failed += 1
-    try:
+    with suppress(BaseException):
         await kst.client(UnblockRequest(user.id))
-    except BaseException:
-        pass
     text = r"\\<b>#UnGbanned</b>// {} in [<code>+{}-{}</code>] groups and channels.".format(
         userlink,
         success,

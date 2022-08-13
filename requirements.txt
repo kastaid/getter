@@ -16,3 +16,5 @@ aiohttp[speedups]==3.8.1
 beautifulsoup4==4.11.1
 Markdown==3.4.1
 emoji==2.0.0
+validators==0.20.0
+selenium==4.4.0

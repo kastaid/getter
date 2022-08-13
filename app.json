@@ -14,12 +14,12 @@
         },
         "HANDLER": {
             "description": "Initial command handler (prefix), default (.)",
-            "required": true,
+            "required": false,
             "value": "."
         },
         "TZ": {
             "description": "Set local timezone: Continent/Country, default: Asia/Jakarta. Get list from \"en.wikipedia.org/wiki/List_of_tz_database_time_zones\"",
-            "required": true,
+            "required": false,
             "value": "Asia/Jakarta"
         },
         "HEROKU_APP_NAME": {
