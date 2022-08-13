@@ -192,8 +192,7 @@ def time_formatter(ms: Union[int, str]) -> str:
 
 
 def get_random_hex(chars: int = 12) -> str:
-    hex = uuid4().hex[:chars]
-    return hex
+    return uuid4().hex[:chars]
 
 
 async def run_async(func, *args, **kwargs):

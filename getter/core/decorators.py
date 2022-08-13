@@ -217,7 +217,7 @@ def kasta_cmd(
             )
         if edited:
 
-            def func_(e):
+            def funce_(e):
                 if not (func is None):
                     return not e.via_bot_id and func(e) and not (e.is_channel and e.chat.broadcast)
                 return not e.via_bot_id and not (e.is_channel and e.chat.broadcast)
@@ -227,7 +227,7 @@ def kasta_cmd(
                 event=MessageEdited(
                     chats=chats,
                     blacklist_chats=blacklist_chats,
-                    func=func_,
+                    func=funce_,
                     incoming=True if is_own else None,
                     outgoing=True if not is_own else None,
                     from_users=senders,
@@ -236,7 +236,7 @@ def kasta_cmd(
                 ),
             )
 
-        def func_(e):
+        def funcn_(e):
             if not (func is None):
                 return not e.via_bot_id and func(e)
             return not e.via_bot_id
@@ -246,7 +246,7 @@ def kasta_cmd(
             event=NewMessage(
                 chats=chats,
                 blacklist_chats=blacklist_chats,
-                func=func_,
+                func=funcn_,
                 incoming=True if is_own else None,
                 outgoing=True if not is_own else None,
                 from_users=senders,

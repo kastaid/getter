@@ -173,7 +173,7 @@ async def _(kst):
         return await kst.eor(f"`{hl}delayspam <time/in seconds> <count> <text>`", time=10)
     await kst.try_delete()
     try:
-        delay = 5 if delay and int(delay) < 5 else delay
+        delay = 2 if delay and int(delay) < 2 else delay
         for _ in range(count):
             await kst.respond(msg)
             await asyncio.sleep(delay)
@@ -258,7 +258,7 @@ Copy the replied message.
 Get current Chat/User/Message ID.
 
 ❯ `{i}delayspam|{i}ds <time/in seconds> <count> <text>`
-Spam chat with delays in seconds (min 5 seconds).
+Spam chat with delays in seconds (min 2 seconds).
 
 ❯ `{i}block <reply/username/id>`
 Block mentioned user.
