@@ -10,13 +10,16 @@
 import asyncio
 from contextlib import suppress
 from telethon.tl.functions.channels import LeaveChannelRequest
+from telethon.tl.functions.contacts import BlockRequest, UnblockRequest
+from telethon.tl.functions.messages import ReportSpamRequest
 from . import (
     choice,
     DEVS,
     HELP,
-    display_name,
     hl,
     kasta_cmd,
+    display_name,
+    get_user,
 )
 
 
@@ -179,6 +182,46 @@ async def _(kst):
 
 
 @kasta_cmd(
+    pattern="block(?: |$)(.*)",
+    no_crash=True,
+)
+async def _(kst):
+    msg = await kst.eor("`Blocking...`", silent=True)
+    user, _ = await get_user(kst)
+    if not user:
+        return await msg.eor("`Reply to some message or add their id.`", time=8)
+    if user.id == kst.client.uid:
+        return await msg.eor("`I can't block myself.`", time=5)
+    if user.id in DEVS:
+        return await msg.eor("`I can't block our Developers.`", time=5)
+    with suppress(BaseException):
+        await kst.client(ReportSpamRequest(user.id))
+    try:
+        await kst.client(BlockRequest(user.id))
+        text = "**User has been blocked!**"
+    except BaseException:
+        text = "**User can't blocked!**"
+    await msg.eor(text)
+
+
+@kasta_cmd(
+    pattern="unblock(?: |$)(.*)",
+    no_crash=True,
+)
+async def _(kst):
+    msg = await kst.eor("`UnBlocking...`", silent=True)
+    user, _ = await get_user(kst)
+    if not user:
+        return await msg.eor("`Reply to some message or add their id.`", time=8)
+    try:
+        await kst.client(UnblockRequest(user.id))
+        text = "**User has been unblocked!**"
+    except BaseException:
+        text = "**User can't unblocked!**"
+    await msg.eor(text)
+
+
+@kasta_cmd(
     pattern="kickme$",
     no_crash=True,
     groups_only=True,
@@ -216,6 +259,12 @@ Get current Chat/User/Message ID.
 
 ❯ `{i}delayspam|{i}ds <time/in seconds> <count> <text>`
 Spam chat with delays in seconds (min 5 seconds).
+
+❯ `{i}block <reply/username/id>`
+Block mentioned user.
+
+❯ `{i}unblock <reply/username/id>`
+Unblock mentioned user.
 
 ❯ `{i}kickme`
 Leaves the group.

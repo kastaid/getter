@@ -18,6 +18,7 @@ from . import (
     kasta_cmd,
     parse_pre,
     Searcher,
+    get_user,
 )
 
 
@@ -218,22 +219,6 @@ async def kebab_(kst):
 
 
 @kasta_cmd(
-    pattern=r"(spoiler|sp)(?: |$)([\s\S]*)",
-    no_crash=True,
-)
-async def spoiler_(kst):
-    match = kst.pattern_match.group(2)
-    if match and not kst.is_reply:
-        text = kst.text.split(" ", maxsplit=1)[1]
-    elif not match and kst.is_reply:
-        text = (await kst.get_reply_message()).text
-    else:
-        return await kst.try_delete()
-    text = f"||{text}||"
-    await kst.eor(text)
-
-
-@kasta_cmd(
     pattern="(b64encode|b64e)(?: |$)(.*)",
     no_crash=False,
 )
@@ -322,6 +307,35 @@ async def roman_(kst):
     await msg.eor(res.get("result"))
 
 
+@kasta_cmd(
+    pattern=r"(spoiler|sp)(?: |$)([\s\S]*)",
+    no_crash=True,
+)
+async def spoiler_(kst):
+    match = kst.pattern_match.group(2)
+    if match and not kst.is_reply:
+        text = kst.text.split(" ", maxsplit=1)[1]
+    elif not match and kst.is_reply:
+        text = (await kst.get_reply_message()).text
+    else:
+        return await kst.try_delete()
+    text = f"||{text}||"
+    await kst.eor(text)
+
+
+@kasta_cmd(
+    pattern=r"(mention|men)(?: |$)([\s\S]*)",
+    no_crash=True,
+)
+async def mention_(kst):
+    user, name = await get_user(kst, 2)
+    if not user:
+        return
+    name = name if name else "ㅤ"
+    mention = f"<a href=tg://user?id={user.id}>{name}</a>"
+    await kst.sod(mention, parse_mode="html")
+
+
 HELP.update(
     {
         "text": [
@@ -359,9 +373,6 @@ Convert text to snake case.
 ❯ `{i}kebab <text/reply>`
 Convert text to kebab case.
 
-❯ `{i}spoiler|{i}sp <text/reply>`
-Create a spoiler message.
-
 ❯ `{i}b64encode|{i}b64e <text/reply>`
 Encode text into Base64.
 
@@ -379,6 +390,12 @@ Convert any number less than 4000 to roman numerals.
 
 ❯ `{i}unroman <text/reply>`
 Convert roman numeral to number.
+
+❯ `{i}spoiler|{i}sp <text/reply>`
+Create a spoiler message.
+
+❯ `{i}mention|{i}men <reply/username/id> <text>`
+Tags that person with the given custom text.
 """,
         ]
     }

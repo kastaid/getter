@@ -55,7 +55,7 @@
 
 - Python 3.9.x
 - Linux (Recommend Debian/Ubuntu)
-- Telegram `API_ID` and `API_HASH` from [API development tools](my.telegram.org)
+- Telegram `API_ID` and `API_HASH` from [API development tools](https://my.telegram.org)
 
 ### STRING_SESSION
 

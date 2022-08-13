@@ -17,7 +17,9 @@ from contextlib import suppress
 from io import BytesIO
 from pathlib import Path
 from aiofiles import open as aiopen
+from selenium import webdriver
 from telethon import functions
+from validators.url import url
 from . import (
     choice,
     StartTime,
@@ -37,6 +39,8 @@ from . import (
     DEFAULT_SHELL_BLACKLIST,
     get_blacklisted,
     Heroku,
+    CHROME_BIN,
+    CHROME_DRIVER,
 )
 
 
@@ -68,11 +72,11 @@ async def _(kst):
 )
 async def _(kst):
     start = time.perf_counter()
-    msg = await kst.eor("Ping !")
+    msg = await kst.edit("Ping !")
     end = time.perf_counter()
     speed = end - start
     uptime = time_formatter((time.time() - StartTime) * 1000)
-    await msg.eor(
+    await msg.edit(
         f"🏓 Pong !!\n<b>Speed</b> - <code>{round(speed, 3)}ms</code>\n<b>Uptime</b> - <code>{uptime}</code>",
         parse_mode="html",
     )
@@ -467,6 +471,62 @@ async def _(kst):
 
 
 @kasta_cmd(
+    pattern="ss(?: |$)(.*)",
+)
+async def _(kst):
+    to_ss = kst.pattern_match.group(1)
+    if not to_ss:
+        return await kst.try_delete()
+    msg = await kst.eor("`Processing...`")
+    start_time = time.time()
+    toss = to_ss
+    urlss = url(toss)
+    if not urlss:
+        toss = f"http://{to_ss}"
+        urlss = url(toss)
+    if not urlss:
+        return await msg.eod("`Input is not supported url.`")
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument("--ignore-certificate-errors")
+    chrome_options.add_argument("--test-type")
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.binary_location = CHROME_BIN
+    msg = await msg.eor("`Starting Chrome bin...`")
+    driver = webdriver.Chrome(executable_path=CHROME_DRIVER, chrome_options=chrome_options)
+    driver.get(toss)
+    msg = await msg.eor("`Calculating page dimensions...`")
+    height = driver.execute_script(
+        "return Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);"
+    )
+    width = driver.execute_script(
+        "return Math.max(document.body.scrollWidth, document.body.offsetWidth, document.documentElement.clientWidth, document.documentElement.scrollWidth, document.documentElement.offsetWidth);"
+    )
+    driver.set_window_size(width + 100, height + 100)
+    ss_png = driver.get_screenshot_as_png()
+    msg = await msg.eor("`Stoppping Chrome bin...`")
+    driver.close()
+    taken = time_formatter((time.time() - start_time) * 1000)
+    with suppress(BaseException):
+        with BytesIO(ss_png) as file:
+            file.name = f"{to_ss}.PNG"
+            caption = rf"""\\**#Getter**//
+**URL:** `{to_ss}`
+**Taken:** `{taken}`"""
+            await kst.client.send_file(
+                kst.chat_id,
+                file=file,
+                caption=caption,
+                force_document=True,
+                allow_cache=False,
+                reply_to=kst.reply_to_msg_id or kst.id,
+                silent=True,
+            )
+    await msg.try_delete()
+
+
+@kasta_cmd(
     pattern=r"(shell|sh)(?: |$)([\s\S]*)",
 )
 async def _(kst):
@@ -625,6 +685,9 @@ Shows System Info.
 
 ❯ `{i}ls <path>`
 View all files and folders inside a directory.
+
+❯ `{i}ss <link>`
+Take a screenshot of a website.
 
 ❯ `{i}shell|{i}sh <cmds>`
 Run the linux commands.

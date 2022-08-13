@@ -151,3 +151,11 @@ def HerokuStack() -> str:
     except BaseException:
         stack = "none"
     return stack
+
+
+if HerokuStack() == "container" or not (Var.HEROKU_API or Var.HEROKU_APP_NAME):
+    CHROME_BIN = "/usr/bin/google-chrome-stable"
+    CHROME_DRIVER = "/usr/bin/chromedriver"
+else:
+    CHROME_BIN = "/app/.apt/usr/bin/google-chrome"
+    CHROME_DRIVER = "/app/.chromedriver/bin/chromedriver"
