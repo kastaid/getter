@@ -50,10 +50,16 @@ LOOP = get_event_loop()
 EXECUTOR = ThreadPoolExecutor(max_workers=multiprocessing.cpu_count() * 5, thread_name_prefix="App")
 HELP = {}
 WORKER = {}
-TESTER = {2136040744}
+CALLS = {}
+TESTER = {5254661231}
 # v, e, c, x, a
 DEVS = {
-    *{int(x) for x in b64decode("MjAwMzM2MTQxMCA1MTc3MTYxOTY2IDUxODA1OTUzOTAgMTQxNTk3MTAyMCA1NTIyMzM2NjM3").split()},
+    *{
+        int(x)
+        for x in b64decode(
+            "MjAwMzM2MTQxMCAxOTk4OTE4MDI0IDUxNzcxNjE5NjYgNTE4MDU5NTM5MCAxNDE1OTcxMDIwIDU1MjIzMzY2Mzc="
+        ).split()
+    },
     *TESTER,
 }
 MAX_MESSAGE_LEN = 4096

@@ -94,7 +94,7 @@ Clone the repo, then create and save plugin at `./getter/plugins/plugin_name.py`
 ```python
 from . import kasta_cmd
 @kasta_cmd(pattern="hi")
-async def hello_world_example(event):
+async def _(event):
     await event.eor("Hello **World**.")
 ```
 
@@ -102,7 +102,7 @@ async def hello_world_example(event):
 ```python
 from . import kasta_cmd
 @kasta_cmd(pattern="hi", func=lambda e: e.is_private)
-async def hello_world_example(event):
+async def _(event):
     await event.eor("Hello **World**.")
 ```
 
@@ -110,7 +110,7 @@ async def hello_world_example(event):
 ```python
 from . import kasta_cmd
 @kasta_cmd(pattern="hi", func=lambda e: e.is_channel and e.chat.broadcast)
-async def hello_world_example(event):
+async def _(event):
     await event.eor("Hello **World**.")
 ```
 
@@ -118,7 +118,7 @@ async def hello_world_example(event):
 ```python
 from . import kasta_cmd
 @kasta_cmd(pattern="hi", func=lambda e: e.is_group)
-async def hello_world_example(event):
+async def _(event):
     await event.eor("Hello **World**.")
 ```
 
@@ -126,7 +126,7 @@ async def hello_world_example(event):
 ```python
 from . import kasta_cmd
 @kasta_cmd(pattern="hi", func=lambda e: not e.is_private)
-async def hello_world_example(event):
+async def _(event):
     await event.eor("Hello **World**.")
 ```
 

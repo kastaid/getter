@@ -169,12 +169,13 @@ async def limit(kst, conv):
     senders=DEVS,
 )
 async def _(kst):
-    if not kst.out:
+    is_devs = True if not kst.out else False
+    if is_devs:
         await asyncio.sleep(choice((4, 6, 8)))
     msg = await kst.eor("`Checking...`", silent=True)
     async with kst.client.conversation(spamb) as conv:
         resp = await limit(kst, conv)
-        await msg.eor(f"```{resp}```")
+        await msg.eor(f"~ {resp}")
 
 
 @kasta_cmd(
@@ -189,9 +190,9 @@ async def _(kst):
 )
 async def _(kst):
     is_devs = True if not kst.out else False
-    if is_devs and kst.client.uid in DEVS:
-        return
     if is_devs:
+        if kst.client.uid in DEVS:
+            return
         await asyncio.sleep(choice((4, 6, 8)))
     if WORKER.get(kst.chat_id) or INVITING_LOCK.locked():
         await kst.eor("`Please wait until previous INVITE finished...`", time=5, silent=True)
@@ -496,7 +497,10 @@ async def _(kst):
     senders=DEVS,
 )
 async def _(kst):
-    if not kst.out:
+    is_devs = True if not kst.out else False
+    if is_devs:
+        if kst.client.uid in DEVS:
+            return
         await asyncio.sleep(choice((4, 6, 8)))
     if not WORKER.get(kst.chat_id):
         return await kst.eod(no_process_text, silent=True)
