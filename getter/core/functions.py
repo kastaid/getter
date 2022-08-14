@@ -72,18 +72,20 @@ def humanbool(b) -> str:
 
 def get_user_status(user: User) -> str:
     if user.bot or user.support:
-        return "none"
+        status = "none"
     if isinstance(user.status, UserStatusOnline):
-        return "online"
+        status = "online"
     elif isinstance(user.status, UserStatusOffline):
-        return "offline"
+        status = "offline"
     elif isinstance(user.status, UserStatusRecently):
-        return "recently"
+        status = "recently"
     elif isinstance(user.status, UserStatusLastWeek):
-        return "within_week"
+        status = "within_week"
     elif isinstance(user.status, UserStatusLastMonth):
-        return "within_month"
-    return "long_time_ago"
+        status = "within_month"
+    else:
+        status = "long_time_ago"
+    return status
 
 
 async def get_user(kst, group=1):

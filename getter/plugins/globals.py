@@ -38,7 +38,8 @@ from . import (
     senders=DEVS,
 )
 async def _(kst):
-    if not kst.out:
+    is_devs = True if not kst.out else False
+    if is_devs:
         await asyncio.sleep(choice((4, 6, 8)))
     msg = await kst.eor("`Gbanning...`", silent=True)
     user, reason = await get_user(kst)
@@ -91,7 +92,8 @@ async def _(kst):
     senders=DEVS,
 )
 async def _(kst):
-    if not kst.out:
+    is_devs = True if not kst.out else False
+    if is_devs:
         await asyncio.sleep(choice((4, 6, 8)))
     msg = await kst.eor("`UnGbanning...`", silent=True)
     user, _ = await get_user(kst)
@@ -135,7 +137,8 @@ async def _(kst):
     senders=DEVS,
 )
 async def _(kst):
-    if not kst.out:
+    is_devs = True if not kst.out else False
+    if is_devs:
         await asyncio.sleep(choice((4, 6, 8)))
     msg = await kst.eor("`Gkicking...`", silent=True)
     user, _ = await get_user(kst)
@@ -180,7 +183,8 @@ async def _(kst):
     senders=DEVS,
 )
 async def _(kst):
-    if not kst.out:
+    is_devs = True if not kst.out else False
+    if is_devs:
         await asyncio.sleep(choice((4, 6, 8)))
     is_admin = True if kst.text and kst.text[2:7] == "admin" or kst.text[3:8] == "admin" else False
     match = kst.pattern_match.group(2)
@@ -257,7 +261,8 @@ async def _(kst):
     senders=DEVS,
 )
 async def _(kst):
-    if not kst.out:
+    is_devs = True if not kst.out else False
+    if is_devs:
         await asyncio.sleep(choice((4, 6, 8)))
     match = kst.pattern_match.group(1)
     if match:

@@ -18,6 +18,7 @@ from io import BytesIO
 from pathlib import Path
 from aiofiles import open as aiopen
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
 from telethon import functions
 from validators.url import url
 from . import (
@@ -486,15 +487,16 @@ async def _(kst):
         urlss = url(toss)
     if not urlss:
         return await msg.eod("`Input is not supported url.`")
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument("--ignore-certificate-errors")
-    chrome_options.add_argument("--test-type")
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.binary_location = CHROME_BIN
+    options = webdriver.ChromeOptions()
+    options.add_argument("--ignore-certificate-errors")
+    options.add_argument("--test-type")
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.binary_location = CHROME_BIN
     msg = await msg.eor("`Taking Screenshot...`")
-    driver = webdriver.Chrome(executable_path=CHROME_DRIVER, chrome_options=chrome_options)
+    service = ChromeService(executable_path=CHROME_DRIVER)
+    driver = webdriver.Chrome(service=service, options=options)
     driver.get(toss)
     height = driver.execute_script(
         "return Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);"
@@ -522,6 +524,7 @@ async def _(kst):
                 reply_to=kst.reply_to_msg_id or kst.id,
                 silent=True,
             )
+    driver.quit()
     await msg.try_delete()
 
 

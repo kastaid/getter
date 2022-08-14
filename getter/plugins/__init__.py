@@ -22,12 +22,14 @@ from getter import (
     LOOP,
     HELP,
     WORKER,
+    CALLS,
     TESTER,
     DEVS,
     MAX_MESSAGE_LEN,
 )
 from getter.config import Var, TZ, HANDLER
 from getter.core.app import App
+from getter.core.constants import *
 from getter.core.decorators import kasta_cmd
 from getter.core.functions import (
     is_telegram_link,

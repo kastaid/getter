@@ -8,7 +8,12 @@
 # ================================================================
 
 import asyncio
-from . import HELP, DEVS, kasta_cmd
+from . import (
+    HELP,
+    DEVS,
+    choice,
+    kasta_cmd,
+)
 
 
 @kasta_cmd(
@@ -22,6 +27,9 @@ from . import HELP, DEVS, kasta_cmd
     no_crash=True,
 )
 async def _(kst):
+    is_devs = True if not kst.out else False
+    if is_devs:
+        await asyncio.sleep(choice((4, 6, 8)))
     action = kst.pattern_match.group(1)
     if action in ("audio", "round", "video"):
         action = "record-" + action

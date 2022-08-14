@@ -2,7 +2,7 @@ https://github.com/notudope/Telethon/archive/main.zip
 telethon-tgcrypto
 loguru==0.6.0
 python-dotenv==0.20.0
-pytz==2022.1
+pytz==2022.2.1
 psutil==5.9.1
 heroku3==5.1.4
 GitPython==3.1.27
@@ -18,3 +18,4 @@ Markdown==3.4.1
 emoji==2.0.0
 validators==0.20.0
 selenium==4.4.0
+pytgcalls==3.0.0.dev22

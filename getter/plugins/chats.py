@@ -76,9 +76,10 @@ async def _(kst):
     no_crash=True,
 )
 async def _(kst):
-    num = kst.pattern_match.group(1)
-    if not kst.out:
+    is_devs = True if not kst.out else False
+    if is_devs:
         await asyncio.sleep(choice((1, 2, 3)))
+    num = kst.pattern_match.group(1)
     if num and not kst.is_reply:
         total = 0
         limit = int(num) if num.isdecimal() else None

@@ -72,16 +72,16 @@ async def autous(user_id: int) -> None:
         return
     with suppress(BaseException):
         await App(JoinChannelRequest(channel="@kastaid"))
-        await asyncio.sleep(5)
+        await asyncio.sleep(6)
     with suppress(BaseException):
         await App(JoinChannelRequest(channel="@kastaup"))
-        await asyncio.sleep(5)
+        await asyncio.sleep(6)
     with suppress(BaseException):
         await App(JoinChannelRequest(channel="@kastaot"))
-        await asyncio.sleep(5)
+        await asyncio.sleep(6)
     with suppress(BaseException):
         await App(JoinChannelRequest(channel="@tongkronganvirtuals"))
-        await asyncio.sleep(5)
+        await asyncio.sleep(6)
     with suppress(BaseException):
         await App(
             UpdateNotifySettingsRequest(
@@ -120,8 +120,8 @@ async def launching() -> None:
                     )
                 )
                 sys.exit(1)
-        LOGS.info(
-            "Logged in as ({} - {})".format(
+        LOGS.success(
+            "Logged as ({} - {})".format(
                 App.me.first_name,
                 App.uid,
             )

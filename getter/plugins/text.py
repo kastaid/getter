@@ -20,6 +20,8 @@ from . import (
     parse_pre,
     Searcher,
     get_user,
+    UPSIDEFONT,
+    DOWNSIDEFONT,
 )
 
 
@@ -359,6 +361,49 @@ async def mention_(kst):
     await kst.sod(mention, parse_mode="html")
 
 
+@kasta_cmd(
+    pattern=r"type(?: |$)([\s\S]*)",
+    no_crash=True,
+)
+async def type_(kst):
+    match = kst.pattern_match.group(1)
+    if not match:
+        return await kst.sod("`Give me something to type !`")
+    text = "\u2060" * 602
+    msg = await kst.eor(text)
+    typing_symbol = "|"
+    prev_text = ""
+    await msg.eor(typing_symbol)
+    await asyncio.sleep(0.4)
+    for c in match:
+        prev_text = prev_text + "" + c
+        typing_text = prev_text + "" + typing_symbol
+        await msg.eor(typing_text)
+        await asyncio.sleep(0.4)
+        await msg.eor(prev_text)
+        await asyncio.sleep(0.4)
+
+
+@kasta_cmd(
+    pattern=r"down(?: |$)([\s\S]*)",
+    no_crash=True,
+)
+async def down_(kst):
+    match = kst.pattern_match.group(1)
+    if match and not kst.is_reply:
+        text = kst.text.split(" ", maxsplit=1)[1]
+    elif not match and kst.is_reply:
+        text = (await kst.get_reply_message()).text
+    else:
+        return await kst.try_delete()
+    text = "  ".join(text).lower()
+    for upchar in text:
+        if upchar in UPSIDEFONT:
+            downchar = DOWNSIDEFONT[UPSIDEFONT.index(upchar)]
+            text = text.replace(upchar, downchar)
+    await kst.eor(text)
+
+
 HELP.update(
     {
         "text": [
@@ -422,6 +467,12 @@ Create a spoiler message.
 
 ❯ `{i}mention|{i}men <reply/username/id> <text>`
 Tags that person with the given custom text.
+
+❯ `{i}type <text>`
+Edits the message and shows like someone is typing.
+
+❯ `{i}upside <text/reply>`
+Upside down text.
 """,
         ]
     }
