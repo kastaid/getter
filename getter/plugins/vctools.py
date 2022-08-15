@@ -29,7 +29,7 @@ async def get_chat_id(e):
     target = e.pattern_match.group(1)
     chat_id = None
     if not target:
-        return e.chat_id
+        return int(str(e.chat_id).replace("-100", ""))
     if str(target).isdecimal() or (str(target).startswith("-") and str(target)[1:].isdecimal()):
         if str(target).startswith("-100"):
             chat_id = int(str(target).replace("-100", ""))

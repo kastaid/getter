@@ -385,10 +385,10 @@ async def type_(kst):
 
 
 @kasta_cmd(
-    pattern=r"down(?: |$)([\s\S]*)",
+    pattern=r"upside(?: |$)([\s\S]*)",
     no_crash=True,
 )
-async def down_(kst):
+async def upside_(kst):
     match = kst.pattern_match.group(1)
     if match and not kst.is_reply:
         text = kst.text.split(" ", maxsplit=1)[1]
