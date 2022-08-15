@@ -127,8 +127,9 @@ async def _(kst):
     if not (group_call and group_call.is_connected):
         with suppress(BaseException):
             await group_call.start(chat_id, enable_action=False)
-        await asyncio.sleep(1)
+        await asyncio.sleep(2)
         with suppress(BaseException):
+            await group_call.set_is_mute(True)
             await group_call.edit_group_call(muted=True)
     await msg.eor("`joined`", time=5)
 
