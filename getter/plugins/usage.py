@@ -21,11 +21,12 @@ from . import (
     time_formatter,
     Searcher,
     Heroku,
+    HerokuStack,
 )
 
 dyno_text = """
 **⚙️  Dyno Usage**
- -> **Dyno usage for** `{}`:
+ -> **Dyno usage for** `{}` ~ {}:
      •  `{}h  {}m  {}%`
  -> **Dyno hours quota remaining this month:**
      •  `{}h  {}m  {}%`
@@ -142,6 +143,7 @@ async def heroku_usage() -> str:
     AppMinutes = math.floor(AppQuotaUsed % 60)
     usage = default_usage() + dyno_text.format(
         Var.HEROKU_APP_NAME,
+        HerokuStack(),
         AppHours,
         AppMinutes,
         AppPercentage,

@@ -29,6 +29,7 @@ from . import (
     DEVS,
     HELP,
     kasta_cmd,
+    display_name,
     strip_format,
     humanbytes,
     time_formatter,
@@ -37,6 +38,7 @@ from . import (
     Carbon,
     MAX_MESSAGE_LEN,
     CARBON_PRESETS,
+    RAYSO_THEMES,
     DEFAULT_SHELL_BLACKLIST,
     get_blacklisted,
     Heroku,
@@ -121,9 +123,9 @@ async def _(kst):
             if not code:
                 continue
             logs = await Carbon(
+                code.strip()[-2500:],
                 file_name="carbon-getter-log",
                 download=True,
-                code=code.strip()[-2500:],
                 fontFamily="Hack",
                 theme=theme,
                 backgroundColor=backgroundColor,
@@ -271,7 +273,7 @@ async def _(kst):
     theme, backgroundColor = choice(CARBON_PRESETS)
     windowTheme = choice(("none", "sharp", "bw"))
     carbon = await Carbon(
-        code=code.strip(),
+        code.strip(),
         file_name="carbon",
         download=True,
         fontFamily="Fira Code",
@@ -296,6 +298,60 @@ async def _(kst):
 
 
 @kasta_cmd(
+    pattern="rayso",
+    no_crash=True,
+)
+async def _(kst):
+    msg = await kst.eor("`Processing...`")
+    opts = kst.text.split()
+    theme, dark, text = None, True, None
+    if len(opts) > 2:
+        if opts[1] in RAYSO_THEMES:
+            theme = opts[1]
+        dark = opts[2].lower().strip() in ["true", "t"]
+    elif len(opts) > 1:
+        if opts[1] in RAYSO_THEMES:
+            theme = opts[1]
+        elif opts[1] == "list":
+            text = "**List of Rayso Themes:**\n" + "\n".join([f"- `{th}`" for th in RAYSO_THEMES])
+            await msg.eor(text)
+            return
+        else:
+            with suppress(BaseException):
+                text = kst.text.split(maxsplit=1)[1]
+    if not theme:
+        theme = choice(RAYSO_THEMES)
+    if kst.is_reply:
+        rep = await kst.get_reply_message()
+        text = rep.text
+        from_user = rep.sender
+    else:
+        from_user = await kst.client.get_entity("me")
+    title = display_name(from_user)
+    rayso = await Carbon(
+        text,
+        download=True,
+        rayso=True,
+        title=title,
+        theme=theme,
+        darkMode=dark,
+    )
+    if not rayso:
+        return await msg.try_delete()
+    with suppress(BaseException):
+        await kst.client.send_file(
+            kst.chat_id,
+            file=rayso,
+            force_document=True,
+            allow_cache=False,
+            reply_to=kst.reply_to_msg_id or kst.id,
+            silent=True,
+        )
+    await msg.try_delete()
+    (Root / rayso).unlink(missing_ok=True)
+
+
+@kasta_cmd(
     pattern="sysinfo$",
 )
 async def _(kst):
@@ -312,7 +368,7 @@ async def _(kst):
         return await msg.try_delete()
     theme, backgroundColor = choice(CARBON_PRESETS)
     neofetch = await Carbon(
-        code=info.replace("\n\n", "").strip(),
+        info.replace("\n\n", "").strip(),
         file_name="neofetch",
         fontFamily="Hack",
         theme=theme,
@@ -322,7 +378,14 @@ async def _(kst):
     if not neofetch:
         return await msg.try_delete()
     with suppress(BaseException):
-        await kst.reply(file=neofetch, silent=True)
+        await kst.client.send_file(
+            kst.chat_id,
+            file=neofetch,
+            force_document=True,
+            allow_cache=False,
+            reply_to=kst.reply_to_msg_id or kst.id,
+            silent=True,
+        )
     await msg.try_delete()
     (Root / file).unlink(missing_ok=True)
 
@@ -488,11 +551,15 @@ async def _(kst):
     if not urlss:
         return await msg.eod("`Input is not supported url.`")
     options = webdriver.ChromeOptions()
-    options.add_argument("--ignore-certificate-errors")
-    options.add_argument("--test-type")
     options.add_argument("--headless")
+    options.add_argument("--test-type")
+    options.add_argument("--disable-logging")
+    options.add_argument("--ignore-certificate-errors")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument(
+        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
+    )
     options.binary_location = CHROME_BIN
     msg = await msg.eor("`Taking Screenshot...`")
     service = ChromeService(executable_path=CHROME_DRIVER)
@@ -681,6 +748,12 @@ Get the raw data of message.
 
 ❯ `{i}carbon <text/reply>`
 Carbonise the text with random presets.
+
+❯ `{i}rayso <theme> <text/reply>`
+Beauty showcase the text by rayso.
+
+❯ `{i}rayso list`
+Get list of rayso themes.
 
 ❯ `{i}sysinfo`
 Shows System Info.

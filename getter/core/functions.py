@@ -250,7 +250,7 @@ async def Searcher(
                     ssl=ssl,
                     raise_for_status=True,
                 )
-        except asyncio.exceptions.TimeoutError:
+        except asyncio.TimeoutError:
             return None
         if resp.status not in (
             200,
@@ -267,11 +267,21 @@ async def Searcher(
 
 
 async def Carbon(
+    code,
     url="https://carbonara-42.herokuapp.com/api/cook",  # https://carbonara.vercel.app/api/cook
     file_name="carbon",
     download=False,
+    rayso=False,
     **kwargs,
 ):
+    if rayso:
+        url = "https://raysoapi.herokuapp.com/generate"
+        kwargs["text"] = code
+        kwargs["theme"] = kwargs.get("theme", "raindrop")
+        kwargs["darkMode"] = kwargs.get("darkMode", True)
+        kwargs["title"] = kwargs.get("title", "getter")
+    else:
+        kwargs["code"] = code
     res = await Searcher(
         url=url,
         post=True,
@@ -280,7 +290,7 @@ async def Carbon(
     )
     if not res:
         return None
-    file_name = f"{file_name}_{get_random_hex()}.png"
+    file_name = f"{file_name}_{get_random_hex()}.jpg"
     if not download:
         file = BytesIO(res)
         file.name = file_name

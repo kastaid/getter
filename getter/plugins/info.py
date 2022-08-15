@@ -71,7 +71,7 @@ async def _(kst):
         while True:
             try:
                 resp = await conv.get_response(timeout=2)
-            except asyncio.exceptions.TimeoutError:
+            except asyncio.TimeoutError:
                 break
             text.append(resp.message)
         if resp:
@@ -127,7 +127,7 @@ async def _(kst):
         while True:
             try:
                 resp = await conv.get_response(timeout=2)
-            except asyncio.exceptions.TimeoutError:
+            except asyncio.TimeoutError:
                 break
             text += resp.message
         if resp:

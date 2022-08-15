@@ -133,6 +133,17 @@ CARBON_PRESETS = [
     ("zenburn", "#B6A291"),
 ]
 
+RAYSO_THEMES = (
+    "breeze",
+    "candy",
+    "crimson",
+    "falcon",
+    "meadow",
+    "midnight",
+    "raindrop",
+    "sunset",
+)
+
 
 def Heroku() -> None:
     _conn = None
