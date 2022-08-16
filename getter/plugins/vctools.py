@@ -1,15 +1,12 @@
 # getter < https://t.me/kastaid >
-# Copyright (C) 2022 - kastaid
-# All rights reserved.
+# Copyright (C) 2022 kastaid
 #
 # This file is a part of < https://github.com/kastaid/getter/ >
-# PLease read the GNU Affero General Public License in;
-# < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
-# ================================================================
+# PLease read the GNU Affero General Public License in
+# < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
 from contextlib import suppress
-from pytgcalls import GroupCallFactory
 from telethon.errors import FloodWaitError
 from telethon.tl.functions.channels import GetFullChannelRequest, DeleteMessagesRequest
 from telethon.tl.functions.messages import GetFullChatRequest
@@ -115,11 +112,15 @@ async def _(kst):
     if not call:
         await msg.eor("__No video chat.__", time=5)
         return
+    try:
+        import pytgcalls
+    except ImportError:
+        return
     group_call = CALLS.get(chat_id)
     if group_call is None:
-        group_call = GroupCallFactory(
+        group_call = pytgcalls.GroupCallFactory(
             kst.client,
-            GroupCallFactory.MTPROTO_CLIENT_TYPE.TELETHON,
+            pytgcalls.GroupCallFactory.MTPROTO_CLIENT_TYPE.TELETHON,
             enable_logs_to_console=False,
             path_to_log_file=None,
         ).get_file_group_call(None)

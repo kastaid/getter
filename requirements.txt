@@ -18,4 +18,5 @@ Markdown==3.4.1
 emoji==2.0.0
 validators==0.20.0
 selenium==4.4.0
+tweet-capture==0.0.13
 pytgcalls==3.0.0.dev22

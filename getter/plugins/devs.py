@@ -1,11 +1,9 @@
 # getter < https://t.me/kastaid >
-# Copyright (C) 2022 - kastaid
-# All rights reserved.
+# Copyright (C) 2022 kastaid
 #
 # This file is a part of < https://github.com/kastaid/getter/ >
-# PLease read the GNU Affero General Public License in;
-# < https://www.github.com/kastaid/getter/blob/main/LICENSE/ >
-# ================================================================
+# PLease read the GNU Affero General Public License in
+# < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
 import html
@@ -17,10 +15,7 @@ from contextlib import suppress
 from io import BytesIO
 from pathlib import Path
 from aiofiles import open as aiopen
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
 from telethon import functions
-from validators.url import url
 from . import (
     choice,
     StartTime,
@@ -29,21 +24,16 @@ from . import (
     DEVS,
     HELP,
     kasta_cmd,
-    display_name,
     strip_format,
     humanbytes,
     time_formatter,
-    get_doc_mime,
     Runner,
     Carbon,
     MAX_MESSAGE_LEN,
     CARBON_PRESETS,
-    RAYSO_THEMES,
     DEFAULT_SHELL_BLACKLIST,
     get_blacklisted,
     Heroku,
-    CHROME_BIN,
-    CHROME_DRIVER,
 )
 
 
@@ -249,105 +239,6 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern=r"carbon(?: |$)([\s\S]*)",
-    no_crash=True,
-)
-async def _(kst):
-    msg = await kst.eor("`Processing...`")
-    if kst.is_reply:
-        rep = await kst.get_reply_message()
-        if rep.media and bool([x for x in ("text", "application") if x in get_doc_mime(rep.media)]):
-            file = await kst.client.download_media(rep)
-            code = None
-            async with aiopen(file, mode="r") as f:
-                code = await f.read()
-            if not code:
-                return await msg.try_delete()
-            (Root / file).unlink(missing_ok=True)
-        else:
-            code = rep.message
-    else:
-        code = kst.pattern_match.group(1)
-    if not code:
-        return await msg.eod("`Reply to text message or readable file.`")
-    theme, backgroundColor = choice(CARBON_PRESETS)
-    windowTheme = choice(("none", "sharp", "bw"))
-    carbon = await Carbon(
-        code.strip(),
-        file_name="carbon",
-        download=True,
-        fontFamily="Fira Code",
-        theme=theme,
-        backgroundColor=backgroundColor,
-        dropShadow=True if windowTheme != "bw" else False,
-        windowTheme=windowTheme,
-    )
-    if not carbon:
-        return await msg.try_delete()
-    with suppress(BaseException):
-        await kst.client.send_file(
-            kst.chat_id,
-            file=carbon,
-            force_document=True,
-            allow_cache=False,
-            reply_to=kst.reply_to_msg_id or kst.id,
-            silent=True,
-        )
-    await msg.try_delete()
-    (Root / carbon).unlink(missing_ok=True)
-
-
-@kasta_cmd(
-    pattern=r"rayso(?: |$)([\s\S]*)",
-    no_crash=True,
-)
-async def _(kst):
-    msg = await kst.eor("`Processing...`")
-    if kst.is_reply:
-        rep = await kst.get_reply_message()
-        if rep.media and bool([x for x in ("text", "application") if x in get_doc_mime(rep.media)]):
-            file = await kst.client.download_media(rep)
-            code = None
-            async with aiopen(file, mode="r") as f:
-                code = await f.read()
-            if not code:
-                return await msg.try_delete()
-            (Root / file).unlink(missing_ok=True)
-        else:
-            code = rep.message
-        from_user = rep.sender
-    else:
-        code = kst.pattern_match.group(1)
-        from_user = await kst.client.get_entity("me")
-    if not code:
-        return await msg.eod("`Reply to text message or readable file.`")
-    title = display_name(from_user)
-    theme, dark = choice(RAYSO_THEMES), choice((True, False))
-    rayso = await Carbon(
-        code,
-        file_name="rayso",
-        download=True,
-        rayso=True,
-        title=title,
-        theme=theme,
-        darkMode=dark,
-    )
-    if not rayso:
-        return await msg.try_delete()
-    with suppress(BaseException):
-        await kst.client.send_file(
-            kst.chat_id,
-            file=rayso,
-            force_document=True,
-            allow_cache=False,
-            reply_to=kst.reply_to_msg_id or kst.id,
-            silent=True,
-        )
-    await msg.try_delete()
-    (Root / rayso).unlink(missing_ok=True)
-
-
-@kasta_cmd(
     pattern="sysinfo$",
 )
 async def _(kst):
@@ -531,67 +422,6 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="ss(?: |$)(.*)",
-)
-async def _(kst):
-    to_ss = kst.pattern_match.group(1)
-    if not to_ss:
-        return await kst.try_delete()
-    msg = await kst.eor("`Processing...`")
-    start_time = time.time()
-    toss = to_ss
-    urlss = url(toss)
-    if not urlss:
-        toss = f"http://{to_ss}"
-        urlss = url(toss)
-    if not urlss:
-        return await msg.eod("`Input is not supported url.`")
-    options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
-    options.add_argument("--test-type")
-    options.add_argument("--disable-logging")
-    options.add_argument("--ignore-certificate-errors")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument(
-        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
-    )
-    options.binary_location = CHROME_BIN
-    msg = await msg.eor("`Taking Screenshot...`")
-    service = ChromeService(executable_path=CHROME_DRIVER)
-    driver = webdriver.Chrome(service=service, options=options)
-    driver.get(toss)
-    height = driver.execute_script(
-        "return Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);"
-    )
-    width = driver.execute_script(
-        "return Math.max(document.body.scrollWidth, document.body.offsetWidth, document.documentElement.clientWidth, document.documentElement.scrollWidth, document.documentElement.offsetWidth);"
-    )
-    driver.set_window_size(width + 100, height + 100)
-    ss_png = driver.get_screenshot_as_png()
-    msg = await msg.eor("`Screenshot Taked...`")
-    driver.close()
-    taken = time_formatter((time.time() - start_time) * 1000)
-    with suppress(BaseException):
-        with BytesIO(ss_png) as file:
-            file.name = f"{to_ss}.png"
-            caption = rf"""\\**#Getter**//
-**URL:** `{to_ss}`
-**Taken:** `{taken}`"""
-            await kst.client.send_file(
-                kst.chat_id,
-                file=file,
-                caption=caption,
-                force_document=True,
-                allow_cache=False,
-                reply_to=kst.reply_to_msg_id or kst.id,
-                silent=True,
-            )
-    driver.quit()
-    await msg.try_delete()
-
-
-@kasta_cmd(
     pattern=r"(shell|sh)(?: |$)([\s\S]*)",
 )
 async def _(kst):
@@ -742,20 +572,11 @@ Sleep the bot in few seconds (max 50).
 ❯ `{i}raw <json> <reply>`
 Get the raw data of message.
 
-❯ `{i}carbon <text/reply>`
-Carbonise the text with random presets.
-
-❯ `{i}rayso <text/reply>`
-Beauty showcase the text by rayso with random themes.
-
 ❯ `{i}sysinfo`
 Shows System Info.
 
 ❯ `{i}ls <path>`
 View all files and folders inside a directory.
-
-❯ `{i}ss <link>`
-Take a full screenshot of a website.
 
 ❯ `{i}shell|{i}sh <cmds>`
 Run the linux commands.
