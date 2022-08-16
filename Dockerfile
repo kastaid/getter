@@ -11,11 +11,12 @@ ENV PROJECT=getter \
     TZ=Asia/Jakarta \
     TERM=xterm-256color \
     DEBIAN_FRONTEND=noninteractive \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    CHROME_BIN=/usr/bin/google-chrome-stable
 
 RUN set -ex \
     && apt-get -qq update \
-    && apt-get -qq -y install --no-install-recommends \
+    && apt-get -qqy install --no-install-recommends \
         sudo \
         bash \
         curl \
@@ -44,7 +45,8 @@ RUN set -ex \
     && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
     && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
     && apt-get -qq update \
-    && apt-get -qq -y install google-chrome-stable \
+    && apt-get -qqy install google-chrome-stable \
+    && rm /etc/apt/sources.list.d/google-chrome.list \
     && wget -N https://chromedriver.storage.googleapis.com/$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip -P ~/ \
     && unzip ~/chromedriver_linux64.zip -d ~/ \
     && rm ~/chromedriver_linux64.zip \
@@ -62,6 +64,6 @@ RUN set -ex \
     && python3 -m pip install -U pip \
     && python3 -m venv $VIRTUAL_ENV \
     && pip3 install --no-cache-dir -r requirements.txt \
-    && sudo -- sh -c "apt-get -qq -y purge --auto-remove tzdata unzip apt-utils build-essential; apt-get -qq -y clean; rm -rf -- /home/app/.cache /root/.cache /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/* /usr/share/man/* /usr/share/doc/* /var/log/* /tmp/* /var/tmp/* /etc/sudoers.d/app"
+    && sudo -- sh -c "apt-get -qqy purge --auto-remove tzdata unzip apt-utils build-essential; apt-get -qq -y clean; rm -rf -- /home/app/.cache /root/.cache /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/* /usr/share/man/* /usr/share/doc/* /var/log/* /tmp/* /var/tmp/* /etc/sudoers.d/app"
 
 CMD ["python3", "-m", "getter"]

@@ -106,6 +106,7 @@ async def _(kst):
     msg = await msg.eor("`Taking Tweet Screenshot...`")
     tweet = TweetCapture()
     tweet.set_chromedriver_path(CHROME_DRIVER)
+    tweet.add_chrome_argument("--no-sandbox")
     file = await tweet.screenshot(to_ss, f"tss_{get_random_hex()}.png", mode=2, night_mode=choice((0, 1, 2)))
     msg = await msg.eor("`Tweet Screenshot Taked...`")
     taken = time_formatter((time.time() - start_time) * 1000)
