@@ -298,38 +298,34 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="rayso",
+    pattern=r"rayso(?: |$)([\s\S]*)",
     no_crash=True,
 )
 async def _(kst):
     msg = await kst.eor("`Processing...`")
-    opts = kst.text.split()
-    theme, dark, text = None, True, None
-    if len(opts) > 2:
-        if opts[1] in RAYSO_THEMES:
-            theme = opts[1]
-        dark = opts[2].lower().strip() in ["true", "t"]
-    elif len(opts) > 1:
-        if opts[1] in RAYSO_THEMES:
-            theme = opts[1]
-        elif opts[1] == "list":
-            text = "**List of Rayso Themes:**\n" + "\n".join([f"- `{th}`" for th in RAYSO_THEMES])
-            await msg.eor(text)
-            return
-        else:
-            with suppress(BaseException):
-                text = kst.text.split(maxsplit=1)[1]
-    if not theme:
-        theme = choice(RAYSO_THEMES)
     if kst.is_reply:
         rep = await kst.get_reply_message()
-        text = rep.text
+        if rep.media and bool([x for x in ("text", "application") if x in get_doc_mime(rep.media)]):
+            file = await kst.client.download_media(rep)
+            code = None
+            async with aiopen(file, mode="r") as f:
+                code = await f.read()
+            if not code:
+                return await msg.try_delete()
+            (Root / file).unlink(missing_ok=True)
+        else:
+            code = rep.message
         from_user = rep.sender
     else:
+        code = kst.pattern_match.group(1)
         from_user = await kst.client.get_entity("me")
+    if not code:
+        return await msg.eod("`Reply to text message or readable file.`")
     title = display_name(from_user)
+    theme, dark = choice(RAYSO_THEMES), choice((True, False))
     rayso = await Carbon(
-        text,
+        code,
+        file_name="rayso",
         download=True,
         rayso=True,
         title=title,
@@ -749,11 +745,8 @@ Get the raw data of message.
 ❯ `{i}carbon <text/reply>`
 Carbonise the text with random presets.
 
-❯ `{i}rayso <theme> <text/reply>`
-Beauty showcase the text by rayso.
-
-❯ `{i}rayso list`
-Get list of rayso themes.
+❯ `{i}rayso <text/reply>`
+Beauty showcase the text by rayso with random themes.
 
 ❯ `{i}sysinfo`
 Shows System Info.
