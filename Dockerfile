@@ -12,10 +12,11 @@ ENV PROJECT=getter \
     TERM=xterm-256color \
     DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1 \
+    VIRTUAL_ENV=/home/app/venv \
     CHROME_BIN=/usr/bin/google-chrome-stable
 
 RUN set -ex \
-    && apt-get -qq update \
+    && apt-get -qqy update \
     && apt-get -qqy install --no-install-recommends \
         sudo \
         bash \
@@ -44,9 +45,8 @@ RUN set -ex \
     && chmod 777 /home/app/$PROJECT \
     && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
     && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && apt-get -qq update \
+    && apt-get -qqy update \
     && apt-get -qqy install google-chrome-stable \
-    && rm /etc/apt/sources.list.d/google-chrome.list \
     && wget -N https://chromedriver.storage.googleapis.com/$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip -P ~/ \
     && unzip ~/chromedriver_linux64.zip -d ~/ \
     && rm ~/chromedriver_linux64.zip \
@@ -57,8 +57,8 @@ RUN set -ex \
 COPY --chown=app:app . /home/app/$PROJECT
 WORKDIR /home/app/$PROJECT
 USER app
-ENV VIRTUAL_ENV=/home/app/venv
-ENV PATH $VIRTUAL_ENV/bin:/home/app/.local/bin:/home/app/$PROJECT/bin:$PATH
+ENV PATH=$VIRTUAL_ENV/bin:/home/app/.local/bin:/home/app/$PROJECT/bin:$PATH \
+    DISPLAY=:99
 
 RUN set -ex \
     && python3 -m pip install -U pip \

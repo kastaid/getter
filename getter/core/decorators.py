@@ -163,7 +163,8 @@ def kasta_cmd(
                     ftext = r"\\**#Getter**// **Client Error:** Forward this to @kastaot"
                     ftext += "\n\n**Getter Version:** `" + str(getterver)
                     ftext += "`\n**Python Version:** `" + str(python_version())
-                    ftext += "`\n**Telethon Version:** `" + str(telethonver) + " Layer: " + str(__layer__) + "`\n\n"
+                    ftext += "`\n**Telethon Version:** `" + str(telethonver)
+                    ftext += "`\n**Telegram Layer:** `" + str(__layer__) + "`\n\n"
                     ftext += "--------START GETTER CRASH LOG--------"
                     ftext += "\n\n**Date:** `" + date
                     ftext += "`\n**Chat:** `" + str(kst.chat_id) + " " + display_name(chat) + "`"

@@ -131,6 +131,7 @@ async def _(kst):
         await asyncio.sleep(2)
         with suppress(BaseException):
             await group_call.set_is_mute(True)
+        with suppress(BaseException):
             await group_call.edit_group_call(muted=True)
     await msg.eor("`joined`", time=5)
 

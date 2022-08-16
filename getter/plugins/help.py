@@ -31,7 +31,8 @@ help_text = """
 ┣  <b>Heroku Stack</b> – <code>{}</code>
 ┣  <b>Getter Version</b> – <code>{}</code>
 ┣  <b>Python Version</b> – <code>{}</code>
-┣  <b>Telethon Version</b> – <code>{} Layer: {}</code>
+┣  <b>Telethon Version</b> – <code>{}</code>
+┣  <b>Telegram Layer</b> – <code>{}</code>
 ┣  <b>Uptime</b> – <code>{}</code>
 ┣  <b>Handler</b> – <code>{}</code>
 ┣  <b>Plugins</b> – <code>{}</code>
@@ -68,7 +69,7 @@ async def _(kst):
         uptime = time_formatter((time.time() - StartTime) * 1000)
         plugins = ""
         for _ in HELP:
-            plugins += f"<code>{_}</code>  ★  "
+            plugins += f"<code>{_}</code>  •  "
         plugins = plugins[:-3]
         me = await kst.client.get_me()
         text = help_text.format(
