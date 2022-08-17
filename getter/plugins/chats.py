@@ -297,7 +297,7 @@ Delete all messages of replied user.
 ❯ `{i}copy <reply>`
 Copy the replied message.
 
-❯ `{i}send|{i}dm <username/id> <reply/type>`
+❯ `{i}send|{i}dm <username/id> <text/reply>`
 Send message to User/Chat.
 
 ❯ `{i}saved <reply>`

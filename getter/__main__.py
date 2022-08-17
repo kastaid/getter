@@ -14,7 +14,6 @@ from importlib import import_module
 from platform import python_version
 from secrets import choice
 from typing import List, Tuple
-import uvloop
 from telethon.errors import ApiIdInvalidError, AuthKeyDuplicatedError, PhoneNumberInvalidError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
 from telethon.tl.functions.channels import JoinChannelRequest
@@ -193,7 +192,6 @@ async def main() -> None:
 
 if __name__ == "__main__":
     try:
-        uvloop.install()
         LOOP.run_until_complete(main())
     except (
         KeyboardInterrupt,
