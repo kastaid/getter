@@ -135,7 +135,7 @@ async def Pulling(kst, state) -> None:
 
     if not Var.DEV_MODE:
         await force_pull()
-        await ignores()
+        # await ignores()
         await update_packages()
     up = rf"""\\**#Getter**// `{state}Updated Successfully...`
 Wait for a few seconds, then run `{hl}ping` command."""
@@ -187,7 +187,6 @@ async def Pushing(kst, state, repo) -> None:
     up = rf"""\\**#Getter**// `{state}Updated Successfully...`
 Wait for a few minutes, then run `{hl}ping` command."""
     await kst.eor(up)
-
     """
     err = await force_push()
     if err:
@@ -202,7 +201,6 @@ Wait for a few minutes, then run `{hl}ping` command."""
         if msg:
             await kst.eor(msg)
     """
-
     url = app.git_url.replace("https://", f"https://api:{Var.HEROKU_API}@")
     if "heroku" in repo.remotes:
         remote = repo.remote("heroku")

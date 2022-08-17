@@ -62,7 +62,7 @@ async def _(kst):
                 args,
                 HELP[args][1].replace("{i}", hl),
             )
-            await msg.eor(_)
+            await msg.sod(_)
         else:
             await msg.eor(f"**📦 Invalid Plugin ➞** `{args}`\nType ```{hl}help``` to see valid plugin names.")
     else:
@@ -88,4 +88,4 @@ async def _(kst):
             plugins,
             hl,
         )
-        await msg.eor(text, parse_mode="html")
+        await msg.sod(text, parse_mode="html")

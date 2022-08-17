@@ -34,7 +34,7 @@ async def _(kst):
     elif kst.is_reply:
         text = (await kst.get_reply_message()).text
     if not text:
-        await msg.eod(f"`{hl}tr <lang code>` reply text message.")
+        await msg.eod(f"`{hl}tr <lang_code>` reply text message.")
         return
     try:
         text = strip_format(strip_emoji(text))
@@ -74,7 +74,7 @@ async def _(kst):
     elif kst.is_reply:
         text = (await kst.get_reply_message()).text
     if not text:
-        await kst.eod(f"`{hl}tl <lang code>` reply text message.")
+        await kst.eod(f"`{hl}tl <lang_code>` reply text message.")
         return
     try:
         text = strip_format(strip_emoji(text))
@@ -101,7 +101,7 @@ async def _(kst):
     elif kst.is_reply:
         text = (await kst.get_reply_message()).text
     if not text:
-        await msg.eod(f"`{hl}tts <lang code>` reply text message.")
+        await msg.eod(f"`{hl}tts <lang_code>` reply text message.")
         return
     try:
         text = strip_format(strip_emoji(text))
@@ -126,16 +126,16 @@ HELP.update(
     {
         "translate": [
             "Translate",
-            """❯ `{i}tr <lang code> <text/reply>`
+            """❯ `{i}tr <lang_code> <text/reply>`
 Translate the message to required language.
 
-❯ `{i}tl <lang code> <text/reply>`
+❯ `{i}tl <lang_code> <text/reply>`
 Send or reply message as translated.
 
-❯ `{i}tts <lang code> <text/reply>`
+❯ `{i}tts <lang_code> <text/reply>`
 Text to speech.
 
-**Note:** Default <lang code> is `id`.
+**Note:** Default <lang_code> is `id`.
 """,
         ]
     }

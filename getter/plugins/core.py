@@ -20,6 +20,7 @@ from telethon.errors.rpcerrorlist import (
     UserChannelsTooMuchError,
     YouBlockedUserError,
 )
+from telethon.events import NewMessage
 from telethon.tl.functions.channels import GetFullChannelRequest, InviteToChannelRequest
 from telethon.tl.functions.contacts import UnblockRequest
 from telethon.tl.functions.messages import GetFullChatRequest
@@ -37,7 +38,6 @@ from . import (
     WORKER,
     DEVS,
     NOCHATS,
-    events,
     TZ,
     hl,
     kasta_cmd,
@@ -143,7 +143,7 @@ async def get_groupinfo(kst, msg, group=1):
 
 async def limit(kst, conv):
     try:
-        resp = conv.wait_event(events.NewMessage(incoming=True, from_users=conv.chat_id))
+        resp = conv.wait_event(NewMessage(incoming=True, from_users=conv.chat_id))
         await conv.send_message("/start")
         resp = await resp
         await resp.mark_read(clear_mentions=True)
@@ -522,7 +522,7 @@ async def _(kst):
 HELP.update(
     {
         "core": [
-            "Core",
+            "Core (Main Plugin)",
             """❯ `{i}inviteall <username/link/id (as target)>`
 Invite people's (exclude self, bots, admins, deleted accounts, status last month, status empty) to your current group/channel.
 

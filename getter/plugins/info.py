@@ -40,7 +40,7 @@ from . import (
     Searcher,
 )
 
-ROSE_LANG_CACHE = TTLCache(maxsize=512, ttl=(120 * 30), timer=time.perf_counter)  # 1 hours
+ROSE_LANG_CACHE = TTLCache(maxsize=512, ttl=(120 * 60), timer=time.perf_counter)  # 2 hours
 ROSE_STAT_CACHE = TTLCache(maxsize=512, ttl=120, timer=time.perf_counter)  # 2 mins
 SPAMWATCH_CACHE = TTLCache(maxsize=512, ttl=120, timer=time.perf_counter)  # 2 mins
 CAS_CACHE = TTLCache(maxsize=512, ttl=120, timer=time.perf_counter)  # 2 mins
@@ -228,6 +228,7 @@ async def _(kst):
     graph += f" ├ <b>Bots Created:</b> <code>{bc_count}</code>\n"
     graph += f" └ <b>It Took:</b> <code>{stop_time:.02f}s</code>"
     await msg.eor(graph, parse_mode="html")
+    await asyncio.sleep(3)
 
 
 @kasta_cmd(
@@ -235,9 +236,9 @@ async def _(kst):
 )
 async def _(kst):
     msg = await kst.eor("`Processing...`")
-    user, _ = await get_user(kst, 1)
-    if user:
-        user_id = user.id
+    target, _ = await get_user(kst, 1)
+    if target:
+        user_id = target.id
     else:
         user_id = kst.client.uid
     try:
@@ -246,15 +247,16 @@ async def _(kst):
         user = full.users[0]
     except Exception as err:
         return await msg.eor(f"**ERROR:**\n`{err}`")
-    user_photos = (await kst.client.get_profile_photos(user_id, limit=0)).total or 0
+    dc_id = user.photo and user.photo.dc_id or 0
     first_name = html.escape(user.first_name).replace("\u2060", "")
     last_name = (
         user.last_name and "\n ├ <b>Last Name:</b> <code>{}</code>".format(user.last_name.replace("\u2060", "")) or ""
     )
     username = user.username and "\n ├ <b>Username:</b> @{}".format(user.username) or ""
-    user_bio = full_user.about and html.escape(full_user.about) or ""
+    user_lang = user.lang_code or "en"
+    user_photos = (await kst.client.get_profile_photos(user_id, limit=0)).total or 0
     user_status = get_user_status(user)
-    dc_id = user.photo and user.photo.dc_id or 0
+    user_bio = full_user.about and html.escape(full_user.about) or ""
     is_rose_fban = await get_rose_fban(kst, user_id)
     is_spamwatch_banned = await get_spamwatch_banned(kst, user_id)
     is_cas_banned = await get_cas_banned(kst, user_id)
@@ -262,9 +264,11 @@ async def _(kst):
  ├ <b>ID:</b> <code>{}</code>
  ├ <b>DC ID:</b> <code>{}</code>
  ├ <b>First Name:</b> <code>{}</code>{}{}
+ ├ <b>Language Code:</b> <code>{}</code>
  ├ <b>User Profile:</b> <a href='tg://user?id={}'>Link</a>
- ├ <b>Number Of Pics:</b> <code>{}</code>
+ ├ <b>Profile Photos:</b> <code>{}</code>
  ├ <b>Last Seen:</b> <code>{}</code>
+ ├ <b>Is Premium User:</b> <code>{}</code>
  ├ <b>Is Mutual Contact:</b> <code>{}</code>
  ├ <b>Is Blocked User:</b> <code>{}</code>
  ├ <b>Is Private Forward:</b> <code>{}</code>
@@ -286,9 +290,11 @@ async def _(kst):
         first_name,
         last_name,
         username,
+        user_lang,
         user_id,
         user_photos,
         user_status,
+        humanbool(user.premium),
         humanbool(user.mutual_contact),
         humanbool(full_user.blocked),
         humanbool(bool(full_user.private_forward_name)),
@@ -319,6 +325,7 @@ async def _(kst):
         await msg.try_delete()
     except BaseException:
         await msg.eor(caption, parse_mode="html")
+    await asyncio.sleep(3)
 
 
 @kasta_cmd(
@@ -357,6 +364,7 @@ async def _(kst):
         await msg.try_delete()
     except BaseException:
         await msg.eor(caption, parse_mode="html")
+    await asyncio.sleep(3)
 
 
 async def get_chat_info(chat, kst):
@@ -593,10 +601,10 @@ HELP.update(
     {
         "info": [
             "Info",
-            """❯ `{i}sg <reply/username/id>`
+            """❯ `{i}sg <reply/username>`
 Get names and usernames by sangmata.
 
-❯ `{i}created <reply/username/id>`
+❯ `{i}created <reply/username>`
 Get creation date by creationdatebot.
 
 ❯ `{i}total <reply/username>`
@@ -605,7 +613,7 @@ Get total user messages.
 ❯ `{i}stats`
 Show your profile stats.
 
-❯ `{i}info <reply/username/id>`
+❯ `{i}info <reply/username>`
 Get mentioned user info, it also get Rose Fban, SpamWatch Banned, CAS Banned, etc. Per ids is cached in 2 minutes.
 
 ❯ `{i}groupinfo <current/username>`

@@ -9,7 +9,6 @@ from secrets import choice
 from textwrap import shorten
 from cachetools import cached, LRUCache
 from heroku3 import from_key
-from telethon import events
 from getter import (
     StartTime,
     __version__,
@@ -44,6 +43,7 @@ from getter.core.functions import (
     humanbytes,
     time_formatter,
     get_random_hex,
+    todict,
     run_async,
     make_async,
     Runner,

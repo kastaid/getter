@@ -195,6 +195,30 @@ def get_random_hex(chars: int = 12) -> str:
     return uuid4().hex[:chars]
 
 
+def todict(obj, classkey=None):
+    if isinstance(obj, dict):
+        data = {}
+        for (k, v) in obj.items():
+            data[k] = todict(v, classkey)
+        return data
+    elif hasattr(obj, "_ast"):
+        return todict(obj._ast())
+    elif hasattr(obj, "__iter__") and not isinstance(obj, str):
+        return [todict(v, classkey) for v in obj]
+    elif hasattr(obj, "__dict__"):
+        data = dict(  # noqa: C404
+            [
+                (key, todict(val, classkey))
+                for key, val in obj.__dict__.items()
+                if not callable(val) and not key.startswith("_")
+            ]
+        )
+        if classkey and hasattr(obj, "__class__"):
+            data[classkey] = obj.__class__.__name__
+        return data
+    return obj
+
+
 async def run_async(func, *args, **kwargs):
     return await LOOP.run_in_executor(executor=EXECUTOR, func=partial(func, *args, **kwargs))
 
@@ -230,6 +254,8 @@ async def Searcher(
     re_json: bool = False,
     re_content: bool = False,
     real: bool = False,
+    *args,
+    **kwargs,
 ):
     async with ClientSession(headers=headers) as session:
         try:
@@ -240,6 +266,8 @@ async def Searcher(
                     data=data,
                     ssl=ssl,
                     raise_for_status=True,
+                    *args,
+                    **kwargs,
                 )
             else:
                 resp = await session.get(
@@ -247,6 +275,8 @@ async def Searcher(
                     params=params,
                     ssl=ssl,
                     raise_for_status=True,
+                    *args,
+                    **kwargs,
                 )
         except asyncio.TimeoutError:
             return None
