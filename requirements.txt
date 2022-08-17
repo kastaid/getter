@@ -20,4 +20,3 @@ validators==0.20.0
 tweet-capture==0.0.13
 selenium==4.4.0
 pytgcalls==3.0.0.dev22
-uvloop==0.16.0
