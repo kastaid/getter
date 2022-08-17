@@ -29,7 +29,7 @@ async def _(kst):
     elif match == "shg":
         chars = SHRUGS
     text = choice(chars)
-    await kst.eor(text)
+    await kst.sod(text)
 
 
 @kasta_cmd(
@@ -441,7 +441,7 @@ async def _(kst):
 HELP.update(
     {
         "fun": [
-            "Funny",
+            "Fun",
             """❯ `{i}owo`
 Get a random owo.
 

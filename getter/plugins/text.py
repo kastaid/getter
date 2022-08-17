@@ -463,7 +463,7 @@ Convert roman numeral to number.
 ❯ `{i}spoiler|{i}sp <text/reply>`
 Create a spoiler message.
 
-❯ `{i}mention|{i}men <reply/username/id> <text>`
+❯ `{i}mention|{i}men <reply/username> <text>`
 Tags that person with the given custom text.
 
 ❯ `{i}type <text>`

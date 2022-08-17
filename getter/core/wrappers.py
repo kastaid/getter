@@ -31,9 +31,8 @@ async def eor(
         async with aiopen(file, mode="w") as f:
             await f.write(text)
         with suppress(BaseException):
-            chat = await e.get_chat()
             await e.client.send_file(
-                chat,
+                e.chat_id,
                 file=file,
                 caption=r"\\**#Getter**// `Message Too Long`",
                 force_document=True,

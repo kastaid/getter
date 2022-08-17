@@ -60,7 +60,7 @@ async def _(kst):
         total += 1
         await asyncio.sleep(0.2)
     await rep.try_delete()
-    await kst.sod(f"`Purged {total}`", time=2, silent=True)
+    await kst.sod(f"`Purged {total}`", time=5, silent=True)
 
 
 @kasta_cmd(
@@ -135,6 +135,50 @@ async def _(kst):
     await kst.try_delete()
     copy = await kst.get_reply_message()
     return await copy.reply(copy)
+
+
+@kasta_cmd(
+    pattern="(send|dm)(?: |$)(.*)",
+    no_crash=True,
+)
+async def _(kst):
+    if len(kst.text.split()) <= 1:
+        return await kst.eor("`Give chat username or id where to send.`", time=5)
+    chat = kst.text.split()[1]
+    try:
+        with suppress(ValueError):
+            chat = int(chat)
+        chat_id = await kst.client.get_peer_id(chat)
+    except Exception as err:
+        return await kst.eor(f"**ERROR:**\n`{err}`")
+    if len(kst.text.split()) > 2:
+        msg = kst.text.split(maxsplit=2)[2]
+    elif kst.reply_to:
+        msg = await kst.get_reply_message()
+    else:
+        return await kst.eor("`Give text to send or reply to message.`", time=5)
+    try:
+        _ = await kst.client.send_message(chat_id, msg)
+        delivered = "Message Delivered!"
+        if not _.is_private:
+            delivered = f"[Message Delivered!]({_.message_link})"
+        await kst.eor(delivered)
+    except Exception as err:
+        await kst.eor(f"**ERROR:**\n`{err}`")
+
+
+@kasta_cmd(
+    pattern="(f|)saved$",
+    no_crash=True,
+    func=lambda e: e.is_reply,
+)
+async def _(kst):
+    rep = await kst.get_reply_message()
+    if kst.pattern_match.group(1).strip() == "f":
+        await rep.forward_to(kst.sender_id)
+    else:
+        await kst.client.send_message(kst.sender_id, rep)
+    await kst.eor("`saved`", time=5)
 
 
 @kasta_cmd(
@@ -253,16 +297,25 @@ Delete all messages of replied user.
 ❯ `{i}copy <reply>`
 Copy the replied message.
 
+❯ `{i}send|{i}dm <username/id> <reply/type>`
+Send message to User/Chat.
+
+❯ `{i}saved <reply>`
+Save that replied message to Saved Messages.
+
+❯ `{i}fsaved <reply>`
+Forward that replied message to Saved Messages.
+
 ❯ `{i}id|{i}ids`
 Get current Chat/User/Message ID.
 
 ❯ `{i}delayspam|{i}ds <time/in seconds> <count> <text>`
 Spam chat with delays in seconds (min 2 seconds).
 
-❯ `{i}block <reply/username/id>`
+❯ `{i}block <reply/username>`
 Block mentioned user.
 
-❯ `{i}unblock <reply/username/id>`
+❯ `{i}unblock <reply/username>`
 Unblock mentioned user.
 
 ❯ `{i}kickme`

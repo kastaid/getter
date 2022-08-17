@@ -123,10 +123,10 @@ HELP.update(
     {
         "beautify": [
             "Beautify",
-            """❯ `{i}carbon <text/reply>`
+            """❯ `{i}carbon <text/reply (text or readable file)>`
 Carbonise the text with random presets.
 
-❯ `{i}rayso <text/reply>`
+❯ `{i}rayso <text/reply (text or readable file)>`
 Beauty showcase the text by rayso with random themes.
 """,
         ]

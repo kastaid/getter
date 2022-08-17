@@ -103,6 +103,10 @@ async def _(kst):
     pattern="joinvc(?: |$)(.*)",
 )
 async def _(kst):
+    try:
+        import pytgcalls
+    except ImportError:
+        return
     chat_id = await get_chat_id(kst)
     msg = await kst.eor("`Processing...`")
     try:
@@ -111,10 +115,6 @@ async def _(kst):
         call = None
     if not call:
         await msg.eor("__No video chat.__", time=5)
-        return
-    try:
-        import pytgcalls
-    except ImportError:
         return
     group_call = CALLS.get(chat_id)
     if group_call is None:

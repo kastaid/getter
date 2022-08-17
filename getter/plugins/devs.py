@@ -27,6 +27,7 @@ from . import (
     strip_format,
     humanbytes,
     time_formatter,
+    todict,
     Runner,
     Carbon,
     MAX_MESSAGE_LEN,
@@ -210,7 +211,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="raw(?: |$)(.*)",
+    pattern="(raw|json)$",
     no_crash=True,
 )
 async def _(kst):
@@ -220,22 +221,7 @@ async def _(kst):
         text = json.dumps(todict(msg), indent=2, default=str, sort_keys=False)
     else:
         text = f"{msg.stringify()}"
-    if len(text) > MAX_MESSAGE_LEN:
-        with suppress(BaseException):
-            with BytesIO(str.encode(text)) as file:
-                file.name = f"raw_output.txt"
-                await kst.client.send_file(
-                    kst.chat_id,
-                    file=file,
-                    caption=r"\\**#Getter**// `Message Raw Data`",
-                    force_document=True,
-                    allow_cache=False,
-                    reply_to=kst.reply_to_msg_id or kst.id,
-                    silent=True,
-                )
-        await kst.try_delete()
-    else:
-        await kst.eor(f"<pre>{html.escape(text)}</pre>", parse_mode="html")
+    await kst.eor(f"<pre>{html.escape(text)}</pre>", parse_mode="html")
 
 
 @kasta_cmd(
@@ -381,11 +367,13 @@ async def _(kst):
                 size = 0
                 for p in path.rglob("*"):
                     size += p.stat().st_size
-                directory += emoji + f" `{path.name}`" + "  `" + humanbytes(size) + "`\n"
+                directory += emoji + f" <code>{path.name}</code>" + "  <code>" + humanbytes(size) + "</code>\n"
                 sfolder += size
                 cfolder += 1
             else:
-                directory += emoji + f" `{path.name}`" + "  `" + humanbytes(path.stat().st_size) + "`\n"
+                directory += (
+                    emoji + f" <code>{path.name}</code>" + "  <code>" + humanbytes(path.stat().st_size) + "</code>\n"
+                )
                 sfile += path.stat().st_size
                 cfile += 1
         except BaseException:
@@ -396,9 +384,9 @@ async def _(kst):
         humanbytes(sfolder + sfile),
     )
     directory += f"""
-**Folders:**  `{cfolder}`  /  `{hfolder}`
-**Files:**  `{cfile}`  /  `{hfile}`
-**Total:**  `{cfile + cfolder}`  /  `{htotal}`
+<b>Folders:</b>  <code>{cfolder}</code>  /  <code>{hfolder}</code>
+<b>Files:</b>  <code>{cfile}</code>  /  <code>{hfile}</code>
+<b>Total:</b>  <code>{cfile + cfolder}</code>  /  <code>{htotal}</code>
 """
     if len(directory) > MAX_MESSAGE_LEN:
         directory = strip_format(directory)
@@ -418,7 +406,7 @@ async def _(kst):
         await msg.try_delete()
         (Root / file).unlink(missing_ok=True)
     else:
-        await msg.eor(directory)
+        await msg.eor(directory, parse_mode="html")
 
 
 @kasta_cmd(
@@ -468,6 +456,14 @@ async def _(kst):
         await msg.eor(shell)
 
 
+@kasta_cmd(
+    pattern="crash$",
+)
+async def _(kst):
+    await kst.try_delete()
+    raise ValueError("not an error, just for testing (>_")
+
+
 def get_terminal_logs():
     return sorted((Root / "logs").rglob("getter-*.log"))
 
@@ -513,31 +509,6 @@ async def restart_app() -> None:
     os.execl(sys.executable, sys.executable, "-m", "getter")
 
 
-def todict(obj, classkey=None):
-    if isinstance(obj, dict):
-        data = {}
-        for (k, v) in obj.items():
-            data[k] = todict(v, classkey)
-        return data
-    elif hasattr(obj, "_ast"):
-        return todict(obj._ast())
-    elif hasattr(obj, "__iter__") and not isinstance(obj, str):
-        return [todict(v, classkey) for v in obj]
-    elif hasattr(obj, "__dict__"):
-        data = dict(  # noqa: C404
-            [
-                (key, todict(val, classkey))
-                for key, val in obj.__dict__.items()
-                if not callable(val) and not key.startswith("_")
-            ]
-        )
-        if classkey and hasattr(obj, "__class__"):
-            data[classkey] = obj.__class__.__name__
-        return data
-    else:
-        return obj
-
-
 HELP.update(
     {
         "devs": [
@@ -569,8 +540,11 @@ Restart the app.
 ❯ `{i}sleep <time/in seconds>`
 Sleep the bot in few seconds (max 50).
 
-❯ `{i}raw <json> <reply>`
+❯ `{i}raw <reply>`
 Get the raw data of message.
+
+❯ `{i}json <reply>`
+Same as above but with json format.
 
 ❯ `{i}sysinfo`
 Shows System Info.

@@ -312,13 +312,13 @@ HELP.update(
     {
         "globals": [
             "Globals",
-            """❯ `{i}gban <reply/username/id> <reason (optional)>`
+            """❯ `{i}gban <reply/username> <reason (optional)>`
 Globally Ban user (temporary) and report as spam.
 
-❯ `{i}ungban <reply/username/id>`
+❯ `{i}ungban <reply/username>`
 Globally Unban user.
 
-❯ `{i}gkick <reply/username/id>`
+❯ `{i}gkick <reply/username>`
 Globally Kick user (temporary).
 
 ❯ `{i}gcast <text/reply>`
