@@ -5,7 +5,10 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+import asyncio
 import datetime
+import html
+import json
 import math
 import shutil
 import time
@@ -14,52 +17,51 @@ from . import (
     StartTime,
     Var,
     HELP,
-    humanbytes,
     kasta_cmd,
+    humanbytes,
     time_formatter,
+    todict,
+    mask_email,
+    USERAGENTS,
     Searcher,
     Heroku,
-    HerokuStack,
 )
 
 dyno_text = """
-**⚙️  Dyno Usage**
- -> **Dyno usage for** `{}` ~ {}:
-     •  `{}h  {}m  {}%`
- -> **Dyno hours quota remaining this month:**
-     •  `{}h  {}m  {}%`
+<b>📦 Heroku App</b>
+-> <b>Name:</b> <code>{}</code>
+-> <b>Stack:</b> <code>{}</code>
+-> <b>Region:</b> <code>{}</code>
+-> <b>Created:</b> <code>{}</code>
+-> <b>Updated:</b> <code>{}</code>
+-> <b>Email:</b> <code>{}</code>
+
+<b>⚙️ Heroku Dyno</b>
+-> <b>Dyno usage:</b>
+    •  <code>{}h  {}m  {}%</code>
+-> <b>Dyno hours quota remaining this month:</b>
+    •  <code>{}h  {}m  {}%</code>
 """
 
 usage_text = """
-**🖥️  Uptime**
-**App:** `{}`
-**System:** `{}`
+<b>🖥️ Uptime</b>
+<b>App:</b> <code>{}</code>
+<b>System:</b> <code>{}</code>
 
-**💾  Disk Space**
-**Total:** `{}`
-**Used:** `{}`
-**Free:** `{}`
+<b>📊 Data Usage</b>
+<b>Upload:</b> <code>{}</code>
+<b>Download:</b> <code>{}</code>
 
-**📊  Data Usage**
-**Upload:** `{}`
-**Download:** `{}`
+<b>💾 Disk Space</b>
+<b>Total:</b> <code>{}</code>
+<b>Used:</b> <code>{}</code>
+<b>Free:</b> <code>{}</code>
 
-**📈  Memory Usage**
-**CPU:** `{}`
-**RAM:** `{}`
-**DISK:** `{}`
+<b>📈 Memory Usage</b>
+<b>CPU:</b> <code>{}</code>
+<b>RAM:</b> <code>{}</code>
+<b>DISK:</b> <code>{}</code>
 """
-
-USERAGENTS = [
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:11.0) Gecko/20100101 Firefox/11.0",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/72.0.3626.121 Safari/537.36",
-    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100 101 Firefox/22.0",
-    "Mozilla/5.0 (Windows NT 6.1; rv:11.0) Gecko/20100101 Firefox/11.0",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_4) AppleWebKit/536.5 (KHTML, like Gecko) "
-    "Chrome/19.0.1084.46 Safari/536.5",
-    "Mozilla/5.0 (Windows; Windows NT 6.1) AppleWebKit/536.5 (KHTML, like Gecko) " "Chrome/19.0.1084.46 Safari/536.5",
-]
 
 
 def default_usage() -> str:
@@ -87,31 +89,26 @@ def default_usage() -> str:
     TOTAL = humanbytes(total)
     USED = humanbytes(used)
     FREE = humanbytes(free)
-    usage = usage_text.format(
+    return usage_text.format(
         app_uptime,
         system_uptime,
+        UPLOAD,
+        DOWN,
         TOTAL,
         USED,
         FREE,
-        UPLOAD,
-        DOWN,
         CPU,
         RAM,
         DISK,
     )
-    return usage
 
 
 async def heroku_usage() -> str:
-    if not Var.HEROKU_API:
-        return "Please set `HEROKU_API` in Config Vars."
-    if not Var.HEROKU_APP_NAME:
-        return "Please set `HEROKU_APP_NAME` in Config Vars."
     try:
-        heroku_conn = Heroku()
-        user_id = heroku_conn.account().id
+        user_id = Heroku().account().id
+        app = Heroku().app(Var.HEROKU_APP_NAME)
     except Exception as err:
-        return f"**ERROR:**\n`{err}`"
+        return f"<b>ERROR:</b>\n<code>{err}</code>"
     headers = {
         "User-Agent": choice(USERAGENTS),
         "Authorization": f"Bearer {Var.HEROKU_API}",
@@ -120,7 +117,7 @@ async def heroku_usage() -> str:
     url = f"https://api.heroku.com/accounts/{user_id}/actions/get-quota"
     res = await Searcher(url, headers=headers, re_json=True)
     if not res:
-        return "`Try again now!`"
+        return "<code>Try again now!</code>"
     quota = res["account_quota"]
     quota_used = res["quota_used"]
     remaining_quota = quota - quota_used
@@ -139,9 +136,13 @@ async def heroku_usage() -> str:
         AppPercentage = math.floor(Apps[0]["quota_used"] * 100 / quota)
     AppHours = math.floor(AppQuotaUsed / 60)
     AppMinutes = math.floor(AppQuotaUsed % 60)
-    usage = default_usage() + dyno_text.format(
-        Var.HEROKU_APP_NAME,
-        HerokuStack(),
+    return dyno_text.format(
+        app.name,
+        app.stack.name,
+        app.region.name,
+        app.created_at.strftime("%d/%m/%Y %H:%M:%S"),
+        app.updated_at.strftime("%d/%m/%Y %H:%M:%S"),
+        mask_email(app.owner.email),
         AppHours,
         AppMinutes,
         AppPercentage,
@@ -149,20 +150,55 @@ async def heroku_usage() -> str:
         minutes,
         percentage,
     )
-    return usage
 
 
 @kasta_cmd(
-    pattern="usage(?: |$)(.*)",
+    pattern="usage$",
 )
 async def _(kst):
-    mode = kst.pattern_match.group(1)
     msg = await kst.eor("`Processing...`")
-    if mode in ("heroku", "hk", "h"):
-        hk = await heroku_usage()
-        await msg.eor(hk)
+    if Var.HEROKU_API and Var.HEROKU_APP_NAME:
+        usage = default_usage() + await heroku_usage()
     else:
-        await msg.eor(default_usage())
+        usage = default_usage()
+    await msg.eor(usage, parse_mode="html")
+
+
+@kasta_cmd(
+    pattern="heroku$",
+)
+async def _(kst):
+    msg = await kst.eor("`Processing...`")
+    if not Var.HEROKU_API:
+        await msg.eor("Please set `HEROKU_API` in Config Vars.")
+        return
+    if not Var.HEROKU_APP_NAME:
+        await msg.eor("Please set `HEROKU_APP_NAME` in Config Vars.")
+        return
+    try:
+        heroku_conn = Heroku()
+        app = heroku_conn.app(Var.HEROKU_APP_NAME)
+    except Exception as err:
+        return await msg.eor(f"**ERROR:**\n`{err}`")
+    uid = kst.sender_id
+    account = json.dumps(todict(heroku_conn.account()), indent=2, default=str)
+    capp = json.dumps(todict(app.info), indent=2, default=str)
+    dyno = json.dumps(todict(app.dynos()), indent=2, default=str)
+    addons = json.dumps(todict(app.addons()), indent=2, default=str)
+    buildpacks = json.dumps(todict(app.buildpacks()), indent=2, default=str)
+    configs = json.dumps(app.config().to_dict(), indent=2, default=str)
+    await kst.client.send_message(uid, f"<b>Account:</b>\n<pre>{html.escape(account)}</pre>", parse_mode="html")
+    await asyncio.sleep(1)
+    await kst.client.send_message(uid, f"<b>App:</b>\n<pre>{html.escape(capp)}</pre>", parse_mode="html")
+    await asyncio.sleep(1)
+    await kst.client.send_message(uid, f"<b>Dyno:</b>\n<pre>{html.escape(dyno)}</pre>", parse_mode="html")
+    await asyncio.sleep(1)
+    await kst.client.send_message(uid, f"<b>Addons:</b>\n<pre>{html.escape(addons)}</pre>", parse_mode="html")
+    await asyncio.sleep(1)
+    await kst.client.send_message(uid, f"<b>Buildpacks:</b>\n<pre>{html.escape(buildpacks)}</pre>", parse_mode="html")
+    await asyncio.sleep(1)
+    await kst.client.send_message(uid, f"<b>Configs:</b>\n<pre>{html.escape(configs)}</pre>", parse_mode="html")
+    await msg.eor("`Sent at Saved Messages.`", time=5)
 
 
 HELP.update(
@@ -170,10 +206,10 @@ HELP.update(
         "usage": [
             "Usage",
             """❯ `{i}usage`
-Get overall usage.
+Get overall usage, also heroku stats.
 
-❯ `{i}usage <heroku|hk|h>`
-Get heroku stats.
+❯ `{i}heroku`
+Get the heroku information (account, app, dyno, addons, buildpacks, configs) and save in Saved Messages.
 """,
         ]
     }

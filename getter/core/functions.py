@@ -27,8 +27,8 @@ from telethon.tl.types import (
     UserStatusRecently,
 )
 from telethon.utils import add_surrogate, get_display_name
-from getter import LOOP, EXECUTOR
-from getter.logger import LOGS
+from .. import LOOP, EXECUTOR
+from ..logger import LOGS
 
 
 def is_telegram_link(url: str) -> bool:
@@ -193,6 +193,11 @@ def time_formatter(ms: Union[int, str]) -> str:
 
 def get_random_hex(chars: int = 12) -> str:
     return uuid4().hex[:chars]
+
+
+def mask_email(email: str) -> str:
+    at = email.find("@")
+    return email[0] + "*" * int(at - 2) + email[at - 1 :]
 
 
 def todict(obj, classkey=None):

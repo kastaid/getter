@@ -17,7 +17,6 @@ from . import (
     kasta_cmd,
     parse_pre,
     Searcher,
-    get_user,
     UPSIDEFONT,
     DOWNSIDEFONT,
 )
@@ -347,19 +346,6 @@ async def spoiler_(kst):
 
 
 @kasta_cmd(
-    pattern=r"(mention|men)(?: |$)([\s\S]*)",
-    no_crash=True,
-)
-async def mention_(kst):
-    user, name = await get_user(kst, 2)
-    if not user:
-        return
-    name = name if name else "ㅤ"
-    mention = f"<a href=tg://user?id={user.id}>{name}</a>"
-    await kst.sod(mention, parse_mode="html")
-
-
-@kasta_cmd(
     pattern=r"type(?: |$)([\s\S]*)",
     no_crash=True,
 )
@@ -462,9 +448,6 @@ Convert roman numeral to number.
 
 ❯ `{i}spoiler|{i}sp <text/reply>`
 Create a spoiler message.
-
-❯ `{i}mention|{i}men <reply/username> <text>`
-Tags that person with the given custom text.
 
 ❯ `{i}type <text>`
 Edits the message and shows like someone is typing.

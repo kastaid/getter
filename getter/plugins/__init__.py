@@ -25,33 +25,7 @@ from getter import (
     MAX_MESSAGE_LEN,
 )
 from getter.config import Var, TZ, HANDLER
-from getter.core.app import App
-from getter.core.constants import *
-from getter.core.decorators import kasta_cmd
-from getter.core.functions import (
-    is_telegram_link,
-    get_username,
-    mentionuser,
-    display_name,
-    get_doc_mime,
-    humanbool,
-    get_user_status,
-    get_user,
-    parse_pre,
-    strip_format,
-    strip_emoji,
-    humanbytes,
-    time_formatter,
-    get_random_hex,
-    todict,
-    run_async,
-    make_async,
-    Runner,
-    Searcher,
-    Carbon,
-)
-from getter.core.property import get_blacklisted
-from getter.core.wrappers import eor, eod, sod
+from getter.core import *
 from getter.logger import LOGS
 
 hl = HANDLER
@@ -142,6 +116,18 @@ RAYSO_THEMES = (
     "sunset",
 )
 
+USERAGENTS = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:11.0) Gecko/20100101 Firefox/11.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/72.0.3626.121 Safari/537.36",
+    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100 101 Firefox/22.0",
+    "Mozilla/5.0 (Windows NT 6.1; rv:11.0) Gecko/20100101 Firefox/11.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_4) AppleWebKit/536.5 (KHTML, like Gecko) "
+    "Chrome/19.0.1084.46 Safari/536.5",
+    "Mozilla/5.0 (Windows; Windows NT 6.1) AppleWebKit/536.5 (KHTML, like Gecko) " "Chrome/19.0.1084.46 Safari/536.5",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0",
+)
+
 
 def Heroku() -> None:
     _conn = None
@@ -156,8 +142,7 @@ def Heroku() -> None:
 @cached(cache=LRUCache(maxsize=512))
 def HerokuStack() -> str:
     try:
-        heroku_conn = Heroku()
-        app = heroku_conn.app(Var.HEROKU_APP_NAME)
+        app = Heroku().app(Var.HEROKU_APP_NAME)
         stack = app.info.stack.name
     except BaseException:
         stack = "none"

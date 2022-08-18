@@ -10,8 +10,8 @@ from contextlib import suppress
 from aiofiles import open as aiopen
 from telethon.errors import MessageNotModifiedError
 from telethon.tl.types import MessageService
-from getter import Root, MAX_MESSAGE_LEN
-from getter.core.functions import strip_format
+from .. import Root, MAX_MESSAGE_LEN
+from .functions import strip_format
 
 
 async def eor(

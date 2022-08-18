@@ -31,7 +31,15 @@
             "required": true
         }
     },
-    "addons": [],
+    "stack": "heroku-22",
+    "addons": [
+        {
+            "plan": "heroku-postgresql",
+            "options": {
+                "version": "14"
+            }
+        }
+    ],
     "buildpacks": [
         {
             "url": "heroku/python"
@@ -51,5 +59,6 @@
             "quantity": 1,
             "size": "free"
         }
-    }
+    },
+    "success_url": "https://t.me/kastaot"
 }

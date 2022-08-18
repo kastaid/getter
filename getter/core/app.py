@@ -11,11 +11,11 @@ from telethon.network.connection.tcpfull import ConnectionTcpFull
 from telethon.sessions.string import StringSession
 
 
-def Client() -> TelegramClient:
-    from getter import __version__, LOOP
-    from getter.config import Var
-    from getter.core.property import do_not_remove_credit
-    from getter.logger import LOGS
+def BaseApp() -> TelegramClient:
+    from .. import __version__, LOOP
+    from ..config import Var
+    from ..logger import LOGS
+    from .property import do_not_remove_credit
 
     do_not_remove_credit()
     if Var.STRING_SESSION:
@@ -27,7 +27,7 @@ def Client() -> TelegramClient:
         LOGS.error("STRING_SESSION empty. Please filling! Quitting...")
         sys.exit(1)
     try:
-        client = TelegramClient(
+        app = TelegramClient(
             session=session,
             api_id=Var.API_ID,
             api_hash=Var.API_HASH,
@@ -37,11 +37,11 @@ def Client() -> TelegramClient:
             connection_retries=None,
             auto_reconnect=True,
         )
-        client.parse_mode = "markdown"
+        app.parse_mode = "markdown"
     except Exception as err:
         LOGS.exception("[APP] - {}".format(err))
         sys.exit(1)
-    return client
+    return app
 
 
-App = Client()
+App = BaseApp()
