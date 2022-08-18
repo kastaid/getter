@@ -43,7 +43,7 @@ Temporary update as locally.
 ❯ `{hl}update <deploy|push>`
 Permanently update as heroku.
 
-❯ `{hl}update <force|f>`
+❯ `{hl}update force`
 Force temporary update as locally.
 """
 test_text = """
@@ -126,7 +126,6 @@ async def show_changelog(kst, changelog) -> None:
         (Root / file).unlink(missing_ok=True)
     else:
         chlog = await kst.eor(changelog, parse_mode="html")
-    await kst.try_delete()
     await chlog.reply(help_text, silent=True)
 
 
@@ -180,7 +179,6 @@ async def Pushing(kst, state, repo) -> None:
             app.install_addon(pg, config={"version": pgv})
     else:
         app.install_addon(pg, config={"version": pgv})
-    await asyncio.sleep(choice((4, 6, 8)))
     if HerokuStack() != "container":
         app.update_buildpacks(
             [
@@ -190,7 +188,6 @@ async def Pushing(kst, state, repo) -> None:
                 "https://github.com/heroku/heroku-buildpack-chromedriver",
             ]
         )
-    await asyncio.sleep(choice((4, 6, 8)))
     await force_pull()
     up = rf"""\\**#Getter**// `{state}Updated Successfully...`
 Wait for a few minutes, then run `{hl}ping` command."""
