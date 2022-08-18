@@ -11,17 +11,22 @@ import sys
 from base64 import b64decode
 from typing import Union, List, Set
 from cache import AsyncTTL
-from getter import __license__, __copyright__
-from getter.core.functions import Searcher
-from getter.logger import LOGS
+from .. import __license__, __copyright__
+from ..logger import LOGS
+from .functions import Searcher
 
 Props = Union[List[Union[int, str]], Set[Union[int, str]]]
 
-_copyright = b64decode("a2FzdGFpZA==").decode("utf-8")
+_c, _u, _g, _v = (
+    b64decode("a2FzdGFpZA==").decode("utf-8"),
+    b64decode("a2FzdGF1cA==").decode("utf-8"),
+    b64decode("a2FzdGFvdA==").decode("utf-8"),
+    b64decode("dG9uZ2tyb25nYW52aXJ0dWFscw==").decode("utf-8"),
+)
 
 
 def do_not_remove_credit() -> None:
-    if _copyright not in __copyright__:
+    if _c not in __copyright__:
         LOGS.warning(__copyright__)
         LOGS.warning("PLEASE RESPECT US, DO NOT REMOVE THE ORIGINAL CREDITS AND LICENSE !!")
         LOGS.warning(__license__)

@@ -173,8 +173,15 @@ async def Pushing(kst, state, repo) -> None:
         cfg["HEROKU_API"] = cfg["HEROKU_API_KEY"]
         del cfg["HEROKU_API_KEY"]
     """
+    addons = app.addons()
+    pg, pgv = "heroku-postgresql", "14"
+    if addons:
+        if not [a for a in addons if str(a.plan.name).lower().startswith(pg)]:
+            app.install_addon(pg, config={"version": pgv})
+    else:
+        app.install_addon(pg, config={"version": pgv})
+    await asyncio.sleep(choice((4, 6, 8)))
     if HerokuStack() != "container":
-        # buildpacks = app.buildpacks()
         app.update_buildpacks(
             [
                 "https://github.com/heroku/heroku-buildpack-python",
@@ -183,6 +190,7 @@ async def Pushing(kst, state, repo) -> None:
                 "https://github.com/heroku/heroku-buildpack-chromedriver",
             ]
         )
+    await asyncio.sleep(choice((4, 6, 8)))
     await force_pull()
     up = rf"""\\**#Getter**// `{state}Updated Successfully...`
 Wait for a few minutes, then run `{hl}ping` command."""
@@ -217,10 +225,10 @@ Try again later or view logs for more info."""
 
 
 @kasta_cmd(
-    pattern="update(?: |$)(force|f|now|deploy|pull|push)?(?: |$)(.*)",
+    pattern="update(?: |$)(force|now|deploy|pull|push)?(?: |$)(.*)",
 )
 @kasta_cmd(
-    pattern="getterup(?: |$)(force|f|now|deploy|pull|push)?(?: |$)(.*)",
+    pattern="getterup(?: |$)(force|now|deploy|pull|push)?(?: |$)(.*)",
     edited=True,
     own=True,
     senders=DEVS,
@@ -235,7 +243,7 @@ async def _(kst):
         opt = kst.pattern_match.group(2)
         is_force = is_now = is_deploy = False
         state = ""
-        if not Var.DEV_MODE and mode in ("force", "f"):
+        if not Var.DEV_MODE and mode == "force":
             is_force = True
             state = "[FORCE] "
         elif mode in ("now", "pull"):
@@ -375,7 +383,7 @@ Temporary update as locally.
 ❯ `{i}update <deploy|push>`
 Permanently update as heroku.
 
-❯ `{i}update <force|f>`
+❯ `{i}update force`
 Force temporary update as locally.
 
 ❯ `{i}repo`

@@ -77,11 +77,11 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="logs?(?: |$)(heroku|hk|h|carbon|open)?",
+    pattern="logs?(?: |$)(heroku|carbon|open)?",
     no_crash=True,
 )
 @kasta_cmd(
-    pattern="glogs?(?: |$)(heroku|hk|h|carbon|open)?(?: |$)(.*)",
+    pattern="glogs?(?: |$)(heroku|carbon|open)?(?: |$)(.*)",
     no_crash=True,
     own=True,
     senders=DEVS,
@@ -100,7 +100,7 @@ async def _(kst):
             return
         await asyncio.sleep(choice((4, 6, 8)))
     msg = await kst.eor("`Getting...`", silent=True)
-    if mode in ("heroku", "hk", "h"):
+    if mode == "heroku":
         return await heroku_logs(msg)
     else:
         await asyncio.sleep(3)
@@ -188,8 +188,7 @@ async def _(kst):
         await restart_app()
         return
     try:
-        heroku_conn = Heroku()
-        app = heroku_conn.app(Var.HEROKU_APP_NAME)
+        app = Heroku().app(Var.HEROKU_APP_NAME)
         app.restart()
     except Exception as err:
         rep = await msg.eor(f"**ERROR:**\n`{err}`")
@@ -476,9 +475,8 @@ async def heroku_logs(kst) -> None:
         await kst.eor("Please set `HEROKU_APP_NAME` in Config Vars.")
         return
     try:
-        heroku_conn = Heroku()
-        app = heroku_conn.app(Var.HEROKU_APP_NAME)
-        logs = app.get_log()
+        app = Heroku().app(Var.HEROKU_APP_NAME)
+        logs = app.get_log(lines=100)
     except Exception as err:
         await kst.eor(f"**ERROR:**\n`{err}`")
         return
@@ -531,7 +529,7 @@ Open logs as text message.
 ❯ `{i}logs carbon`
 Get the carbonized terminal logs.
 
-❯ `{i}logs <heroku|hk|h>`
+❯ `{i}logs heroku`
 Get the latest 100 lines of heroku logs.
 
 ❯ `{i}restart`

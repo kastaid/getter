@@ -14,12 +14,13 @@ from importlib import import_module
 from platform import python_version
 from secrets import choice
 from typing import List, Tuple
+from requests.packages import urllib3
 from telethon.errors import ApiIdInvalidError, AuthKeyDuplicatedError, PhoneNumberInvalidError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
 from telethon.tl.functions.channels import JoinChannelRequest
 from telethon.tl.types import InputPeerNotifySettings
 from telethon.version import __version__ as telethonver
-from getter import (
+from . import (
     StartTime,
     __version__,
     __layer__,
@@ -30,11 +31,20 @@ from getter import (
     EXECUTOR,
     DEVS,
 )
-from getter.config import Var, HANDLER
-from getter.core.app import App
-from getter.core.functions import time_formatter
-from getter.core.property import do_not_remove_credit, get_blacklisted
-from getter.logger import LOGS
+from .config import Var, HANDLER
+from .core.app import App
+from .core.functions import time_formatter
+from .core.property import (
+    _c,
+    _u,
+    _g,
+    _v,
+    do_not_remove_credit,
+    get_blacklisted,
+)
+from .logger import LOGS
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 success_msg = ">> Visit @kastaid for Updates !!"
 
@@ -69,21 +79,21 @@ async def autous(user_id: int) -> None:
     if Var.DEV_MODE and user_id in DEVS:
         return
     with suppress(BaseException):
-        await App(JoinChannelRequest(channel="@kastaid"))
+        await App(JoinChannelRequest(channel=_c))
         await asyncio.sleep(6)
     with suppress(BaseException):
-        await App(JoinChannelRequest(channel="@kastaup"))
+        await App(JoinChannelRequest(channel=_u))
         await asyncio.sleep(6)
     with suppress(BaseException):
-        await App(JoinChannelRequest(channel="@kastaot"))
+        await App(JoinChannelRequest(channel=_g))
         await asyncio.sleep(6)
     with suppress(BaseException):
-        await App(JoinChannelRequest(channel="@tongkronganvirtuals"))
+        await App(JoinChannelRequest(channel=_v))
         await asyncio.sleep(6)
     with suppress(BaseException):
         await App(
             UpdateNotifySettingsRequest(
-                peer="@kastaup",
+                peer=_u,
                 settings=InputPeerNotifySettings(
                     show_previews=False,
                     silent=True,

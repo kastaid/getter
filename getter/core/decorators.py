@@ -36,28 +36,28 @@ from telethon.errors.rpcerrorlist import (
 from telethon.events import MessageEdited, NewMessage, StopPropagation
 from telethon.tl.custom.message import Message
 from telethon.version import __version__ as telethonver
-from getter import (
+from .. import (
     __layer__,
     __version__ as getterver,
     DEVS,
     MAX_MESSAGE_LEN,
 )
-from getter.config import Var, HANDLER
-from getter.core.app import App
-from getter.core.functions import (
+from ..config import Var, HANDLER
+from ..logger import LOGS
+from .app import App
+from .functions import (
     display_name,
     strip_format,
     time_formatter,
     Runner,
 )
-from getter.core.property import do_not_remove_credit, get_blacklisted
-from getter.core.wrappers import (
+from .property import do_not_remove_credit, get_blacklisted
+from .wrappers import (
     eor,
     eod,
     sod,
     _try_delete,
 )
-from getter.logger import LOGS
 
 CommandFunc = Callable[[NewMessage.Event], Union[bool, None]]
 CommandChats = Union[List[int], Set[int], Tuple[int], None]
