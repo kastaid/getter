@@ -13,18 +13,17 @@ import math
 import shutil
 import time
 from . import (
-    choice,
     StartTime,
-    Var,
-    HELP,
     kasta_cmd,
+    plugins_help,
+    choice,
     humanbytes,
     time_formatter,
     todict,
     mask_email,
     USERAGENTS,
     Searcher,
-    Heroku,
+    Hk,
 )
 
 dyno_text = """
@@ -105,16 +104,17 @@ def default_usage() -> str:
 
 async def heroku_usage() -> str:
     try:
-        user_id = Heroku().account().id
-        app = Heroku().app(Var.HEROKU_APP_NAME)
+        conn = Hk.heroku()
+        user = conn.account().id
+        app = conn.app(Hk.name)
     except Exception as err:
         return f"<b>ERROR:</b>\n<code>{err}</code>"
     headers = {
         "User-Agent": choice(USERAGENTS),
-        "Authorization": f"Bearer {Var.HEROKU_API}",
+        "Authorization": f"Bearer {Hk.api}",
         "Accept": "application/vnd.heroku+json; version=3.account-quotas",
     }
-    url = f"https://api.heroku.com/accounts/{user_id}/actions/get-quota"
+    url = f"https://api.heroku.com/accounts/{user}/actions/get-quota"
     res = await Searcher(url, headers=headers, re_json=True)
     if not res:
         return "<code>Try again now!</code>"
@@ -157,7 +157,7 @@ async def heroku_usage() -> str:
 )
 async def _(kst):
     msg = await kst.eor("`Processing...`")
-    if Var.HEROKU_API and Var.HEROKU_APP_NAME:
+    if Hk.is_heroku:
         usage = default_usage() + await heroku_usage()
     else:
         usage = default_usage()
@@ -169,19 +169,19 @@ async def _(kst):
 )
 async def _(kst):
     msg = await kst.eor("`Processing...`")
-    if not Var.HEROKU_API:
+    if not Hk.api:
         await msg.eor("Please set `HEROKU_API` in Config Vars.")
         return
-    if not Var.HEROKU_APP_NAME:
+    if not Hk.name:
         await msg.eor("Please set `HEROKU_APP_NAME` in Config Vars.")
         return
     try:
-        heroku_conn = Heroku()
-        app = heroku_conn.app(Var.HEROKU_APP_NAME)
+        conn = Hk.heroku()
+        app = conn.app(Hk.name)
     except Exception as err:
         return await msg.eor(f"**ERROR:**\n`{err}`")
-    uid = kst.sender_id
-    account = json.dumps(todict(heroku_conn.account()), indent=2, default=str)
+    uid = kst.client.uid
+    account = json.dumps(todict(conn.account()), indent=2, default=str)
     capp = json.dumps(todict(app.info), indent=2, default=str)
     dyno = json.dumps(todict(app.dynos()), indent=2, default=str)
     addons = json.dumps(todict(app.addons()), indent=2, default=str)
@@ -201,16 +201,7 @@ async def _(kst):
     await msg.eor("`Sent at Saved Messages.`", time=5)
 
 
-HELP.update(
-    {
-        "usage": [
-            "Usage",
-            """❯ `{i}usage`
-Get overall usage, also heroku stats.
-
-❯ `{i}heroku`
-Get the heroku information (account, app, dyno, addons, buildpacks, configs) and save in Saved Messages.
-""",
-        ]
-    }
-)
+plugins_help["usage"] = {
+    "{i}usage": "Get overall usage, also heroku stats.",
+    "{i}heroku": "Get the heroku information (account, app, dyno, addons, buildpacks, configs) and save in Saved Messages.",
+}

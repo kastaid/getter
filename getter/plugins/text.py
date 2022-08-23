@@ -12,13 +12,12 @@ import sys
 from base64 import b64encode, b64decode
 import aiohttp
 from . import (
-    __version__ as getterver,
-    HELP,
+    __version__,
     kasta_cmd,
+    plugins_help,
     parse_pre,
     Searcher,
-    UPSIDEFONT,
-    DOWNSIDEFONT,
+    FLIP_MAP,
 )
 
 
@@ -49,7 +48,7 @@ def kebab(s: str) -> str:
     pattern="hang(?: |$)(.*)",
     no_crash=True,
 )
-async def hang_(kst):
+async def _(kst):
     evil = f"😈꙰꙰꙰꙰꙰꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰😈꙰꙰꙰꙰꙰꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰😈꙰꙰꙰꙰꙰꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰😈꙰꙰꙰꙰꙰꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰😈꙰꙰꙰꙰꙰꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟꙰꙰⃟꙰⃟꙰⃟"
     count = kst.pattern_match.group(1)
     try:
@@ -72,11 +71,11 @@ async def hang_(kst):
     func=lambda e: e.is_reply,
     no_crash=True,
 )
-async def noformat_(kst):
-    rep = await kst.get_reply_message()
-    if not (hasattr(rep, "text") and rep.text):
+async def _(kst):
+    reply = await kst.get_reply_message()
+    if not getattr(reply, "text", None):
         return await kst.try_delete()
-    text = rep.text
+    text = reply.text
     await kst.eor(text, parse_mode=parse_pre)
 
 
@@ -85,11 +84,11 @@ async def noformat_(kst):
     func=lambda e: e.is_reply,
     no_crash=True,
 )
-async def nospace_(kst):
-    rep = await kst.get_reply_message()
-    if not (hasattr(rep, "text") and rep.text):
+async def _(kst):
+    reply = await kst.get_reply_message()
+    if not getattr(reply, "text", None):
         return await kst.try_delete()
-    text = "".join(rep.text.split())
+    text = "".join(reply.text.split())
     await kst.eor(text)
 
 
@@ -98,13 +97,13 @@ async def nospace_(kst):
     func=lambda e: e.is_reply,
     no_crash=True,
 )
-async def repeat_(kst):
+async def _(kst):
     count = kst.pattern_match.group(1)
-    rep = await kst.get_reply_message()
-    if not (hasattr(rep, "text") and rep.text):
+    reply = await kst.get_reply_message()
+    if not getattr(reply, "text", None):
         return await kst.try_delete()
     count = int(count) if count.isdecimal() else 1
-    txt = rep.text
+    txt = reply.text
     text = txt + "\n"
     for _ in range(0, count - 1):
         text += txt + "\n"
@@ -115,13 +114,9 @@ async def repeat_(kst):
     pattern=r"count(?: |$)([\s\S]*)",
     no_crash=True,
 )
-async def count_(kst):
-    match = kst.pattern_match.group(1)
-    if match and not kst.is_reply:
-        text = match
-    elif not match and kst.is_reply:
-        text = (await kst.get_reply_message()).text
-    else:
+async def _(kst):
+    text = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(1)
+    if not text:
         return await kst.try_delete()
     count = len(re.findall(r"(\S+)", text))
     text = f"**Count:** `{count}`"
@@ -129,114 +124,28 @@ async def count_(kst):
 
 
 @kasta_cmd(
-    pattern=r"upper(?: |$)([\s\S]*)",
+    pattern=r"(upper|lower|title|capital|camel|snake|kebab)(?: |$)([\s\S]*)",
     no_crash=True,
 )
-async def upper_(kst):
-    match = kst.pattern_match.group(1)
-    if match and not kst.is_reply:
-        text = kst.text.split(" ", maxsplit=1)[1]
-    elif not match and kst.is_reply:
-        text = (await kst.get_reply_message()).text
-    else:
+async def _(kst):
+    text = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(2)
+    if not text:
         return await kst.try_delete()
-    text = text.upper()
-    await kst.eor(text)
-
-
-@kasta_cmd(
-    pattern=r"lower(?: |$)([\s\S]*)",
-    no_crash=True,
-)
-async def lower_(kst):
-    match = kst.pattern_match.group(1)
-    if match and not kst.is_reply:
-        text = kst.text.split(" ", maxsplit=1)[1]
-    elif not match and kst.is_reply:
-        text = (await kst.get_reply_message()).text
-    else:
-        return await kst.try_delete()
-    text = text.lower()
-    await kst.eor(text)
-
-
-@kasta_cmd(
-    pattern=r"title(?: |$)([\s\S]*)",
-    no_crash=True,
-)
-async def title_(kst):
-    match = kst.pattern_match.group(1)
-    if match and not kst.is_reply:
-        text = kst.text.split(" ", maxsplit=1)[1]
-    elif not match and kst.is_reply:
-        text = (await kst.get_reply_message()).text
-    else:
-        return await kst.try_delete()
-    text = text.title()
-    await kst.eor(text)
-
-
-@kasta_cmd(
-    pattern=r"capital(?: |$)([\s\S]*)",
-    no_crash=True,
-)
-async def capital_(kst):
-    match = kst.pattern_match.group(1)
-    if match and not kst.is_reply:
-        text = kst.text.split(" ", maxsplit=1)[1]
-    elif not match and kst.is_reply:
-        text = (await kst.get_reply_message()).text
-    else:
-        return await kst.try_delete()
-    text = text.capitalize()
-    await kst.eor(text)
-
-
-@kasta_cmd(
-    pattern=r"camel(?: |$)([\s\S]*)",
-    no_crash=True,
-)
-async def camel_(kst):
-    match = kst.pattern_match.group(1)
-    if match and not kst.is_reply:
-        text = kst.text.split(" ", maxsplit=1)[1]
-    elif not match and kst.is_reply:
-        text = (await kst.get_reply_message()).text
-    else:
-        return await kst.try_delete()
-    text = camel(text)
-    await kst.eor(text)
-
-
-@kasta_cmd(
-    pattern=r"snake(?: |$)([\s\S]*)",
-    no_crash=True,
-)
-async def snake_(kst):
-    match = kst.pattern_match.group(1)
-    if match and not kst.is_reply:
-        text = kst.text.split(" ", maxsplit=1)[1]
-    elif not match and kst.is_reply:
-        text = (await kst.get_reply_message()).text
-    else:
-        return await kst.try_delete()
-    text = snake(text)
-    await kst.eor(text)
-
-
-@kasta_cmd(
-    pattern=r"kebab(?: |$)([\s\S]*)",
-    no_crash=True,
-)
-async def kebab_(kst):
-    match = kst.pattern_match.group(1)
-    if match and not kst.is_reply:
-        text = kst.text.split(" ", maxsplit=1)[1]
-    elif not match and kst.is_reply:
-        text = (await kst.get_reply_message()).text
-    else:
-        return await kst.try_delete()
-    text = kebab(text)
+    cmd = kst.pattern_match.group(1)
+    if cmd == "upper":
+        text = text.upper()
+    elif cmd == "lower":
+        text = text.lower()
+    elif cmd == "title":
+        text = text.title()
+    elif cmd == "capital":
+        text = text.capitalize()
+    elif cmd == "camel":
+        text = camel(text)
+    elif cmd == "snake":
+        text = snake(text)
+    elif cmd == "kebab":
+        text = kebab(text)
     await kst.eor(text)
 
 
@@ -244,13 +153,9 @@ async def kebab_(kst):
     pattern="(b64encode|b64e)(?: |$)(.*)",
     no_crash=False,
 )
-async def b64encode_(kst):
-    match = kst.pattern_match.group(2)
-    if match and not kst.is_reply:
-        text = kst.text.split(" ", maxsplit=1)[1]
-    elif not match and kst.is_reply:
-        text = (await kst.get_reply_message()).text
-    else:
+async def _(kst):
+    text = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(2)
+    if not text:
         return await kst.try_delete()
     text = b64encode(text.encode("utf-8")).decode()
     await kst.eor(text, parse_mode=parse_pre)
@@ -260,13 +165,9 @@ async def b64encode_(kst):
     pattern="(b64decode|b64d)(?: |$)(.*)",
     no_crash=False,
 )
-async def b64decode_(kst):
-    match = kst.pattern_match.group(2)
-    if match and not kst.is_reply:
-        text = kst.text.split(" ", maxsplit=1)[1]
-    elif not match and kst.is_reply:
-        text = (await kst.get_reply_message()).text
-    else:
+async def _(kst):
+    text = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(2)
+    if not text:
         return await kst.try_delete()
     try:
         text = b64decode(text).decode("utf-8", "replace")
@@ -279,20 +180,16 @@ async def b64decode_(kst):
     pattern="(morse|unmorse)(?: |$)(.*)",
     no_crash=True,
 )
-async def morse_(kst):
-    cmd = kst.pattern_match.group(1)
-    match = kst.pattern_match.group(2)
-    if match and not kst.is_reply:
-        text = kst.text.split(" ", maxsplit=1)[1]
-    elif not match and kst.is_reply:
-        text = (await kst.get_reply_message()).text
-    else:
+async def _(kst):
+    text = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(2)
+    if not text:
         return await kst.try_delete()
+    cmd = kst.pattern_match.group(1)
     api = "en" if cmd == "morse" else "de"
     msg = await kst.eor("`...`")
     headers = {
         "User-Agent": "Python/{0[0]}.{0[1]} aiohttp/{1} getter/{2}".format(
-            sys.version_info, aiohttp.__version__, getterver
+            sys.version_info, aiohttp.__version__, __version__
         )
     }
     url = f"https://notapi.vercel.app/api/morse?{api}={text}"
@@ -306,20 +203,18 @@ async def morse_(kst):
     pattern="(roman|unroman)(?: |$)(.*)",
     no_crash=True,
 )
-async def roman_(kst):
-    cmd = kst.pattern_match.group(1)
-    match = kst.pattern_match.group(2)
-    if match and not kst.is_reply:
-        text = kst.text.split(" ", maxsplit=1)[1]
-    elif not match and kst.is_reply:
-        text = (await kst.get_reply_message()).text
-    else:
+async def _(kst):
+    text = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(2)
+    if not text:
         return await kst.try_delete()
+    cmd = kst.pattern_match.group(1)
     api = "en" if cmd == "roman" else "de"
     msg = await kst.eor("`...`")
     headers = {
         "User-Agent": "Python/{0[0]}.{0[1]} aiohttp/{1} getter/{2}".format(
-            sys.version_info, aiohttp.__version__, getterver
+            sys.version_info,
+            aiohttp.__version__,
+            __version__,
         )
     }
     url = f"https://notapi.vercel.app/api/romans?{api}={text}"
@@ -333,13 +228,9 @@ async def roman_(kst):
     pattern=r"(spoiler|sp)(?: |$)([\s\S]*)",
     no_crash=True,
 )
-async def spoiler_(kst):
-    match = kst.pattern_match.group(2)
-    if match and not kst.is_reply:
-        text = kst.text.split(" ", maxsplit=1)[1]
-    elif not match and kst.is_reply:
-        text = (await kst.get_reply_message()).text
-    else:
+async def _(kst):
+    text = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(2)
+    if not text:
         return await kst.try_delete()
     text = f"||{text}||"
     await kst.eor(text)
@@ -349,10 +240,10 @@ async def spoiler_(kst):
     pattern=r"type(?: |$)([\s\S]*)",
     no_crash=True,
 )
-async def type_(kst):
+async def _(kst):
     match = kst.pattern_match.group(1)
     if not match:
-        return await kst.sod("`Give me something to type !`")
+        return await kst.sod("`Give me something to type!`")
     text = "\u2060" * 602
     msg = await kst.eor(text)
     typing_symbol = "|"
@@ -369,92 +260,46 @@ async def type_(kst):
 
 
 @kasta_cmd(
-    pattern=r"upside(?: |$)([\s\S]*)",
+    pattern=r"flip(?: |$)([\s\S]*)",
     no_crash=True,
 )
-async def upside_(kst):
-    match = kst.pattern_match.group(1)
-    if match and not kst.is_reply:
-        text = kst.text.split(" ", maxsplit=1)[1]
-    elif not match and kst.is_reply:
-        text = (await kst.get_reply_message()).text
-    else:
+async def _(kst):
+    text = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(1)
+    if not text:
         return await kst.try_delete()
-    text = "  ".join(text).lower()
-    for upchar in text:
-        if upchar in UPSIDEFONT:
-            downchar = DOWNSIDEFONT[UPSIDEFONT.index(upchar)]
-            text = text.replace(upchar, downchar)
+    text = "  ".join(text)
+    final_text = ""
+    for char in text:
+        if char in FLIP_MAP.keys():
+            new_char = FLIP_MAP[char]
+        else:
+            new_char = char
+        final_text += new_char
+    if text != final_text:
+        return await kst.eor(final_text)
     await kst.eor(text)
 
 
-HELP.update(
-    {
-        "text": [
-            "Text",
-            """❯ `{i}hang <count>`
-Send evil message.
-
-❯ `{i}noformat <reply>`
-Convert replied message without format.
-
-❯ `{i}nospace <reply>`
-Remove all spaces in text.
-
-❯ `{i}repeat <count> <reply>`
-Repeat text in replied message.
-
-❯ `{i}count <text/reply>`
-Count words in text message.
-
-❯ `{i}upper <text/reply>`
-Convert text to upper case.
-
-❯ `{i}lower <text/reply>`
-Convert text to lower case.
-
-❯ `{i}title <text/reply>`
-Convert text to title case.
-
-❯ `{i}capital <text/reply>`
-Convert first word to capital.
-
-❯ `{i}camel <text/reply>`
-Convert text to camel case.
-
-❯ `{i}snake <text/reply>`
-Convert text to snake case.
-
-❯ `{i}kebab <text/reply>`
-Convert text to kebab case.
-
-❯ `{i}b64encode|{i}b64e <text/reply>`
-Encode text into Base64.
-
-❯ `{i}b64decode|{i}b64d <text/reply>`
-Decode Base64 data.
-
-❯ `{i}morse <text/reply>`
-Encode text into Morse code.
-
-❯ `{i}unmorse <text/reply>`
-Decode Morse code.
-
-❯ `{i}roman <text/reply>`
-Convert any number less than 4000 to roman numerals.
-
-❯ `{i}unroman <text/reply>`
-Convert roman numeral to number.
-
-❯ `{i}spoiler|{i}sp <text/reply>`
-Create a spoiler message.
-
-❯ `{i}type <text>`
-Edits the message and shows like someone is typing.
-
-❯ `{i}upside <text/reply>`
-Upside down text.
-""",
-        ]
-    }
-)
+plugins_help["text"] = {
+    "{i}hang [count]": "Send evil message.",
+    "{i}noformat [reply]": "Convert replied message without format.",
+    "{i}nospace [reply]": "Remove all spaces in text.",
+    "{i}repeat [count] [reply]": "Repeat text in replied message.",
+    "{i}count [text/reply]": "Count words in text message.",
+    "{i}upper [text/reply]": "Convert text to UPPERCASE.",
+    "{i}lower [text/reply]": "Convert text to lowercase.",
+    "{i}title [text/reply]": "Convert text to TitleCase.",
+    "{i}capital [text/reply]": "Convert first word to Capital.",
+    "{i}camel [text/reply]": "Convert text to camelCase.",
+    "{i}snake [text/reply]": "Convert text to snake_case.",
+    "{i}kebab [text/reply]": "Convert text to kebab-case.",
+    "{i}b64encode|{i}b64e [text/reply]": "Encode text into Base64.",
+    "{i}b64decode|{i}b64d [text/reply]": "Decode Base64 data.",
+    "{i}morse [text/reply]": "Encode text into Morse code.",
+    "{i}unmorse [text/reply]": "Decode Morse code.",
+    "{i}roman [text/reply]": "Convert any number less than 4000 to roman numerals.",
+    "{i}unroman [text/reply]": "Convert roman numeral to number.",
+    "{i}spoiler|{i}sp [text/reply]": "Create a spoiler message.",
+    "{i}type [text]": "Edits the message and shows like someone is typing.",
+    "{i}flip [text/reply]": "Flip text upside down.",
+}

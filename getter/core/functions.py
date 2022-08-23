@@ -6,12 +6,13 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
+import math
 import re
 from functools import partial, wraps
 from io import BytesIO
 from typing import Union, Tuple
 from uuid import uuid4
-from aiofiles import open as aiopen
+import aiofiles
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup
 from emoji import replace_emoji
@@ -32,13 +33,11 @@ from ..logger import LOGS
 
 
 def is_telegram_link(url: str) -> bool:
-    tlink_re = r"^(?:https?://)?((www)\.|)(?:t\.me|telegram\.(?:dog|me))/(\w+)$"
-    return bool(re.match(tlink_re, url, flags=re.I))
+    return bool(re.match(r"^(?:https?://)?(?:www\.|)(?:t\.me|telegram\.(?:dog|me))/(\w+)$", url, flags=re.I))
 
 
 def get_username(url: str) -> str:
-    tusername_re = r"^(?:https?://)((www)\.|)(?:t\.me|telegram\.(?:dog|me))/"
-    return re.sub(tusername_re, "@", url, flags=re.I)
+    return re.sub(r"^(?:https?://)((www)\.|)(?:t\.me|telegram\.(?:dog|me))/", "@", url, flags=re.I)
 
 
 def mentionuser(
@@ -59,13 +58,11 @@ def display_name(user) -> str:
 
 def get_doc_mime(media) -> str:
     media_type = str((str(media)).split("(", maxsplit=1)[0])
-    if media_type == "MessageMediaDocument":
-        return media.document.mime_type
-    return ""
+    return media.document.mime_type if media_type == "MessageMediaDocument" else ""
 
 
 def humanbool(b) -> str:
-    return "No" if str(b).lower() in ("false", "none", "0", "") else "Yes"
+    return str(b).lower() in ("false", "none", "0", "") and "No" or "Yes"
 
 
 def get_user_status(user: User) -> str:
@@ -89,7 +86,7 @@ def get_user_status(user: User) -> str:
 async def get_user(kst, group=1):
     args = kst.pattern_match.group(group).split(" ", 1)
     extra = None
-    await kst.get_chat()
+    await kst.get_input_chat()
     try:
         if args:
             user = args[0]
@@ -112,8 +109,9 @@ async def get_user(kst, group=1):
             if len(args) > 1:
                 extra = "".join(args[1:])
             if user.isdecimal() or (user.startswith("-") and user[1:].isdecimal()):
-                obj = partial(type, "user", ())
-                user_obj = obj({"id": int(user), "first_name": user})
+                user_obj = type("user", (object,), {})
+                user_obj.id = int(user)
+                user_obj.first_name = user
                 return user_obj, extra
             return None, None
         else:
@@ -131,14 +129,25 @@ async def get_user(kst, group=1):
                 user_obj = await kst.client.get_entity(user_id)
                 return user_obj, extra
             except ValueError:
-                obj = partial(type, "user", ())
-                user_obj = obj({"id": user_id, "first_name": str(user_id)})
+                user_obj = type("user", (object,), {})
+                user_obj.id = user_id
+                user_obj.first_name = str(user_id)
                 return user_obj, extra
         if not args:
             return None, None
     except Exception as err:
         LOGS.error(str(err))
     return None, None
+
+
+def get_chat_msg_id(link: str) -> Tuple[Union[str, int], int]:
+    matches = re.findall(r"(?:https?://)?(?:www\.|)(?:t\.me|telegram\.(?:dog|me))/(c\/|)(.*)\/(.*)", link)
+    if not matches:
+        return None, None
+    _, chat, msg_id = matches[0]
+    if chat.isdecimal():
+        chat = int("-100" + chat)
+    return chat, int(msg_id)
 
 
 def parse_pre(text: str) -> str:
@@ -159,11 +168,15 @@ def strip_emoji(text: str) -> str:
     return replace_emoji(text, "")
 
 
+def chunk(lst: list, size: int) -> list:
+    return list(map(lambda x: lst[x * size : x * size + size], list(range(math.ceil(len(lst) / size)))))  # noqa: C417
+
+
 def humanbytes(size: Union[int, float]) -> str:
     if not size:
         return "0 B"
     power = 1024
-    for _ in ("", "Ki", "Mi", "Gi", "Ti"):
+    for _ in ("", "K", "M", "G", "T"):
         if size < power:
             break
         size /= power
@@ -186,9 +199,7 @@ def time_formatter(ms: Union[int, str]) -> str:
         + ((str(minutes) + "m:") if minutes else "")
         + ((str(seconds) + "s") if seconds else "")
     )
-    if tmp:
-        return tmp[:-1] if tmp.endswith(":") else tmp
-    return "0s"
+    return tmp and (tmp[:-1] if tmp.endswith(":") else tmp) or "0s"
 
 
 def get_random_hex(chars: int = 12) -> str:
@@ -288,6 +299,10 @@ async def Searcher(
         if resp.status not in (
             200,
             201,
+            301,
+            302,
+            307,
+            308,
         ):
             return None
         if re_json:
@@ -329,6 +344,6 @@ async def Carbon(
         file.name = file_name
     else:
         file = file_name
-        async with aiopen(file, mode="wb") as f:
+        async with aiofiles.open(file, mode="wb") as f:
             await f.write(res)
     return file

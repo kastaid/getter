@@ -5,7 +5,7 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from .app import App
+from .client import getter_app
 from .constants import *
 from .decorators import kasta_cmd
 from .functions import (
@@ -17,9 +17,11 @@ from .functions import (
     humanbool,
     get_user_status,
     get_user,
+    get_chat_msg_id,
     parse_pre,
     strip_format,
     strip_emoji,
+    chunk,
     humanbytes,
     time_formatter,
     get_random_hex,
@@ -31,5 +33,13 @@ from .functions import (
     Searcher,
     Carbon,
 )
-from .property import get_blacklisted
+from .helper import plugins_help, from_key, Hk
+from .property import get_blacklisted, do_not_remove_credit
 from .wrappers import eor, eod, sod
+
+if Hk.stack == "container" or not Hk.is_heroku:
+    CHROME_BIN = "/usr/bin/google-chrome"
+    CHROME_DRIVER = "/usr/bin/chromedriver"
+else:
+    CHROME_BIN = "/app/.apt/usr/bin/google-chrome"
+    CHROME_DRIVER = "/app/.chromedriver/bin/chromedriver"

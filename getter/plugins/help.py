@@ -6,19 +6,19 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import time
-from platform import python_version
-from telethon.version import __version__ as telethonver
 from . import (
-    __version__ as getterver,
+    __version__,
+    __tlversion__,
     __layer__,
+    __pyversion__,
     StartTime,
-    HELP,
     hl,
     kasta_cmd,
-    Var,
+    plugins_help,
     display_name,
     time_formatter,
-    HerokuStack,
+    chunk,
+    Hk,
 )
 
 help_text = """
@@ -36,13 +36,15 @@ help_text = """
 ┣  <b>Uptime</b> – <code>{}</code>
 ┣  <b>Handler</b> – <code>{}</code>
 ┣  <b>Plugins</b> – <code>{}</code>
+┣  <b>Commands</b> – <code>{}</code>
 ┣  <b>Usage</b> – <code>{}help &lt;plugin name&gt;</code>
 ┗━━━━━━━━━━━━━━━━━━━━━━━━
-<b>~ All plugins and commands are below:</b>
-
+<b>~ All plugins and their commands:</b>
 {}
 
-<b>Example:</b> Type <pre>{}help core</pre> for usage.
+<b>Example:</b> Type <pre>{}help text</pre> for usage.
+
+(c) @kastaid
 """
 
 
@@ -52,40 +54,50 @@ help_text = """
     no_crash=True,
 )
 async def _(kst):
-    args = kst.pattern_match.group(1).lower()
+    arg = kst.pattern_match.group(1).lower()
     msg = await kst.eor("`Loading...`")
-    if args:
-        if args in HELP:
-            _ = "**📦 Getter Plugin {}** <`{}help {}`>\n\n{}".format(
-                HELP[args][0],
-                hl,
-                args,
-                HELP[args][1].replace("{i}", hl),
-            )
-            await msg.sod(_)
-        else:
-            await msg.eor(f"**📦 Invalid Plugin ➞** `{args}`\nType ```{hl}help``` to see valid plugin names.")
-    else:
-        uptime = time_formatter((time.time() - StartTime) * 1000)
-        plugins = ""
-        for _ in HELP:
-            plugins += f"<code>{_}</code>  •  "
-        plugins = plugins[:-3]
-        me = await kst.client.get_me()
-        text = help_text.format(
-            display_name(me),
-            kst.client.uid,
-            Var.HEROKU_APP_NAME or "none",
-            HerokuStack(),
-            getterver,
-            python_version(),
-            telethonver,
-            __layer__,
-            uptime,
-            hl,
-            len(HELP),
-            hl,
-            plugins,
-            hl,
-        )
-        await msg.sod(text, parse_mode="html")
+    if arg:
+        if arg in plugins_help:
+            cmds = plugins_help[arg]
+            text = f"**{len(cmds)} ==Help For {arg.upper()}==**  <`{hl}help {arg}`>\n\n"
+            for cmd, desc in cmds.items():
+                # cmd --> cmd.split(maxsplit=1)[0]
+                # args --> cmd.split(maxsplit=1)cmd[1]
+                text += "**❯** `{}`\n{}\n\n".format(cmd.replace("{i}", hl), desc.replace("{i}", hl))
+            text += "(c) @kastaid"
+            await msg.sod(text)
+            return
+        await msg.sod(f"**Invalid Plugin ➞** `{arg}`\nType ```{hl}help``` to see valid plugin names.")
+        return
+    plugins = ""
+    for plug in chunk(sorted(plugins_help.keys()), 3):
+        pr = ""
+        for x in plug:
+            pr += f"<code>{x}</code>  •  "
+        pr = pr[:-3]
+        plugins += f"\n{pr}"
+    me = await kst.client.get_me()
+    uptime = time_formatter((time.time() - StartTime) * 1000)
+    text = help_text.format(
+        display_name(me),
+        kst.client.uid,
+        Hk.name or "none",
+        Hk.stack,
+        __version__,
+        __pyversion__,
+        __tlversion__,
+        __layer__,
+        uptime,
+        hl,
+        len(plugins_help),
+        sum(len(v) for v in plugins_help.values()),
+        hl,
+        plugins,
+        hl,
+    )
+    await msg.sod(text, parse_mode="html")
+
+
+plugins_help["help"] = {
+    "{i}help [plugin_name]": "Get common/plugin/command help.",
+}

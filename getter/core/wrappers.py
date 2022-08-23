@@ -7,7 +7,7 @@
 
 import asyncio
 from contextlib import suppress
-from aiofiles import open as aiopen
+import aiofiles
 from telethon.errors import MessageNotModifiedError
 from telethon.tl.types import MessageService
 from .. import Root, MAX_MESSAGE_LEN
@@ -28,7 +28,7 @@ async def eor(
     if len(text) > MAX_MESSAGE_LEN:
         text = strip_format(text)
         file = "message_output.txt"
-        async with aiopen(file, mode="w") as f:
+        async with aiofiles.open(file, mode="w") as f:
             await f.write(text)
         with suppress(BaseException):
             await e.client.send_file(
@@ -90,7 +90,7 @@ async def sod(
     if len(text) > MAX_MESSAGE_LEN:
         text = strip_format(text)
         file = "message_output.txt"
-        async with aiopen(file, mode="w") as f:
+        async with aiofiles.open(file, mode="w") as f:
             await f.write(text)
         with suppress(BaseException):
             await e.client.send_file(

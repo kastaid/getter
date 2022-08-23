@@ -11,30 +11,32 @@ import json
 import os
 import sys
 import time
-from contextlib import suppress
 from io import BytesIO
 from pathlib import Path
-from aiofiles import open as aiopen
+import aiofiles
+import aiohttp
 from telethon import functions
 from . import (
-    choice,
+    __version__,
     StartTime,
     Root,
-    Var,
     DEVS,
-    HELP,
     kasta_cmd,
+    plugins_help,
+    choice,
+    suppress,
     strip_format,
     humanbytes,
     time_formatter,
     todict,
     Runner,
+    Searcher,
     Carbon,
     MAX_MESSAGE_LEN,
     CARBON_PRESETS,
     DEFAULT_SHELL_BLACKLIST,
     get_blacklisted,
-    Heroku,
+    Hk,
 )
 
 
@@ -77,6 +79,35 @@ async def _(kst):
 
 
 @kasta_cmd(
+    pattern=r"haste(?: |$)([\s\S]*)",
+)
+async def _(kst):
+    text = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(1)
+    if not text:
+        await kst.eor("`Provide a text!`", time=5)
+        return
+    msg = await kst.eor("`Processing...`")
+    headers = {
+        "User-Agent": "Python/{0[0]}.{0[1]} aiohttp/{1} getter/{2}".format(
+            sys.version_info,
+            aiohttp.__version__,
+            __version__,
+        )
+    }
+    url = "https://hastebin.com"
+    res = await Searcher(
+        url=f"{url}/documents",
+        post=True,
+        data=text.encode("UTF-8"),
+        headers=headers,
+        re_json=True,
+    )
+    if not res:
+        return await msg.eod("`Try again now!`")
+    await msg.eor("{}/{}.txt".format(url, res.get("key")))
+
+
+@kasta_cmd(
     pattern="logs?(?: |$)(heroku|carbon|open)?",
     no_crash=True,
 )
@@ -92,10 +123,8 @@ async def _(kst):
     if is_devs:
         opt = kst.pattern_match.group(2)
         user_id = None
-        try:
+        with suppress(ValueError):
             user_id = int(opt)
-        except ValueError:
-            pass
         if user_id and user_id != kst.client.uid:
             return
         await asyncio.sleep(choice((4, 6, 8)))
@@ -109,7 +138,7 @@ async def _(kst):
         code = logs = ""
         theme, backgroundColor = choice(CARBON_PRESETS)
         for file in get_terminal_logs():
-            async with aiopen(file, mode="r") as f:
+            async with aiofiles.open(file, mode="r") as f:
                 code = await f.read()
             if not code:
                 continue
@@ -131,6 +160,7 @@ async def _(kst):
                     caption=r"\\**#Getter**// `Carbon Terminal Logs`",
                     force_document=True,
                     allow_cache=False,
+                    reply_to=kst.reply_to_msg_id,
                     silent=True,
                 )
                 await asyncio.sleep(3)
@@ -138,7 +168,7 @@ async def _(kst):
     elif mode == "open":
         logs = ""
         for file in get_terminal_logs():
-            async with aiopen(file, mode="r") as f:
+            async with aiofiles.open(file, mode="r") as f:
                 logs = await f.read()
             if not logs:
                 continue
@@ -153,6 +183,7 @@ async def _(kst):
                     caption=r"\\**#Getter**// `Terminal Logs`",
                     force_document=True,
                     allow_cache=False,
+                    reply_to=kst.reply_to_msg_id,
                     silent=True,
                 )
                 await asyncio.sleep(3)
@@ -173,10 +204,8 @@ async def _(kst):
     if is_devs:
         opt = kst.pattern_match.group(1)
         user_id = None
-        try:
+        with suppress(ValueError):
             user_id = int(opt)
-        except ValueError:
-            pass
         if user_id and user_id != kst.client.uid:
             return
         await asyncio.sleep(choice((4, 6, 8)))
@@ -184,15 +213,15 @@ async def _(kst):
     os.system("clear")
     await asyncio.sleep(1)
     await msg.eor(r"\\**#Getter**// `Restarting... Wait for a few minutes.`")
-    if not (Var.HEROKU_API and Var.HEROKU_APP_NAME):
+    if not Hk.is_heroku:
         await restart_app()
         return
     try:
-        app = Heroku().app(Var.HEROKU_APP_NAME)
+        app = Hk.heroku().app(Hk.name)
         app.restart()
     except Exception as err:
-        rep = await msg.eor(f"**ERROR:**\n`{err}`")
-        await rep.reply(r"\\**#Getter**// `Restarting as locally...`", silent=True)
+        reply = await msg.eor(f"**ERROR:**\n`{err}`")
+        await reply.reply(r"\\**#Getter**// `Restarting as locally...`", silent=True)
         await restart_app()
 
 
@@ -234,7 +263,7 @@ async def _(kst):
     if ret != 0:
         return await msg.try_delete()
     info = ""
-    async with aiopen(file, mode="r") as f:
+    async with aiofiles.open(file, mode="r") as f:
         info = await f.read()
     if not info:
         return await msg.try_delete()
@@ -255,7 +284,7 @@ async def _(kst):
             file=neofetch,
             force_document=True,
             allow_cache=False,
-            reply_to=kst.reply_to_msg_id or kst.id,
+            reply_to=kst.reply_to_msg_id,
             silent=True,
         )
     await msg.try_delete()
@@ -361,7 +390,7 @@ async def _(kst):
     sfile, sfolder = 0, 0
     cfile, cfolder = 0, 0
     for emoji, path in lists:
-        try:
+        with suppress(BaseException):
             if path.is_dir():
                 size = 0
                 for p in path.rglob("*"):
@@ -375,8 +404,6 @@ async def _(kst):
                 )
                 sfile += path.stat().st_size
                 cfile += 1
-        except BaseException:
-            pass
     hfolder, hfile, htotal = (
         humanbytes(sfolder),
         humanbytes(sfile),
@@ -390,16 +417,17 @@ async def _(kst):
     if len(directory) > MAX_MESSAGE_LEN:
         directory = strip_format(directory)
         file = "directory_output.txt"
-        async with aiopen(file, mode="w") as f:
+        async with aiofiles.open(file, mode="w") as f:
             await f.write(directory)
         with suppress(BaseException):
+            caption = rf"\\**#Getter**// `Directory {cat}`"
             await kst.client.send_file(
                 kst.chat_id,
                 file=file,
-                caption=rf"\\**#Getter**// `Directory {cat}`",
+                caption=caption,
                 force_document=True,
                 allow_cache=False,
-                reply_to=kst.reply_to_msg_id or kst.id,
+                reply_to=kst.reply_to_msg_id,
                 silent=True,
             )
         await msg.try_delete()
@@ -447,7 +475,7 @@ async def _(kst):
                     caption=rf"\\**#Getter**// {caption}",
                     force_document=True,
                     allow_cache=False,
-                    reply_to=kst.reply_to_msg_id or kst.id,
+                    reply_to=kst.reply_to_msg_id,
                     silent=True,
                 )
         await msg.try_delete()
@@ -468,21 +496,21 @@ def get_terminal_logs():
 
 
 async def heroku_logs(kst) -> None:
-    if not Var.HEROKU_API:
+    if not Hk.api:
         await kst.eor("Please set `HEROKU_API` in Config Vars.")
         return
-    if not Var.HEROKU_APP_NAME:
+    if not Hk.name:
         await kst.eor("Please set `HEROKU_APP_NAME` in Config Vars.")
         return
     try:
-        app = Heroku().app(Var.HEROKU_APP_NAME)
+        app = Hk.heroku().app(Hk.name)
         logs = app.get_log(lines=100)
     except Exception as err:
         await kst.eor(f"**ERROR:**\n`{err}`")
         return
     await kst.eor("`Downloading Logs...`")
     file = "getter-heroku.log"
-    async with aiopen(file, mode="w") as f:
+    async with aiofiles.open(file, mode="w") as f:
         await f.write(logs)
     with suppress(BaseException):
         await kst.client.send_file(
@@ -491,6 +519,7 @@ async def heroku_logs(kst) -> None:
             caption=r"\\**#Getter**// `Heroku Logs`",
             force_document=True,
             allow_cache=False,
+            reply_to=kst.reply_to_msg_id,
             silent=True,
         )
     await kst.try_delete()
@@ -507,52 +536,22 @@ async def restart_app() -> None:
     os.execl(sys.executable, sys.executable, "-m", "getter")
 
 
-HELP.update(
-    {
-        "devs": [
-            "Devs",
-            """❯ `{i}deak|{i}deac`
-Give a link Deactivated Account.
-
-❯ `{i}dc`
-Finds the nearest datacenter from your server.
-
-❯ `{i}ping|ping|Ping`
-Check response time.
-
-❯ `{i}logs`
-Get the full terminal logs.
-
-❯ `{i}logs open`
-Open logs as text message.
-
-❯ `{i}logs carbon`
-Get the carbonized terminal logs.
-
-❯ `{i}logs heroku`
-Get the latest 100 lines of heroku logs.
-
-❯ `{i}restart`
-Restart the app.
-
-❯ `{i}sleep <time/in seconds>`
-Sleep the bot in few seconds (max 50).
-
-❯ `{i}raw <reply>`
-Get the raw data of message.
-
-❯ `{i}json <reply>`
-Same as above but with json format.
-
-❯ `{i}sysinfo`
-Shows System Info.
-
-❯ `{i}ls <path>`
-View all files and folders inside a directory.
-
-❯ `{i}shell|{i}sh <cmds>`
-Run the linux commands.
-
+plugins_help["dev"] = {
+    "{i}deak|{i}deac": "Give a link Deactivated Account.",
+    "{i}dc": "Finds the nearest datacenter from your server.",
+    "{i}ping|ping|Ping": "Check response time.",
+    "{i}haste <text/reply>": "Upload text to hastebin.",
+    "{i}logs": "Get the full terminal logs.",
+    "{i}logs open": "Open logs as text message.",
+    "{i}logs carbon": "Get the carbonized terminal logs.",
+    "{i}logs heroku": "Get the latest 100 lines of heroku logs.",
+    "{i}restart": "Restart the app.",
+    "{i}sleep <time/in seconds>": "Sleep the bot in few seconds (max 50).",
+    "{i}raw <reply>": "Get the raw data of message.",
+    "{i}json <reply>": "Same as above but with json format.",
+    "{i}sysinfo": "Shows System Info.",
+    "{i}ls <path>": "View all files and folders inside a directory.",
+    "{i}shell|{i}sh <cmds>": """Run the linux commands.
 **Command Snippets:**
 `echo Hello, World!`
 `python --version`
@@ -571,8 +570,5 @@ Run the linux commands.
 `free -h`
 `command -v sh`
 `grep -rnliF --color=auto kasta_cmd`
-`cat LICENSE`
-""",
-        ]
-    }
-)
+`cat LICENSE`""",
+}

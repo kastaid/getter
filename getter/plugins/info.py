@@ -11,7 +11,8 @@ import math
 import time
 from cache import AsyncTTL
 from cachetools import TTLCache
-from telethon.errors.rpcerrorlist import YouBlockedUserError
+from telethon.errors import YouBlockedUserError
+from telethon.events import NewMessage
 from telethon.tl.custom import Dialog
 from telethon.tl.functions.channels import GetFullChannelRequest, GetParticipantsRequest
 from telethon.tl.functions.contacts import GetBlockedRequest, UnblockRequest
@@ -30,16 +31,20 @@ from telethon.tl.types import (
     ChannelParticipantsAdmins,
 )
 from . import (
-    HELP,
+    kasta_cmd,
+    plugins_help,
+    suppress,
     display_name,
     humanbool,
     get_user_status,
     get_user,
-    kasta_cmd,
     parse_pre,
     Searcher,
 )
 
+SG_BOT = "SangMataInfo_bot"
+CREATED_BOT = "creationdatebot"
+ROSE_BOT = "MissRose_bot"
 ROSE_LANG_CACHE = TTLCache(maxsize=512, ttl=(120 * 60), timer=time.perf_counter)  # 2 hours
 ROSE_STAT_CACHE = TTLCache(maxsize=512, ttl=120, timer=time.perf_counter)  # 2 mins
 SPAMWATCH_CACHE = TTLCache(maxsize=512, ttl=120, timer=time.perf_counter)  # 2 mins
@@ -57,30 +62,29 @@ async def _(kst):
     if not user:
         await msg.eor("`Required Username/ID or reply message.`", time=15)
         return
-    sangmata = "@SangMataInfo_bot"
+    text = []
     resp = None
-    async with kst.client.conversation(sangmata) as conv:
+    async with kst.client.conversation(SG_BOT) as conv:
         try:
-            await conv.send_message(f"/search_id {user.id}")
+            com = await conv.send_message(f"/search_id {user.id}")
         except YouBlockedUserError:
-            await kst.client(UnblockRequest(sangmata))
-            await conv.send_message(f"/search_id {user.id}")
-        text = []
+            await kst.client(UnblockRequest(conv.chat_id))
+            com = await conv.send_message(f"/search_id {user.id}")
         while True:
             try:
                 resp = await conv.get_response(timeout=2)
             except asyncio.TimeoutError:
                 break
-            text.append(resp.message)
+            text.append(resp.message.message)
         if resp:
+            await com.try_delete()
             await resp.mark_read(clear_mentions=True)
-            # await kst.client(telethon.tl.functions.messages.DeleteHistoryRequest(conv.chat_id, max_id=0, just_clear=False, revoke=True))
     if not text:
-        return await msg.eod("`Sangmata did not respond.`")
+        return await msg.eod("`Bot did not respond.`")
     if len(text) == 1 and bool([x for x in text if x.startswith("🔗")]):
         return await msg.eod("`Can't get any records.`")
     if "No records found" in text:
-        return await msg.eod("`Doesn't have any record.`")
+        return await msg.eod("`Doesn't have any records.`")
     names, usernames = await sglist(text)
     if names:
         for x in names:
@@ -113,26 +117,14 @@ async def _(kst):
         user_id = user.id
     else:
         user_id = kst.client.uid
-    created = "@creationdatebot"
     resp = None
-    async with kst.client.conversation(created) as conv:
-        try:
-            await conv.send_message(f"/id {user_id}")
-        except YouBlockedUserError:
-            await kst.client(UnblockRequest(created))
-            await conv.send_message(f"/id {user_id}")
-        text = ""
-        while True:
-            try:
-                resp = await conv.get_response(timeout=2)
-            except asyncio.TimeoutError:
-                break
-            text += resp.message
-        if resp:
-            await resp.mark_read(clear_mentions=True)
-    if not text:
+    async with kst.client.conversation(CREATED_BOT) as conv:
+        resp = await conv_created(conv, user_id)
+    if not resp:
         return await msg.eod("`Bot did not respond.`")
-    await msg.eor(text, parse_mode=parse_pre)
+    with suppress(BaseException):
+        await kst.client.delete_dialog(CREATED_BOT, revoke=True)
+    await msg.eor(resp.message.message, parse_mode=parse_pre)
 
 
 @kasta_cmd(
@@ -204,8 +196,8 @@ async def _(kst):
         sp_count = len(sp.sets)
     except BaseException:
         sp_count = 0
-    sc_count = await get_total_created(kst, "@Stickers", "/stats")
-    bc_count = await get_total_created(kst, "@BotFather", "/setcommands")
+    sc_count = await get_total_bot(kst, "Stickers", "/stats")
+    bc_count = await get_total_bot(kst, "BotFather", "/setcommands")
     me = await kst.client.get_me()
     graph = f"<b>Stats for {display_name(me)}</b>"
     graph += f"\n ├ <b>Private:</b> <code>{private_chats}</code>\n"
@@ -336,7 +328,7 @@ async def _(kst):
     match = kst.pattern_match.group(1)
     if match:
         try:
-            group = await kst.client.get_peer_id(match)
+            group = await kst.client.parse_id(match)
         except Exception as err:
             return await msg.eor(f"**ERROR:**\n`{err}`")
     else:
@@ -412,9 +404,9 @@ async def get_chat_info(chat, kst):
     banned_users = getattr(full, "kicked_count", None)
     members_online = getattr(full, "online_count", 0)
     group_stickers = full.stickerset.title if getattr(full, "stickerset", None) else None
-    messages_viewable = msg_info.count if msg_info else None
-    messages_sent = getattr(full, "read_inbox_max_id", None)
-    messages_sent_alt = getattr(full, "read_outbox_max_id", None)
+    msgs_viewable = msg_info.count if msg_info else None
+    msgs_sent = getattr(full, "read_inbox_max_id", None)
+    msgs_sent_alt = getattr(full, "read_outbox_max_id", None)
     exp_count = getattr(full, "pts", None)
     supergroup = "<b>Yes</b>" if getattr(chat, "megagroup", None) else "No"
     creator_username = "@{}".format(creator_username) if creator_username else None
@@ -452,12 +444,12 @@ async def get_chat_info(chat, kst):
     if exp_count:
         chat_level = int((1 + math.sqrt(1 + 7 * exp_count / 14)) / 2)
         caption += f" ├ <b>{chat_type} Level:</b> <code>{chat_level}</code>\n"
-    if messages_viewable:
-        caption += f" ├ <b>Viewable Messages:</b> <code>{messages_viewable}</code>\n"
-    if messages_sent:
-        caption += f" ├ <b>Messages Sent:</b> <code>{messages_sent}</code>\n"
-    elif messages_sent_alt:
-        caption += f" ├ <b>Messages Sent:</b> <code>{messages_sent_alt}</code>\n"
+    if msgs_viewable:
+        caption += f" ├ <b>Viewable Messages:</b> <code>{msgs_viewable}</code>\n"
+    if msgs_sent:
+        caption += f" ├ <b>Messages Sent:</b> <code>{msgs_sent}</code>\n"
+    elif msgs_sent_alt:
+        caption += f" ├ <b>Messages Sent:</b> <code>{msgs_sent_alt}</code>\n"
     if members:
         caption += f" ├ <b>Members:</b> <code>{members}</code>\n"
     if admins:
@@ -492,23 +484,43 @@ async def get_chat_info(chat, kst):
     return chat_photo, caption
 
 
+async def conv_created(conv, user_id):
+    try:
+        resp = conv.wait_event(NewMessage(incoming=True, from_users=conv.chat_id))
+        msg = await conv.send_message(f"/id {user_id}")
+        resp = await resp
+        await msg.try_delete()
+        await resp.mark_read(clear_mentions=True)
+        return resp
+    except YouBlockedUserError:
+        await conv._client(UnblockRequest(conv.chat_id))
+        return await conv_created(conv, user_id)
+
+
+async def conv_total_bot(conv, command):
+    try:
+        resp = conv.wait_event(NewMessage(incoming=True, from_users=conv.chat_id))
+        msg = await conv.send_message(command)
+        resp = await resp
+        await msg.try_delete()
+        await resp.mark_read(clear_mentions=True)
+        return resp
+    except YouBlockedUserError:
+        await conv._client(UnblockRequest(conv.chat_id))
+        return await conv_total_bot(conv, command)
+
+
 @AsyncTTL(time_to_live=(30 * 10), maxsize=512)  # 5 mins
-async def get_total_created(kst, bot: str, command: str) -> int:
+async def get_total_bot(kst, bot: str, command: str) -> int:
     total = 0
     resp = None
     async with kst.client.conversation(bot) as conv:
-        try:
-            await conv.send_message(command)
-        except YouBlockedUserError:
-            await kst.client(UnblockRequest(bot))
-            await conv.send_message(command)
-        resp = await conv.get_response()
-        await resp.mark_read(clear_mentions=True)
+        resp = await conv_total_bot(conv, command)
     if not resp:
         total = 0
-    elif resp and resp.message.lower().startswith("you don't"):
+    elif resp and resp.message.message.lower().startswith("you don't"):
         total = 0
-    elif resp.message.lower().startswith("choose"):
+    elif resp.message.message.lower().startswith("choose"):
         for rows in resp.reply_markup.rows:
             if rows.buttons:
                 for _ in rows.buttons:
@@ -522,24 +534,26 @@ async def get_rose_fban(kst, user_id: int) -> bool:
     global ROSE_LANG_CACHE, ROSE_STAT_CACHE
     if user_id in ROSE_STAT_CACHE:
         return ROSE_STAT_CACHE.get(user_id)
-    rose = "@MissRose_bot"
     resp = None
-    async with kst.client.conversation(rose) as conv:
+    async with kst.client.conversation(ROSE_BOT) as conv:
         try:
             if not ROSE_LANG_CACHE.get("lang"):
-                await conv.send_message("/setlang EN-GB")
+                msg = await conv.send_message("/setlang EN-GB")
                 await conv.get_response()
-            await conv.send_message(f"/fedstat {user_id}")
+                await msg.try_delete()
+            msg = await conv.send_message(f"/fedstat {user_id}")
         except YouBlockedUserError:
-            await kst.client(UnblockRequest(rose))
+            await kst.client(UnblockRequest(conv.chat_id))
             if not ROSE_LANG_CACHE.get("lang"):
-                await conv.send_message("/setlang EN-GB")
+                msg = await conv.send_message("/setlang EN-GB")
                 await conv.get_response()
-            await conv.send_message(f"/fedstat {user_id}")
+                await msg.try_delete()
+            msg = await conv.send_message(f"/fedstat {user_id}")
         while True:
             await asyncio.sleep(1.5)
             resp = await conv.get_response()
-            if not resp.message.lower().startswith("checking fbans"):
+            await msg.try_delete()
+            if not resp.message.message.lower().startswith("checking fbans"):
                 break
         if resp:
             await resp.mark_read(clear_mentions=True)
@@ -547,10 +561,10 @@ async def get_rose_fban(kst, user_id: int) -> bool:
     if not resp:
         ROSE_STAT_CACHE[user_id] = False
         return False
-    elif "hasn't been banned" in resp.message:
+    elif "hasn't been banned" in resp.message.message:
         ROSE_STAT_CACHE[user_id] = False
         return False
-    elif "to be banned" in resp.message:
+    elif "to be banned" in resp.message.message:
         ROSE_STAT_CACHE[user_id] = True
         return True
     ROSE_STAT_CACHE[user_id] = False
@@ -597,28 +611,11 @@ async def sglist(text) -> tuple:
     return (names, usernames)
 
 
-HELP.update(
-    {
-        "info": [
-            "Info",
-            """❯ `{i}sg <reply/username>`
-Get names and usernames by sangmata.
-
-❯ `{i}created <reply/username>`
-Get creation date by creationdatebot.
-
-❯ `{i}total <reply/username>`
-Get total user messages.
-
-❯ `{i}stats`
-Show your profile stats.
-
-❯ `{i}info <reply/username>`
-Get mentioned user info, it also get Rose Fban, SpamWatch Banned, CAS Banned, etc. Per ids is cached in 2 minutes.
-
-❯ `{i}groupinfo <current/username>`
-Get details information of current group or mentioned group.
-""",
-        ]
-    }
-)
+plugins_help["info"] = {
+    "{i}sg [reply/username]": "Get names and usernames by sangmata.",
+    "{i}created [reply/username]": "Get creation date by creationdatebot.",
+    "{i}total [reply/username]": "Get total user messages.",
+    "{i}stats": "Show your profile stats.",
+    "{i}info [reply/username]": "Get mentioned user info, it also get Rose Fban, SpamWatch Banned, CAS Banned, etc. Per ids is cached in 2 minutes.",
+    "{i}groupinfo [current/username]": "Get details information of current group or mentioned group.",
+}

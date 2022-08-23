@@ -6,8 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-from contextlib import suppress
-from textwrap import shorten
+from random import randrange
 from telethon.tl.types import (
     ChannelParticipantsAdmins,
     ChannelParticipantAdmin,
@@ -16,9 +15,11 @@ from telethon.tl.types import (
     UserStatusLastMonth,
 )
 from . import (
-    choice,
-    HELP,
     kasta_cmd,
+    plugins_help,
+    choice,
+    shorten,
+    suppress,
     mentionuser,
     display_name,
     get_user,
@@ -27,7 +28,7 @@ from . import (
 
 ATAGS = []
 ETAGS = []
-DEFAULT_PERUSER = 12
+DEFAULT_PERUSER = 6
 DEFAULT_SEP = "|"
 
 
@@ -47,7 +48,7 @@ async def _(kst):
             slots -= 1
             if slots == 0:
                 break
-    await kst.respond(msg, reply_to=kst.reply_to_msg_id or None)
+    await kst.respond(msg, reply_to=kst.reply_to_msg_id)
     await kst.try_delete()
 
 
@@ -65,7 +66,7 @@ async def _(kst):
     users = []
     limit = 0
     ATAGS.append(chat_id)
-    msg = await kst.sod("`In atag process...`", delete=False, force_reply=True, silent=True)
+    msg = await kst.sod("`In atag process...`", delete=False, force_reply=True)
     chat = await kst.get_input_chat()
     admins = await kst.client.get_participants(chat, filter=ChannelParticipantsAdmins)
     admins_id = [x.id for x in admins]
@@ -77,26 +78,22 @@ async def _(kst):
                 users.append("<b>👮 Admin:</b> {}".format(to_mention(x)))
             if isinstance(x.participant, ChannelParticipantCreator):
                 users.append("<b>🤴 Owner:</b> {}".format(to_mention(x)))
-
+    caption = f"{caption}\n" if caption else caption
     for men in list(user_list(users, DEFAULT_PERUSER)):
         try:
             if chat_id not in ATAGS:
                 await kst.try_delete()
                 await msg.try_delete()
                 return
-            men = "  {}  ".format(DEFAULT_SEP).join(map(str, men))
-            men = f"{caption}\n{men}" if caption else men
-            await kst.client.send_message(
-                chat_id,
-                men,
-                reply_to=kst.reply_to_msg_id or None,
+            await kst.respond(
+                caption + "  {}  ".format(DEFAULT_SEP).join(map(str, men)),
+                reply_to=kst.reply_to_msg_id,
                 parse_mode="html",
             )
             limit += DEFAULT_PERUSER
-            await asyncio.sleep(choice((5, 6, 7, 8)))
+            await asyncio.sleep(randrange(5, 7))
         except BaseException:
             pass
-
     with suppress(ValueError):
         ATAGS.remove(chat_id)
     await kst.try_delete()
@@ -132,7 +129,7 @@ async def _(kst):
     users = []
     limit = 0
     ETAGS.append(chat_id)
-    msg = await kst.sod("`In etag process...`", delete=False, force_reply=True, silent=True)
+    msg = await kst.sod("`In etag process...`", delete=False, force_reply=True)
     chat = await kst.get_input_chat()
     admins = await kst.client.get_participants(chat, filter=ChannelParticipantsAdmins)
     admins_id = [x.id for x in admins]
@@ -144,26 +141,22 @@ async def _(kst):
                 users.append(" {} ".format(mentionuser(x.id, choice(EMOJITAG), html=True)))
             if isinstance(x.participant, ChannelParticipantCreator):
                 users.append(" {} ".format(mentionuser(x.id, choice(EMOJITAG), html=True)))
-
+    caption = f"{caption}\n" if caption else caption
     for men in list(user_list(users, DEFAULT_PERUSER)):
         try:
             if chat_id not in ETAGS:
                 await kst.try_delete()
                 await msg.try_delete()
                 return
-            men = " ".join(map(str, men))
-            men = f"{caption}\n{men}" if caption else men
-            await kst.client.send_message(
-                chat_id,
-                men,
-                reply_to=kst.reply_to_msg_id or None,
+            await kst.respond(
+                caption + " ".join(map(str, men)),
+                reply_to=kst.reply_to_msg_id,
                 parse_mode="html",
             )
             limit += DEFAULT_PERUSER
-            await asyncio.sleep(choice((5, 6, 7, 8)))
+            await asyncio.sleep(randrange(5, 7))
         except BaseException:
             pass
-
     with suppress(ValueError):
         ETAGS.remove(chat_id)
     await kst.try_delete()
@@ -198,7 +191,7 @@ async def _(kst):
     async for x in kst.client.iter_participants(chat, filter=ChannelParticipantsAdmins):
         if exclude_user(x):
             msg += mentionuser(x.id, "\u2063")
-    await kst.respond(msg, reply_to=kst.reply_to_msg_id or None)
+    await kst.respond(msg, reply_to=kst.reply_to_msg_id)
     await kst.try_delete()
 
 
@@ -238,31 +231,12 @@ def user_list(ls, n):
         yield ls[i : i + n]
 
 
-HELP.update(
-    {
-        "mentions": [
-            "Mentions",
-            """❯ `{i}all|@all`
-Mention the lucky members in current group.
-
-❯ `{i}atag <or reply> <caption (optional)>`
-Mention all members in current group.
-
-❯ `{i}acancel`
-Stop the current process of {i}atag.
-
-❯ `{i}etag <or reply> <caption (optional)>`
-Mention all members in current group with random emoji.
-
-❯ `{i}ecancel`
-Stop the current process of {i}etag.
-
-❯ `{i}report <reply>`
-Report reply messages to admin.
-
-❯ `{i}mention|{i}men <reply/username> <text>`
-Tags that person with the given custom text.
-""",
-        ]
-    }
-)
+plugins_help["mention"] = {
+    "{i}all|@all": "Mention the lucky members in current group.",
+    "{i}atag [or reply] [caption (optional)]": "Mention all members in current group.",
+    "{i}acancel": "Stop the current process of {i}atag.",
+    "{i}etag [or reply] [caption (optional)]": "Mention all members in current group with random emoji.",
+    "{i}ecancel": "Stop the current process of {i}etag.",
+    "{i}report [reply]": "Report reply messages to admin.",
+    "{i}mention|{i}men [reply/username] [text]": "Tags that person with the given custom text.",
+}

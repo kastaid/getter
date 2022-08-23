@@ -15,18 +15,20 @@ from pathlib import Path
 from platform import python_version
 from shutil import rmtree
 from telethon.tl.alltlobjects import LAYER as __layer__
+from telethon.version import __version__ as __tlversion__
 from version import __version__
 
 StartTime = time.time()
 __license__ = "GNU Affero General Public License v3.0"
 __copyright__ = "Getter Copyright (C) 2022 kastaid"
+__pyversion__ = python_version()
 
 if not sys.platform.startswith("linux"):
     print("You must use Linux platform, currently {}. Quitting...".format(sys.platform))
     sys.exit(1)
 
 if sys.version_info < (3, 9, 0):
-    print("You must use at least Python version 3.9.0, currently {}. Quitting...".format(python_version()))
+    print("You must use at least Python version 3.9.0, currently {}. Quitting...".format(__pyversion__))
     sys.exit(1)
 
 Root: Path = Path(__file__).parent.parent
@@ -46,11 +48,10 @@ for d in DIRS:
 
 LOOP = get_event_loop()
 EXECUTOR = ThreadPoolExecutor(max_workers=multiprocessing.cpu_count() * 5, thread_name_prefix="App")
-HELP = {}
 WORKER = {}
 CALLS = {}
-TESTER = {5254661231}
-# v, e, c, x, a
+TESTER = {5215824623}
+# vo, en1, en5, co, xl, ar
 DEVS = {
     *{
         int(x)
