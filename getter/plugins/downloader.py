@@ -5,6 +5,7 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+import asyncio
 from telethon.errors import YouBlockedUserError
 from telethon.events import NewMessage
 from telethon.tl.functions.contacts import UnblockRequest
@@ -87,6 +88,8 @@ async def conv_tt(conv, link):
         resp = await resp
         await resp.mark_read(clear_mentions=True)
         return resp
+    except asyncio.TimeoutError:
+        return None
     except YouBlockedUserError:
         await conv._client(UnblockRequest(conv.chat_id))
         return await conv_tt(conv, link)
@@ -99,6 +102,8 @@ async def conv_tw(conv, link):
         resp = await resp
         await resp.mark_read(clear_mentions=True)
         return resp
+    except asyncio.TimeoutError:
+        return None
     except YouBlockedUserError:
         await conv._client(UnblockRequest(conv.chat_id))
         return await conv_tw(conv, link)

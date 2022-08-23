@@ -75,7 +75,7 @@ async def _(kst):
                 resp = await conv.get_response(timeout=2)
             except asyncio.TimeoutError:
                 break
-            text.append(resp.message.message)
+            text.append(resp.message)
         if resp:
             await com.try_delete()
             await resp.mark_read(clear_mentions=True)
@@ -505,6 +505,8 @@ async def conv_total_bot(conv, command):
         await msg.try_delete()
         await resp.mark_read(clear_mentions=True)
         return resp
+    except asyncio.TimeoutError:
+        return None
     except YouBlockedUserError:
         await conv._client(UnblockRequest(conv.chat_id))
         return await conv_total_bot(conv, command)
@@ -518,9 +520,9 @@ async def get_total_bot(kst, bot: str, command: str) -> int:
         resp = await conv_total_bot(conv, command)
     if not resp:
         total = 0
-    elif resp and resp.message.message.lower().startswith("you don't"):
+    elif resp and resp.message.lower().startswith("you don't"):
         total = 0
-    elif resp.message.message.lower().startswith("choose"):
+    elif resp.message.lower().startswith("choose"):
         for rows in resp.reply_markup.rows:
             if rows.buttons:
                 for _ in rows.buttons:
@@ -553,7 +555,7 @@ async def get_rose_fban(kst, user_id: int) -> bool:
             await asyncio.sleep(1.5)
             resp = await conv.get_response()
             await msg.try_delete()
-            if not resp.message.message.lower().startswith("checking fbans"):
+            if not resp.message.lower().startswith("checking fbans"):
                 break
         if resp:
             await resp.mark_read(clear_mentions=True)
@@ -561,10 +563,10 @@ async def get_rose_fban(kst, user_id: int) -> bool:
     if not resp:
         ROSE_STAT_CACHE[user_id] = False
         return False
-    elif "hasn't been banned" in resp.message.message:
+    elif "hasn't been banned" in resp.message:
         ROSE_STAT_CACHE[user_id] = False
         return False
-    elif "to be banned" in resp.message.message:
+    elif "to be banned" in resp.message:
         ROSE_STAT_CACHE[user_id] = True
         return True
     ROSE_STAT_CACHE[user_id] = False
