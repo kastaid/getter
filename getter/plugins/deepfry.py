@@ -5,6 +5,7 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+import asyncio
 import random
 from io import BytesIO
 from PIL import Image, ImageEnhance, ImageOps
@@ -104,6 +105,8 @@ async def conv_fry(conv, reply, level):
         await msg.try_delete()
         await resp.mark_read(clear_mentions=True)
         return resp
+    except asyncio.TimeoutError:
+        return None
     except YouBlockedUserError:
         await conv._client(UnblockRequest(conv.chat_id))
         return await conv_fry(conv, reply, level)

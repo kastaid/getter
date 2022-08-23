@@ -524,6 +524,8 @@ async def conv_limit(conv):
         await msg.try_delete()
         await resp.mark_read(clear_mentions=True)
         return resp
+    except asyncio.TimeoutError:
+        return None
     except YouBlockedUserError:
         await conv._client(UnblockRequest(conv.chat_id))
         return await conv_limit(conv)
