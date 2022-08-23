@@ -13,7 +13,7 @@ ENV PROJECT=getter \
     DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1 \
     VIRTUAL_ENV=/home/app/venv \
-    CHROME_BIN=/usr/bin/google-chrome-stable
+    CHROME_BIN=/usr/bin/google-chrome
 
 RUN set -ex \
     && apt-get -qqy update \
@@ -31,6 +31,9 @@ RUN set -ex \
         fonts-noto-color-emoji \
         locales \
         tzdata \
+        ffmpeg \
+        libjpeg-dev \
+        libpng-dev \
         unzip \
         apt-utils \
         build-essential \

@@ -8,11 +8,10 @@
 import asyncio
 import datetime
 import time
-from contextlib import suppress
 from csv import reader as csv_read
+import aiofiles
 from aiocsv import AsyncDictReader, AsyncWriter
-from aiofiles import open as aiopen
-from telethon.errors.rpcerrorlist import (
+from telethon.errors import (
     UserAlreadyParticipantError,
     UserNotMutualContactError,
     UserPrivacyRestrictedError,
@@ -32,15 +31,16 @@ from telethon.tl.types import (
     UserStatusLastMonth,
 )
 from . import (
-    choice,
     Root,
-    HELP,
     WORKER,
     DEVS,
     NOCHATS,
     TZ,
     hl,
     kasta_cmd,
+    plugins_help,
+    choice,
+    suppress,
     display_name,
     get_username,
     is_telegram_link,
@@ -50,13 +50,14 @@ from . import (
 INVITING_LOCK = asyncio.Lock()
 SCRAPING_LOCK = asyncio.Lock()
 ADDING_LOCK = asyncio.Lock()
-spamb = "@SpamBot"
 
 with_error_text = """
 ✅ <b>DONE INVITING WITH ERROR</b>
-(<code>MAY GOT LIMIT ERROR AND TRY AGAIN LATER</code>)
 
-<b>✘ Error Message:</b>
+<b><u>Note</u></b>
+<pre>Got limit error and try again after {}</pre>
+
+<b><u>Error Message</u></b>
 <pre>{}</pre>
 
 • <b>Invited:</b> <code>{}</code>
@@ -73,7 +74,7 @@ invite_text = """
 • <b>Invited:</b> <code>{}</code>
 • <b>Failed:</b> <code>{}</code>
 
-<b>✘ Last Error:</b> <code>{}</code>
+<b>Last Error:</b> <code>{}</code>
 """
 
 done_text = """
@@ -110,50 +111,6 @@ cancelled_text = """
 """
 
 
-async def get_groupinfo(kst, msg, group=1):
-    info = None
-    args = kst.pattern_match.group(group).split(" ")
-    target = args[0]
-    if not target:
-        await msg.eod("`Required Username/Link/ID as target.`")
-        return None
-    if str(target).isdecimal() or (str(target).startswith("-") and str(target)[1:].isdecimal()):
-        if str(target).startswith("-100"):
-            target = int(str(target).replace("-100", ""))
-        elif str(target).startswith("-"):
-            target = int(str(target).replace("-", ""))
-        else:
-            target = int(target)
-    if isinstance(target, str):
-        if is_telegram_link(target):
-            target = get_username(target)
-    try:
-        info = await kst.client(GetFullChatRequest(chat_id=target))
-    except BaseException:
-        try:
-            info = await kst.client(GetFullChannelRequest(channel=target))
-        except ValueError:
-            await msg.eod("`You must join the target.`")
-            return None
-        except BaseException:
-            await msg.eod("`Invalid Username/Link/ID as target, please re-check.`")
-            return None
-    return info
-
-
-async def limit(kst, conv):
-    try:
-        resp = conv.wait_event(NewMessage(incoming=True, from_users=conv.chat_id))
-        await conv.send_message("/start")
-        resp = await resp
-        await resp.mark_read(clear_mentions=True)
-        # await kst.client(telethon.tl.functions.messages.DeleteHistoryRequest(conv.chat_id, max_id=0, just_clear=False, revoke=False))
-        return resp.message.message
-    except YouBlockedUserError:
-        await kst.client(UnblockRequest(spamb))
-        return await limit(kst, conv)
-
-
 @kasta_cmd(
     pattern="limit$",
     edited=True,
@@ -171,9 +128,12 @@ async def _(kst):
     if is_devs:
         await asyncio.sleep(choice((4, 6, 8)))
     msg = await kst.eor("`Checking...`", silent=True)
-    async with kst.client.conversation(spamb) as conv:
-        resp = await limit(kst, conv)
-        await msg.eor(f"~ {resp}")
+    resp = None
+    async with kst.client.conversation("SpamBot") as conv:
+        resp = await conv_limit(conv)
+    if not resp:
+        return msg.try_delete()
+    await msg.eor(f"~ {resp.text}")
 
 
 @kasta_cmd(
@@ -226,8 +186,14 @@ async def _(kst):
                             if WORKER.get(kst.chat_id):
                                 WORKER.pop(kst.chat_id)
                             taken = time_formatter((time.time() - start_time) * 1000)
+                            try:
+                                waitfor = int("".join(filter(str.isdigit, error.lower())))
+                            except ValueError:
+                                waitfor = 0
+                            flood = time_formatter(waitfor)
                             await msg.eor(
                                 with_error_text.format(
+                                    flood,
                                     error,
                                     success,
                                     failed,
@@ -306,7 +272,7 @@ async def _(kst):
         if members_exist:
             rows = [int(x[0]) for x in csv_read(open(members_file, "r")) if str(x[0]).isdecimal()]
             members = len(rows)
-            async with aiopen(members_file, mode="a") as f:
+            async with aiofiles.open(members_file, mode="a") as f:
                 writer = AsyncWriter(f, delimiter=",")
                 # aggressive=True : telethon.errors.common.MultiError: ([None, None, None, FloodWaitError('A wait of 11 seconds is required (caused by GetParticipantsRequest)'),
                 try:
@@ -323,7 +289,7 @@ async def _(kst):
                 except BaseException:
                     pass
         else:
-            async with aiopen(members_file, mode="w") as f:
+            async with aiofiles.open(members_file, mode="w") as f:
                 writer = AsyncWriter(f, delimiter=",")
                 await writer.writerow(["user_id", "hash", "username"])
                 try:
@@ -339,7 +305,7 @@ async def _(kst):
                 except BaseException:
                     pass
         await msg.eor("`Scraping Admins...`")
-        async with aiopen(admins_file, mode="w") as f:
+        async with aiofiles.open(admins_file, mode="w") as f:
             writer = AsyncWriter(f, delimiter=",")
             await writer.writerow(["user_id", "hash", "username"])
             async for x in kst.client.iter_participants(group.full_chat.id, filter=ChannelParticipantsAdmins):
@@ -350,7 +316,7 @@ async def _(kst):
                     except BaseException:
                         pass
         await msg.eor("`Scraping Bots...`")
-        async with aiopen(bots_file, mode="w") as f:
+        async with aiofiles.open(bots_file, mode="w") as f:
             writer = AsyncWriter(f, delimiter=",")
             await writer.writerow(["user_id", "hash", "username"])
             async for x in kst.client.iter_participants(group.full_chat.id, filter=ChannelParticipantsBots):
@@ -444,7 +410,7 @@ async def _(kst):
         local_now = datetime.datetime.now(TZ).strftime("%d/%m/%Y %H:%M:%S")
         try:
             await msg.eor(f"`Reading {csv_file} file...`")
-            async with aiopen(csv_file, mode="r") as f:
+            async with aiofiles.open(csv_file, mode="r") as f:
                 async for row in AsyncDictReader(f, delimiter=","):
                     user = {"user_id": int(row["user_id"]), "hash": int(row["hash"])}
                     users.append(user)
@@ -519,34 +485,63 @@ async def _(kst):
     )
 
 
-HELP.update(
-    {
-        "core": [
-            "Core (Main Plugin)",
-            """❯ `{i}inviteall <username/link/id (as target)>`
-Invite people's (exclude self, bots, admins, deleted accounts, status last month, status empty) to your current group/channel.
+async def get_groupinfo(kst, msg, group=1):
+    info = None
+    args = kst.pattern_match.group(group).split(" ")
+    target = args[0]
+    if not target:
+        await msg.eod("`Required Username/Link/ID as target.`")
+        return None
+    if str(target).isdecimal() or (str(target).startswith("-") and str(target)[1:].isdecimal()):
+        if str(target).startswith("-100"):
+            target = int(str(target).replace("-100", ""))
+        elif str(target).startswith("-"):
+            target = int(str(target).replace("-", ""))
+        else:
+            target = int(target)
+    if isinstance(target, str):
+        if is_telegram_link(target):
+            target = get_username(target)
+    try:
+        info = await kst.client(GetFullChatRequest(chat_id=target))
+    except BaseException:
+        try:
+            info = await kst.client(GetFullChannelRequest(channel=target))
+        except ValueError:
+            await msg.eod("`You must join the target.`")
+            return None
+        except BaseException:
+            await msg.eod("`Invalid Username/Link/ID as target, please re-check.`")
+            return None
+    return info
 
-❯ `{i}getmembers <username/link/id (as target)>`
-Scraping members from the group and then save as csv files (members, admins, bots).
+
+async def conv_limit(conv):
+    try:
+        resp = conv.wait_event(NewMessage(incoming=True, from_users=conv.chat_id))
+        msg = await conv.send_message("/start")
+        resp = await resp
+        await msg.try_delete()
+        await resp.mark_read(clear_mentions=True)
+        return resp
+    except YouBlockedUserError:
+        await conv._client(UnblockRequest(conv.chat_id))
+        return await conv_limit(conv)
+
+
+plugins_help["core"] = {
+    "{i}inviteall [username/link/id (as target)]": "Invite people's (exclude self, bots, admins, deleted accounts, status last month, status empty) to your current group/channel.",
+    "{i}getmembers [username/link/id (as target)]": """Scraping members from the group and then save as csv files (members, admins, bots).
 Run this command in everywhere exclude the target groups.
 
 **Note:**
 - You must join the target if you use id, for two commands above.
 - Do not delete running messages if you have running process or the process will be stopped and users can't join.
 - Telethon (Telegram APIs) have a limit to scraping members. If you need to get more members use this command with options <`append`> or <`a`> example: `<{i}getmembers @username append`>. Repeat it after finished to get more members without duplicated rows. You can also combination with difference groups!
-- Files members_list.csv, admins_list.csv and bot_list.csv saved at main directory and not removed, will replaced if you run the command above again. But if the app restarted files will be destroyed, so keep downloading latest files.
+- Files members_list.csv, admins_list.csv and bot_list.csv saved at main directory and not removed, will replaced if you run the command above again. But if the app restarted files will be destroyed, so keep downloading latest files.""",
+    "{i}addmembers|{i}addadmins|{i}addbots": "Adding members to your current group/channel from saved csv files generate by command above as members or admins or bots (there's a limit).",
+    "{i}cancel": "Cancel the running process, both for invite and add.",
+    "{i}limit": """Check your account was limit or not.
 
-❯ `{i}addmembers|{i}addadmins|{i}addbots`
-Adding members to your current group/channel from saved csv files generate by command above as members or admins or bots (there's a limit).
-
-❯ `{i}cancel`
-Cancel the running process, both for invite and add.
-
-❯ `{i}limit`
-Check your account was limit or not.
-
-**DWYOR ~ Do With Your Own Risk**
-""",
-        ]
-    }
-)
+**DWYOR ~ Do With Your Own Risk**""",
+}

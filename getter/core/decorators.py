@@ -11,7 +11,6 @@ import re
 import sys
 from contextlib import suppress
 from io import BytesIO
-from platform import python_version
 from traceback import format_exc
 from typing import (
     Union,
@@ -21,7 +20,7 @@ from typing import (
     Tuple,
     Optional,
 )
-from telethon.errors.rpcerrorlist import (
+from telethon.errors import (
     AuthKeyDuplicatedError,
     ChatSendGifsForbiddenError,
     ChatSendInlineForbiddenError,
@@ -35,16 +34,17 @@ from telethon.errors.rpcerrorlist import (
 )
 from telethon.events import MessageEdited, NewMessage, StopPropagation
 from telethon.tl.custom.message import Message
-from telethon.version import __version__ as telethonver
 from .. import (
+    __version__,
+    __tlversion__,
     __layer__,
-    __version__ as getterver,
+    __pyversion__,
     DEVS,
     MAX_MESSAGE_LEN,
 )
 from ..config import Var, HANDLER
 from ..logger import LOGS
-from .app import App
+from .client import getter_app
 from .functions import (
     display_name,
     strip_format,
@@ -108,7 +108,7 @@ def kasta_cmd(
                 if user_id in KASTA_BLACKLIST:
                     LOGS.error(
                         "({} - {}) YOU ARE BLACKLISTED !!".format(
-                            kst.client.me.first_name,
+                            kst.client.full_name,
                             user_id,
                         )
                     )
@@ -122,14 +122,14 @@ def kasta_cmd(
                 ):
                     return
             if private_only and not kst.is_private:
-                return await eod(kst, "`Use this in Private.`")
+                return await eod(kst, "`use in private`")
             if admins_only:
                 if kst.is_private:
                     return
                 if not (chat.admin_rights or chat.creator):
-                    return await eod(kst, "`Not an admin.`")
+                    return await eod(kst, "`not admin`")
             if groups_only and kst.is_private:
-                return await eod(kst, "`Use this in Group/Channel.`")
+                return await eod(kst, "`use in group or channel`")
             try:
                 await fun(kst)
             except FloodWaitError as fw:
@@ -161,9 +161,9 @@ def kasta_cmd(
                 if not no_crash:
                     date = datetime.datetime.now(datetime.timezone.utc).strftime("%d/%m/%Y %H:%M:%S")
                     ftext = r"\\**#Getter**// **Client Error:** Forward this to @kastaot"
-                    ftext += "\n\n**Getter Version:** `" + str(getterver)
-                    ftext += "`\n**Python Version:** `" + str(python_version())
-                    ftext += "`\n**Telethon Version:** `" + str(telethonver)
+                    ftext += "\n\n**Getter Version:** `" + str(__version__)
+                    ftext += "`\n**Python Version:** `" + str(__pyversion__)
+                    ftext += "`\n**Telethon Version:** `" + str(__tlversion__)
                     ftext += "`\n**Telegram Layer:** `" + str(__layer__) + "`\n\n"
                     ftext += "--------START GETTER CRASH LOG--------"
                     ftext += "\n\n**Date:** `" + date
@@ -188,7 +188,7 @@ def kasta_cmd(
                             ftext = strip_format(ftext)
                             with BytesIO(ftext.encode()) as file:
                                 file.name = "getter_client_error.txt"
-                                await App.send_file(
+                                await getter_app.send_file(
                                     kst.chat_id,
                                     file=file,
                                     caption=r"\\**#Getter**// **Client Error:** Forward this to @kastaot",
@@ -198,7 +198,7 @@ def kasta_cmd(
                                     silent=True,
                                 )
                     else:
-                        await App.send_message(
+                        await getter_app.send_message(
                             kst.chat_id,
                             ftext,
                             link_preview=False,
@@ -221,7 +221,7 @@ def kasta_cmd(
                     return not e.via_bot_id and func(e) and not (e.is_channel and e.chat.broadcast)
                 return not e.via_bot_id and not (e.is_channel and e.chat.broadcast)
 
-            App.add_event_handler(
+            getter_app.add_event_handler(
                 callback=wrapp,
                 event=MessageEdited(
                     chats=chats,
@@ -240,7 +240,7 @@ def kasta_cmd(
                 return not e.via_bot_id and func(e)
             return not e.via_bot_id
 
-        App.add_event_handler(
+        getter_app.add_event_handler(
             callback=wrapp,
             event=NewMessage(
                 chats=chats,

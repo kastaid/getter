@@ -5,19 +5,20 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from secrets import choice
+from contextlib import suppress
+from random import choice
 from textwrap import shorten
-from cachetools import cached, LRUCache
-from heroku3 import from_key
+from validators.url import url as is_url
 from getter import (
     StartTime,
-    __version__,
-    __layer__,
     __license__,
     __copyright__,
+    __version__,
+    __tlversion__,
+    __layer__,
+    __pyversion__,
     Root,
     LOOP,
-    HELP,
     WORKER,
     CALLS,
     TESTER,
@@ -33,6 +34,7 @@ hl = HANDLER
 NOCHATS = {
     -1001699144606,
     -1001700971911,
+    -1001261461928,
 }
 
 DEFAULT_GCAST_BLACKLIST = {
@@ -46,6 +48,7 @@ DEFAULT_GCAST_BLACKLIST = {
     -1001235155926,  # @RoseSupportChat
     -1001421589523,  # @tdspya
     -1001360494801,  # @OFIOpenChat
+    -1001275084637,  # @OFIChat
     -1001435671639,  # @xfichat
 }
 
@@ -88,21 +91,21 @@ DEFAULT_SHELL_BLACKLIST = {
 }
 
 CARBON_PRESETS = [
-    ("blackboard", "#6676BE"),
-    ("material", "#829FAF"),
-    ("monokai", "#9E9E9E"),
-    ("night-owl", "#B96BFF"),
-    ("nord", "#9AC5EF"),
-    ("oceanic-next", "#8DB1C0"),
-    ("one-light", "#2B66DF"),
-    ("seti", "#ABB8C3"),
-    ("shades-of-purple", "#736FCA"),
-    ("synthwave-84", "#9C77D9"),
-    ("solarized-light", "#BBBBBB"),
-    ("twilight", "#F9EDD4"),
-    ("verminal", "#BD10E0"),
-    ("vscode", "#E1962F"),
-    ("zenburn", "#B6A291"),
+    ("blackboard", "#6676be"),
+    ("material", "#829faf"),
+    ("monokai", "#9e9e9e"),
+    ("night-owl", "#b96bff"),
+    ("nord", "#9ac5ef"),
+    ("oceanic-next", "#8db1c0"),
+    ("one-light", "#2b66df"),
+    ("seti", "#abb8c3"),
+    ("shades-of-purple", "#736fca"),
+    ("synthwave-84", "#9c77d9"),
+    ("solarized-light", "#bbbbbb"),
+    ("twilight", "#f9edd4"),
+    ("verminal", "#bd10e0"),
+    ("vscode", "#e1962f"),
+    ("zenburn", "#b6a291"),
 ]
 
 RAYSO_THEMES = (
@@ -127,31 +130,3 @@ USERAGENTS = (
     "Mozilla/5.0 (Windows; Windows NT 6.1) AppleWebKit/536.5 (KHTML, like Gecko) " "Chrome/19.0.1084.46 Safari/536.5",
     "Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0",
 )
-
-
-def Heroku() -> None:
-    _conn = None
-    try:
-        if Var.HEROKU_API and Var.HEROKU_APP_NAME:
-            _conn = from_key(Var.HEROKU_API)
-    except BaseException as err:
-        LOGS.exception(err)
-    return _conn
-
-
-@cached(cache=LRUCache(maxsize=512))
-def HerokuStack() -> str:
-    try:
-        app = Heroku().app(Var.HEROKU_APP_NAME)
-        stack = app.info.stack.name
-    except BaseException:
-        stack = "none"
-    return stack
-
-
-if HerokuStack() == "container" or not (Var.HEROKU_API or Var.HEROKU_APP_NAME):
-    CHROME_BIN = "/usr/bin/google-chrome-stable"
-    CHROME_DRIVER = "/usr/bin/chromedriver"
-else:
-    CHROME_BIN = "/app/.apt/usr/bin/google-chrome"
-    CHROME_DRIVER = "/app/.chromedriver/bin/chromedriver"

@@ -6,12 +6,16 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-from contextlib import suppress
 from telethon.errors import FloodWaitError
 from telethon.tl.functions.channels import GetFullChannelRequest, DeleteMessagesRequest
 from telethon.tl.functions.messages import GetFullChatRequest
 from telethon.tl.functions.phone import CreateGroupCallRequest, DiscardGroupCallRequest, EditGroupCallTitleRequest
-from . import HELP, kasta_cmd, CALLS
+from . import (
+    kasta_cmd,
+    plugins_help,
+    suppress,
+    CALLS,
+)
 
 
 async def get_call(e, chat_id):
@@ -68,10 +72,9 @@ async def _(kst):
     if not silent:
         await msg.eor("__Starting a video chat...__", time=5)
         return
-    else:
-        await msg.try_delete()
-        if req and req.updates[1].id is not None:
-            await kst.client(DeleteMessagesRequest(kst.chat_id, [req.updates[1].id]))
+    await msg.try_delete()
+    if req and req.updates[1].id is not None:
+        await kst.client(DeleteMessagesRequest(kst.chat_id, [req.updates[1].id]))
 
 
 @kasta_cmd(
@@ -93,10 +96,9 @@ async def _(kst):
     if not silent:
         await msg.eor("__Stopping video chat...__", time=5)
         return
-    else:
-        await msg.try_delete()
-        if req and req.updates[1].id is not None:
-            await kst.client(DeleteMessagesRequest(kst.chat_id, [req.updates[1].id]))
+    await msg.try_delete()
+    if req and req.updates[1].id is not None:
+        await kst.client(DeleteMessagesRequest(kst.chat_id, [req.updates[1].id]))
 
 
 @kasta_cmd(
@@ -165,7 +167,8 @@ async def _(kst):
     msg = await kst.eor("`Processing...`")
     title = kst.pattern_match.group(1)
     if not title:
-        return msg.eor("__Required some text for title.__", time=5)
+        await msg.eor("__Required some text for title.__", time=5)
+        return
     try:
         call = await get_call(kst, kst.chat_id)
     except BaseException:
@@ -177,25 +180,10 @@ async def _(kst):
     await msg.eor("`changed`", time=5)
 
 
-HELP.update(
-    {
-        "vctools": [
-            "Video Chats Tools",
-            """❯ `{i}startvc <silent/s> <title>`
-Start a video chat.
-
-❯ `{i}stopvc <silent/s>`
-Stop the video chat.
-
-❯ `{i}joinvc <chat_id/username group/channel>`
-Join the video chat.
-
-❯ `{i}leavevc <chat_id/username group/channel>`
-Leave the video chat.
-
-❯ `{i}vctitle <title>`
-Change the video chat title.
-""",
-        ]
-    }
-)
+plugins_help["vctools"] = {
+    "{i}startvc [silent/s] [title]": "Start a video chat.",
+    "{i}stopvc [silent/s]": "Stop the video chat.",
+    "{i}joinvc [chat_id/username group/channel]": "Join the video chat.",
+    "{i}leavevc [chat_id/username group/channel]": "Leave the video chat.",
+    "{i}vctitle [title]": "Change the video chat title.",
+}

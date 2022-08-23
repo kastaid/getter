@@ -1,13 +1,11 @@
 https://github.com/notudope/Telethon/archive/main.zip
-telethon-tgcrypto
+cryptg
 loguru==0.6.0
 python-dotenv==0.20.0
 pytz==2022.2.1
 psutil==5.9.1
 heroku3==5.1.4
 GitPython==3.1.27
-gpytranslate==1.4.0
-gTTS==2.2.4
 cachetools==5.2.0
 async-cache==1.1.1
 aiofiles==0.8.0
@@ -18,5 +16,10 @@ Markdown==3.4.1
 emoji==2.0.0
 validators==0.20.0
 tweet-capture==0.0.13
-selenium==4.4.2
+selenium==4.4.3
 pytgcalls==3.0.0.dev22
+gpytranslate==1.4.0
+gTTS==2.2.4
+geopy==2.2.0
+Pillow>=9.1.1
+yt-dlp==2022.8.19

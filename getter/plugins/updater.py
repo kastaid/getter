@@ -10,28 +10,27 @@ import datetime
 import os
 import sys
 import time
-from contextlib import suppress
-from aiofiles import open as aiopen
+import aiofiles
 from git import Repo
 from git.exc import GitCommandError, InvalidGitRepositoryError, NoSuchPathError
 from . import (
-    choice,
     StartTime,
     __version__,
     Root,
-    HELP,
     DEVS,
     Var,
     hl,
     kasta_cmd,
+    plugins_help,
+    choice,
+    suppress,
     strip_format,
     time_formatter,
     get_random_hex,
     make_async,
     Runner,
     MAX_MESSAGE_LEN,
-    Heroku,
-    HerokuStack,
+    Hk,
 )
 
 UPDATE_LOCK = asyncio.Lock()
@@ -79,7 +78,7 @@ async def force_pull() -> None:
 
 
 async def force_push() -> str:
-    push = f"git push --force https://heroku:{Var.HEROKU_API}@git.heroku.com/{Var.HEROKU_APP_NAME}.git HEAD:main"
+    push = f"git push --force https://heroku:{Hk.api}@git.heroku.com/{Hk.name}.git HEAD:main"
     _, err, _, _ = await Runner(push)
     return err
 
@@ -108,7 +107,7 @@ async def show_changelog(kst, changelog) -> None:
     if len(changelog) > MAX_MESSAGE_LEN:
         changelog = strip_format(changelog)
         file = "changelog_output.txt"
-        async with aiopen(file, mode="w") as f:
+        async with aiofiles.open(file, mode="w") as f:
             await f.write(changelog)
         try:
             chat = await kst.get_input_chat()
@@ -118,7 +117,7 @@ async def show_changelog(kst, changelog) -> None:
                 caption=r"\\**#Getter**// `View this file to see changelog.`",
                 force_document=True,
                 allow_cache=False,
-                reply_to=kst.reply_to_msg_id or None,
+                reply_to=kst.reply_to_msg_id,
                 silent=True,
             )
         except Exception as err:
@@ -147,15 +146,15 @@ Wait for a few seconds, then run `{hl}ping` command."""
 
 
 async def Pushing(kst, state, repo) -> None:
-    if not Var.HEROKU_API:
+    if not Hk.api:
         await kst.eod("Please set `HEROKU_API` in Config Vars.")
         return
-    if not Var.HEROKU_APP_NAME:
+    if not Hk.name:
         await kst.eod("Please set `HEROKU_APP_NAME` in Config Vars.")
         return
     try:
-        heroku_conn = Heroku()
-        app = heroku_conn.app(Var.HEROKU_APP_NAME)
+        conn = Hk.heroku()
+        app = conn.app(Hk.name)
     except Exception as err:
         if str(err).lower().startswith("401 client error: unauthorized"):
             msg = "HEROKU_API invalid or expired... Please re-check."
@@ -165,29 +164,6 @@ async def Pushing(kst, state, repo) -> None:
 `{msg}`"""
         await kst.eor(up)
         return
-    """
-    # migration new vars
-    cfg = app.config()
-    if "HEROKU_API_KEY" in cfg:
-        cfg["HEROKU_API"] = cfg["HEROKU_API_KEY"]
-        del cfg["HEROKU_API_KEY"]
-    """
-    addons = app.addons()
-    pg, pgv = "heroku-postgresql", "14"
-    if addons:
-        if not [a for a in addons if str(a.plan.name).lower().startswith(pg)]:
-            app.install_addon(pg, config={"version": pgv})
-    else:
-        app.install_addon(pg, config={"version": pgv})
-    if HerokuStack() != "container":
-        app.update_buildpacks(
-            [
-                "https://github.com/heroku/heroku-buildpack-python",
-                "https://github.com/heroku/heroku-buildpack-apt",
-                "https://github.com/heroku/heroku-buildpack-google-chrome",
-                "https://github.com/heroku/heroku-buildpack-chromedriver",
-            ]
-        )
     await force_pull()
     up = rf"""\\**#Getter**// `{state}Updated Successfully...`
 Wait for a few minutes, then run `{hl}ping` command."""
@@ -206,7 +182,7 @@ Wait for a few minutes, then run `{hl}ping` command."""
         if msg:
             await kst.eor(msg)
     """
-    url = app.git_url.replace("https://", f"https://api:{Var.HEROKU_API}@")
+    url = app.git_url.replace("https://", f"https://api:{Hk.api}@")
     if "heroku" in repo.remotes:
         remote = repo.remote("heroku")
         remote.set_url(url)
@@ -353,8 +329,8 @@ async def _(kst):
     uptime = time_formatter((time.time() - StartTime) * 1000)
     text = test_text.format(
         kst.client.uid,
-        Var.HEROKU_APP_NAME or "none",
-        HerokuStack(),
+        Hk.name or "none",
+        Hk.stack,
         __version__,
         round(speed, 3),
         uptime,
@@ -367,28 +343,11 @@ async def _(kst):
     )
 
 
-HELP.update(
-    {
-        "updater": [
-            "Updater",
-            """❯ `{i}update`
-Checks for updates, also displaying the changelog.
-
-❯ `{i}update <now|pull>`
-Temporary update as locally.
-
-❯ `{i}update <deploy|push>`
-Permanently update as heroku.
-
-❯ `{i}update force`
-Force temporary update as locally.
-
-❯ `{i}repo`
-Get repo link.
-
-❯ `{i}test`
-Check the response.
-""",
-        ]
-    }
-)
+plugins_help["updater"] = {
+    "{i}update": "Checks for updates, also displaying the changelog.",
+    "{i}update [now|pull]": "Temporary update as locally.",
+    "{i}update [deploy|push]": "Permanently update as heroku.",
+    "{i}update force": "Force temporary update as locally.",
+    "{i}repo": "Get repo link.",
+    "{i}test": "Check the response.",
+}

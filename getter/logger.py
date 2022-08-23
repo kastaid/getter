@@ -41,5 +41,7 @@ class InterceptHandler(logging.Handler):
 
 logging.getLogger("asyncio").setLevel(logging.ERROR)
 logging.getLogger("urllib3").disabled = True
+logging.getLogger("urllib3.connectionpool").disabled = True
 logging.getLogger("telethon").setLevel(logging.ERROR)
+logging.getLogger("webdriver_manager").disabled = True
 logging.basicConfig(handlers=[InterceptHandler()], level="INFO")

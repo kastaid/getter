@@ -9,9 +9,9 @@ from gpytranslate import Translator
 from gtts import gTTS
 from . import (
     Root,
-    HELP,
-    hl,
     kasta_cmd,
+    plugins_help,
+    LANG_CODES,
     parse_pre,
     strip_format,
     strip_emoji,
@@ -24,29 +24,31 @@ from . import (
     no_crash=True,
 )
 async def _(kst):
-    args = kst.pattern_match.group(1)
-    lang = args[:2] or "id"
-    txt = args[3:]
-    text = ""
-    msg = await kst.eor("`...`")
-    if txt:
-        text = txt
-    elif kst.is_reply:
-        text = (await kst.get_reply_message()).text
-    if not text:
-        await msg.eod(f"`{hl}tr <lang_code>` reply text message.")
+    match = kst.pattern_match.group(1)
+    args = match.split(" ")
+    if args[0] in LANG_CODES.keys():
+        is_lang, lang = True, args[0]
+    else:
+        is_lang, lang = False, "id"
+    if kst.is_reply:
+        words = (await kst.get_reply_message()).text
+    else:
+        try:
+            words = match.split(maxsplit=1)[1] if is_lang else match
+        except IndexError:
+            words = match
+    if not words:
+        await kst.eor("`Reply to text message or provide a text!`", time=5)
         return
+    msg = await kst.eor("`...`")
     try:
-        text = strip_format(strip_emoji(text))
+        text = strip_format(strip_emoji(words))
         translator = Translator()
         translation = await translator(text, targetlang=lang)
-        after_tr_text = translation.text
-        source_lang = await translator.detect(translation.orig)
-        transl_lang = await translator.detect(translation.text)
         output_text = "**Detected:** `{}`\n**Translated:** `{}`\n\n```{}```".format(
-            source_lang,
-            transl_lang,
-            after_tr_text,
+            await translator.detect(translation.orig),
+            await translator.detect(translation.text),
+            translation.text,
         )
         await msg.eor(output_text)
     except Exception as err:
@@ -65,22 +67,27 @@ async def _(kst):
     no_crash=True,
 )
 async def _(kst):
-    args = kst.pattern_match.group(1)
-    lang = args[:2] or "id"
-    txt = args[3:]
-    text = ""
-    if txt:
-        text = txt
-    elif kst.is_reply:
-        text = (await kst.get_reply_message()).text
-    if not text:
-        await kst.eod(f"`{hl}tl <lang_code>` reply text message.")
+    match = kst.pattern_match.group(1)
+    args = match.split(" ")
+    if args[0] in LANG_CODES.keys():
+        is_lang, lang = True, args[0]
+    else:
+        is_lang, lang = False, "id"
+    if kst.is_reply:
+        words = (await kst.get_reply_message()).text
+    else:
+        try:
+            words = match.split(maxsplit=1)[1] if is_lang else match
+        except IndexError:
+            words = match
+    if not words:
+        await kst.eor("`Reply to text message or provide a text!`", time=5)
         return
     try:
-        text = strip_format(strip_emoji(text))
+        text = strip_format(strip_emoji(words))
         translator = Translator()
-        tl = (await translator(text, targetlang=lang)).text
-        await kst.sod(tl)
+        translation = await translator(text, targetlang=lang)
+        await kst.sod(translation.text)
     except Exception as err:
         return await kst.eod(str(err), parse_mode=parse_pre)
 
@@ -91,27 +98,32 @@ async def _(kst):
     no_crash=True,
 )
 async def _(kst):
-    args = kst.pattern_match.group(1)
-    lang = args[:2] or "id"
-    txt = args[3:]
-    text = ""
-    msg = await kst.eor("`...`")
-    if txt:
-        text = txt
-    elif kst.is_reply:
-        text = (await kst.get_reply_message()).text
-    if not text:
-        await msg.eod(f"`{hl}tts <lang_code>` reply text message.")
+    match = kst.pattern_match.group(1)
+    args = match.split(" ")
+    if args[0] in LANG_CODES.keys():
+        is_lang, lang = True, args[0]
+    else:
+        is_lang, lang = False, "id"
+    if kst.is_reply:
+        words = (await kst.get_reply_message()).text
+    else:
+        try:
+            words = match.split(maxsplit=1)[1] if is_lang else match
+        except IndexError:
+            words = match
+    if not words:
+        await kst.eor("`Reply to text message or provide a text!`", time=5)
         return
+    msg = await kst.eor("`...`")
     try:
-        text = strip_format(strip_emoji(text))
-        file = Root / ("downloads/" + "tts.mp3")
-        tts = gTTS(text, lang=lang, slow=False)
-        tts.save(file)
+        text = strip_format(strip_emoji(words))
+        file = Root / ("downloads/" + "voice.mp3")
+        voice = gTTS(text, lang=lang, slow=False)
+        voice.save(file)
         await kst.client.send_file(
             kst.chat_id,
             file=file,
-            reply_to=kst.reply_to_msg_id or None,
+            reply_to=kst.reply_to_msg_id,
             allow_cache=False,
             voice_note=True,
             silent=True,
@@ -122,21 +134,20 @@ async def _(kst):
         await msg.eod(str(err), parse_mode=parse_pre)
 
 
-HELP.update(
-    {
-        "translate": [
-            "Translate",
-            """❯ `{i}tr <lang_code> <text/reply>`
-Translate the message to required language.
-
-❯ `{i}tl <lang_code> <text/reply>`
-Send or reply message as translated.
-
-❯ `{i}tts <lang_code> <text/reply>`
-Text to speech.
-
-**Note:** Default <lang_code> is `id`.
-""",
-        ]
-    }
+@kasta_cmd(
+    pattern="lang$",
+    no_crash=True,
 )
+async def _(kst):
+    lang = "**Language Code:**\n" + "\n".join([f"- {y}: {x}" for x, y in LANG_CODES.items()])
+    await kst.sod(lang)
+
+
+plugins_help["translate"] = {
+    "{i}tr [lang_code] [text/reply]": "Translate the message to required language.",
+    "{i}tl [lang_code] [text/reply]": "Send or reply message as translated.",
+    "{i}tts [lang_code] [text/reply]": "Text to speech",
+    "{i}lang": """Show all language code.
+
+**Note:** Default [lang_code] is `id`.""",
+}

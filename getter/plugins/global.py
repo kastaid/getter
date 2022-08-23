@@ -7,16 +7,17 @@
 
 import asyncio
 import time
-from contextlib import suppress
 from io import BytesIO
 from telethon.errors import FloodWaitError
 from telethon.tl.functions.contacts import BlockRequest, UnblockRequest
-from telethon.tl.functions.messages import ReportSpamRequest
+from telethon.tl.functions.messages import ReportSpamRequest, ReportRequest
+from telethon.tl.types import InputReportReasonSpam, InputReportReasonOther, InputReportReasonFake
 from . import (
-    choice,
     DEVS,
-    HELP,
     kasta_cmd,
+    plugins_help,
+    choice,
+    suppress,
     time_formatter,
     get_user,
     mentionuser,
@@ -42,14 +43,19 @@ async def _(kst):
     msg = await kst.eor("`Gbanning...`", silent=True)
     user, reason = await get_user(kst)
     if not user:
-        return await msg.eor("`Reply to some message or add their id.`", time=8)
+        return await msg.eor("`Reply to some message or add their id.`", time=5)
     if user.id == kst.client.uid:
         return await msg.eor("`I can't gban myself.`", time=5)
     if user.id in DEVS:
         return await msg.eor("`I can't gban our Developers.`", time=5)
     userlink = mentionuser(user.id, display_name(user), sep="➥ ", html=True)
     success = failed = 0
-    async for gg in kst.client.iter_dialogs():
+    if kst.client._dialogs:
+        dialog = kst.client._dialogs
+    else:
+        dialog = await kst.client.get_dialogs()
+        kst.client._dialogs.extend(dialog)
+    for gg in dialog:
         if gg.is_group or gg.is_channel:
             try:
                 await kst.client.edit_permissions(gg.id, user.id, view_messages=False)
@@ -66,7 +72,28 @@ async def _(kst):
             except BaseException:
                 failed += 1
     with suppress(BaseException):
-        await kst.client(ReportSpamRequest(user.id))
+        if kst.is_reply:
+            reply = await kst.get_reply_message()
+            reran = choice(("spam", "other", "fake"))
+            if reran == "spam":
+                reason = InputReportReasonSpam()
+                message = "Sends spam messages in many chats, we request Telegram to ban this user."
+            elif reran == "other":
+                reason = InputReportReasonOther()
+                message = "We request Telegram to ban this user."
+            else:
+                reason = InputReportReasonFake()
+                message = "Fake account and scamming people, we request Telegram to ban this user."
+            await kst.client(
+                ReportRequest(
+                    peer=reply.sender_id,
+                    id=[reply.id],
+                    reason=reason,
+                    message=message,
+                )
+            )
+        else:
+            await kst.client(ReportSpamRequest(user.id))
     with suppress(BaseException):
         await kst.client(BlockRequest(user.id))
     reason = reason if reason else "No Reason"
@@ -96,11 +123,16 @@ async def _(kst):
     msg = await kst.eor("`UnGbanning...`", silent=True)
     user, _ = await get_user(kst)
     if not user:
-        return await msg.eor("`Reply to some message or add their id.`", time=8)
+        return await msg.eor("`Reply to some message or add their id.`", time=5)
     msg = await msg.eor("`Force UnGbanning...`")
     userlink = mentionuser(user.id, display_name(user), sep="➥ ", html=True)
     success = failed = 0
-    async for gg in kst.client.iter_dialogs():
+    if kst.client._dialogs:
+        dialog = kst.client._dialogs
+    else:
+        dialog = await kst.client.get_dialogs()
+        kst.client._dialogs.extend(dialog)
+    for gg in dialog:
         if gg.is_group or gg.is_channel:
             try:
                 await kst.client.edit_permissions(gg.id, user.id, view_messages=True)
@@ -141,14 +173,19 @@ async def _(kst):
     msg = await kst.eor("`Gkicking...`", silent=True)
     user, _ = await get_user(kst)
     if not user:
-        return await msg.eor("`Reply to some message or add their id.`", time=8)
+        return await msg.eor("`Reply to some message or add their id.`", time=5)
     if user.id == kst.client.uid:
         return await msg.eor("`I can't gkick myself.`", time=5)
     if user.id in DEVS:
         return await msg.eor("`I can't gkick our Developers.`", time=5)
     userlink = mentionuser(user.id, display_name(user), sep="➥ ", html=True)
     success = failed = 0
-    async for gg in kst.client.iter_dialogs():
+    if kst.client._dialogs:
+        dialog = kst.client._dialogs
+    else:
+        dialog = await kst.client.get_dialogs()
+        kst.client._dialogs.extend(dialog)
+    for gg in dialog:
         if gg.is_group or gg.is_channel:
             try:
                 await kst.client.kick_participant(gg.id, user.id)
@@ -191,7 +228,7 @@ async def _(kst):
     elif kst.is_reply:
         content = await kst.get_reply_message()
     else:
-        return await kst.eod("`Give some text to Gcast or reply message.`", silent=True)
+        return await kst.eor("`Give some text to Gcast or reply message.`", time=5, silent=True)
     start_time = time.time()
     msg = await kst.eor(
         "⚡ __**Gcasting to {}...**__".format(
@@ -206,7 +243,12 @@ async def _(kst):
         attempts=6,
         fallbacks=DEFAULT_GCAST_BLACKLIST,
     )
-    async for gg in kst.client.iter_dialogs():
+    if kst.client._dialogs:
+        dialog = kst.client._dialogs
+    else:
+        dialog = await kst.client.get_dialogs()
+        kst.client._dialogs.extend(dialog)
+    for gg in dialog:
         if gg.is_group:
             chat = gg.entity.id
             if int("-100" + str(chat)) not in GCAST_BLACKLIST and (
@@ -245,6 +287,7 @@ async def _(kst):
                     caption=r"\\**#Getter**// `Gcast Error Logs`",
                     force_document=True,
                     allow_cache=False,
+                    reply_to=msg.id,
                     silent=True,
                 )
     await msg.eor(text)
@@ -268,7 +311,7 @@ async def _(kst):
     elif kst.is_reply:
         content = await kst.get_reply_message()
     else:
-        return await kst.eod("`Give some text to Gucast or reply message.`", silent=True)
+        return await kst.eor("`Give some text to Gucast or reply message.`", time=5, silent=True)
     start_time = time.time()
     msg = await kst.eor(
         "⚡ __**Gucasting in all pm users...**__",
@@ -281,7 +324,12 @@ async def _(kst):
         fallbacks=DEFAULT_GUCAST_BLACKLIST,
     )
     DND = set(DEVS + GUCAST_BLACKLIST)
-    async for gg in kst.client.iter_dialogs():
+    if kst.client._dialogs:
+        dialog = kst.client._dialogs
+    else:
+        dialog = await kst.client.get_dialogs()
+        kst.client._dialogs.extend(dialog)
+    for gg in dialog:
         if gg.is_user and not gg.entity.bot:
             chat = gg.id
             if chat not in DND:
@@ -308,30 +356,13 @@ async def _(kst):
     await msg.eor(text)
 
 
-HELP.update(
-    {
-        "globals": [
-            "Globals",
-            """❯ `{i}gban <reply/username> <reason (optional)>`
-Globally Ban user (temporary) and report as spam.
+plugins_help["global"] = {
+    "{i}gban [reply/username] [reason (optional)]": "Globally Ban user (temporary) and report as spam.",
+    "{i}ungban [reply/username]": "Globally Unban user.",
+    "{i}gkick [reply/username]": "Globally Kick user (temporary).",
+    "{i}gcast [text/reply]": "Send broadcast messages to all groups.",
+    "{i}gadmincast [text/reply]": "Same as above, but only in your admin groups.",
+    "{i}gucast [text/reply]": """Send broadcast messages in all pm users.
 
-❯ `{i}ungban <reply/username>`
-Globally Unban user.
-
-❯ `{i}gkick <reply/username>`
-Globally Kick user (temporary).
-
-❯ `{i}gcast <text/reply>`
-Send broadcast messages to all groups.
-
-❯ `{i}gadmincast <text/reply>`
-Same as above, but only in your admin groups.
-
-❯ `{i}gucast <text/reply>`
-Send broadcast messages in all pm users.
-
-**DWYOR ~ Do With Your Own Risk**
-""",
-        ]
-    }
-)
+**DWYOR ~ Do With Your Own Risk**""",
+}

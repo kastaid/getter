@@ -5,15 +5,16 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import os
+import asyncio
 import time
-from contextlib import suppress
 from io import BytesIO
-from validators.url import url
 from . import (
-    HELP,
+    Root,
     kasta_cmd,
+    plugins_help,
+    is_url,
     choice,
+    suppress,
     time_formatter,
     get_random_hex,
     CHROME_BIN,
@@ -30,18 +31,19 @@ async def _(kst):
         from selenium.webdriver.chrome.service import Service
     except ImportError:
         return
-    to_ss = kst.pattern_match.group(1)
-    if not to_ss:
-        return await kst.try_delete()
+    link = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(1)
+    if not link:
+        await kst.eor("`Provide a valid link!`", time=5)
+        return
+    toss = link
+    check_link = is_url(toss)
+    if check_link is not True:
+        toss = f"http://{link}"
+        check_link = is_url(toss)
+    if check_link is not True:
+        return await kst.eod("`Input is not supported link!`")
     msg = await kst.eor("`Processing...`")
     start_time = time.time()
-    toss = to_ss
-    urlss = url(toss)
-    if not urlss:
-        toss = f"http://{to_ss}"
-        urlss = url(toss)
-    if not urlss:
-        return await msg.eod("`Input is not supported url.`")
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")
     options.add_argument("--test-type")
@@ -52,6 +54,8 @@ async def _(kst):
     options.add_argument(
         "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
     )
+    prefs = {"download.default_directory": "./"}
+    options.add_experimental_option("prefs", prefs)
     options.binary_location = CHROME_BIN
     msg = await msg.eor("`Taking Screenshot...`")
     service = Service(executable_path=CHROME_DRIVER)
@@ -63,16 +67,18 @@ async def _(kst):
     width = driver.execute_script(
         "return Math.max(document.body.scrollWidth, document.body.offsetWidth, document.documentElement.clientWidth, document.documentElement.scrollWidth, document.documentElement.offsetWidth);"
     )
-    driver.set_window_size(width + 100, height + 100)
+    driver.set_window_size(width + 125, height + 125)
+    wait_for = height / 1000
+    await asyncio.sleep(int(wait_for))
     ss_png = driver.get_screenshot_as_png()
     msg = await msg.eor("`Screenshot Taked...`")
     driver.close()
     taken = time_formatter((time.time() - start_time) * 1000)
     with suppress(BaseException):
         with BytesIO(ss_png) as file:
-            file.name = f"ss_{to_ss}.png"
+            file.name = f"ss_{link}.png"
             caption = rf"""\\**#Getter**//
-**URL:** `{to_ss}`
+**URL:** `{link}`
 **Taken:** `{taken}`"""
             await kst.client.send_file(
                 kst.chat_id,
@@ -80,7 +86,7 @@ async def _(kst):
                 caption=caption,
                 force_document=True,
                 allow_cache=False,
-                reply_to=kst.reply_to_msg_id or kst.id,
+                reply_to=kst.reply_to_msg_id,
                 silent=True,
             )
     driver.quit()
@@ -96,20 +102,26 @@ async def _(kst):
         from tweetcapture.utils.utils import is_valid_tweet_url
     except ImportError:
         return
-    to_ss = kst.pattern_match.group(1)
-    if not to_ss:
-        return await kst.try_delete()
+    link = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(1)
+    if not link:
+        await kst.eor("`Provide a valid tweet link!`", time=5)
+        return
+    toss = link
+    check_link = is_url(toss)
+    if check_link is not True:
+        toss = f"http://{link}"
+        check_link = is_url(toss)
+    if check_link is not True or not is_valid_tweet_url(link):
+        return await kst.eod("`Input is not valid tweet link!`")
     msg = await kst.eor("`Processing...`")
     start_time = time.time()
-    if not is_valid_tweet_url(to_ss):
-        return await msg.eod("`Input is not valid tweet url.`")
-    msg = await msg.eor("`Taking Tweet Screenshot...`")
     tweet = TweetCapture()
     tweet.set_chromedriver_path(CHROME_DRIVER)
     tweet.add_chrome_argument("--no-sandbox")
     try:
+        msg = await msg.eor("`Taking Tweet Screenshot...`")
         file = await tweet.screenshot(
-            to_ss,
+            link,
             f"tss_{get_random_hex()}.png",
             mode=2,
             night_mode=choice((0, 1, 2)),
@@ -121,7 +133,7 @@ async def _(kst):
     taken = time_formatter((time.time() - start_time) * 1000)
     with suppress(BaseException):
         caption = rf"""\\**#Getter**//
-**URL:** `{to_ss}`
+**URL:** `{link}`
 **Taken:** `{taken}`"""
         await kst.client.send_file(
             kst.chat_id,
@@ -129,26 +141,16 @@ async def _(kst):
             caption=caption,
             force_document=True,
             allow_cache=False,
-            reply_to=kst.reply_to_msg_id or kst.id,
+            reply_to=kst.reply_to_msg_id,
             silent=True,
         )
-    if os.path.exists(file):
-        os.remove(file)
+    (Root / file).unlink(missing_ok=True)
     await msg.try_delete()
 
 
-HELP.update(
-    {
-        "screenshot": [
-            "Screenshot",
-            """❯ `{i}ss <link>`
-Take a full screenshot of a website.
-**Example:** `{i}ss https://google.com`
-
-❯ `{i}tss <twitter_link>`
-Gives screenshot of tweet.
-**Example:** `{i}tss https://twitter.com/jack/status/969234275420655616`
-""",
-        ]
-    }
-)
+plugins_help["screenshot"] = {
+    "{i}ss [link/reply]": """Take a full screenshot of a website.
+**Example:** `{i}ss https://google.com`""",
+    "{i}tss [link/reply]": """Gives screenshot of tweet.
+**Example:** `{i}tss https://twitter.com/jack/status/969234275420655616`""",
+}
