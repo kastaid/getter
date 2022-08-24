@@ -6,19 +6,20 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
+import mimetypes
 import random
-from io import BytesIO
 from PIL import Image, ImageEnhance, ImageOps
 from telethon.errors import YouBlockedUserError
 from telethon.events import NewMessage
 from telethon.tl.functions.contacts import UnblockRequest
-from telethon.tl.types import DocumentAttributeFilename
+from telethon.tl.types import MessageMediaPhoto, DocumentAttributeFilename
 from . import (
     Root,
     kasta_cmd,
     plugins_help,
     suppress,
     make_async,
+    Screenshot,
 )
 
 FRY_BOT = "image_deepfrybot"
@@ -27,6 +28,7 @@ FRY_BOT = "image_deepfrybot"
 @kasta_cmd(
     pattern="fry(?: |$)([1-8])?",
     func=lambda e: e.is_reply,
+    no_crash=True,
 )
 async def _(kst):
     match = kst.pattern_match.group(1)
@@ -41,28 +43,47 @@ async def _(kst):
         return
     msg = await kst.eor("`Frying...`")
     resp = None
+    ext = None
+    fry_image = Root / ("downloads/" + "fry.jpeg")
+    if isinstance(reply.media, MessageMediaPhoto):
+        file = fry_image
+    else:
+        mim = reply.media.document.mime_type
+        ext = mimetypes.guess_extension(mim)
+        file = Root / ("downloads/" + f"fry{ext}")
+    await kst.client.download_file(reply.media, file=file)
+    if ext and ext in (".mp4", ".gif", ".webm"):
+        ss = await Screenshot(file, 0, fry_image)
+        if not ss:
+            (file).unlink(missing_ok=True)
+            return await msg.try_delete()
+    else:
+        img = Image.open(file)
+        img.convert("RGB").save(fry_image, format="JPEG")
     async with kst.client.conversation(FRY_BOT) as conv:
-        resp = await conv_fry(conv, reply, level)
+        resp = await conv_fry(conv, fry_image, level)
     if not resp:
         return await msg.eod("`Bot did not respond.`")
-    if not getattr(resp.message.media, "document", None):
+    if not getattr(resp.message.media, "photo", None):
         return await msg.eod(f"`{resp.message.message}`")
-    file = resp.message.media
     with suppress(BaseException):
         await kst.client.send_file(
             kst.chat_id,
-            file=file,
+            file=resp.message.media,
             force_document=False,
             allow_cache=False,
             reply_to=kst.reply_to_msg_id,
             silent=True,
         )
     await msg.try_delete()
+    (file).unlink(missing_ok=True)
+    (fry_image).unlink(missing_ok=True)
 
 
 @kasta_cmd(
     pattern="deepfry(?: |$)([1-9])?",
     func=lambda e: e.is_reply,
+    no_crash=True,
 )
 async def _(kst):
     match = kst.pattern_match.group(1)
@@ -76,14 +97,30 @@ async def _(kst):
         await kst.eor("`Reply to actual users message.`", time=5)
         return
     msg = await kst.eor("`Deepfrying...`")
-    image = BytesIO()
-    await kst.client.download_media(data, image)
+    ext = None
+    fry_image = Root / ("downloads/" + "fry.jpeg")
+    if isinstance(reply.media, MessageMediaPhoto):
+        file = fry_image
+    else:
+        mim = reply.media.document.mime_type
+        ext = mimetypes.guess_extension(mim)
+        file = Root / ("downloads/" + f"fry{ext}")
+    await kst.client.download_file(data, file=file)
+    if ext and ext in (".mp4", ".gif", ".webm"):
+        to_deepfry = fry_image
+        ss = await Screenshot(file, 0, fry_image)
+        if not ss:
+            (file).unlink(missing_ok=True)
+            return await msg.try_delete()
+    else:
+        to_deepfry = file
     for _ in range(level):
-        file = await deepfry(image)
+        img = await deepfry(to_deepfry)
+    img.save(fry_image, format="JPEG")
     with suppress(BaseException):
         await kst.client.send_file(
             kst.chat_id,
-            file=file,
+            file=fry_image,
             force_document=False,
             allow_cache=False,
             reply_to=kst.reply_to_msg_id,
@@ -91,12 +128,17 @@ async def _(kst):
         )
     await msg.try_delete()
     (file).unlink(missing_ok=True)
+    (fry_image).unlink(missing_ok=True)
 
 
-async def conv_fry(conv, reply, level):
+async def conv_fry(conv, image, level):
     try:
         resp = conv.wait_event(NewMessage(incoming=True, from_users=conv.chat_id))
-        media = await conv.send_message(reply)
+        media = await conv.send_file(
+            image,
+            force_document=False,
+            allow_cache=False,
+        )
         resp = await resp
         await resp.try_delete()
         msg = await conv.send_message(f"/deepfry {level}", reply_to=media.id)
@@ -109,7 +151,7 @@ async def conv_fry(conv, reply, level):
         return None
     except YouBlockedUserError:
         await conv._client(UnblockRequest(conv.chat_id))
-        return await conv_fry(conv, reply, level)
+        return await conv_fry(conv, image, level)
 
 
 @make_async
@@ -142,14 +184,7 @@ def deepfry(img: Image) -> Image:
     overlay = ImageOps.colorize(overlay, colours[0], colours[1])
     img = Image.blend(img, overlay, random.uniform(0.1, 0.4))
     img = ImageEnhance.Sharpness(img).enhance(random.randint(5, 300))
-    file_name = Root / ("downloads/" + "deepfry.jpeg")
-    img.save(
-        file_name,
-        format="JPEG",
-        quality=90,
-        optimize=True,
-    )
-    return file_name
+    return img
 
 
 def check_media(reply):
@@ -159,7 +194,7 @@ def check_media(reply):
         elif reply.document:
             if DocumentAttributeFilename(file_name="AnimatedSticker.tgs") in reply.media.document.attributes:
                 return False
-            if reply.gif or reply.video or reply.audio or reply.voice:
+            if reply.audio or reply.voice:
                 return False
             data = reply.media.document
         else:
@@ -170,6 +205,6 @@ def check_media(reply):
 
 
 plugins_help["deepfry"] = {
-    "{i}fry [1-8] [reply]": "Frying any image/sticker use image_deepfrybot (default level 3).",
-    "{i}deepfry [1-9] [reply]": "Deepfy any image/sticker and make it look ugly (default level 1).",
+    "{i}fry [1-8] [reply]": "Frying any image/sticker/gif/video use image_deepfrybot (default level 3).",
+    "{i}deepfry [1-9] [reply]": "Deepfy any image/sticker/gif/video and make it look ugly (default level 1).",
 }

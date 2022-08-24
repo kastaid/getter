@@ -10,7 +10,7 @@ import math
 import re
 from functools import partial, wraps
 from io import BytesIO
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional
 from uuid import uuid4
 import aiofiles
 from aiohttp import ClientSession
@@ -347,3 +347,16 @@ async def Carbon(
         async with aiofiles.open(file, mode="wb") as f:
             await f.write(res)
     return file
+
+
+async def Screenshot(
+    video_file: str,
+    duration: int,
+    path: str = "",
+) -> Optional[str]:
+    ttl = duration // 2
+    command = f"ffmpeg -ss {ttl} -i {video_file} -vframes 1 {path}"
+    _, stderr, _, _ = await Runner(command)
+    if stderr:
+        return False
+    return True
