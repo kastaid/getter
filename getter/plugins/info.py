@@ -139,7 +139,10 @@ async def _(kst):
         from_user = (await kst.get_reply_message()).sender_id
     else:
         from_user = "me"
-    msg = await kst.client.get_messages(kst.chat_id, limit=0, from_user=from_user)
+    try:
+        msg = await kst.client.get_messages(kst.chat_id, limit=0, from_user=from_user)
+    except BaseException:
+        return await kst.try_delete()
     user = await kst.client.get_entity(from_user)
     await kst.eor(f"Total messages of <code>{display_name(user)}</code> [<code>{msg.total}</code>]", parse_mode="html")
 
@@ -153,10 +156,10 @@ async def _(kst):
     private_chats = 0
     bots = 0
     groups = 0
-    broadcast_channels = 0
+    channels = 0
     admin_in_groups = 0
     creator_in_groups = 0
-    admin_in_broadcast_channels = 0
+    admin_in_channels = 0
     creator_in_channels = 0
     unread_mentions = 0
     unread = 0
@@ -164,9 +167,9 @@ async def _(kst):
     async for dialog in kst.client.iter_dialogs():
         entity = dialog.entity
         if isinstance(entity, Channel) and entity.broadcast:
-            broadcast_channels += 1
+            channels += 1
             if entity.creator or entity.admin_rights:
-                admin_in_broadcast_channels += 1
+                admin_in_channels += 1
             if entity.creator:
                 creator_in_channels += 1
         elif (isinstance(entity, Channel) and entity.megagroup) or isinstance(entity, Chat):
@@ -183,42 +186,61 @@ async def _(kst):
         unread += dialog.unread_count
     stop_time = time.time() - start_time
     try:
-        ct = (await kst.client(GetBlockedRequest(1, 0))).count
-    except AttributeError:
-        ct = 0
+        bl_count = (await kst.client(GetBlockedRequest(1, 0))).count
+    except BaseException:
+        bl_count = 0
     try:
-        gs = await kst.client(GetSavedGifsRequest(0))
-        gs_count = len(gs.gifs)
+        gs_count = len((await kst.client(GetSavedGifsRequest(0))).gifs)
     except BaseException:
         gs_count = 0
     try:
-        sp = await kst.client(GetAllStickersRequest(0))
-        sp_count = len(sp.sets)
+        sp_count = len((await kst.client(GetAllStickersRequest(0))).sets)
     except BaseException:
         sp_count = 0
     sc_count = await get_total_bot(kst, "Stickers", "/stats")
     bc_count = await get_total_bot(kst, "BotFather", "/setcommands")
     me = await kst.client.get_me()
-    graph = f"<b>Stats for {display_name(me)}</b>"
-    graph += f"\n ├ <b>Private:</b> <code>{private_chats}</code>\n"
-    graph += f" ┊   ├ <b>Users:</b> <code>{private_chats - bots}</code>\n"
-    graph += f" ┊   ├ <b>Bots:</b> <code>{bots}</code>\n"
-    graph += f" ├ <b>Groups:</b> <code>{groups}</code>\n"
-    graph += f" ├ <b>Channels:</b> <code>{broadcast_channels}</code>\n"
-    graph += f" ├ <b>Admin Groups:</b> <code>{admin_in_groups}</code>\n"
-    graph += f" ┊   ├ <b>Creator:</b> <code>{creator_in_groups}</code>\n"
-    graph += f" ┊   ├ <b>Admin Rights:</b> <code>{admin_in_groups - creator_in_groups}</code>\n"
-    graph += f" ├ <b>Admin Channels:</b> <code>{admin_in_broadcast_channels}</code>\n"
-    graph += f" ┊   ├ <b>Creator:</b> <code>{creator_in_channels}</code>\n"
-    graph += f" ┊   ├ <b>Admin Rights:</b> <code>{admin_in_broadcast_channels - creator_in_channels}</code>\n"
-    graph += f" ├ <b>Unread:</b> <code>{unread}</code>\n"
-    graph += f" ├ <b>Unread Mentions:</b> <code>{unread_mentions}</code>\n"
-    graph += f" ├ <b>Blocked Users:</b> <code>{ct}</code>\n"
-    graph += f" ├ <b>Gifs Saved:</b> <code>{gs_count}</code>\n"
-    graph += f" ├ <b>Stickers Pack Installed:</b> <code>{sp_count}</code>\n"
-    graph += f" ├ <b>Stickers Pack Created:</b> <code>{sc_count}</code>\n"
-    graph += f" ├ <b>Bots Created:</b> <code>{bc_count}</code>\n"
-    graph += f" └ <b>It Took:</b> <code>{stop_time:.02f}s</code>"
+    graph = """<b>Stats for {}</b>
+├ <b>Private:</b> <code>{}</code>
+┊  ├ <b>Users:</b> <code>{}</code>
+┊  ├ <b>Bots:</b> <code>{}</code>
+├ <b>Groups:</b> <code>{}</code>
+├ <b>Channels:</b> <code>{}</code>
+├ <b>Admin Groups:</b> <code>{}</code>
+┊  ├ <b>Creator:</b> <code>{}</code>
+┊  ├ <b>Admin Rights:</b> <code>{}</code>
+├ <b>Admin Channels:</b> <code>{}</code>
+┊  ├ <b>Creator:</b> <code>{}</code>
+┊  ├ <b>Admin Rights:</b> <code>{}</code>
+├ <b>Unread:</b> <code>{}</code>
+├ <b>Unread Mentions:</b> <code>{}</code>
+├ <b>Blocked Users:</b> <code>{}</code>
+├ <b>Gifs Saved:</b> <code>{}</code>
+├ <b>Stickers Pack Installed:</b> <code>{}</code>
+├ <b>Stickers Pack Created:</b> <code>{}</code>
+├ <b>Bots Created:</b> <code>{}</code>
+└ <b>It Took:</b> <code>{}s</code>""".format(
+        display_name(me),
+        private_chats,
+        private_chats - bots,
+        bots,
+        groups,
+        channels,
+        admin_in_groups,
+        creator_in_groups,
+        admin_in_groups - creator_in_groups,
+        admin_in_channels,
+        creator_in_channels,
+        admin_in_channels - creator_in_channels,
+        unread,
+        unread_mentions,
+        bl_count,
+        gs_count,
+        sp_count,
+        sc_count,
+        bc_count,
+        f"{stop_time:.02f}",
+    )
     await msg.eor(graph, parse_mode="html")
     await asyncio.sleep(3)
 
@@ -244,9 +266,9 @@ async def _info(kst):
     dc_id = user.photo and user.photo.dc_id or 0
     first_name = html.escape(user.first_name).replace("\u2060", "")
     last_name = (
-        user.last_name and "\n ├ <b>Last Name:</b> <code>{}</code>".format(user.last_name.replace("\u2060", "")) or ""
+        user.last_name and "\n├ <b>Last Name:</b> <code>{}</code>".format(user.last_name.replace("\u2060", "")) or ""
     )
-    username = user.username and "\n ├ <b>Username:</b> @{}".format(user.username) or ""
+    username = user.username and "\n├ <b>Username:</b> @{}".format(user.username) or ""
     user_lang = user.lang_code or "en"
     user_photos = (await kst.client.get_profile_photos(user_id, limit=0)).total or 0
     user_status = get_user_status(user)
@@ -255,30 +277,28 @@ async def _info(kst):
     is_spamwatch_banned = await get_spamwatch_banned(kst, user_id)
     is_cas_banned = await get_cas_banned(kst, user_id)
     caption = """<b><u>USER INFORMATION</u></b>
- ├ <b>ID:</b> <code>{}</code>
- ├ <b>DC ID:</b> <code>{}</code>
- ├ <b>First Name:</b> <code>{}</code>{}{}
- ├ <b>Language Code:</b> <code>{}</code>
- ├ <b>User Profile:</b> <a href='tg://user?id={}'>Link</a>
- ├ <b>Profile Photos:</b> <code>{}</code>
- ├ <b>Last Seen:</b> <code>{}</code>
- ├ <b>Is Premium User:</b> <code>{}</code>
- ├ <b>Is Mutual Contact:</b> <code>{}</code>
- ├ <b>Is Blocked User:</b> <code>{}</code>
- ├ <b>Is Private Forward:</b> <code>{}</code>
- ├ <b>Is Fake:</b> <code>{}</code>
- ├ <b>Is Scam:</b> <code>{}</code>
- ├ <b>Is Restricted:</b> <code>{}</code>
- ├ <b>Is Verified:</b> <code>{}</code>
- ├ <b>Is Support:</b> <code>{}</code>
- ├ <b>Is Bot:</b> <code>{}</code>
- ├ <b>Is Deleted:</b> <code>{}</code>
- ├ <b>Is Rose Fban:</b> <code>{}</code>
- ├ <b>Is SpamWatch Banned:</b> <code>{}</code>
- ├ <b>Is CAS Banned:</b> <code>{}</code>
- ├ <b>Groups In Common:</b> <code>{}</code>
- └ <b>Bio:</b>\n<pre>{}</pre>
-""".format(
+├ <b>ID:</b> <code>{}</code>
+├ <b>DC ID:</b> <code>{}</code>
+├ <b>First Name:</b> <code>{}</code>{}{}
+├ <b>Language Code:</b> <code>{}</code>
+├ <b>User Profile:</b> <a href=tg://user?id={}>Link</a>
+├ <b>Profile Photos:</b> <code>{}</code>
+├ <b>Last Seen:</b> <code>{}</code>
+├ <b>★ Premium User:</b> <code>{}</code>
+├ <b>Blocked User:</b> <code>{}</code>
+├ <b>Private Forward:</b> <code>{}</code>
+├ <b>Fake:</b> <code>{}</code>
+├ <b>Scam:</b> <code>{}</code>
+├ <b>Restricted:</b> <code>{}</code>
+├ <b>Verified:</b> <code>{}</code>
+├ <b>Support:</b> <code>{}</code>
+├ <b>Bot:</b> <code>{}</code>
+├ <b>Deleted:</b> <code>{}</code>
+├ <b>Rose Fban:</b> <code>{}</code>
+├ <b>SpamWatch Banned:</b> <code>{}</code>
+├ <b>CAS Banned:</b> <code>{}</code>
+├ <b>Groups In Common:</b> <code>{}</code>
+└ <b>Bio:</b>\n<pre>{}</pre>""".format(
         user_id,
         dc_id,
         first_name,
@@ -289,7 +309,6 @@ async def _info(kst):
         user_photos,
         user_status,
         humanbool(user.premium),
-        humanbool(user.mutual_contact),
         humanbool(full_user.blocked),
         humanbool(bool(full_user.private_forward_name)),
         humanbool(user.fake),
@@ -367,7 +386,7 @@ async def get_chat_info(chat, kst):
     elif isinstance(chat, Chat):
         chat_info = await kst.client(GetFullChatRequest(chat))
     else:
-        return await kst.eor("`Use this for Group/Channel.`")
+        return await kst.eor("`Use this for group/channel.`")
     full = chat_info.full_chat
     chat_photo = full.chat_photo
     broadcast = getattr(chat, "broadcast", False)
@@ -396,10 +415,7 @@ async def get_chat_info(chat, kst):
     )
     creator_username = msg_info.users[0].username if creator_valid and msg_info.users[0].username else None
     created = msg_info.messages[0].date if first_msg_valid else None
-    if not isinstance(chat.photo, ChatPhotoEmpty):
-        dc_id = chat.photo.dc_id
-    else:
-        dc_id = 0
+    dc_id = chat.photo.dc_id if not isinstance(chat.photo, ChatPhotoEmpty) else 0
     restricted_users = getattr(full, "banned_count", None)
     members = getattr(full, "participants_count", chat.participants_count)
     admins = getattr(full, "admins_count", None)
@@ -410,7 +426,7 @@ async def get_chat_info(chat, kst):
     msgs_sent = getattr(full, "read_inbox_max_id", None)
     msgs_sent_alt = getattr(full, "read_outbox_max_id", None)
     exp_count = getattr(full, "pts", None)
-    supergroup = "<b>Yes</b>" if getattr(chat, "megagroup", None) else "No"
+    supergroup = humanbool(getattr(chat, "megagroup", None))
     creator_username = "@{}".format(creator_username) if creator_username else None
     if not admins:
         try:
@@ -427,62 +443,62 @@ async def get_chat_info(chat, kst):
         except BaseException:
             pass
     caption = "<b><u>CHAT INFO</u></b>\n"
-    caption += f" ├ <b>ID:</b> <code>{chat.id}</code>\n"
+    caption += f"├ <b>ID:</b> <code>{chat.id}</code>\n"
     if chat_title:
-        caption += f" ├ <b>{chat_type} Name:</b> <code>{chat_title}</code>\n"
+        caption += f"├ <b>{chat_type} Name:</b> <code>{chat_title}</code>\n"
     if chat.username:
-        caption += f" ├ <b>Link:</b> @{chat.username}\n"
+        caption += f"├ <b>Link:</b> @{chat.username}\n"
     else:
-        caption += f" ├ <b>{chat_type} type:</b> Private\n"
+        caption += f"├ <b>{chat_type} type:</b> Private\n"
     if creator_username:
-        caption += f" ├ <b>Creator:</b> {creator_username}\n"
+        caption += f"├ <b>Creator:</b> {creator_username}\n"
     elif creator_valid:
-        caption += f' ├ <b>Creator:</b> <a href="tg://user?id={creator_id}">{creator_firstname}</a>\n'
+        caption += f"├ <b>Creator:</b> <a href=tg://user?id={creator_id}>{creator_firstname}</a>\n"
     if created:
-        caption += f" ├ <b>Created:</b> <code>{created.date().strftime('%b %d, %Y')} - {created.time()}</code>\n"
+        caption += f"├ <b>Created:</b> <code>{created.date().strftime('%b %d, %Y')} - {created.time()}</code>\n"
     else:
-        caption += f" ├ <b>Created:</b> <code>{chat.date.date().strftime('%b %d, %Y')} - {chat.date.time()}</code>\n"
-    caption += f" ├ <b>DC ID:</b> <code>{dc_id}</code>\n"
+        caption += f"├ <b>Created:</b> <code>{chat.date.date().strftime('%b %d, %Y')} - {chat.date.time()}</code>\n"
+    caption += f"├ <b>DC ID:</b> <code>{dc_id}</code>\n"
     if exp_count:
         chat_level = int((1 + math.sqrt(1 + 7 * exp_count / 14)) / 2)
-        caption += f" ├ <b>{chat_type} Level:</b> <code>{chat_level}</code>\n"
+        caption += f"├ <b>{chat_type} Level:</b> <code>{chat_level}</code>\n"
     if msgs_viewable:
-        caption += f" ├ <b>Viewable Messages:</b> <code>{msgs_viewable}</code>\n"
+        caption += f"├ <b>Viewable Messages:</b> <code>{msgs_viewable}</code>\n"
     if msgs_sent:
-        caption += f" ├ <b>Messages Sent:</b> <code>{msgs_sent}</code>\n"
+        caption += f"├ <b>Messages Sent:</b> <code>{msgs_sent}</code>\n"
     elif msgs_sent_alt:
-        caption += f" ├ <b>Messages Sent:</b> <code>{msgs_sent_alt}</code>\n"
+        caption += f"├ <b>Messages Sent:</b> <code>{msgs_sent_alt}</code>\n"
     if members:
-        caption += f" ├ <b>Members:</b> <code>{members}</code>\n"
+        caption += f"├ <b>Members:</b> <code>{members}</code>\n"
     if admins:
-        caption += f" ├ <b>Administrators:</b> <code>{admins}</code>\n"
+        caption += f"├ <b>Administrators:</b> <code>{admins}</code>\n"
     if full.bot_info:
-        caption += f" ├ <b>Bots:</b> <code>{len(full.bot_info)}</code>\n"
+        caption += f"├ <b>Bots:</b> <code>{len(full.bot_info)}</code>\n"
     if members_online:
-        caption += f" ├ <b>Currently Online:</b> <code>{members_online}</code>\n"
+        caption += f"├ <b>Currently Online:</b> <code>{members_online}</code>\n"
     if restricted_users:
-        caption += f" ├ <b>Restricted Users:</b> <code>{restricted_users}</code>\n"
+        caption += f"├ <b>Restricted Users:</b> <code>{restricted_users}</code>\n"
     if banned_users:
-        caption += f" ├ <b>Banned Users:</b> <code>{banned_users}</code>\n"
+        caption += f"├ <b>Banned Users:</b> <code>{banned_users}</code>\n"
     if group_stickers:
-        caption += f' ├ <b>{chat_type} Stickers:</b> <a href="t.me/addstickers/{full.stickerset.short_name}">{group_stickers}</a>\n'
+        caption += f'├ <b>{chat_type} Stickers:</b> <a href="t.me/addstickers/{full.stickerset.short_name}">{group_stickers}</a>\n'
     if not broadcast:
         if getattr(chat, "slowmode_enabled", None):
-            caption += f" ├ <b>Slow Mode:</b> <code>{full.slowmode_seconds}s</code>\n"
+            caption += f"├ <b>Slow Mode:</b> <code>{full.slowmode_seconds}s</code>\n"
         else:
-            caption += f" ├ <b>Supergroup:</b> {supergroup}\n"
+            caption += f"├ <b>Supergroup:</b> <code>{supergroup}</code>\n"
     if getattr(chat, "restricted", None):
-        caption += f" ├ <b>Restricted:</b> {chat.restricted}\n"
+        caption += f"├ <b>Restricted:</b> {chat.restricted}\n"
         rist = chat.restriction_reason[0]
-        caption += f"   > Platform: {rist.platform}\n"
-        caption += f"   > Reason: {rist.reason}\n"
-        caption += f"   > Text: {rist.text}\n"
+        caption += f"  > Platform: {rist.platform}\n"
+        caption += f"  > Reason: {rist.reason}\n"
+        caption += f"  > Text: {rist.text}\n"
     if getattr(chat, "scam", None):
-        caption += " ├ <b>Scam:</b> <b>Yes</b>\n"
+        caption += "├ <b>Scam:</b> <code>Yes</code>\n"
     if getattr(chat, "verified", None):
-        caption += f" ├ <b>Verified By Telegram:</b> <code>Yes</code>\n"
+        caption += f"├ <b>Verified By Telegram:</b> <code>Yes</code>\n"
     if full.about:
-        caption += f" └ <b>Description:</b>\n<pre>{full.about}</pre>"
+        caption += f"└ <b>Description:</b>\n<pre>{full.about}</pre>"
     return chat_photo, caption
 
 

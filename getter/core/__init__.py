@@ -19,6 +19,8 @@ from .functions import (
     get_user,
     get_chat_msg_id,
     parse_pre,
+    replace_all,
+    md_to_html,
     strip_format,
     strip_emoji,
     chunk,

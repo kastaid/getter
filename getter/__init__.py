@@ -47,7 +47,7 @@ for d in DIRS:
 [c.unlink(missing_ok=True) for c in Root.rglob("*s_list.csv")]
 
 LOOP = get_event_loop()
-EXECUTOR = ThreadPoolExecutor(max_workers=multiprocessing.cpu_count() * 5, thread_name_prefix="App")
+EXECUTOR = ThreadPoolExecutor(max_workers=multiprocessing.cpu_count() * 5, thread_name_prefix="Getter")
 WORKER = {}
 CALLS = {}
 TESTER = {5215824623}

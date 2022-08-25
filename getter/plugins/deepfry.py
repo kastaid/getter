@@ -58,8 +58,12 @@ async def _(kst):
             (file).unlink(missing_ok=True)
             return await msg.try_delete()
     else:
-        img = Image.open(file)
-        img.convert("RGB").save(fry_image, format="JPEG")
+        try:
+            img = Image.open(file)
+            img.convert("RGB").save(fry_image, format="JPEG")
+        except BaseException:
+            (file).unlink(missing_ok=True)
+            return await msg.try_delete()
     async with kst.client.conversation(FRY_BOT) as conv:
         resp = await conv_fry(conv, fry_image, level)
     if not resp:
@@ -114,9 +118,13 @@ async def _(kst):
             return await msg.try_delete()
     else:
         to_deepfry = file
-    for _ in range(level):
-        img = await deepfry(to_deepfry)
-    img.save(fry_image, format="JPEG")
+    try:
+        for _ in range(level):
+            img = await deepfry(to_deepfry)
+        img.save(fry_image, format="JPEG")
+    except BaseException:
+        (to_deepfry).unlink(missing_ok=True)
+        return await msg.try_delete()
     with suppress(BaseException):
         await kst.client.send_file(
             kst.chat_id,

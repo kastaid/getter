@@ -6,7 +6,6 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-import signal
 import sys
 import time
 from importlib import import_module
@@ -27,7 +26,7 @@ from .core.functions import time_formatter
 from .core.helper import plugins_help
 from .core.property import do_not_remove_credit
 from .core.startup import (
-    shutdown,
+    trap,
     migrations,
     all_plugins,
     autous,
@@ -39,18 +38,10 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 success_msg = ">> Visit @kastaid for Updates !!"
 
 if Var.DEV_MODE:
+    trap()
     LOGS.warning(
         "\nDEV_MODE config enabled.\nSome codes and functions will not work.\nIf you need to run in production then comment DEV_MODE or set value to False or remove them!"
     )
-
-
-def trap() -> None:
-    for signame in ("SIGINT", "SIGTERM", "SIGABRT"):
-        sig = getattr(signal, signame)
-        LOOP.add_signal_handler(sig, lambda s=sig: asyncio.create_task(shutdown(s.name)))
-
-
-trap()
 
 
 async def main() -> None:
@@ -73,7 +64,6 @@ async def main() -> None:
         tuple(plugins),
     )
     LOGS.info(loaded_msg)
-    await asyncio.sleep(1)
     do_not_remove_credit()
     launch_time = time_formatter((time.time() - StartTime) * 1000)
     python_msg = ">> Python Version - {}".format(
@@ -93,9 +83,7 @@ async def main() -> None:
     LOGS.info(python_msg)
     LOGS.info(telethon_msg)
     LOGS.info(launch_msg)
-    await asyncio.sleep(1)
     LOGS.info(__license__)
-    await asyncio.sleep(1)
     LOGS.info(__copyright__)
     await autous(getter_app.uid)
     LOGS.success(success_msg)
@@ -111,7 +99,7 @@ if __name__ == "__main__":
         asyncio.CancelledError,
     ):
         pass
-    except (ModuleNotFoundError, ImportError) as err:
+    except (ImportError, ModuleNotFoundError) as err:
         LOGS.exception("[MAIN_MODULE_IMPORT] : {}".format(err))
         sys.exit(1)
     except Exception as err:

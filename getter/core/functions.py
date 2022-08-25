@@ -10,7 +10,7 @@ import math
 import os
 import re
 import sys
-from functools import partial, wraps
+from functools import partial, wraps, reduce
 from io import BytesIO
 from typing import Union, Tuple, Optional
 from uuid import uuid4
@@ -19,6 +19,7 @@ import aiohttp
 from bs4 import BeautifulSoup
 from emoji import replace_emoji
 from markdown import markdown
+from markdownify import markdownify
 from telethon.tl.types import (
     MessageEntityMentionName,
     MessageEntityPre,
@@ -48,19 +49,17 @@ def mentionuser(
     sep: str = "",
     html: bool = False,
 ) -> str:
-    if html:
-        return f"<a href=tg://user?id={user_id}>{sep}{name}</a>"
-    return f"[{sep}{name}](tg://user?id={user_id})"
+    return html and f"<a href=tg://user?id={user_id}>{sep}{name}</a>" or f"[{sep}{name}](tg://user?id={user_id})"
 
 
 def display_name(user) -> str:
     name = get_display_name(user)
-    return name if name else "{}".format(user.first_name or "none")
+    return name and name or "{}".format(user.first_name or "none")
 
 
 def get_doc_mime(media) -> str:
     media_type = str((str(media)).split("(", maxsplit=1)[0])
-    return media.document.mime_type if media_type == "MessageMediaDocument" else ""
+    return media_type == "MessageMediaDocument" and media.document.mime_type or ""
 
 
 def humanbool(b) -> str:
@@ -157,10 +156,30 @@ def parse_pre(text: str) -> str:
     )
 
 
-def strip_format(md: str) -> str:
-    html = markdown(md)
-    soup = BeautifulSoup(html, features="html.parser")
-    return soup.get_text().replace("```", "").strip()
+def replace_all(
+    text: str,
+    repls: dict,
+    regex: bool = False,
+) -> str:
+    if regex:
+        return reduce(lambda a, kv: re.sub(*kv, a), repls.items(), text)
+    return reduce(lambda a, kv: a.replace(*kv), repls.items(), text)
+
+
+def md_to_html(text: str) -> str:
+    repls = {r"\*(.*)\*": r"__\g<1>__"}
+    return replace_all(markdownify(text), repls, regex=True)
+
+
+def strip_format(text: str) -> str:
+    repls = {
+        "==": "",
+        "~~": "",
+        "--": "",
+        "||": "",
+    }
+    soup = BeautifulSoup(markdown(text), features="html.parser").get_text()
+    return replace_all(soup, repls)
 
 
 def strip_emoji(text: str) -> str:
@@ -367,4 +386,4 @@ async def Screenshot(
     ttl = duration // 2
     command = f'''ffmpeg -v quiet -ss {ttl} -i "{video_file}" -vframes 1 "{output_file}"'''
     await Runner(command)
-    return output_file if os.path.exists(output_file) else None
+    return os.path.exists(output_file) and output_file or None
