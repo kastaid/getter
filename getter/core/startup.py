@@ -6,6 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
+import signal
 from contextlib import suppress
 from typing import List, Tuple
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
@@ -38,6 +39,12 @@ async def shutdown(signum: str) -> None:
     EXECUTOR.shutdown(wait=False)
     await LOOP.shutdown_asyncgens()
     LOOP.stop()
+
+
+def trap() -> None:
+    for signame in ("SIGINT", "SIGTERM", "SIGABRT"):
+        sig = getattr(signal, signame)
+        LOOP.add_signal_handler(sig, lambda s=sig: asyncio.create_task(shutdown(s.name)))
 
 
 def migrations(app=None) -> None:

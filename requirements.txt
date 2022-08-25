@@ -11,8 +11,9 @@ async-cache==1.1.1
 aiofiles==0.8.0
 aiocsv==1.2.2
 aiohttp[speedups]==3.8.1
-beautifulsoup4==4.11.1
+markdownify==0.11.2
 Markdown==3.4.1
+beautifulsoup4==4.11.1
 emoji==2.0.0
 validators==0.20.0
 tweet-capture==0.0.13

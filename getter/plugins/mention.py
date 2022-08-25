@@ -23,6 +23,7 @@ from . import (
     mentionuser,
     display_name,
     get_user,
+    md_to_html,
     EMOJITAG,
 )
 
@@ -78,7 +79,7 @@ async def _(kst):
                 users.append("<b>👮 Admin:</b> {}".format(to_mention(x)))
             if isinstance(x.participant, ChannelParticipantCreator):
                 users.append("<b>🤴 Owner:</b> {}".format(to_mention(x)))
-    caption = f"{caption}\n" if caption else caption
+    caption = f"{md_to_html(caption)}\n" if caption else caption
     for men in list(user_list(users, DEFAULT_PERUSER)):
         try:
             if chat_id not in ATAGS:
@@ -141,7 +142,7 @@ async def _(kst):
                 users.append(" {} ".format(mentionuser(x.id, choice(EMOJITAG), html=True)))
             if isinstance(x.participant, ChannelParticipantCreator):
                 users.append(" {} ".format(mentionuser(x.id, choice(EMOJITAG), html=True)))
-    caption = f"{caption}\n" if caption else caption
+    caption = f"{md_to_html(caption)}\n" if caption else caption
     for men in list(user_list(users, DEFAULT_PERUSER)):
         try:
             if chat_id not in ETAGS:
