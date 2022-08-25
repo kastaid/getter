@@ -365,8 +365,6 @@ async def Screenshot(
     output_file: str = "",
 ) -> Optional[str]:
     ttl = duration // 2
-    command = f'''ffmpeg -ss {ttl} -i "{video_file}" -vframes 1 "{output_file}"'''
-    _, stderr, _, _ = await Runner(command)
-    if stderr:
-        LOGS.error(stderr)
+    command = f'''ffmpeg -v quiet -ss {ttl} -i "{video_file}" -vframes 1 "{output_file}"'''
+    await Runner(command)
     return output_file if os.path.exists(output_file) else None
