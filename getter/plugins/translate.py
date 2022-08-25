@@ -15,6 +15,7 @@ from . import (
     parse_pre,
     strip_format,
     strip_emoji,
+    run_async,
 )
 
 
@@ -118,7 +119,7 @@ async def _(kst):
     try:
         text = strip_format(strip_emoji(words))
         file = Root / ("downloads/" + "voice.mp3")
-        voice = gTTS(text, lang=lang, slow=False)
+        voice = await run_async(gTTS, text, lang=lang, slow=False)
         voice.save(file)
         await kst.client.send_file(
             kst.chat_id,

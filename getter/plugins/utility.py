@@ -6,19 +6,18 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import mimetypes
-import sys
 import time
-import aiohttp
 from geopy.geocoders import Nominatim
 from telethon.tl.types import MessageMediaPhoto, InputMediaGeoPoint, InputGeoPoint
+from validators.ip_address import ipv4
 from . import (
-    __version__,
     Root,
     kasta_cmd,
     plugins_help,
     suppress,
     is_url,
     time_formatter,
+    humanbool,
     get_random_hex,
     get_chat_msg_id,
     Searcher,
@@ -152,17 +151,9 @@ async def _(kst):
         await kst.eor("`Provide a valid link!`", time=5)
         return
     msg = await kst.eor("`Processing...`")
-    headers = {
-        "User-Agent": "Python/{0[0]}.{0[1]} aiohttp/{1} getter/{2}".format(
-            sys.version_info,
-            aiohttp.__version__,
-            __version__,
-        )
-    }
     if kst.pattern_match.group(1).strip() == "un":
         res = await Searcher(
             url=text,
-            headers=headers,
             real=True,
             allow_redirects=False,
         )
@@ -171,14 +162,66 @@ async def _(kst):
         output = "**Unshorted Link:** {}\n**Your Link:** {}".format(res.headers.get("location"), text)
     else:
         url = f"https://da.gd/s?url={text}"
-        res = await Searcher(
-            url=url,
-            headers=headers,
-        )
+        res = await Searcher(url=url)
         if not res:
             return await msg.eod("`Try again now!`")
         output = "**Shorted Link:** {}\n**Your Link:** {}".format(res.strip(), text)
     await msg.eor(output)
+
+
+@kasta_cmd(
+    pattern="ipinfo(?: |$)(.*)",
+    no_crash=True,
+)
+async def _(kst):
+    ipaddr = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(1)
+    if not ipaddr or ipv4(ipaddr) is not True:
+        await kst.eor("`Provide a valid IP Address!`", time=5)
+        return
+    msg = await kst.eor("`Processing...`")
+    url = f"http://ip-api.com/json/{ipaddr}?fields=status,message,continent,country,countryCode,regionName,city,zip,lat,lon,timezone,currency,isp,mobile,query"
+    res = await Searcher(url=url, re_json=True)
+    if not res:
+        return await msg.eod("`Try again now!`")
+    if str(res.get("status")) == "success":
+        text = """
+**IP:** `{}`
+**City:** `{}`
+**Region:** `{}`
+**Country:** `{}`
+**Country Code:** `{}`
+**Currency:** `{}`
+**Continent:** `{}`
+**Co-ordinates:** `{}`
+**Postal Code:** `{}`
+**Time Zone:** `{}`
+**ISP:** `{}`
+**Mobile:** `{}`
+""".format(
+            res.get("query") or "?",
+            res.get("city") or "?",
+            res.get("regionName") or "?",
+            res.get("country") or "?",
+            res.get("countryCode") or "?",
+            res.get("currency") or "?",
+            res.get("continent") or "?",
+            str(res.get("lat")) + ", " + str(res.get("lon")),
+            res.get("zip") or "?",
+            res.get("timezone") or "?",
+            res.get("isp") or "?",
+            humanbool(res.get("mobile")),
+        )
+    else:
+        text = """
+**IP:** `{}`
+**Status:** `{}`
+**Message:** `{}`
+""".format(
+            res.get("query"),
+            res.get("status"),
+            res.get("message"),
+        )
+    await msg.eor(text)
 
 
 plugins_help["utility"] = {
@@ -192,5 +235,6 @@ plugins_help["utility"] = {
     "{i}baidu [keywords/reply]": "How to Baidu...",
     "{i}ecosia [keywords/reply]": "How to Ecosia...",
     "{i}short [link/reply]": "Shorten a link into `da.gd` link.",
-    "{i}unshort [shortlink/reply]": "Reverse the shortened link to real link.",
+    "{i}unshort [short_link/reply]": "Reverse the shortened link to real link.",
+    "{i}ipinfo [ip_address/reply]": "Get info about IP address.",
 }

@@ -14,10 +14,8 @@ import time
 from io import BytesIO
 from pathlib import Path
 import aiofiles
-import aiohttp
 from telethon import functions
 from . import (
-    __version__,
     StartTime,
     Root,
     DEVS,
@@ -87,19 +85,11 @@ async def _(kst):
         await kst.eor("`Provide a text!`", time=5)
         return
     msg = await kst.eor("`Processing...`")
-    headers = {
-        "User-Agent": "Python/{0[0]}.{0[1]} aiohttp/{1} getter/{2}".format(
-            sys.version_info,
-            aiohttp.__version__,
-            __version__,
-        )
-    }
     url = "https://hastebin.com"
     res = await Searcher(
         url=f"{url}/documents",
         post=True,
-        data=text.encode("UTF-8"),
-        headers=headers,
+        data=text.encode("utf-8"),
         re_json=True,
     )
     if not res:

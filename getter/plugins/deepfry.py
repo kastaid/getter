@@ -51,7 +51,7 @@ async def _(kst):
         mim = reply.media.document.mime_type
         ext = mimetypes.guess_extension(mim)
         file = Root / ("downloads/" + f"fry{ext}")
-    await kst.client.download_file(reply.media, file=file)
+    await kst.client.download_media(reply.media, file=file)
     if ext and ext in (".mp4", ".gif", ".webm"):
         ss = await Screenshot(file, 0, fry_image)
         if not ss:
@@ -105,7 +105,7 @@ async def _(kst):
         mim = reply.media.document.mime_type
         ext = mimetypes.guess_extension(mim)
         file = Root / ("downloads/" + f"fry{ext}")
-    await kst.client.download_file(data, file=file)
+    await kst.client.download_media(data, file=file)
     if ext and ext in (".mp4", ".gif", ".webm"):
         to_deepfry = fry_image
         ss = await Screenshot(file, 0, fry_image)
