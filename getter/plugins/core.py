@@ -190,7 +190,7 @@ async def _(kst):
                                 waitfor = int("".join(filter(str.isdigit, error.lower())))
                             except ValueError:
                                 waitfor = 0
-                            flood = time_formatter(waitfor)
+                            flood = time_formatter(waitfor * 1000)
                             await msg.eor(
                                 with_error_text.format(
                                     flood,
