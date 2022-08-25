@@ -7,13 +7,15 @@
 
 import asyncio
 import math
+import os
 import re
+import sys
 from functools import partial, wraps
 from io import BytesIO
 from typing import Union, Tuple, Optional
 from uuid import uuid4
 import aiofiles
-from aiohttp import ClientSession
+import aiohttp
 from bs4 import BeautifulSoup
 from emoji import replace_emoji
 from markdown import markdown
@@ -28,7 +30,7 @@ from telethon.tl.types import (
     UserStatusRecently,
 )
 from telethon.utils import add_surrogate, get_display_name
-from .. import LOOP, EXECUTOR
+from .. import __version__, LOOP, EXECUTOR
 from ..logger import LOGS
 
 
@@ -86,7 +88,6 @@ def get_user_status(user: User) -> str:
 async def get_user(kst, group=1):
     args = kst.pattern_match.group(group).split(" ", 1)
     extra = None
-    await kst.get_input_chat()
     try:
         if args:
             user = args[0]
@@ -109,9 +110,8 @@ async def get_user(kst, group=1):
             if len(args) > 1:
                 extra = "".join(args[1:])
             if user.isdecimal() or (user.startswith("-") and user[1:].isdecimal()):
-                user_obj = type("user", (object,), {})
-                user_obj.id = int(user)
-                user_obj.first_name = user
+                obj = partial(type, "user", ())
+                user_obj = obj({"id": int(user), "first_name": user})
                 return user_obj, extra
             return None, None
         else:
@@ -129,9 +129,8 @@ async def get_user(kst, group=1):
                 user_obj = await kst.client.get_entity(user_id)
                 return user_obj, extra
             except ValueError:
-                user_obj = type("user", (object,), {})
-                user_obj.id = user_id
-                user_obj.first_name = str(user_id)
+                obj = partial(type, "user", ())
+                user_obj = obj({"id": user_id, "first_name": str(user_id)})
                 return user_obj, extra
         if not args:
             return None, None
@@ -254,9 +253,12 @@ async def Runner(cmd: str) -> Tuple[str, str, int, int]:
         stderr=asyncio.subprocess.PIPE,
     )
     stdout, stderr = await proc.communicate()
-    err = stderr.decode().strip()
-    out = stdout.decode().strip()
-    return (out, err, proc.returncode, proc.pid)
+    return (
+        stdout.decode("utf-8", "replace").strip(),
+        stderr.decode("utf-8", "replace").strip(),
+        proc.returncode,
+        proc.pid,
+    )
 
 
 async def Searcher(
@@ -273,7 +275,15 @@ async def Searcher(
     *args,
     **kwargs,
 ):
-    async with ClientSession(headers=headers) as session:
+    if not headers:
+        headers = {
+            "User-Agent": "Python/{0[0]}.{0[1]} aiohttp/{1} getter/{2}".format(
+                sys.version_info,
+                aiohttp.__version__,
+                __version__,
+            )
+        }
+    async with aiohttp.ClientSession(headers=headers) as session:
         try:
             if post:
                 resp = await session.post(
@@ -352,11 +362,11 @@ async def Carbon(
 async def Screenshot(
     video_file: str,
     duration: int,
-    path: str = "",
+    output_file: str = "",
 ) -> Optional[str]:
     ttl = duration // 2
-    command = f"ffmpeg -ss {ttl} -i {video_file} -vframes 1 {path}"
+    command = f'''ffmpeg -ss {ttl} -i "{video_file}" -vframes 1 "{output_file}"'''
     _, stderr, _, _ = await Runner(command)
     if stderr:
-        return False
-    return True
+        LOGS.error(stderr)
+    return output_file if os.path.exists(output_file) else None

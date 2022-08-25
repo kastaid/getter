@@ -6,13 +6,10 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
+import base64
 import binascii
 import re
-import sys
-from base64 import b64encode, b64decode
-import aiohttp
 from . import (
-    __version__,
     kasta_cmd,
     plugins_help,
     parse_pre,
@@ -157,7 +154,7 @@ async def _(kst):
     text = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(2)
     if not text:
         return await kst.try_delete()
-    text = b64encode(text.encode("utf-8")).decode()
+    text = base64.b64encode(text.encode("utf-8")).decode()
     await kst.eor(text, parse_mode=parse_pre)
 
 
@@ -170,7 +167,7 @@ async def _(kst):
     if not text:
         return await kst.try_delete()
     try:
-        text = b64decode(text).decode("utf-8", "replace")
+        text = base64.b64decode(text).decode("utf-8", "replace")
     except (binascii.Error, ValueError) as err:
         text = f"Invalid Base64 data: {err}"
     await kst.eor(text, parse_mode=parse_pre)
@@ -187,13 +184,9 @@ async def _(kst):
     cmd = kst.pattern_match.group(1)
     api = "en" if cmd == "morse" else "de"
     msg = await kst.eor("`...`")
-    headers = {
-        "User-Agent": "Python/{0[0]}.{0[1]} aiohttp/{1} getter/{2}".format(
-            sys.version_info, aiohttp.__version__, __version__
-        )
-    }
+    text = text.encode("utf-8")
     url = f"https://notapi.vercel.app/api/morse?{api}={text}"
-    res = await Searcher(url=url, headers=headers, re_json=True)
+    res = await Searcher(url=url, re_json=True)
     if not res:
         return await msg.eod("`Try again now!`")
     await msg.eor(res.get("result"))
@@ -210,15 +203,9 @@ async def _(kst):
     cmd = kst.pattern_match.group(1)
     api = "en" if cmd == "roman" else "de"
     msg = await kst.eor("`...`")
-    headers = {
-        "User-Agent": "Python/{0[0]}.{0[1]} aiohttp/{1} getter/{2}".format(
-            sys.version_info,
-            aiohttp.__version__,
-            __version__,
-        )
-    }
+    text = text.encode("utf-8")
     url = f"https://notapi.vercel.app/api/romans?{api}={text}"
-    res = await Searcher(url=url, headers=headers, re_json=True)
+    res = await Searcher(url=url, re_json=True)
     if not res:
         return await msg.eod("`Try again now!`")
     await msg.eor(res.get("result"))

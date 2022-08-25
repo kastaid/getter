@@ -85,7 +85,7 @@ async def _(kst):
         return await msg.eod("`Can't get any records.`")
     if "No records found" in text:
         return await msg.eod("`Doesn't have any records.`")
-    names, usernames = await sglist(text)
+    names, usernames = sglist(text)
     if names:
         for x in names:
             if x.startswith("⚠️"):
@@ -226,7 +226,7 @@ async def _(kst):
 @kasta_cmd(
     pattern="info(?: |$)(.*)",
 )
-async def _(kst):
+async def _info(kst):
     msg = await kst.eor("`Processing...`")
     target, _ = await get_user(kst, 1)
     if target:
@@ -237,6 +237,8 @@ async def _(kst):
         full = await kst.client(GetFullUserRequest(user_id))
         full_user = full.full_user
         user = full.users[0]
+    except ValueError:
+        return await msg.eod("`Couldn't fetch user info.`")
     except Exception as err:
         return await msg.eor(f"**ERROR:**\n`{err}`")
     dc_id = user.photo and user.photo.dc_id or 0
@@ -599,7 +601,7 @@ async def get_cas_banned(kst, user_id: int) -> bool:
     return res.get("ok")
 
 
-async def sglist(text) -> tuple:
+def sglist(text) -> tuple:
     for x in text:
         if x.startswith("🔗"):
             text.remove(x)
