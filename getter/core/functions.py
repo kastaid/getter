@@ -364,7 +364,7 @@ async def Searcher(
                     json=json,
                     data=data,
                     ssl=ssl,
-                    raise_for_status=True,
+                    raise_for_status=False,
                     *args,
                     **kwargs,
                 )
@@ -373,7 +373,7 @@ async def Searcher(
                     url=url,
                     params=params,
                     ssl=ssl,
-                    raise_for_status=True,
+                    raise_for_status=False,
                     *args,
                     **kwargs,
                 )
@@ -406,12 +406,12 @@ async def Carbon(
     **kwargs,
 ):
     kwargs["code"] = code
-    kwargs["language"] = "auto"
     if rayso:
         url = "https://rayso.herokuapp.com/api"
         kwargs["title"] = kwargs.get("title", "getter")
         kwargs["theme"] = kwargs.get("theme", "raindrop")
         kwargs["darkMode"] = kwargs.get("darkMode", True)
+        kwargs["background"] = kwargs.get("background", True)
     res = await Searcher(
         url=url,
         post=True,
