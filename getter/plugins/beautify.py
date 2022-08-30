@@ -12,7 +12,6 @@ from . import (
     plugins_help,
     choice,
     suppress,
-    display_name,
     mentionuser,
     get_doc_mime,
     Carbon,
@@ -65,7 +64,8 @@ async def _(kst):
         windowTheme=windowTheme,
     )
     if not carbon:
-        return await yy.try_delete()
+        await yy.eod("`Carbon API not responding.`")
+        return
     with suppress(BaseException):
         await kst.client.send_file(
             kst.chat_id,
@@ -104,29 +104,26 @@ async def _(kst):
             (Root / file).unlink(missing_ok=True)
         else:
             code = reply.text
-        from_user = reply.sender
     else:
         try:
             code = match.split(maxsplit=1)[1] if is_theme else match
         except IndexError:
             code = match
-        from_user = await kst.client.get_entity("me")
     if not code:
         return await kst.eod("`Reply to text message or readable file.`")
     yy = await kst.eor("`Processing...`")
-    title = display_name(from_user)
     darkMode = choice((True, False))
     rayso = await Carbon(
         code,
         file_name="rayso",
         download=True,
         rayso=True,
-        title=title,
         theme=theme,
         darkMode=darkMode,
     )
     if not rayso:
-        return await yy.try_delete()
+        await yy.eod("`Rayso API not responding.`")
+        return
     with suppress(BaseException):
         await kst.client.send_file(
             kst.chat_id,

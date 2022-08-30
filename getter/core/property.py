@@ -56,8 +56,9 @@ async def get_blacklisted(
             ids = fallbacks
             break
         if is_content:
-            _ = r"(\[|\]|\{|\}|#.[\w]*|,)"
-            ids = {int(x) for x in re.sub(_, " ", "".join(res.decode("utf-8").split())).split()}
+            reg = r"[^\s#,\[\]\{\}]+"
+            data = re.findall(reg, res.decode("utf-8"))
+            ids = {int(x) for x in data if x.isdecimal() or (x.startswith("-") and x[1:].isdecimal())}
         else:
             ids = set(res)
         break

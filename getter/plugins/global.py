@@ -355,7 +355,7 @@ async def _(kst):
             attempts=6,
             fallbacks=DEFAULT_GUCAST_BLACKLIST,
         )
-        DND = set(DEVS + GUCAST_BLACKLIST)
+        DND = {*DEVS, *GUCAST_BLACKLIST}
         if kst.client._dialogs:
             dialog = kst.client._dialogs
         else:
