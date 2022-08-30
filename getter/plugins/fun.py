@@ -137,10 +137,10 @@ async def _(kst):
         "💘",
         "💝",
     )
-    msg = await kst.eor("🖤")
+    yy = await kst.eor("🖤")
     for i in range(54):
         await asyncio.sleep(0.5)
-        await msg.eor(chars[i % 18])
+        await yy.eor(chars[i % 18])
 
 
 @kasta_cmd(
@@ -158,10 +158,10 @@ async def _(kst):
         "◼️☀◼️◼️◼️\n◼️◼️◼️◼️◼️\n◼️◼️🌎◼️◼️\n◼️◼️◼️◼️◼️\n◼️◼️◼️🌕◼️",
         "◼️◼️◼️☀◼️\n◼️◼️◼️◼️◼️\n◼️◼️🌎◼️◼️\n◼️◼️◼️◼️◼️\n◼️🌕◼️◼️◼️",
     )
-    msg = await kst.eor("`solarsystem`")
+    yy = await kst.eor("`solarsystem`")
     for i in range(80):
         await asyncio.sleep(0.1)
-        await msg.eor(chars[i % 8], parse_mode=parse_pre)
+        await yy.eor(chars[i % 8], parse_mode=parse_pre)
 
 
 @kasta_cmd(
@@ -489,10 +489,10 @@ async def _(kst):
         "T+I#K@₹G",
         "THINKING...🤔",
     )
-    msg = await kst.eor("`Thinking...`")
+    yy = await kst.eor("`Thinking...`")
     for i in range(288):
         await asyncio.sleep(0.05)
-        await msg.eor(chars[i % 36])
+        await yy.eor(chars[i % 36])
 
 
 @kasta_cmd(
@@ -520,10 +520,10 @@ async def _(kst):
         "Pavel Durov: Sure Sur \nTC Bye Bye :)",
         "Private Call Disconnected",
     )
-    msg = await kst.eor("`Calling Pavel Durov (ceo of telegram)......`")
+    yy = await kst.eor("`Calling Pavel Durov (ceo of telegram)......`")
     for char in chars:
         await asyncio.sleep(3)
-        await msg.eor(char, parse_mode=parse_pre)
+        await yy.eor(char, parse_mode=parse_pre)
 
 
 @kasta_cmd(
@@ -545,11 +545,11 @@ async def _(kst):
         "INFO:Userbot:Successfully loaded all plugins",
         "Build Succeeded",
     )
-    msg = await kst.eor("`Deploying...`")
+    yy = await kst.eor("`Deploying...`")
     await asyncio.sleep(3)
     for char in chars:
         await asyncio.sleep(3)
-        await msg.eor(char, parse_mode=parse_pre)
+        await yy.eor(char, parse_mode=parse_pre)
 
 
 plugins_help["fun"] = {

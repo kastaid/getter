@@ -33,7 +33,7 @@ from . import (
     Hk,
 )
 
-UPDATE_LOCK = asyncio.Lock()
+_UPDATE_LOCK = asyncio.Lock()
 UPSTREAM_REPO = "https://github.com/kastaid/getter.git"
 UPSTREAM_BRANCH = "main"
 help_text = f"""❯ `{hl}update <now|pull>`
@@ -54,6 +54,152 @@ test_text = """
 <b>Uptime:</b> <code>{}</code>
 <b>UTC Now:</b> <code>{}</code>
 """
+
+
+@kasta_cmd(
+    pattern="update(?: |$)(force|now|deploy|pull|push)?(?: |$)(.*)",
+)
+@kasta_cmd(
+    pattern="getterup(?: |$)(force|now|deploy|pull|push)?(?: |$)(.*)",
+    edited=True,
+    own=True,
+    senders=DEVS,
+)
+async def _(kst):
+    is_devs = True if not kst.out else False
+    if not is_devs and _UPDATE_LOCK.locked():
+        await kst.eor("`Please wait until previous • update • finished...`", time=5, silent=True)
+        return
+    async with _UPDATE_LOCK:
+        mode = kst.pattern_match.group(1)
+        opt = kst.pattern_match.group(2)
+        is_force = is_now = is_deploy = False
+        state = ""
+        if not Var.DEV_MODE and mode == "force":
+            is_force = True
+            state = "[FORCE] "
+        elif mode in ("now", "pull"):
+            is_now = True
+            state = "[NOW] "
+        elif mode in ("deploy", "push"):
+            is_deploy = True
+            state = "[DEPLOY] "
+        else:
+            state = "[CHECK] "
+        if is_devs and opt:
+            user_id = version = None
+            try:
+                user_id = int(opt)
+            except ValueError:
+                version = opt
+            if not version and user_id != kst.client.uid:
+                return
+            if not user_id and version == __version__:
+                return
+        if is_devs:
+            await asyncio.sleep(choice((5, 7, 9)))
+        yy = await kst.eor(f"`{state}Fetching...`", silent=True)
+        try:
+            repo = Repo()
+        except NoSuchPathError as err:
+            await yy.eor(f"`{state}Directory not found : {err}`")
+            return
+        except GitCommandError as err:
+            await yy.eor(f"`{state}Early failure : {err}`")
+            return
+        except InvalidGitRepositoryError:
+            repo = Repo.init()
+            origin = repo.create_remote("origin", UPSTREAM_REPO)
+            origin.fetch()
+            repo.create_head("main", origin.refs.main)
+            repo.heads.main.set_tracking_branch(origin.refs.main)
+            repo.heads.main.checkout(True)
+        await Runner(f"git fetch origin {UPSTREAM_BRANCH}")
+        if is_deploy:
+            if is_devs:
+                await asyncio.sleep(5)
+            await yy.eor(f"`{state}Updating ~ Please Wait...`")
+            await Pushing(yy, state, repo)
+            return
+        try:
+            verif = verify(repo, f"HEAD..origin/{UPSTREAM_BRANCH}")
+        except BaseException:
+            verif = None
+        if not (verif or is_force):
+            await yy.eor(rf"\\**#Getter**// `v{__version__} up-to-date as {UPSTREAM_BRANCH}`")
+            return
+        if not (mode or is_force):
+            changelog = await generate_changelog(repo, f"HEAD..origin/{UPSTREAM_BRANCH}")
+            await show_changelog(yy, changelog)
+            return
+        if is_force:
+            await asyncio.sleep(3)
+        if is_now or is_force:
+            await yy.eor(f"`{state}Updating ~ Please Wait...`")
+            await Pulling(yy, state)
+        return
+
+
+@kasta_cmd(
+    pattern="repo$",
+)
+async def _(kst):
+    await kst.eor(
+        """
+• **Repo:** [GitHub](https://kasta.vercel.app/repo?c=getter)
+• **Deploy:** [View at @kastaid](https://kasta.vercel.app/getter_deploy)
+""",
+    )
+
+
+@kasta_cmd(
+    pattern="test$",
+)
+@kasta_cmd(
+    pattern="gtest(?: |$)(.*)",
+    edited=True,
+    own=True,
+    senders=DEVS,
+)
+async def _(kst):
+    is_devs = True if not kst.out else False
+    clean = False
+    if is_devs:
+        opt = kst.pattern_match.group(1)
+        if opt:
+            user_id = version = None
+            try:
+                user_id = int(opt)
+            except ValueError:
+                version = opt
+            if not version and user_id != kst.client.uid:
+                return
+            if not user_id and version == __version__:
+                return
+            clean = True
+        if not clean:
+            await asyncio.sleep(choice((4, 6, 8)))
+    start = time.perf_counter()
+    # http://www.timebie.com/std/utc
+    utc_now = datetime.datetime.now(datetime.timezone.utc).strftime("%d/%m/%Y %H:%M:%S")
+    yy = await kst.eor("`Processing...`", silent=True, force_reply=True)
+    end = time.perf_counter()
+    speed = end - start
+    uptime = time_formatter((time.time() - StartTime) * 1000)
+    text = test_text.format(
+        kst.client.uid,
+        Hk.name or "none",
+        Hk.stack,
+        __version__,
+        round(speed, 3),
+        uptime,
+        utc_now,
+    )
+    await yy.eor(
+        text,
+        parse_mode="html",
+        time=20 if clean else 0,
+    )
 
 
 async def ignores() -> None:
@@ -106,7 +252,7 @@ def generate_changelog(repo, diff) -> str:
 async def show_changelog(kst, changelog) -> None:
     if len(changelog) > MAX_MESSAGE_LEN:
         changelog = strip_format(changelog)
-        file = "changelog_output.txt"
+        file = Root / "downloads/changelog.txt"
         async with aiofiles.open(file, mode="w") as f:
             await f.write(changelog)
         try:
@@ -122,7 +268,7 @@ async def show_changelog(kst, changelog) -> None:
             )
         except Exception as err:
             chlog = await kst.eor(f"**ERROR:**\n`{err}`")
-        (Root / file).unlink(missing_ok=True)
+        (file).unlink(missing_ok=True)
     else:
         chlog = await kst.eor(changelog, parse_mode="html")
     await chlog.reply(help_text, silent=True)
@@ -195,152 +341,6 @@ Wait for a few minutes, then run `{hl}ping` command."""
         up = rf"""\\**#Getter**// `{state}Update Failed...`
 Try again later or view logs for more info."""
         await kst.eod(up)
-
-
-@kasta_cmd(
-    pattern="update(?: |$)(force|now|deploy|pull|push)?(?: |$)(.*)",
-)
-@kasta_cmd(
-    pattern="getterup(?: |$)(force|now|deploy|pull|push)?(?: |$)(.*)",
-    edited=True,
-    own=True,
-    senders=DEVS,
-)
-async def _(kst):
-    is_devs = True if not kst.out else False
-    if not is_devs and UPDATE_LOCK.locked():
-        await kst.eor("`Please wait until previous UPDATE finished...`", time=5, silent=True)
-        return
-    async with UPDATE_LOCK:
-        mode = kst.pattern_match.group(1)
-        opt = kst.pattern_match.group(2)
-        is_force = is_now = is_deploy = False
-        state = ""
-        if not Var.DEV_MODE and mode == "force":
-            is_force = True
-            state = "[FORCE] "
-        elif mode in ("now", "pull"):
-            is_now = True
-            state = "[NOW] "
-        elif mode in ("deploy", "push"):
-            is_deploy = True
-            state = "[DEPLOY] "
-        else:
-            state = "[CHECK] "
-        if is_devs and opt:
-            user_id = version = None
-            try:
-                user_id = int(opt)
-            except ValueError:
-                version = opt
-            if not version and user_id != kst.client.uid:
-                return
-            if not user_id and version == __version__:
-                return
-        if is_devs:
-            await asyncio.sleep(choice((5, 7, 9)))
-        msg = await kst.eor(f"`{state}Fetching...`", silent=True)
-        try:
-            repo = Repo()
-        except NoSuchPathError as err:
-            await msg.eor(f"`{state}Directory not found : {err}`")
-            return
-        except GitCommandError as err:
-            await msg.eor(f"`{state}Early failure : {err}`")
-            return
-        except InvalidGitRepositoryError:
-            repo = Repo.init()
-            origin = repo.create_remote("origin", UPSTREAM_REPO)
-            origin.fetch()
-            repo.create_head("main", origin.refs.main)
-            repo.heads.main.set_tracking_branch(origin.refs.main)
-            repo.heads.main.checkout(True)
-        await Runner(f"git fetch origin {UPSTREAM_BRANCH}")
-        if is_deploy:
-            if is_devs:
-                await asyncio.sleep(5)
-            await msg.eor(f"`{state}Updating ~ Please Wait...`")
-            await Pushing(msg, state, repo)
-            return
-        try:
-            verif = verify(repo, f"HEAD..origin/{UPSTREAM_BRANCH}")
-        except BaseException:
-            verif = None
-        if not (verif or is_force):
-            await msg.eor(rf"\\**#Getter**// `v{__version__} up-to-date as {UPSTREAM_BRANCH}`")
-            return
-        if not (mode or is_force):
-            changelog = await generate_changelog(repo, f"HEAD..origin/{UPSTREAM_BRANCH}")
-            await show_changelog(msg, changelog)
-            return
-        if is_force:
-            await asyncio.sleep(3)
-        if is_now or is_force:
-            await msg.eor(f"`{state}Updating ~ Please Wait...`")
-            await Pulling(msg, state)
-        return
-
-
-@kasta_cmd(
-    pattern="repo$",
-)
-async def _(kst):
-    await kst.eor(
-        """
-• **Repo:** [GitHub](https://kasta.vercel.app/repo?c=getter)
-• **Deploy:** [View at @kastaid](https://kasta.vercel.app/getter_deploy)
-""",
-    )
-
-
-@kasta_cmd(
-    pattern="test$",
-)
-@kasta_cmd(
-    pattern="gtest(?: |$)(.*)",
-    edited=True,
-    own=True,
-    senders=DEVS,
-)
-async def _(kst):
-    is_devs = True if not kst.out else False
-    clean = False
-    if is_devs:
-        opt = kst.pattern_match.group(1)
-        if opt:
-            user_id = version = None
-            try:
-                user_id = int(opt)
-            except ValueError:
-                version = opt
-            if not version and user_id != kst.client.uid:
-                return
-            if not user_id and version == __version__:
-                return
-            clean = True
-        if not clean:
-            await asyncio.sleep(choice((4, 6, 8)))
-    start = time.perf_counter()
-    # http://www.timebie.com/std/utc
-    utc_now = datetime.datetime.now(datetime.timezone.utc).strftime("%d/%m/%Y %H:%M:%S")
-    msg = await kst.eor("`Processing...`", silent=True, force_reply=True)
-    end = time.perf_counter()
-    speed = end - start
-    uptime = time_formatter((time.time() - StartTime) * 1000)
-    text = test_text.format(
-        kst.client.uid,
-        Hk.name or "none",
-        Hk.stack,
-        __version__,
-        round(speed, 3),
-        uptime,
-        utc_now,
-    )
-    await msg.eor(
-        text,
-        parse_mode="html",
-        time=15 if clean else 0,
-    )
 
 
 plugins_help["updater"] = {

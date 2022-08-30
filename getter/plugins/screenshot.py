@@ -42,7 +42,7 @@ async def _(kst):
         check_link = is_url(toss)
     if check_link is not True:
         return await kst.eod("`Input is not supported link!`")
-    msg = await kst.eor("`Processing...`")
+    yy = await kst.eor("`Processing...`")
     start_time = time.time()
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")
@@ -57,7 +57,7 @@ async def _(kst):
     prefs = {"download.default_directory": "./"}
     options.add_experimental_option("prefs", prefs)
     options.binary_location = CHROME_BIN
-    msg = await msg.eor("`Taking Screenshot...`")
+    await yy.eor("`Taking Screenshot...`")
     service = Service(executable_path=CHROME_DRIVER)
     driver = webdriver.Chrome(service=service, options=options)
     driver.get(toss)
@@ -71,7 +71,7 @@ async def _(kst):
     wait_for = height / 1000
     await asyncio.sleep(int(wait_for))
     ss_png = driver.get_screenshot_as_png()
-    msg = await msg.eor("`Screenshot Taked...`")
+    await yy.eor("`Screenshot Taked...`")
     driver.close()
     taken = time_formatter((time.time() - start_time) * 1000)
     with suppress(BaseException):
@@ -89,8 +89,7 @@ async def _(kst):
                 reply_to=kst.reply_to_msg_id,
                 silent=True,
             )
-    driver.quit()
-    await msg.try_delete()
+    await yy.try_delete()
 
 
 @kasta_cmd(
@@ -113,13 +112,13 @@ async def _(kst):
         check_link = is_url(toss)
     if check_link is not True or not is_valid_tweet_url(link):
         return await kst.eod("`Input is not valid tweet link!`")
-    msg = await kst.eor("`Processing...`")
+    yy = await kst.eor("`Processing...`")
     start_time = time.time()
     tweet = TweetCapture()
     tweet.set_chromedriver_path(CHROME_DRIVER)
     tweet.add_chrome_argument("--no-sandbox")
     try:
-        msg = await msg.eor("`Taking Tweet Screenshot...`")
+        await yy.eor("`Taking Tweet Screenshot...`")
         file = await tweet.screenshot(
             link,
             f"tss_{get_random_hex()}.png",
@@ -127,9 +126,9 @@ async def _(kst):
             night_mode=choice((0, 1, 2)),
         )
     except BaseException:
-        await msg.eod("`Oops, the tweet not found or suspended account.`")
+        await yy.eod("`Oops, the tweet not found or suspended account.`")
         return
-    msg = await msg.eor("`Tweet Screenshot Taked...`")
+    await yy.eor("`Tweet Screenshot Taked...`")
     taken = time_formatter((time.time() - start_time) * 1000)
     with suppress(BaseException):
         caption = rf"""\\**#Getter**//
@@ -139,13 +138,13 @@ async def _(kst):
             kst.chat_id,
             file=file,
             caption=caption,
-            force_document=True,
+            force_document=False,
             allow_cache=False,
             reply_to=kst.reply_to_msg_id,
             silent=True,
         )
     (Root / file).unlink(missing_ok=True)
-    await msg.try_delete()
+    await yy.try_delete()
 
 
 plugins_help["screenshot"] = {

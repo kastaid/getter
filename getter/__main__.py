@@ -96,7 +96,7 @@ if __name__ == "__main__":
     except (
         KeyboardInterrupt,
         ConnectionError,
-        asyncio.CancelledError,
+        asyncio.exceptions.CancelledError,
     ):
         pass
     except (ImportError, ModuleNotFoundError) as err:

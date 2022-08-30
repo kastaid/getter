@@ -11,7 +11,7 @@ import math
 import time
 from cache import AsyncTTL
 from cachetools import TTLCache
-from telethon.errors import YouBlockedUserError
+from telethon.errors.rpcerrorlist import YouBlockedUserError
 from telethon.events import NewMessage
 from telethon.tl.custom import Dialog
 from telethon.tl.functions.channels import GetFullChannelRequest, GetParticipantsRequest
@@ -57,10 +57,10 @@ CAS_CACHE = TTLCache(maxsize=512, ttl=120, timer=time.perf_counter)  # 2 mins
     no_crash=True,
 )
 async def _(kst):
-    msg = await kst.eor("`Checking...`")
+    yy = await kst.eor("`Checking...`")
     user, _ = await get_user(kst, 1)
     if not user:
-        await msg.eor("`Required Username/ID or reply message.`", time=15)
+        await yy.eor("`Required Username/ID or reply message.`", time=15)
         return
     text = []
     resp = None
@@ -73,35 +73,37 @@ async def _(kst):
         while True:
             try:
                 resp = await conv.get_response(timeout=2)
-            except asyncio.TimeoutError:
+            except asyncio.exceptions.TimeoutError:
                 break
             text.append(resp.message)
         if resp:
             await com.try_delete()
             await resp.mark_read(clear_mentions=True)
     if not text:
-        return await msg.eod("`Bot did not respond.`")
+        return await yy.eod("`Bot did not respond.`")
     if len(text) == 1 and bool([x for x in text if x.startswith("🔗")]):
-        return await msg.eod("`Can't get any records.`")
+        return await yy.eod("`Can't get any records.`")
     if "No records found" in text:
-        return await msg.eod("`Doesn't have any records.`")
+        return await yy.eod("`Doesn't have any records.`")
     names, usernames = sglist(text)
     if names:
         for x in names:
             if x.startswith("⚠️"):
                 break
-            await msg.sod(
+            await yy.sod(
                 x,
                 force_reply=True,
+                silent=True,
                 parse_mode=parse_pre,
             )
     if usernames:
         for x in usernames:
             if x.startswith("⚠️"):
                 break
-            await msg.sod(
+            await yy.sod(
                 x,
                 force_reply=True,
+                silent=True,
                 parse_mode=parse_pre,
             )
 
@@ -111,7 +113,7 @@ async def _(kst):
     no_crash=True,
 )
 async def _(kst):
-    msg = await kst.eor("`Checking...`")
+    yy = await kst.eor("`Checking...`")
     user, _ = await get_user(kst, 1)
     if user:
         user_id = user.id
@@ -121,10 +123,10 @@ async def _(kst):
     async with kst.client.conversation(CREATED_BOT) as conv:
         resp = await conv_created(conv, user_id)
     if not resp:
-        return await msg.eod("`Bot did not respond.`")
+        return await yy.eod("`Bot did not respond.`")
     with suppress(BaseException):
         await kst.client.delete_dialog(CREATED_BOT, revoke=True)
-    await msg.eor(resp.message.message, parse_mode=parse_pre)
+    await yy.eor(resp.message.message, parse_mode=parse_pre)
 
 
 @kasta_cmd(
@@ -151,7 +153,7 @@ async def _(kst):
     pattern="stats$",
 )
 async def _(kst):
-    msg = await kst.eor("`Collecting stats...`")
+    yy = await kst.eor("`Collecting stats...`")
     start_time = time.time()
     private_chats = 0
     bots = 0
@@ -199,7 +201,6 @@ async def _(kst):
         sp_count = 0
     sc_count = await get_total_bot(kst, "Stickers", "/stats")
     bc_count = await get_total_bot(kst, "BotFather", "/setcommands")
-    me = await kst.client.get_me()
     graph = """<b>Stats for {}</b>
 ├ <b>Private:</b> <code>{}</code>
 ┊  ├ <b>Users:</b> <code>{}</code>
@@ -220,7 +221,7 @@ async def _(kst):
 ├ <b>Stickers Pack Created:</b> <code>{}</code>
 ├ <b>Bots Created:</b> <code>{}</code>
 └ <b>It Took:</b> <code>{}s</code>""".format(
-        display_name(me),
+        kst.client.full_name,
         private_chats,
         private_chats - bots,
         bots,
@@ -241,7 +242,7 @@ async def _(kst):
         bc_count,
         f"{stop_time:.02f}",
     )
-    await msg.eor(graph, parse_mode="html")
+    await yy.eor(graph, parse_mode="html")
     await asyncio.sleep(3)
 
 
@@ -249,7 +250,7 @@ async def _(kst):
     pattern="info(?: |$)(.*)",
 )
 async def _info(kst):
-    msg = await kst.eor("`Processing...`")
+    yy = await kst.eor("`Processing...`")
     target, _ = await get_user(kst, 1)
     if target:
         user_id = target.id
@@ -260,9 +261,9 @@ async def _info(kst):
         full_user = full.full_user
         user = full.users[0]
     except ValueError:
-        return await msg.eod("`Couldn't fetch user info.`")
+        return await yy.eod("`Couldn't fetch user info.`")
     except Exception as err:
-        return await msg.eor(f"**ERROR:**\n`{err}`")
+        return await yy.eor(f"**ERROR:**\n`{err}`")
     dc_id = user.photo and user.photo.dc_id or 0
     first_name = html.escape(user.first_name).replace("\u2060", "")
     last_name = (
@@ -281,24 +282,25 @@ async def _info(kst):
 ├ <b>DC ID:</b> <code>{}</code>
 ├ <b>First Name:</b> <code>{}</code>{}{}
 ├ <b>Language Code:</b> <code>{}</code>
-├ <b>User Profile:</b> <a href=tg://user?id={}>Link</a>
-├ <b>Profile Photos:</b> <code>{}</code>
+├ <b>Profile:</b> <a href=tg://user?id={}>Link</a>
+├ <b>Pictures:</b> <code>{}</code>
 ├ <b>Last Seen:</b> <code>{}</code>
-├ <b>★ Premium User:</b> <code>{}</code>
-├ <b>Blocked User:</b> <code>{}</code>
-├ <b>Private Forward:</b> <code>{}</code>
-├ <b>Fake:</b> <code>{}</code>
-├ <b>Scam:</b> <code>{}</code>
-├ <b>Restricted:</b> <code>{}</code>
-├ <b>Verified:</b> <code>{}</code>
-├ <b>Support:</b> <code>{}</code>
-├ <b>Bot:</b> <code>{}</code>
-├ <b>Deleted:</b> <code>{}</code>
-├ <b>Rose Fban:</b> <code>{}</code>
-├ <b>SpamWatch Banned:</b> <code>{}</code>
-├ <b>CAS Banned:</b> <code>{}</code>
+├ <b>Is Premium:</b> <code>{}</code>
+├ <b>Is Blocked:</b> <code>{}</code>
+├ <b>Is Private Forward:</b> <code>{}</code>
+├ <b>Is Fake:</b> <code>{}</code>
+├ <b>Is Scam:</b> <code>{}</code>
+├ <b>Is Restricted:</b> <code>{}</code>
+├ <b>Is Verified:</b> <code>{}</code>
+├ <b>Is Support:</b> <code>{}</code>
+├ <b>Is Bot:</b> <code>{}</code>
+├ <b>Is Deleted:</b> <code>{}</code>
+├ <b>Is Rose Fban:</b> <code>{}</code>
+├ <b>Is SpamWatch Banned:</b> <code>{}</code>
+├ <b>Is CAS Banned:</b> <code>{}</code>
 ├ <b>Groups In Common:</b> <code>{}</code>
-└ <b>Bio:</b>\n<pre>{}</pre>""".format(
+└ <b>Bio:</b>
+<pre>{}</pre>""".format(
         user_id,
         dc_id,
         first_name,
@@ -335,34 +337,34 @@ async def _info(kst):
             parse_mode="html",
             silent=True,
         )
-        await msg.try_delete()
+        await yy.try_delete()
     except BaseException:
-        await msg.eor(caption, parse_mode="html")
+        await yy.eor(caption, parse_mode="html")
     await asyncio.sleep(3)
 
 
 @kasta_cmd(
-    pattern="groupinfo(?: |$)(.*)",
+    pattern="chatinfo(?: |$)(.*)",
 )
 async def _(kst):
-    msg = await kst.eor("`Processing...`")
+    yy = await kst.eor("`Processing...`")
     match = kst.pattern_match.group(1)
     if match:
         try:
             group = await kst.client.parse_id(match)
         except Exception as err:
-            return await msg.eor(f"**ERROR:**\n`{err}`")
+            return await yy.eor(f"**ERROR:**\n`{err}`")
     else:
         group = kst.chat_id
     try:
         entity = await kst.client.get_entity(group)
     except Exception as err:
-        return await msg.eor(f"**ERROR:**\n`{err}`")
+        return await yy.eor(f"**ERROR:**\n`{err}`")
     if isinstance(entity, User):
         return
     photo, caption = await get_chat_info(entity, kst)
     if not photo:
-        return await msg.eor(caption, parse_mode="html")
+        return await yy.eor(caption, parse_mode="html")
     try:
         await kst.client.send_file(
             kst.chat_id,
@@ -374,9 +376,9 @@ async def _(kst):
             parse_mode="html",
             silent=True,
         )
-        await msg.try_delete()
+        await yy.try_delete()
     except BaseException:
-        await msg.eor(caption, parse_mode="html")
+        await yy.eor(caption, parse_mode="html")
     await asyncio.sleep(3)
 
 
@@ -449,7 +451,7 @@ async def get_chat_info(chat, kst):
     if chat.username:
         caption += f"├ <b>Link:</b> @{chat.username}\n"
     else:
-        caption += f"├ <b>{chat_type} type:</b> Private\n"
+        caption += f"├ <b>{chat_type} Type:</b> Private\n"
     if creator_username:
         caption += f"├ <b>Creator:</b> {creator_username}\n"
     elif creator_valid:
@@ -505,9 +507,9 @@ async def get_chat_info(chat, kst):
 async def conv_created(conv, user_id):
     try:
         resp = conv.wait_event(NewMessage(incoming=True, from_users=conv.chat_id))
-        msg = await conv.send_message(f"/id {user_id}")
+        yy = await conv.send_message(f"/id {user_id}")
         resp = await resp
-        await msg.try_delete()
+        await yy.try_delete()
         await resp.mark_read(clear_mentions=True)
         return resp
     except YouBlockedUserError:
@@ -518,12 +520,12 @@ async def conv_created(conv, user_id):
 async def conv_total_bot(conv, command):
     try:
         resp = conv.wait_event(NewMessage(incoming=True, from_users=conv.chat_id))
-        msg = await conv.send_message(command)
+        yy = await conv.send_message(command)
         resp = await resp
-        await msg.try_delete()
+        await yy.try_delete()
         await resp.mark_read(clear_mentions=True)
         return resp
-    except asyncio.TimeoutError:
+    except asyncio.exceptions.TimeoutError:
         return None
     except YouBlockedUserError:
         await conv._client(UnblockRequest(conv.chat_id))
@@ -538,9 +540,9 @@ async def get_total_bot(kst, bot: str, command: str) -> int:
         resp = await conv_total_bot(conv, command)
     if not resp:
         total = 0
-    elif resp and resp.message.lower().startswith("you don't"):
+    elif resp and resp.message.message.lower().startswith("you don't"):
         total = 0
-    elif resp.message.lower().startswith("choose"):
+    elif resp.message.message.lower().startswith("choose"):
         for rows in resp.reply_markup.rows:
             if rows.buttons:
                 for _ in rows.buttons:
@@ -558,21 +560,21 @@ async def get_rose_fban(kst, user_id: int) -> bool:
     async with kst.client.conversation(ROSE_BOT) as conv:
         try:
             if not ROSE_LANG_CACHE.get("lang"):
-                msg = await conv.send_message("/setlang EN-GB")
+                yy = await conv.send_message("/setlang EN-GB")
                 await conv.get_response()
-                await msg.try_delete()
-            msg = await conv.send_message(f"/fedstat {user_id}")
+                await yy.try_delete()
+            yy = await conv.send_message(f"/fedstat {user_id}")
         except YouBlockedUserError:
             await kst.client(UnblockRequest(conv.chat_id))
             if not ROSE_LANG_CACHE.get("lang"):
-                msg = await conv.send_message("/setlang EN-GB")
+                yy = await conv.send_message("/setlang EN-GB")
                 await conv.get_response()
-                await msg.try_delete()
-            msg = await conv.send_message(f"/fedstat {user_id}")
+                await yy.try_delete()
+            yy = await conv.send_message(f"/fedstat {user_id}")
         while True:
             await asyncio.sleep(1.5)
             resp = await conv.get_response()
-            await msg.try_delete()
+            await yy.try_delete()
             if not resp.message.lower().startswith("checking fbans"):
                 break
         if resp:
@@ -637,5 +639,5 @@ plugins_help["info"] = {
     "{i}total [reply/username]": "Get total user messages.",
     "{i}stats": "Show your profile stats.",
     "{i}info [reply/username]": "Get mentioned user info, it also get Rose Fban, SpamWatch Banned, CAS Banned, etc. Per ids is cached in 2 minutes.",
-    "{i}groupinfo [current/username]": "Get details information of current group or mentioned group.",
+    "{i}chatinfo [current/username]": "Get details information of current group/channel or mentioned group/channel.",
 }

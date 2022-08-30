@@ -18,12 +18,15 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: ${{ github.head_ref }}
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+          token: ${{ secrets.GIT_TOKEN }}
+      - uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          all_but_latest: true
+          access_token: ${{ secrets.GIT_TOKEN }}
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Cache pip
-        uses: actions/cache@v3
+      - uses: actions/cache@v3
         if: startsWith(runner.os, 'Linux')
         with:
           path: ~/.cache/pip
@@ -37,17 +40,13 @@ jobs:
           if [ -f requirements-dev.txt ]; then pip3 install -r requirements-dev.txt; fi
       - name: Linting and format code
         run: python3 -m run --lint
-      - name: Beautify shell scripts
-        uses: illvart/beautysh-action@latest
+      - uses: illvart/beautysh-action@latest
         with:
           args: '*.sh --indent-size 2 &>/dev/null'
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v4
+      - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: '[action] ci: auto-fixes'
           commit_options: '--no-verify'
           commit_user_name: kastaid
-          commit_user_email: kastaid@protonmail.com
-          commit_author: kastaid <kastaid@protonmail.com>
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          commit_user_email: ${{ secrets.EMAIL }}
+          commit_author: kastaid <${{ secrets.EMAIL }}>

@@ -12,6 +12,7 @@ import re
 import sys
 from functools import partial, wraps, reduce
 from io import BytesIO
+from textwrap import shorten
 from typing import Union, Tuple, Optional
 from uuid import uuid4
 import aiofiles
@@ -19,7 +20,8 @@ import aiohttp
 from bs4 import BeautifulSoup
 from emoji import replace_emoji
 from markdown import markdown
-from markdownify import markdownify
+from telethon.tl.functions.channels import GetFullChannelRequest
+from telethon.tl.functions.messages import GetFullChatRequest
 from telethon.tl.types import (
     MessageEntityMentionName,
     MessageEntityPre,
@@ -40,16 +42,18 @@ def is_telegram_link(url: str) -> bool:
 
 
 def get_username(url: str) -> str:
-    return re.sub(r"^(?:https?://)((www)\.|)(?:t\.me|telegram\.(?:dog|me))/", "@", url, flags=re.I)
+    return re.sub(r"^(?:https?://)?(?:www\.|)(?:t\.me|telegram\.(?:dog|me))/", "@", url, flags=re.I)
 
 
 def mentionuser(
     user_id: Union[int, str],
     name: str,
     sep: str = "",
+    width: int = 20,
     html: bool = False,
 ) -> str:
-    return html and f"<a href=tg://user?id={user_id}>{sep}{name}</a>" or f"[{sep}{name}](tg://user?id={user_id})"
+    name = shorten(name, width=width, placeholder="...")
+    return f"<a href=tg://user?id={user_id}>{sep}{name}</a>" if html else f"[{sep}{name}](tg://user?id={user_id})"
 
 
 def display_name(user) -> str:
@@ -138,6 +142,34 @@ async def get_user(kst, group=1):
     return None, None
 
 
+async def get_chat_id(kst):
+    target = kst.pattern_match.group(1)
+    chat_id = None
+    if not target:
+        return int(str(kst.chat_id).replace("-100", ""))
+    if str(target).isdecimal() or (str(target).startswith("-") and str(target)[1:].isdecimal()):
+        if str(target).startswith("-100"):
+            chat_id = int(str(target).replace("-100", ""))
+        elif str(target).startswith("-"):
+            chat_id = int(str(target).replace("-", ""))
+        else:
+            chat_id = int(target)
+    else:
+        if isinstance(target, str):
+            if is_telegram_link(target):
+                target = get_username(target)
+        try:
+            req = await kst.client(GetFullChatRequest(chat_id=target))
+            chat_id = req.full_chat.id
+        except BaseException:
+            try:
+                req = await kst.client(GetFullChannelRequest(channel=target))
+                chat_id = req.full_chat.id
+            except Exception as err:
+                return await kst.eor(str(err), parse_mode=parse_pre)
+    return chat_id
+
+
 def get_chat_msg_id(link: str) -> Tuple[Union[str, int], int]:
     matches = re.findall(r"(?:https?://)?(?:www\.|)(?:t\.me|telegram\.(?:dog|me))/(c\/|)(.*)\/(.*)", link)
     if not matches:
@@ -162,13 +194,20 @@ def replace_all(
     regex: bool = False,
 ) -> str:
     if regex:
-        return reduce(lambda a, kv: re.sub(*kv, a), repls.items(), text)
+        return reduce(lambda a, kv: re.sub(*kv, a, flags=re.I), repls.items(), text)
     return reduce(lambda a, kv: a.replace(*kv), repls.items(), text)
 
 
 def md_to_html(text: str) -> str:
-    repls = {r"\*(.*)\*": r"__\g<1>__"}
-    return replace_all(markdownify(text), repls, regex=True)
+    repls = {
+        "<p>(.*)</p>": "\\1",
+        r"\=\=(.*)\=\=": "<u>\\1</u>",
+        r"\~\~(.*)\~\~": "<del>\\1</del>",
+        r"\-\-(.*)\-\-": "<u>\\1</u>",
+        r"\_\_(.*)\_\_": "<em>\\1</em>",
+        r"\|\|(.*)\|\|": "<spoiler>\\1</spoiler>",
+    }
+    return replace_all(markdown(text), repls, regex=True)
 
 
 def strip_format(text: str) -> str:
@@ -176,33 +215,48 @@ def strip_format(text: str) -> str:
         "==": "",
         "~~": "",
         "--": "",
+        "__": "",
         "||": "",
     }
-    soup = BeautifulSoup(markdown(text), features="html.parser").get_text()
-    return replace_all(soup, repls)
+    return replace_all(BeautifulSoup(markdown(text), features="html.parser").get_text(), repls)
 
 
 def strip_emoji(text: str) -> str:
     return replace_emoji(text, "")
 
 
-def chunk(lst: list, size: int) -> list:
+def strip_ascii(text: str) -> str:
+    return text.encode("ascii", "ignore").decode("ascii")
+
+
+def chunk(lst: list, size: int = 2) -> list:
     return list(map(lambda x: lst[x * size : x * size + size], list(range(math.ceil(len(lst) / size)))))  # noqa: C417
+
+
+def sort_dict(dct: dict, reverse: bool = False) -> dict:
+    return dict(sorted(dct.items(), reverse=reverse))
 
 
 def humanbytes(size: Union[int, float]) -> str:
     if not size:
         return "0 B"
     power = 1024
-    for _ in ("", "K", "M", "G", "T"):
-        if size < power:
-            break
+    pos = 0
+    power_dict = {
+        0: "",
+        1: "Ki",
+        2: "Mi",
+        3: "Gi",
+        4: "Ti",
+        5: "Pi",
+        6: "Ei",
+        7: "Zi",
+        8: "Yi",
+    }
+    while size > power:
         size /= power
-    if isinstance(size, int):
-        size = f"{size} {_}B"
-    elif isinstance(size, float):
-        size = f"{size:.2f} {_}B"
-    return size
+        pos += 1
+    return "{:.2f} {}B".format(size, power_dict[pos])
 
 
 def time_formatter(ms: Union[int, str]) -> str:
@@ -211,13 +265,13 @@ def time_formatter(ms: Union[int, str]) -> str:
     days, hours = divmod(hours, 24)
     weeks, days = divmod(days, 7)
     tmp = (
-        ((str(weeks) + "w:") if weeks else "")
-        + ((str(days) + "d:") if days else "")
-        + ((str(hours) + "h:") if hours else "")
-        + ((str(minutes) + "m:") if minutes else "")
-        + ((str(seconds) + "s") if seconds else "")
+        ((str(weeks) + "w,") if weeks else "")
+        + ((str(days) + "d,") if days else "")
+        + ((str(hours) + "h,") if hours else "")
+        + ((str(minutes) + "m,") if minutes else "")
+        + ((str(seconds) + "s,") if seconds else "")
     )
-    return tmp and (tmp[:-1] if tmp.endswith(":") else tmp) or "0s"
+    return tmp and tmp[:-1] or "0s"
 
 
 def get_random_hex(chars: int = 12) -> str:
@@ -323,7 +377,7 @@ async def Searcher(
                     *args,
                     **kwargs,
                 )
-        except asyncio.TimeoutError:
+        except asyncio.exceptions.TimeoutError:
             return None
         if resp.status not in (
             200,
@@ -345,20 +399,19 @@ async def Searcher(
 
 async def Carbon(
     code,
-    url="https://carbonara-42.herokuapp.com/api/cook",  # https://carbonara.vercel.app/api/cook
+    url="https://carbonara-42.herokuapp.com/api/cook",
     file_name="carbon",
     download=False,
     rayso=False,
     **kwargs,
 ):
+    kwargs["code"] = code
+    kwargs["language"] = "auto"
     if rayso:
-        url = "https://raysoapi.herokuapp.com/generate"
-        kwargs["text"] = code
+        url = "https://rayso.herokuapp.com/api"
+        kwargs["title"] = kwargs.get("title", "getter")
         kwargs["theme"] = kwargs.get("theme", "raindrop")
         kwargs["darkMode"] = kwargs.get("darkMode", True)
-        kwargs["title"] = kwargs.get("title", "getter")
-    else:
-        kwargs["code"] = code
     res = await Searcher(
         url=url,
         post=True,
@@ -372,7 +425,7 @@ async def Carbon(
         file = BytesIO(res)
         file.name = file_name
     else:
-        file = file_name
+        file = "downloads/" + file_name
         async with aiofiles.open(file, mode="wb") as f:
             await f.write(res)
     return file

@@ -6,7 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-from telethon.errors import YouBlockedUserError
+from telethon.errors.rpcerrorlist import YouBlockedUserError
 from telethon.events import NewMessage
 from telethon.tl.functions.contacts import UnblockRequest
 from . import kasta_cmd, plugins_help, suppress
@@ -24,14 +24,14 @@ async def _(kst):
     if not link:
         await kst.eor("`Provide a valid tweet link!`", time=5)
         return
-    msg = await kst.eor("`Downloading...`")
+    yy = await kst.eor("`Downloading...`")
     resp = None
     async with kst.client.conversation(TW_BOT) as conv:
         resp = await conv_tw(conv, link)
     if not resp:
-        return await msg.eod("`Bot did not respond.`")
+        return await yy.eod("`Bot did not respond.`")
     if not getattr(resp.message.media, "document", None):
-        return await msg.eod(f"`{resp.message.message}`")
+        return await yy.eod(f"`{resp.message.message}`")
     file = resp.message.media
     with suppress(BaseException):
         await kst.client.send_file(
@@ -45,7 +45,7 @@ async def _(kst):
         )
     with suppress(BaseException):
         await kst.client.delete_dialog(TW_BOT, revoke=True)
-    await kst.try_delete()
+    await yy.try_delete()
 
 
 @kasta_cmd(
@@ -57,14 +57,14 @@ async def _(kst):
     if not link:
         await kst.eor("`Provide a valid tiktok link!`", time=5)
         return
-    msg = await kst.eor("`Downloading...`")
+    yy = await kst.eor("`Downloading...`")
     resp = None
     async with kst.client.conversation(TT_BOT) as conv:
         resp = await conv_tt(conv, link)
     if not resp:
-        return await msg.eod("`Bot did not respond.`")
+        return await yy.eod("`Bot did not respond.`")
     if not getattr(resp.message.media, "document", None):
-        return await msg.eod(f"`{resp.message.message}`")
+        return await yy.eod(f"`{resp.message.message}`")
     file = resp.message.media
     with suppress(BaseException):
         await kst.client.send_file(
@@ -78,7 +78,7 @@ async def _(kst):
         )
     with suppress(BaseException):
         await kst.client.delete_dialog(TT_BOT, revoke=True)
-    await kst.try_delete()
+    await yy.try_delete()
 
 
 async def conv_tt(conv, link):
@@ -88,7 +88,7 @@ async def conv_tt(conv, link):
         resp = await resp
         await resp.mark_read(clear_mentions=True)
         return resp
-    except asyncio.TimeoutError:
+    except asyncio.exceptions.TimeoutError:
         return None
     except YouBlockedUserError:
         await conv._client(UnblockRequest(conv.chat_id))
@@ -102,7 +102,7 @@ async def conv_tw(conv, link):
         resp = await resp
         await resp.mark_read(clear_mentions=True)
         return resp
-    except asyncio.TimeoutError:
+    except asyncio.exceptions.TimeoutError:
         return None
     except YouBlockedUserError:
         await conv._client(UnblockRequest(conv.chat_id))

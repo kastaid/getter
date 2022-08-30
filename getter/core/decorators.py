@@ -20,7 +20,7 @@ from typing import (
     Tuple,
     Optional,
 )
-from telethon.errors import (
+from telethon.errors.rpcerrorlist import (
     AuthKeyDuplicatedError,
     ChatSendGifsForbiddenError,
     ChatSendInlineForbiddenError,
@@ -160,23 +160,31 @@ def kasta_cmd(
                 LOGS.exception(f"[KASTA_CMD] - {err}")
                 if not no_crash:
                     date = datetime.datetime.now(datetime.timezone.utc).strftime("%d/%m/%Y %H:%M:%S")
+                    if kst.is_private:
+                        chat_type = "private"
+                    elif kst.is_group:
+                        chat_type = "group"
+                    else:
+                        chat_type = "channel"
                     ftext = r"\\**#Getter**// **Client Error:** Forward this to @kastaot"
                     ftext += "\n\n**Getter Version:** `" + str(__version__)
                     ftext += "`\n**Python Version:** `" + str(__pyversion__)
                     ftext += "`\n**Telethon Version:** `" + str(__tlversion__)
                     ftext += "`\n**Telegram Layer:** `" + str(__layer__) + "`\n\n"
-                    ftext += "--------START GETTER CRASH LOG--------"
+                    ftext += "**--START GETTER ERROR LOG--**"
                     ftext += "\n\n**Date:** `" + date
-                    ftext += "`\n**Chat:** `" + str(kst.chat_id) + " " + display_name(chat) + "`"
-                    ftext += "\n**User ID:** `" + str(user_id)
+                    ftext += "`\n**Chat Type:** `" + chat_type
+                    ftext += "`\n**Chat ID:** `" + str(kst.chat_id)
+                    ftext += "`\n**Chat Title:** `" + display_name(chat)
+                    ftext += "`\n**User ID:** `" + str(user_id)
                     ftext += "`\n**Replied:** `" + str(kst.is_reply)
                     ftext += "`\n\n**Event Trigger:**`\n"
                     ftext += str(kst.text)
-                    ftext += "`\n\n**Traceback Info:**`\n"
+                    ftext += "`\n\n**Traceback Info:**```\n"
                     ftext += str(format_exc())
-                    ftext += "`\n\n**Error Text:**`\n"
+                    ftext += "```\n\n**Error Text:**`\n"
                     ftext += str(sys.exc_info()[1])
-                    ftext += "`\n\n--------END GETTER CRASH LOG--------"
+                    ftext += "`\n\n**--END GETTER ERROR LOG--**"
                     if not Var.DEV_MODE:
                         ftext += "\n\n\n**Last 5 Commits:**`\n"
                         stdout, stderr, _, _ = await Runner('git log --pretty=format:"%an: %s" -5')

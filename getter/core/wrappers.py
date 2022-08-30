@@ -8,14 +8,14 @@
 import asyncio
 from contextlib import suppress
 import aiofiles
-from telethon.errors import MessageNotModifiedError
+from telethon.errors.rpcerrorlist import MessageIdInvalidError, MessageNotModifiedError
 from telethon.tl.types import MessageService
 from .. import Root, MAX_MESSAGE_LEN
 from .functions import strip_format
 
 
 async def eor(
-    e,
+    kst,
     text=None,
     link_preview=False,
     silent=False,
@@ -24,15 +24,15 @@ async def eor(
     force_reply=False,
     **args,
 ):
-    reply_to = e.reply_to_msg_id or (e if force_reply else None)
+    reply_to = kst.reply_to_msg_id or (kst if force_reply else None)
     if len(text) > MAX_MESSAGE_LEN:
         text = strip_format(text)
-        file = "message_output.txt"
+        file = Root / "downloads/eor_message.txt"
         async with aiofiles.open(file, mode="w") as f:
             await f.write(text)
         with suppress(BaseException):
-            await e.client.send_file(
-                e.chat_id,
+            await kst.client.send_file(
+                kst.chat_id,
                 file=file,
                 caption=r"\\**#Getter**// `Message Too Long`",
                 force_document=True,
@@ -40,22 +40,24 @@ async def eor(
                 reply_to=reply_to,
                 silent=True,
             )
-        await _try_delete(e)
-        return (Root / file).unlink(missing_ok=True)
-    if e.out and not isinstance(e, MessageService):
+        await _try_delete(kst)
+        return (file).unlink(missing_ok=True)
+    if kst.out and not isinstance(kst, MessageService):
         if edit_time:
             await asyncio.sleep(edit_time)
         try:
-            res = await e.edit(
+            res = await kst.edit(
                 text,
                 link_preview=link_preview,
                 **args,
             )
+        except MessageIdInvalidError:  # keep functions running
+            return
         except MessageNotModifiedError:
-            res = e
+            res = kst
     else:
-        res = await e.client.send_message(
-            e.chat_id,
+        res = await kst.client.send_message(
+            kst.chat_id,
             text,
             link_preview=link_preview,
             silent=silent,
@@ -68,13 +70,13 @@ async def eor(
     return res
 
 
-async def eod(e, text=None, **kwargs):
+async def eod(kst, text=None, **kwargs):
     kwargs["time"] = kwargs.get("time", 8)
-    return await eor(e, text, **kwargs)
+    return await eor(kst, text, **kwargs)
 
 
 async def sod(
-    e,
+    kst,
     text=None,
     link_preview=False,
     silent=False,
@@ -84,17 +86,17 @@ async def sod(
     delete=True,
     **args,
 ):
-    reply_to = e.reply_to_msg_id or (e if force_reply else None)
+    reply_to = kst.reply_to_msg_id or (kst if force_reply else None)
     if delete:
-        await _try_delete(e)
+        await _try_delete(kst)
     if len(text) > MAX_MESSAGE_LEN:
         text = strip_format(text)
-        file = "message_output.txt"
+        file = Root / "downloads/sod_message.txt"
         async with aiofiles.open(file, mode="w") as f:
             await f.write(text)
         with suppress(BaseException):
-            await e.client.send_file(
-                e.chat_id,
+            await kst.client.send_file(
+                kst.chat_id,
                 file=file,
                 caption=r"\\**#Getter**// `Message Too Long`",
                 force_document=True,
@@ -102,10 +104,10 @@ async def sod(
                 reply_to=reply_to,
                 silent=True,
             )
-        await _try_delete(e)
-        return (Root / file).unlink(missing_ok=True)
-    res = await e.client.send_message(
-        e.chat_id,
+        await _try_delete(kst)
+        return (file).unlink(missing_ok=True)
+    res = await kst.client.send_message(
+        kst.chat_id,
         text,
         link_preview=link_preview,
         silent=silent,
@@ -118,6 +120,6 @@ async def sod(
     return res
 
 
-async def _try_delete(e):
+async def _try_delete(kst):
     with suppress(BaseException):
-        return await e.delete()
+        return await kst.delete()

@@ -63,6 +63,55 @@ usage_text = """
 """
 
 
+@kasta_cmd(
+    pattern="usage$",
+)
+async def _(kst):
+    yy = await kst.eor("`Processing...`")
+    if Hk.is_heroku:
+        usage = default_usage() + await heroku_usage()
+    else:
+        usage = default_usage()
+    await yy.eor(usage, parse_mode="html")
+
+
+@kasta_cmd(
+    pattern="heroku$",
+)
+async def _(kst):
+    yy = await kst.eor("`Processing...`")
+    if not Hk.api:
+        await yy.eor("Please set `HEROKU_API` in Config Vars.")
+        return
+    if not Hk.name:
+        await yy.eor("Please set `HEROKU_APP_NAME` in Config Vars.")
+        return
+    try:
+        conn = Hk.heroku()
+        app = conn.app(Hk.name)
+    except Exception as err:
+        return await yy.eor(f"**ERROR:**\n`{err}`")
+    uid = kst.client.uid
+    account = json.dumps(todict(conn.account()), indent=2, default=str)
+    capp = json.dumps(todict(app.info), indent=2, default=str)
+    dyno = json.dumps(todict(app.dynos()), indent=2, default=str)
+    addons = json.dumps(todict(app.addons()), indent=2, default=str)
+    buildpacks = json.dumps(todict(app.buildpacks()), indent=2, default=str)
+    configs = json.dumps(app.config().to_dict(), indent=2, default=str)
+    await kst.client.send_message(uid, f"<b>Account:</b>\n<pre>{html.escape(account)}</pre>", parse_mode="html")
+    await asyncio.sleep(1)
+    await kst.client.send_message(uid, f"<b>App:</b>\n<pre>{html.escape(capp)}</pre>", parse_mode="html")
+    await asyncio.sleep(1)
+    await kst.client.send_message(uid, f"<b>Dyno:</b>\n<pre>{html.escape(dyno)}</pre>", parse_mode="html")
+    await asyncio.sleep(1)
+    await kst.client.send_message(uid, f"<b>Addons:</b>\n<pre>{html.escape(addons)}</pre>", parse_mode="html")
+    await asyncio.sleep(1)
+    await kst.client.send_message(uid, f"<b>Buildpacks:</b>\n<pre>{html.escape(buildpacks)}</pre>", parse_mode="html")
+    await asyncio.sleep(1)
+    await kst.client.send_message(uid, f"<b>Configs:</b>\n<pre>{html.escape(configs)}</pre>", parse_mode="html")
+    await yy.eor("`Heroku details sent at saved messages.`")
+
+
 def default_usage() -> str:
     import psutil
 
@@ -150,55 +199,6 @@ async def heroku_usage() -> str:
         minutes,
         percentage,
     )
-
-
-@kasta_cmd(
-    pattern="usage$",
-)
-async def _(kst):
-    msg = await kst.eor("`Processing...`")
-    if Hk.is_heroku:
-        usage = default_usage() + await heroku_usage()
-    else:
-        usage = default_usage()
-    await msg.eor(usage, parse_mode="html")
-
-
-@kasta_cmd(
-    pattern="heroku$",
-)
-async def _(kst):
-    msg = await kst.eor("`Processing...`")
-    if not Hk.api:
-        await msg.eor("Please set `HEROKU_API` in Config Vars.")
-        return
-    if not Hk.name:
-        await msg.eor("Please set `HEROKU_APP_NAME` in Config Vars.")
-        return
-    try:
-        conn = Hk.heroku()
-        app = conn.app(Hk.name)
-    except Exception as err:
-        return await msg.eor(f"**ERROR:**\n`{err}`")
-    uid = kst.client.uid
-    account = json.dumps(todict(conn.account()), indent=2, default=str)
-    capp = json.dumps(todict(app.info), indent=2, default=str)
-    dyno = json.dumps(todict(app.dynos()), indent=2, default=str)
-    addons = json.dumps(todict(app.addons()), indent=2, default=str)
-    buildpacks = json.dumps(todict(app.buildpacks()), indent=2, default=str)
-    configs = json.dumps(app.config().to_dict(), indent=2, default=str)
-    await kst.client.send_message(uid, f"<b>Account:</b>\n<pre>{html.escape(account)}</pre>", parse_mode="html")
-    await asyncio.sleep(1)
-    await kst.client.send_message(uid, f"<b>App:</b>\n<pre>{html.escape(capp)}</pre>", parse_mode="html")
-    await asyncio.sleep(1)
-    await kst.client.send_message(uid, f"<b>Dyno:</b>\n<pre>{html.escape(dyno)}</pre>", parse_mode="html")
-    await asyncio.sleep(1)
-    await kst.client.send_message(uid, f"<b>Addons:</b>\n<pre>{html.escape(addons)}</pre>", parse_mode="html")
-    await asyncio.sleep(1)
-    await kst.client.send_message(uid, f"<b>Buildpacks:</b>\n<pre>{html.escape(buildpacks)}</pre>", parse_mode="html")
-    await asyncio.sleep(1)
-    await kst.client.send_message(uid, f"<b>Configs:</b>\n<pre>{html.escape(configs)}</pre>", parse_mode="html")
-    await msg.eor("`Sent at Saved Messages.`", time=5)
 
 
 plugins_help["usage"] = {

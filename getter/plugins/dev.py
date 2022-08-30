@@ -14,7 +14,7 @@ import time
 from io import BytesIO
 from pathlib import Path
 import aiofiles
-from telethon import functions
+from telethon.tl.functions.help import GetNearestDcRequest
 from . import (
     StartTime,
     Root,
@@ -24,6 +24,7 @@ from . import (
     choice,
     suppress,
     strip_format,
+    parse_pre,
     humanbytes,
     time_formatter,
     todict,
@@ -40,21 +41,23 @@ from . import (
 
 @kasta_cmd(
     pattern="dea(c|k)$",
+    no_crash=True,
 )
 async def _(kst):
-    msg = "**[Delete Telegram Account](https://telegram.org/deactivate)**"
-    await kst.sod(msg)
+    yy = "**[Delete Telegram Account](https://telegram.org/deactivate)**"
+    await kst.sod(yy)
 
 
 @kasta_cmd(
     pattern="dc$",
+    no_crash=True,
 )
 async def _(kst):
-    res = await kst.client(functions.help.GetNearestDcRequest())
+    dc = await kst.client(GetNearestDcRequest())
     await kst.eor(
-        f"**Country:** `{res.country}`\n"
-        f"**Nearest Datacenter:** `{res.nearest_dc}`\n"
-        f"**This Datacenter:** `{res.this_dc}`",
+        f"**Country:** `{dc.country}`\n"
+        f"**Nearest Datacenter:** `{dc.nearest_dc}`\n"
+        f"**This Datacenter:** `{dc.this_dc}`",
     )
 
 
@@ -66,11 +69,11 @@ async def _(kst):
 )
 async def _(kst):
     start = time.perf_counter()
-    msg = await kst.edit("Ping !")
+    yy = await kst.edit("Ping !")
     end = time.perf_counter()
     speed = end - start
     uptime = time_formatter((time.time() - StartTime) * 1000)
-    await msg.edit(
+    await yy.edit(
         f"🏓 Pong !!\n<b>Speed</b> - <code>{round(speed, 3)}ms</code>\n<b>Uptime</b> - <code>{uptime}</code>",
         parse_mode="html",
     )
@@ -84,7 +87,7 @@ async def _(kst):
     if not text:
         await kst.eor("`Provide a text!`", time=5)
         return
-    msg = await kst.eor("`Processing...`")
+    yy = await kst.eor("`Processing...`")
     url = "https://hastebin.com"
     res = await Searcher(
         url=f"{url}/documents",
@@ -93,8 +96,8 @@ async def _(kst):
         re_json=True,
     )
     if not res:
-        return await msg.eod("`Try again now!`")
-    await msg.eor("{}/{}.txt".format(url, res.get("key")))
+        return await yy.eod("`Try again now!`")
+    await yy.eor("{}/{}.txt".format(url, res.get("key")))
 
 
 @kasta_cmd(
@@ -118,15 +121,15 @@ async def _(kst):
         if user_id and user_id != kst.client.uid:
             return
         await asyncio.sleep(choice((4, 6, 8)))
-    msg = await kst.eor("`Getting...`", silent=True)
+    yy = await kst.eor("`Getting...`", silent=True)
     if mode == "heroku":
-        return await heroku_logs(msg)
+        return await heroku_logs(yy)
     else:
-        await asyncio.sleep(3)
-        await msg.try_delete()
+        await yy.try_delete()
     if mode == "carbon":
         code = logs = ""
-        theme, backgroundColor = choice(CARBON_PRESETS)
+        theme = choice(list(CARBON_PRESETS))
+        backgroundColor = CARBON_PRESETS[theme]
         for file in get_terminal_logs():
             async with aiofiles.open(file, mode="r") as f:
                 code = await f.read()
@@ -153,8 +156,8 @@ async def _(kst):
                     reply_to=kst.reply_to_msg_id,
                     silent=True,
                 )
-                await asyncio.sleep(3)
             (Root / logs).unlink(missing_ok=True)
+        await asyncio.sleep(3)
     elif mode == "open":
         logs = ""
         for file in get_terminal_logs():
@@ -162,8 +165,8 @@ async def _(kst):
                 logs = await f.read()
             if not logs:
                 continue
-            await msg.sod(f"`{logs}`")
-            await asyncio.sleep(3)
+            await yy.sod(logs, parse_mode=parse_pre)
+        await asyncio.sleep(3)
     else:
         with suppress(BaseException):
             for file in get_terminal_logs():
@@ -176,7 +179,7 @@ async def _(kst):
                     reply_to=kst.reply_to_msg_id,
                     silent=True,
                 )
-                await asyncio.sleep(3)
+            await asyncio.sleep(3)
 
 
 @kasta_cmd(
@@ -199,10 +202,10 @@ async def _(kst):
         if user_id and user_id != kst.client.uid:
             return
         await asyncio.sleep(choice((4, 6, 8)))
-    msg = await kst.eor("`Restarting...`", silent=True)
+    yy = await kst.eor("`Restarting...`", silent=True)
     os.system("clear")
     await asyncio.sleep(1)
-    await msg.eor(r"\\**#Getter**// `Restarting... Wait for a few minutes.`")
+    await yy.eor(r"\\**#Getter**// `Restarting... Wait for a few minutes.`")
     if not Hk.is_heroku:
         await restart_app()
         return
@@ -210,7 +213,7 @@ async def _(kst):
         app = Hk.heroku().app(Hk.name)
         app.restart()
     except Exception as err:
-        reply = await msg.eor(f"**ERROR:**\n`{err}`")
+        reply = await yy.eor(f"**ERROR:**\n`{err}`")
         await reply.reply(r"\\**#Getter**// `Restarting as locally...`", silent=True)
         await restart_app()
 
@@ -246,18 +249,18 @@ async def _(kst):
     pattern="sysinfo$",
 )
 async def _(kst):
-    msg = await kst.eor("`Processing...`")
-    file = "neofetch.txt"
-    (Root / file).unlink(missing_ok=True)
+    yy = await kst.eor("`Processing...`")
+    file = "downloads/neofetch.txt"
     _, _, ret, _ = await Runner(f"neofetch|sed 's/\x1B\\[[0-9;\\?]*[a-zA-Z]//g'>>{file}")
     if ret != 0:
-        return await msg.try_delete()
+        return await yy.try_delete()
     info = ""
     async with aiofiles.open(file, mode="r") as f:
         info = await f.read()
     if not info:
-        return await msg.try_delete()
-    theme, backgroundColor = choice(CARBON_PRESETS)
+        return await yy.try_delete()
+    theme = choice(list(CARBON_PRESETS))
+    backgroundColor = CARBON_PRESETS[theme]
     neofetch = await Carbon(
         info.replace("\n\n", "").strip(),
         file_name="neofetch",
@@ -267,17 +270,17 @@ async def _(kst):
         dropShadow=True,
     )
     if not neofetch:
-        return await msg.try_delete()
+        return await yy.try_delete()
     with suppress(BaseException):
         await kst.client.send_file(
             kst.chat_id,
             file=neofetch,
-            force_document=True,
+            force_document=False,
             allow_cache=False,
             reply_to=kst.reply_to_msg_id,
             silent=True,
         )
-    await msg.try_delete()
+    await yy.try_delete()
     (Root / file).unlink(missing_ok=True)
 
 
@@ -292,13 +295,13 @@ async def _(kst):
         cat += "*"
     elif "*" not in cat:
         cat += "/*"
-    msg = await kst.eor("`Loading...`")
+    yy = await kst.eor("`Loading...`")
     try:
         paths = sorted(Path(".").glob(cat))
     except BaseException:
         paths = None
     if not paths:
-        return await msg.eor("`No such directory or empty or incorrect.`", time=5)
+        return await yy.eor("`No such directory or empty or incorrect.`", time=5)
     _symlinks = []
     _folders = []
     _shells = []
@@ -406,7 +409,7 @@ async def _(kst):
 """
     if len(directory) > MAX_MESSAGE_LEN:
         directory = strip_format(directory)
-        file = "directory_output.txt"
+        file = Root / "downloads/ls.txt"
         async with aiofiles.open(file, mode="w") as f:
             await f.write(directory)
         with suppress(BaseException):
@@ -420,10 +423,10 @@ async def _(kst):
                 reply_to=kst.reply_to_msg_id,
                 silent=True,
             )
-        await msg.try_delete()
-        (Root / file).unlink(missing_ok=True)
+        await yy.try_delete()
+        (file).unlink(missing_ok=True)
     else:
-        await msg.eor(directory, parse_mode="html")
+        await yy.eor(directory, parse_mode="html")
 
 
 @kasta_cmd(
@@ -433,7 +436,7 @@ async def _(kst):
     cmd = kst.pattern_match.group(2)
     if not cmd:
         return await kst.try_delete()
-    msg = await kst.eor("`Running...`")
+    yy = await kst.eor("`Running...`")
     SHELL_BLACKLIST = await get_blacklisted(
         url="https://raw.githubusercontent.com/kastaid/resources/main/shellblacklist.json",
         is_json=True,
@@ -441,7 +444,7 @@ async def _(kst):
         fallbacks=DEFAULT_SHELL_BLACKLIST,
     )
     if bool([x for x in cmd.lower().split() if x.startswith(tuple(SHELL_BLACKLIST))]) and kst.client.uid not in DEVS:
-        return await msg.eod("`Command not allowed.`")
+        return await yy.eod("`Command not allowed.`")
     stdout, stderr, ret, _ = await Runner(cmd)
     icon = "❯" if ret == 0 else "❮"
     shell = f"**{icon}**  ```{cmd}```\n\n"
@@ -457,7 +460,7 @@ async def _(kst):
         shell = strip_format(shell)
         with suppress(BaseException):
             with BytesIO(str.encode(shell)) as file:
-                file.name = "shell_output.txt"
+                file.name = "shell.txt"
                 caption = f"`{cmd}`" if len(cmd) < 998 else "`Shell Output`"
                 await kst.client.send_file(
                     kst.chat_id,
@@ -468,9 +471,9 @@ async def _(kst):
                     reply_to=kst.reply_to_msg_id,
                     silent=True,
                 )
-        await msg.try_delete()
-    else:
-        await msg.eor(shell)
+        await yy.try_delete()
+        return
+    await yy.eor(shell)
 
 
 @kasta_cmd(
@@ -514,6 +517,7 @@ async def heroku_logs(kst) -> None:
         )
     await kst.try_delete()
     (Root / file).unlink(missing_ok=True)
+    await asyncio.sleep(3)
 
 
 async def restart_app() -> None:

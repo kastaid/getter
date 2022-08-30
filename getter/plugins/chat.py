@@ -6,7 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-from telethon.errors import UserBotError
+from telethon.errors.rpcerrorlist import UserBotError
 from telethon.tl.functions.account import ReportPeerRequest
 from telethon.tl.functions.channels import InviteToChannelRequest
 from telethon.tl.functions.contacts import BlockRequest, UnblockRequest
@@ -19,6 +19,7 @@ from . import (
     plugins_help,
     choice,
     suppress,
+    parse_pre,
     display_name,
     get_user,
     NOCHATS,
@@ -62,7 +63,7 @@ async def _(kst):
     ):
         await msg.try_delete()
         total += 1
-        await asyncio.sleep(0.2)
+    total += 1
     await reply.try_delete()
     await kst.sod(f"`Purged {total}`", time=3, silent=True)
 
@@ -130,7 +131,6 @@ async def _(kst):
     ):
         await msg.try_delete()
         total += 1
-        await asyncio.sleep(0.2)
     await kst.sod(f"`Purged {total} messages from {display_name(user)}`", time=3, silent=True)
 
 
@@ -142,7 +142,7 @@ async def _(kst):
 async def _(kst):
     await kst.try_delete()
     copy = await kst.get_reply_message()
-    return await copy.reply(copy)
+    await copy.reply(copy)
 
 
 @kasta_cmd(
@@ -217,12 +217,12 @@ async def _(kst):
             "🙏",
         )
     )
-    msg = await kst.eor("`Reaction...`")
+    yy = await kst.eor("`Reaction...`")
     reaction = emoji
     with suppress(BaseException):
         reply = await kst.get_reply_message()
         await reply.react(reaction=reaction)
-    await msg.eor(f"`reacted {reaction}`", time=5)
+    await yy.eor(f"`reacted {reaction}`", time=3)
 
 
 @kasta_cmd(
@@ -274,14 +274,14 @@ async def _(kst):
     no_crash=True,
 )
 async def _(kst):
-    msg = await kst.eor("`Blocking...`", silent=True)
+    yy = await kst.eor("`Blocking...`", silent=True)
     user, _ = await get_user(kst)
     if not user:
-        return await msg.eor("`Reply to some message or add their id.`", time=5)
+        return await yy.eor("`Reply to some message or add their id.`", time=5)
     if user.id == kst.client.uid:
-        return await msg.eor("`I can't block myself.`", time=5)
+        return await yy.eor("`I can't block myself.`", time=5)
     if user.id in DEVS:
-        return await msg.eor("`I can't block our Developers.`", time=5)
+        return await yy.eor("`I can't block our Developers.`", time=5)
     with suppress(BaseException):
         if kst.is_private:
             reran = choice(("spam", "other"))
@@ -305,7 +305,7 @@ async def _(kst):
         text = "**User has been blocked!**"
     except BaseException:
         text = "**User can't blocked!**"
-    await msg.eor(text)
+    await yy.eor(text, time=8)
 
 
 @kasta_cmd(
@@ -313,16 +313,18 @@ async def _(kst):
     no_crash=True,
 )
 async def _(kst):
-    msg = await kst.eor("`UnBlocking...`", silent=True)
+    yy = await kst.eor("`UnBlocking...`", silent=True)
     user, _ = await get_user(kst)
     if not user:
-        return await msg.eor("`Reply to some message or add their id.`", time=5)
+        return await yy.eor("`Reply to some message or add their id.`", time=5)
+    if user.id == kst.client.uid:
+        return await yy.eor("`I can't unblock myself.`", time=5)
     try:
         await kst.client(UnblockRequest(user.id))
         text = "**User has been unblocked!**"
     except BaseException:
         text = "**User can't unblocked!**"
-    await msg.eor(text)
+    await yy.eor(text, time=8)
 
 
 @kasta_cmd(
@@ -331,35 +333,35 @@ async def _(kst):
     groups_only=True,
 )
 async def _(kst):
-    msg = await kst.eor("`Processing...`")
-    to_add_users = kst.pattern_match.group(1)
+    yy = await kst.eor("`Processing...`")
+    users = kst.pattern_match.group(1)
     if not kst.is_channel and kst.is_group:
-        for user_id in to_add_users.split(" "):
+        for x in users.split(" "):
             try:
                 await kst.client(
                     AddChatUserRequest(
                         chat_id=kst.chat_id,
-                        user_id=await kst.client.parse_id(user_id),
+                        user_id=await kst.client.parse_id(x),
                         fwd_limit=1000000,
                     ),
                 )
-                await msg.eor(f"Successfully invited `{user_id}` to `{kst.chat_id}`")
+                await yy.eor(f"Successfully invited `{x}` to `{kst.chat_id}`")
             except Exception as err:
-                await msg.eor(str(err))
+                await yy.eor(str(err), parse_mode=parse_pre)
     else:
-        for user_id in to_add_users.split(" "):
+        for x in users.split(" "):
             try:
                 await kst.client(
                     InviteToChannelRequest(
                         channel=kst.chat_id,
-                        users=[await kst.client.parse_id(user_id)],
+                        users=[await kst.client.parse_id(x)],
                     ),
                 )
-                await msg.eor(f"Successfully invited `{user_id}` to `{kst.chat_id}`")
+                await yy.eor(f"Successfully invited `{x}` to `{kst.chat_id}`")
             except UserBotError:
-                await msg.eod("`Bots can only be added as Admins in Channel.`")
+                await yy.eod("`Bots can only be added as Admins in Channel.`")
             except Exception as err:
-                await msg.eor(str(err))
+                await yy.eor(str(err), parse_mode=parse_pre)
 
 
 @kasta_cmd(
