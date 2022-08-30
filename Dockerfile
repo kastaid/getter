@@ -20,6 +20,7 @@ RUN set -ex \
     && apt-get -qqy install --no-install-recommends \
         sudo \
         bash \
+        gnupg2 \
         git \
         curl \
         wget \
