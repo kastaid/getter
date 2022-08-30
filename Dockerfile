@@ -20,10 +20,9 @@ RUN set -ex \
     && apt-get -qqy install --no-install-recommends \
         sudo \
         bash \
+        git \
         curl \
         wget \
-        git \
-        gnupg2 \
         tree \
         neofetch \
         fonts-roboto \

@@ -49,16 +49,10 @@ for d in DIRS:
 LOOP = get_event_loop()
 EXECUTOR = ThreadPoolExecutor(max_workers=multiprocessing.cpu_count() * 5, thread_name_prefix="Getter")
 WORKER = {}
-CALLS = {}
 TESTER = {5215824623}
-# vo, en1, en5, co, xl, ar
+# vo, en, co, xl, ar
 DEVS = {
-    *{
-        int(x)
-        for x in b64decode(
-            "MjAwMzM2MTQxMCAxOTk4OTE4MDI0IDUxNzcxNjE5NjYgNTE4MDU5NTM5MCAxNDE1OTcxMDIwIDU1MjIzMzY2Mzc="
-        ).split()
-    },
+    *{int(x) for x in b64decode("MjAwMzM2MTQxMCAxOTk4OTE4MDI0IDUxODA1OTUzOTAgMTQxNTk3MTAyMCA1NTIyMzM2NjM3").split()},
     *TESTER,
 }
 MAX_MESSAGE_LEN = 4096

@@ -7,23 +7,17 @@
 
 import asyncio
 from random import randrange
-from telethon.tl.types import (
-    ChannelParticipantsAdmins,
-    ChannelParticipantAdmin,
-    ChannelParticipantCreator,
-    UserStatusEmpty,
-    UserStatusLastMonth,
-)
+from telethon.tl.types import ChannelParticipantsAdmins, ChannelParticipantAdmin, ChannelParticipantCreator
 from . import (
     kasta_cmd,
     plugins_help,
     choice,
-    shorten,
-    suppress,
     mentionuser,
     display_name,
+    get_user_status,
     get_user,
     md_to_html,
+    chunk,
     EMOJITAG,
 )
 
@@ -40,16 +34,16 @@ DEFAULT_SEP = "|"
 )
 async def _(kst):
     tag = "\U000e0020all"
-    msg = f"@{tag}"
-    slots = 4096 - len(msg)
+    yy = f"@{tag}"
+    slots = 4096 - len(yy)
     chat = await kst.get_input_chat()
     async for x in kst.client.iter_participants(chat):
         if exclude_user(x):
-            msg += mentionuser(x.id, "\u2063")
+            yy += mentionuser(x.id, "\u2063")
             slots -= 1
             if slots == 0:
                 break
-    await kst.respond(msg, reply_to=kst.reply_to_msg_id)
+    await kst.respond(yy, reply_to=kst.reply_to_msg_id)
     await kst.try_delete()
 
 
@@ -61,31 +55,29 @@ async def _(kst):
 async def _(kst):
     chat_id = kst.chat_id
     if chat_id in ATAGS:
-        await kst.eor("`Please wait until previous ATAG finished...`", time=5, silent=True)
+        await kst.eor("`Please wait until previous • atag • finished...`", time=5, silent=True)
         return
     caption = kst.pattern_match.group(1)
     users = []
     limit = 0
     ATAGS.append(chat_id)
-    msg = await kst.sod("`In atag process...`", delete=False, force_reply=True)
+    yy = await kst.sod("`In atag process...`", delete=False, force_reply=True)
     chat = await kst.get_input_chat()
     admins = await kst.client.get_participants(chat, filter=ChannelParticipantsAdmins)
     admins_id = [x.id for x in admins]
     async for x in kst.client.iter_participants(chat):
         if exclude_user(x):
             if x.id not in admins_id:
-                users.append(to_mention(x))
+                users.append(mentionuser(x.id, display_name(x), html=True))
             if isinstance(x.participant, ChannelParticipantAdmin):
-                users.append("<b>👮 Admin:</b> {}".format(to_mention(x)))
+                users.append("👮 {}".format(mentionuser(x.id, display_name(x), html=True)))
             if isinstance(x.participant, ChannelParticipantCreator):
-                users.append("<b>🤴 Owner:</b> {}".format(to_mention(x)))
+                users.append("🤴 {}".format(mentionuser(x.id, display_name(x), html=True)))
     caption = f"{md_to_html(caption)}\n" if caption else caption
-    for men in list(user_list(users, DEFAULT_PERUSER)):
+    for men in chunk(users, DEFAULT_PERUSER):
         try:
             if chat_id not in ATAGS:
-                await kst.try_delete()
-                await msg.try_delete()
-                return
+                break
             await kst.respond(
                 caption + "  {}  ".format(DEFAULT_SEP).join(map(str, men)),
                 reply_to=kst.reply_to_msg_id,
@@ -95,25 +87,9 @@ async def _(kst):
             await asyncio.sleep(randrange(5, 7))
         except BaseException:
             pass
-    with suppress(ValueError):
+    if chat_id in ATAGS:
         ATAGS.remove(chat_id)
-    await kst.try_delete()
-    await msg.try_delete()
-
-
-@kasta_cmd(
-    pattern="acancel$",
-    no_crash=True,
-    groups_only=True,
-)
-async def _(kst):
-    msg = await kst.eor("`Processing...`")
-    if kst.chat_id not in ATAGS:
-        await msg.eod("__No current atag are running.__")
-        return
-    with suppress(ValueError):
-        ATAGS.remove(kst.chat_id)
-    await msg.eor("`cancelled`", time=5)
+    await yy.try_delete()
 
 
 @kasta_cmd(
@@ -124,31 +100,29 @@ async def _(kst):
 async def _(kst):
     chat_id = kst.chat_id
     if chat_id in ETAGS:
-        await kst.eor("`Please wait until previous ETAG finished...`", time=5, silent=True)
+        await kst.eor("`Please wait until previous • etag • finished...`", time=5, silent=True)
         return
     caption = kst.pattern_match.group(1)
     users = []
     limit = 0
     ETAGS.append(chat_id)
-    msg = await kst.sod("`In etag process...`", delete=False, force_reply=True)
+    yy = await kst.sod("`In etag process...`", delete=False, force_reply=True)
     chat = await kst.get_input_chat()
     admins = await kst.client.get_participants(chat, filter=ChannelParticipantsAdmins)
     admins_id = [x.id for x in admins]
     async for x in kst.client.iter_participants(chat):
         if exclude_user(x):
             if x.id not in admins_id:
-                users.append(" {} ".format(mentionuser(x.id, choice(EMOJITAG), html=True)))
+                users.append(mentionuser(x.id, choice(EMOJITAG), html=True))
             if isinstance(x.participant, ChannelParticipantAdmin):
-                users.append(" {} ".format(mentionuser(x.id, choice(EMOJITAG), html=True)))
+                users.append("👮 {}".format(mentionuser(x.id, choice(EMOJITAG), html=True)))
             if isinstance(x.participant, ChannelParticipantCreator):
-                users.append(" {} ".format(mentionuser(x.id, choice(EMOJITAG), html=True)))
+                users.append("🤴 {}".format(mentionuser(x.id, choice(EMOJITAG), html=True)))
     caption = f"{md_to_html(caption)}\n" if caption else caption
-    for men in list(user_list(users, DEFAULT_PERUSER)):
+    for men in chunk(users, DEFAULT_PERUSER):
         try:
             if chat_id not in ETAGS:
-                await kst.try_delete()
-                await msg.try_delete()
-                return
+                break
             await kst.respond(
                 caption + " ".join(map(str, men)),
                 reply_to=kst.reply_to_msg_id,
@@ -158,25 +132,33 @@ async def _(kst):
             await asyncio.sleep(randrange(5, 7))
         except BaseException:
             pass
-    with suppress(ValueError):
+    if chat_id in ETAGS:
         ETAGS.remove(chat_id)
-    await kst.try_delete()
-    await msg.try_delete()
+    await yy.try_delete()
 
 
 @kasta_cmd(
-    pattern="ecancel$",
+    pattern="(a|e)cancel$",
     no_crash=True,
     groups_only=True,
 )
 async def _(kst):
-    msg = await kst.eor("`Processing...`")
-    if kst.chat_id not in ETAGS:
-        await msg.eod("__No current etag are running.__")
-        return
-    with suppress(ValueError):
-        ETAGS.remove(kst.chat_id)
-    await msg.eor("`cancelled`", time=5)
+    chat_id = kst.chat_id
+    match = kst.pattern_match.group(1)
+    yy = await kst.eor("`Processing...`")
+    if match == "a":
+        if chat_id not in ATAGS:
+            await yy.eod("__No current atag are running.__")
+            return
+        else:
+            ATAGS.remove(chat_id)
+    else:
+        if chat_id not in ETAGS:
+            await yy.eod("__No current etag are running.__")
+            return
+        else:
+            ETAGS.remove(chat_id)
+    await yy.eor("`cancelled`", time=5)
 
 
 @kasta_cmd(
@@ -187,12 +169,12 @@ async def _(kst):
 )
 async def _(kst):
     tag = "\U000e0020admin"
-    msg = f"@{tag}"
+    yy = f"@{tag}"
     chat = await kst.get_input_chat()
     async for x in kst.client.iter_participants(chat, filter=ChannelParticipantsAdmins):
         if exclude_user(x):
-            msg += mentionuser(x.id, "\u2063")
-    await kst.respond(msg, reply_to=kst.reply_to_msg_id)
+            yy += mentionuser(x.id, "\u2063")
+    await kst.respond(yy, reply_to=kst.reply_to_msg_id)
     await kst.try_delete()
 
 
@@ -209,10 +191,6 @@ async def _(kst):
     await kst.sod(mention, parse_mode="html")
 
 
-def to_mention(user) -> str:
-    return mentionuser(user.id, shorten(display_name(user), width=20, placeholder="..."), html=True)
-
-
 def exclude_user(x) -> bool:
     return (
         True
@@ -222,14 +200,9 @@ def exclude_user(x) -> bool:
             or x.is_self
             or (hasattr(x.participant, "admin_rights") and x.participant.admin_rights.anonymous)
         )
-        and not isinstance(x.status, (UserStatusLastMonth, UserStatusEmpty))
+        and get_user_status(x) != "long_time_ago"
         else False
     )
-
-
-def user_list(ls, n):
-    for i in range(0, len(ls), n):
-        yield ls[i : i + n]
 
 
 plugins_help["mention"] = {

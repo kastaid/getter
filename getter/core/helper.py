@@ -38,7 +38,7 @@ class Heroku:
         return _conn
 
     @property
-    @cached(LRUCache(maxsize=1024))
+    @cached(LRUCache(maxsize=512))
     def stack(self) -> str:
         try:
             app = self.heroku().app(self.name)

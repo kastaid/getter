@@ -9,7 +9,7 @@ import asyncio
 import mimetypes
 import random
 from PIL import Image, ImageEnhance, ImageOps
-from telethon.errors import YouBlockedUserError
+from telethon.errors.rpcerrorlist import YouBlockedUserError
 from telethon.events import NewMessage
 from telethon.tl.functions.contacts import UnblockRequest
 from telethon.tl.types import MessageMediaPhoto, DocumentAttributeFilename
@@ -41,10 +41,10 @@ async def _(kst):
     if reply.sender.bot:
         await kst.eor("`Reply to actual users message.`", time=5)
         return
-    msg = await kst.eor("`Frying...`")
+    yy = await kst.eor("`Frying...`")
     resp = None
     ext = None
-    fry_image = Root / ("downloads/" + "fry.jpeg")
+    fry_image = Root / "downloads/fry.jpeg"
     if isinstance(reply.media, MessageMediaPhoto):
         file = fry_image
     else:
@@ -56,20 +56,20 @@ async def _(kst):
         ss = await Screenshot(file, 0, fry_image)
         if not ss:
             (file).unlink(missing_ok=True)
-            return await msg.try_delete()
+            return await yy.try_delete()
     else:
         try:
             img = Image.open(file)
             img.convert("RGB").save(fry_image, format="JPEG")
         except BaseException:
             (file).unlink(missing_ok=True)
-            return await msg.try_delete()
+            return await yy.try_delete()
     async with kst.client.conversation(FRY_BOT) as conv:
         resp = await conv_fry(conv, fry_image, level)
     if not resp:
-        return await msg.eod("`Bot did not respond.`")
+        return await yy.eod("`Bot did not respond.`")
     if not getattr(resp.message.media, "photo", None):
-        return await msg.eod(f"`{resp.message.message}`")
+        return await yy.eod(f"`{resp.message.message}`")
     with suppress(BaseException):
         await kst.client.send_file(
             kst.chat_id,
@@ -79,7 +79,7 @@ async def _(kst):
             reply_to=kst.reply_to_msg_id,
             silent=True,
         )
-    await msg.try_delete()
+    await yy.try_delete()
     (file).unlink(missing_ok=True)
     (fry_image).unlink(missing_ok=True)
 
@@ -100,9 +100,9 @@ async def _(kst):
     if reply.sender.bot:
         await kst.eor("`Reply to actual users message.`", time=5)
         return
-    msg = await kst.eor("`Deepfrying...`")
+    yy = await kst.eor("`Deepfrying...`")
     ext = None
-    fry_image = Root / ("downloads/" + "fry.jpeg")
+    fry_image = Root / "downloads/fry.jpeg"
     if isinstance(reply.media, MessageMediaPhoto):
         file = fry_image
     else:
@@ -115,7 +115,7 @@ async def _(kst):
         ss = await Screenshot(file, 0, fry_image)
         if not ss:
             (file).unlink(missing_ok=True)
-            return await msg.try_delete()
+            return await yy.try_delete()
     else:
         to_deepfry = file
     try:
@@ -124,7 +124,7 @@ async def _(kst):
         img.save(fry_image, format="JPEG")
     except BaseException:
         (to_deepfry).unlink(missing_ok=True)
-        return await msg.try_delete()
+        return await yy.try_delete()
     with suppress(BaseException):
         await kst.client.send_file(
             kst.chat_id,
@@ -134,7 +134,7 @@ async def _(kst):
             reply_to=kst.reply_to_msg_id,
             silent=True,
         )
-    await msg.try_delete()
+    await yy.try_delete()
     (file).unlink(missing_ok=True)
     (fry_image).unlink(missing_ok=True)
 
@@ -149,13 +149,13 @@ async def conv_fry(conv, image, level):
         )
         resp = await resp
         await resp.try_delete()
-        msg = await conv.send_message(f"/deepfry {level}", reply_to=media.id)
+        yy = await conv.send_message(f"/deepfry {level}", reply_to=media.id)
         resp = conv.wait_event(NewMessage(incoming=True, from_users=conv.chat_id))
         resp = await resp
-        await msg.try_delete()
+        await yy.try_delete()
         await resp.mark_read(clear_mentions=True)
         return resp
-    except asyncio.TimeoutError:
+    except asyncio.exceptions.TimeoutError:
         return None
     except YouBlockedUserError:
         await conv._client(UnblockRequest(conv.chat_id))

@@ -23,8 +23,7 @@ def tobool(val):
         return 1
     elif val in ("n", "no", "f", "false", "off", "0"):
         return 0
-    else:
-        raise ValueError("invalid truth value %r" % (val,))
+    raise ValueError("invalid truth value %r" % (val,))
 
 
 class Var:

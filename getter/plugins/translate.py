@@ -15,8 +15,12 @@ from . import (
     parse_pre,
     strip_format,
     strip_emoji,
+    strip_ascii,
+    sort_dict,
     run_async,
 )
+
+DEFAULT_LANG = "id"
 
 
 @kasta_cmd(
@@ -30,7 +34,7 @@ async def _(kst):
     if args[0] in LANG_CODES.keys():
         is_lang, lang = True, args[0]
     else:
-        is_lang, lang = False, "id"
+        is_lang, lang = False, DEFAULT_LANG
     if kst.is_reply:
         words = (await kst.get_reply_message()).text
     else:
@@ -41,19 +45,27 @@ async def _(kst):
     if not words:
         await kst.eor("`Reply to text message or provide a text!`", time=5)
         return
-    msg = await kst.eor("`...`")
+    yy = await kst.eor("`...`")
     try:
         text = strip_format(strip_emoji(words))
+        """
+        from gpyts.asyncGpyts import Gpyts
+        gpyts = Gpyts(tld="com")
+        translation = await gpyts.translate(text, to_lang=lang)
+        translation.src,
+        lang,
+        translation.text,
+        """
         translator = Translator()
         translation = await translator(text, targetlang=lang)
-        output_text = "**Detected:** `{}`\n**Translated:** `{}`\n\n```{}```".format(
+        tr = "**Detected:** `{}`\n**Translated:** `{}`\n\n```{}```".format(
             await translator.detect(translation.orig),
             await translator.detect(translation.text),
             translation.text,
         )
-        await msg.eor(output_text)
+        await yy.eor(tr)
     except Exception as err:
-        await msg.eor(str(err), parse_mode=parse_pre)
+        await yy.eod(str(err), parse_mode=parse_pre)
 
 
 @kasta_cmd(
@@ -73,7 +85,7 @@ async def _(kst):
     if args[0] in LANG_CODES.keys():
         is_lang, lang = True, args[0]
     else:
-        is_lang, lang = False, "id"
+        is_lang, lang = False, DEFAULT_LANG
     if kst.is_reply:
         words = (await kst.get_reply_message()).text
     else:
@@ -90,7 +102,7 @@ async def _(kst):
         translation = await translator(text, targetlang=lang)
         await kst.sod(translation.text)
     except Exception as err:
-        return await kst.eod(str(err), parse_mode=parse_pre)
+        await kst.eod(str(err), parse_mode=parse_pre)
 
 
 @kasta_cmd(
@@ -104,7 +116,7 @@ async def _(kst):
     if args[0] in LANG_CODES.keys():
         is_lang, lang = True, args[0]
     else:
-        is_lang, lang = False, "id"
+        is_lang, lang = False, DEFAULT_LANG
     if kst.is_reply:
         words = (await kst.get_reply_message()).text
     else:
@@ -115,10 +127,10 @@ async def _(kst):
     if not words:
         await kst.eor("`Reply to text message or provide a text!`", time=5)
         return
-    msg = await kst.eor("`...`")
+    yy = await kst.eor("`...`")
     try:
-        text = strip_format(strip_emoji(words))
-        file = Root / ("downloads/" + "voice.mp3")
+        text = strip_ascii(strip_format(strip_emoji(words)))
+        file = Root / "downloads/voice.mp3"
         voice = await run_async(gTTS, text, lang=lang, slow=False)
         voice.save(file)
         await kst.client.send_file(
@@ -130,9 +142,9 @@ async def _(kst):
             silent=True,
         )
         (file).unlink(missing_ok=True)
-        await msg.try_delete()
+        await yy.try_delete()
     except Exception as err:
-        await msg.eod(str(err), parse_mode=parse_pre)
+        await yy.eod(str(err), parse_mode=parse_pre)
 
 
 @kasta_cmd(
@@ -140,7 +152,7 @@ async def _(kst):
     no_crash=True,
 )
 async def _(kst):
-    lang = "**Language Code:**\n" + "\n".join([f"- {y}: {x}" for x, y in LANG_CODES.items()])
+    lang = "**Language Code:**\n" + "\n".join([f"- {y}: {x}" for x, y in sort_dict(LANG_CODES).items()])
     await kst.sod(lang)
 
 
@@ -150,5 +162,7 @@ plugins_help["translate"] = {
     "{i}tts [lang_code] [text/reply]": "Text to speech",
     "{i}lang": """Show all language code.
 
-**Note:** Default [lang_code] is `id`.""",
+**Note:** Default [lang_code] is `{}`.""".format(
+        DEFAULT_LANG
+    ),
 }

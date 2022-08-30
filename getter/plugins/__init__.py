@@ -7,7 +7,6 @@
 
 from contextlib import suppress
 from random import choice
-from textwrap import shorten
 from validators.url import url as is_url
 from getter import (
     StartTime,
@@ -20,7 +19,6 @@ from getter import (
     Root,
     LOOP,
     WORKER,
-    CALLS,
     TESTER,
     DEVS,
     MAX_MESSAGE_LEN,
@@ -90,23 +88,23 @@ DEFAULT_SHELL_BLACKLIST = {
     "apt",
 }
 
-CARBON_PRESETS = [
-    ("blackboard", "#6676be"),
-    ("material", "#829faf"),
-    ("monokai", "#9e9e9e"),
-    ("night-owl", "#b96bff"),
-    ("nord", "#9ac5ef"),
-    ("oceanic-next", "#8db1c0"),
-    ("one-light", "#2b66df"),
-    ("seti", "#abb8c3"),
-    ("shades-of-purple", "#736fca"),
-    ("synthwave-84", "#9c77d9"),
-    ("solarized-light", "#bbbbbb"),
-    ("twilight", "#f9edd4"),
-    ("verminal", "#bd10e0"),
-    ("vscode", "#e1962f"),
-    ("zenburn", "#b6a291"),
-]
+CARBON_PRESETS = {
+    "blackboard": "#6676be",
+    "material": "#829faf",
+    "monokai": "#9e9e9e",
+    "night-owl": "#b96bff",
+    "nord": "#9ac5ef",
+    "oceanic-next": "#8db1c0",
+    "one-light": "#2b66df",
+    "seti": "#abb8c3",
+    "shades-of-purple": "#736fca",
+    "synthwave-84": "#9c77d9",
+    "solarized-light": "#bbbbbb",
+    "twilight": "#f9edd4",
+    "verminal": "#bd10e0",
+    "vscode": "#e1962f",
+    "zenburn": "#b6a291",
+}
 
 RAYSO_THEMES = (
     "breeze",

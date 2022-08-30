@@ -33,10 +33,10 @@ async def _(kst):
     if not link:
         await kst.eor("`Provide a message link!`", time=5)
         return
-    msg = await kst.eor("`Processing...`")
+    yy = await kst.eor("`Processing...`")
     chat, msg_id = get_chat_msg_id(link)
     if not (chat and msg_id):
-        await msg.eor("Provide a valid message link!\n**Eg:** `https://t.me/tldevs/11` or `https://t.me/tldevs/19`")
+        await yy.eor("Provide a valid message link!\n**Eg:** `https://t.me/tldevs/11` or `https://t.me/tldevs/19`")
         return
     start_time = time.time()
     try:
@@ -44,9 +44,9 @@ async def _(kst):
     except Exception as err:
         await kst.eor(f"**ERROR**\n`{err}`")
     if not from_msg.media:
-        await msg.try_delete()
+        await yy.try_delete()
     else:
-        await msg.eor("`Downloading...`")
+        await yy.eor("`Downloading...`")
         if isinstance(from_msg.media, MessageMediaPhoto):
             file = "getmsg_" + get_random_hex() + ".jpg"
         else:
@@ -55,7 +55,7 @@ async def _(kst):
         with suppress(BaseException):
             await kst.client.download_file(from_msg.media, file=file)
             taken = time_formatter((time.time() - start_time) * 1000)
-            await msg.eor("`Uploading...`")
+            await yy.eor("`Uploading...`")
             caption = rf"""\\**#Getter**//
 **Up:** `{file}`
 **Source:** `{link}`
@@ -69,7 +69,7 @@ async def _(kst):
                 reply_to=kst.reply_to_msg_id,
                 silent=True,
             )
-        await msg.try_delete()
+        await yy.try_delete()
         (Root / file).unlink(missing_ok=True)
 
 
@@ -82,7 +82,7 @@ async def _(kst):
     if not place:
         await kst.eor("`Provide a place!`", time=5)
         return
-    msg = await kst.eor("`Finding...`")
+    yy = await kst.eor("`Finding...`")
     geolocator = Nominatim(user_agent="getter")
     place = place.replace("\n", " ").strip()
     geoloc = geolocator.geocode(place)
@@ -96,12 +96,12 @@ async def _(kst):
                 file=InputMediaGeoPoint(InputGeoPoint(lat, lon)),
                 caption=caption,
                 force_document=True,
-                reply_to=kst.reply_to_msg_id or None,
+                reply_to=kst.reply_to_msg_id,
                 silent=True,
             )
-        await msg.try_delete()
+        await yy.try_delete()
         return
-    await msg.eor("`I coudn't find it.`", time=5)
+    await yy.eor("`I coudn't find it.`", time=5)
 
 
 @kasta_cmd(
@@ -114,7 +114,7 @@ async def _(kst):
     if not keywords:
         await kst.eor("`Provide a keywords!`", time=5)
         return
-    msg = await kst.eor("`Searching...`")
+    yy = await kst.eor("`Searching...`")
     if engine == "google":
         search = "Google"
         url = "https://www.google.com/search?q={}"
@@ -138,7 +138,7 @@ async def _(kst):
         url = "https://www.ecosia.org/search?q={}"
     result = url.format(keywords.replace("\n", " ").replace(" ", "+")).strip()
     keywords = keywords.replace("\n", " ").strip()
-    await msg.eor("**🔎 {} Search Result:**\n[{}]({})".format(search, keywords, result))
+    await yy.eor("**🔎 {} Search Result:**\n[{}]({})".format(search, keywords, result))
 
 
 @kasta_cmd(
@@ -150,7 +150,7 @@ async def _(kst):
     if not text or is_url(text) is not True:
         await kst.eor("`Provide a valid link!`", time=5)
         return
-    msg = await kst.eor("`Processing...`")
+    yy = await kst.eor("`Processing...`")
     if kst.pattern_match.group(1).strip() == "un":
         res = await Searcher(
             url=text,
@@ -158,15 +158,15 @@ async def _(kst):
             allow_redirects=False,
         )
         if not res:
-            return await msg.eod("`Try again now!`")
+            return await yy.eod("`Try again now!`")
         output = "**Unshorted Link:** {}\n**Your Link:** {}".format(res.headers.get("location"), text)
     else:
         url = f"https://da.gd/s?url={text}"
         res = await Searcher(url=url)
         if not res:
-            return await msg.eod("`Try again now!`")
+            return await yy.eod("`Try again now!`")
         output = "**Shorted Link:** {}\n**Your Link:** {}".format(res.strip(), text)
-    await msg.eor(output)
+    await yy.eor(output)
 
 
 @kasta_cmd(
@@ -178,11 +178,11 @@ async def _(kst):
     if not ipaddr or ipv4(ipaddr) is not True:
         await kst.eor("`Provide a valid IP Address!`", time=5)
         return
-    msg = await kst.eor("`Processing...`")
+    yy = await kst.eor("`Processing...`")
     url = f"http://ip-api.com/json/{ipaddr}?fields=status,message,continent,country,countryCode,regionName,city,zip,lat,lon,timezone,currency,isp,mobile,query"
     res = await Searcher(url=url, re_json=True)
     if not res:
-        return await msg.eod("`Try again now!`")
+        return await yy.eod("`Try again now!`")
     if str(res.get("status")) == "success":
         text = """
 **IP:** `{}`
@@ -221,7 +221,7 @@ async def _(kst):
             res.get("status"),
             res.get("message"),
         )
-    await msg.eor(text)
+    await yy.eor(text)
 
 
 plugins_help["utility"] = {

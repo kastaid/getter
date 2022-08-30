@@ -14,7 +14,7 @@ from random import choice
 from typing import Union
 from telethon import utils as telethon_utils
 from telethon.client.telegramclient import TelegramClient
-from telethon.errors import (
+from telethon.errors.rpcerrorlist import (
     ApiIdInvalidError,
     AuthKeyDuplicatedError,
     PhoneNumberInvalidError,

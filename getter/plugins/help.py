@@ -15,7 +15,6 @@ from . import (
     hl,
     kasta_cmd,
     plugins_help,
-    display_name,
     time_formatter,
     chunk,
     Hk,
@@ -54,8 +53,8 @@ help_text = """
     no_crash=True,
 )
 async def _(kst):
-    arg = kst.pattern_match.group(1).lower()
-    msg = await kst.eor("`Loading...`")
+    arg = str((await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(1)).lower()
+    yy = await kst.eor("`Loading...`")
     if arg:
         if arg in plugins_help:
             cmds = plugins_help[arg]
@@ -65,9 +64,9 @@ async def _(kst):
                 # args --> cmd.split(maxsplit=1)cmd[1]
                 text += "**❯** `{}`\n{}\n\n".format(cmd.replace("{i}", hl), desc.replace("{i}", hl))
             text += "(c) @kastaid"
-            await msg.sod(text)
+            await yy.sod(text)
             return
-        await msg.sod(f"**Invalid Plugin ➞** `{arg}`\nType ```{hl}help``` to see valid plugin names.")
+        await yy.sod(f"**Invalid Plugin ➞** `{arg}`\nType ```{hl}help``` to see valid plugin names.")
         return
     plugins = ""
     for plug in chunk(sorted(plugins_help.keys()), 3):
@@ -76,10 +75,9 @@ async def _(kst):
             pr += f"<code>{x}</code>  •  "
         pr = pr[:-3]
         plugins += f"\n{pr}"
-    me = await kst.client.get_me()
     uptime = time_formatter((time.time() - StartTime) * 1000)
     text = help_text.format(
-        display_name(me),
+        kst.client.full_name,
         kst.client.uid,
         Hk.name or "none",
         Hk.stack,
@@ -95,9 +93,9 @@ async def _(kst):
         plugins,
         hl,
     )
-    await msg.sod(text, parse_mode="html")
+    await yy.sod(text, parse_mode="html")
 
 
 plugins_help["help"] = {
-    "{i}help [plugin_name]": "Get common/plugin/command help.",
+    "{i}help [plugin_name/reply]": "Get common/plugin/command help.",
 }

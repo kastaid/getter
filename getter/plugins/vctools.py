@@ -6,49 +6,36 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-from telethon.errors import FloodWaitError
-from telethon.tl.functions.channels import GetFullChannelRequest, DeleteMessagesRequest
-from telethon.tl.functions.messages import GetFullChatRequest
+from telethon.errors.rpcerrorlist import FloodWaitError
+from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.phone import CreateGroupCallRequest, DiscardGroupCallRequest, EditGroupCallTitleRequest
 from . import (
+    getter_app,
     kasta_cmd,
     plugins_help,
     suppress,
-    CALLS,
+    get_chat_id,
 )
 
+CALLS = {}
 
-async def get_call(e, chat_id):
-    try:
-        call = await e.client(GetFullChannelRequest(channel=chat_id))
-        return call.full_chat.call
-    except FloodWaitError:
-        return None
+try:
+    import pytgcalls
 
+    group_call = pytgcalls.GroupCallFactory(
+        getter_app,
+        pytgcalls.GroupCallFactory.MTPROTO_CLIENT_TYPE.TELETHON,
+        enable_logs_to_console=False,
+        path_to_log_file=None,
+    ).get_file_group_call(input_filename="", play_on_repeat=False)
 
-async def get_chat_id(e):
-    target = e.pattern_match.group(1)
-    chat_id = None
-    if not target:
-        return int(str(e.chat_id).replace("-100", ""))
-    if str(target).isdecimal() or (str(target).startswith("-") and str(target)[1:].isdecimal()):
-        if str(target).startswith("-100"):
-            chat_id = int(str(target).replace("-100", ""))
-        elif str(target).startswith("-"):
-            chat_id = int(str(target).replace("-", ""))
-        else:
-            chat_id = int(target)
-    else:
-        try:
-            req = await e.client(GetFullChatRequest(chat_id=target))
-            chat_id = req.full_chat.id
-        except BaseException:
-            try:
-                req = await e.client(GetFullChannelRequest(channel=target))
-                chat_id = req.full_chat.id
-            except Exception as err:
-                return await e.eor(f"```{err}```")
-    return chat_id
+    @group_call.on_network_status_changed
+    async def __(context, is_connected):
+        if not is_connected:
+            CALLS.pop(context.full_chat.id, None)
+
+except ImportError:
+    group_call = None
 
 
 @kasta_cmd(
@@ -56,7 +43,8 @@ async def get_chat_id(e):
     admins_only=True,
 )
 async def _(kst):
-    msg = await kst.eor("`Processing...`")
+    chat_id = await get_chat_id(kst)
+    yy = await kst.eor("`Processing...`")
     opts = kst.pattern_match.group(1)
     args = opts.split(" ")
     silent = True if args[0] in ("s", "silent") else False
@@ -65,16 +53,20 @@ async def _(kst):
         title += x + " "
     req = await kst.client(
         CreateGroupCallRequest(
-            peer=kst.chat_id,
+            peer=chat_id,
             title=title,
         )
     )
+    if CALLS.get(chat_id):
+        CALLS.pop(chat_id, None)
     if not silent:
-        await msg.eor("__Starting a video chat...__", time=5)
+        await yy.eor("__Starting a video chat...__", time=5)
         return
-    await msg.try_delete()
-    if req and req.updates[1].id is not None:
-        await kst.client(DeleteMessagesRequest(kst.chat_id, [req.updates[1].id]))
+    await yy.try_delete()
+    if req:
+        reqs = [x.id for x in req.updates if hasattr(x, "id")]
+        if reqs:
+            await kst.client.delete_messages(chat_id, reqs)
 
 
 @kasta_cmd(
@@ -82,60 +74,58 @@ async def _(kst):
     admins_only=True,
 )
 async def _(kst):
-    msg = await kst.eor("`Processing...`")
+    chat_id = await get_chat_id(kst)
+    yy = await kst.eor("`Processing...`")
     opts = kst.pattern_match.group(1)
     silent = True if opts in ("s", "silent") else False
     try:
-        call = await get_call(kst, kst.chat_id)
+        call = await get_call(kst, chat_id)
     except BaseException:
         call = None
     if not call:
-        await msg.eor("__No video chat.__", time=5)
+        await yy.eor("__No video chat.__", time=5)
         return
     req = await kst.client(DiscardGroupCallRequest(call=call))
+    if CALLS.get(chat_id):
+        CALLS.pop(chat_id, None)
     if not silent:
-        await msg.eor("__Stopping video chat...__", time=5)
+        await yy.eor("__Stopping video chat...__", time=5)
         return
-    await msg.try_delete()
-    if req and req.updates[1].id is not None:
-        await kst.client(DeleteMessagesRequest(kst.chat_id, [req.updates[1].id]))
+    await yy.try_delete()
+    if req:
+        reqs = [x.id for x in req.updates if hasattr(x, "id")]
+        if reqs:
+            await kst.client.delete_messages(chat_id, reqs)
 
 
 @kasta_cmd(
     pattern="joinvc(?: |$)(.*)",
 )
 async def _(kst):
-    try:
-        import pytgcalls
-    except ImportError:
+    if not group_call:
         return
     chat_id = await get_chat_id(kst)
-    msg = await kst.eor("`Processing...`")
+    yy = await kst.eor("`Processing...`")
     try:
         call = await get_call(kst, chat_id)
     except BaseException:
         call = None
     if not call:
-        await msg.eor("__No video chat.__", time=5)
+        await yy.eor("__No video chat.__", time=5)
         return
-    group_call = CALLS.get(chat_id)
-    if group_call is None:
-        group_call = pytgcalls.GroupCallFactory(
-            kst.client,
-            pytgcalls.GroupCallFactory.MTPROTO_CLIENT_TYPE.TELETHON,
-            enable_logs_to_console=False,
-            path_to_log_file=None,
-        ).get_file_group_call(None)
+    if not CALLS.get(chat_id):
         CALLS[chat_id] = group_call
-    if not (group_call and group_call.is_connected):
+    in_call = CALLS.get(chat_id)
+    if not (in_call and in_call.is_connected):
         with suppress(BaseException):
-            await group_call.start(chat_id, enable_action=False)
-        await asyncio.sleep(2)
+            await in_call.start(chat_id, enable_action=False)
+        # await in_call.edit_group_call(volume=100, muted=True)
+        await yy.eor("`joined`", time=5)
+    else:
         with suppress(BaseException):
-            await group_call.set_is_mute(True)
-        with suppress(BaseException):
-            await group_call.edit_group_call(muted=True)
-    await msg.eor("`joined`", time=5)
+            await in_call.reconnect()
+        await yy.eor("`rejoin`", time=5)
+    await asyncio.sleep(3)
 
 
 @kasta_cmd(
@@ -143,20 +133,21 @@ async def _(kst):
 )
 async def _(kst):
     chat_id = await get_chat_id(kst)
-    msg = await kst.eor("`Processing...`")
+    yy = await kst.eor("`Processing...`")
     try:
         call = await get_call(kst, chat_id)
     except BaseException:
         call = None
     if not call:
-        await msg.eor("__No video chat.__", time=5)
+        await yy.eor("__No video chat.__", time=5)
         return
-    group_call = CALLS.get(chat_id)
-    if group_call and group_call.is_connected:
+    in_call = CALLS.get(chat_id)
+    if in_call and in_call.is_connected:
         with suppress(BaseException):
-            await group_call.stop()
+            await in_call.stop()
         CALLS.pop(chat_id, None)
-    await msg.eor("`leaved`", time=5)
+    await yy.eor("`leaved`", time=5)
+    await asyncio.sleep(3)
 
 
 @kasta_cmd(
@@ -164,20 +155,70 @@ async def _(kst):
     admins_only=True,
 )
 async def _(kst):
-    msg = await kst.eor("`Processing...`")
+    yy = await kst.eor("`Processing...`")
     title = kst.pattern_match.group(1)
     if not title:
-        await msg.eor("__Required some text for title.__", time=5)
+        await yy.eor("__Required some text for title.__", time=5)
         return
     try:
         call = await get_call(kst, kst.chat_id)
     except BaseException:
         call = None
     if not call:
-        await msg.eor("__No video chat.__", time=5)
+        await yy.eor("__No video chat.__", time=5)
         return
-    await kst.client(EditGroupCallTitleRequest(call=call, title=title.strip()))
-    await msg.eor("`changed`", time=5)
+    with suppress(BaseException):
+        await kst.client(EditGroupCallTitleRequest(call=call, title=title.strip()))
+    await yy.eor("`changed`", time=5)
+    await asyncio.sleep(3)
+
+
+"""
+@kasta_cmd(
+    pattern="vcinvite$",
+    groups_only=True,
+)
+async def _(kst):
+    yy = await kst.eor("`Inviting members to video chat...`")
+    try:
+        call = await get_call(kst, kst.chat_id)
+    except BaseException:
+        call = None
+    if not call:
+        await yy.eor("__No video chat.__", time=5)
+        return
+    users = []
+    done = 0
+    async for x in kst.client.iter_participants(kst.chat_id):
+        if not (
+            x.deleted
+            or x.bot
+            or x.is_self
+            or (hasattr(x.participant, "admin_rights") and x.participant.admin_rights.anonymous)
+        ) and get_user_status(x) != "long_time_ago":
+            users.append(x.id)
+    for user in chunk(users, 6):
+        try:
+            await kst.client(InviteToGroupCallRequest(call=call, users=user))
+            done += 6
+        except FloodWaitError as fw:
+            flood = fw.seconds
+            await yy.eor("`Inviting wait in {}...`".format(time_formatter((flood + 5) * 1000)))
+            await asyncio.sleep(flood + 5)
+            await kst.client(InviteToGroupCallRequest(call=call, users=user))
+            done += 6
+        except BaseException:
+            pass
+    await yy.eod("`invited {}`".format(done))
+"""
+
+
+async def get_call(kst, chat_id):
+    try:
+        call = await kst.client(GetFullChannelRequest(channel=chat_id))
+        return call.full_chat.call
+    except FloodWaitError:
+        return None
 
 
 plugins_help["vctools"] = {
@@ -186,4 +227,5 @@ plugins_help["vctools"] = {
     "{i}joinvc [chat_id/username group/channel]": "Join the video chat.",
     "{i}leavevc [chat_id/username group/channel]": "Leave the video chat.",
     "{i}vctitle [title]": "Change the video chat title.",
+    # "{i}vcinvite": "Invite all members to current video chat. **(YOU MUST BE JOINED)**",
 }
