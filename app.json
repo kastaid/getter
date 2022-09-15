@@ -59,8 +59,7 @@
     ],
     "formation": {
         "worker": {
-            "quantity": 1,
-            "size": "free"
+            "quantity": 1
         }
     },
     "success_url": "https://t.me/kastaot"

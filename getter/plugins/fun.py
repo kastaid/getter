@@ -6,8 +6,9 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
+import html
 from collections import deque
-from telethon.tl.types import InputMediaDice
+from telethon.tl import types as typ
 from . import (
     kasta_cmd,
     plugins_help,
@@ -35,17 +36,35 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="(owo|shg)$",
+    pattern="owo$",
+    no_crash=True,
+)
+@kasta_cmd(
+    pattern="owo$",
+    sudo=True,
     no_crash=True,
 )
 async def _(kst):
-    cmd = kst.pattern_match.group(1)
-    if cmd == "owo":
-        chars = UWUS
-    elif cmd == "shg":
-        chars = SHRUGS
-    text = choice(chars)
-    await kst.sod(text)
+    if kst.is_sudo:
+        await asyncio.sleep(choice((4, 6, 8)))
+    text = html.escape(choice(UWUS))
+    await kst.sod(f"<pre>{text}</pre>", parse_mode="html")
+
+
+@kasta_cmd(
+    pattern="shg$",
+    no_crash=True,
+)
+@kasta_cmd(
+    pattern="shg$",
+    sudo=True,
+    no_crash=True,
+)
+async def _(kst):
+    if kst.is_sudo:
+        await asyncio.sleep(choice((4, 6, 8)))
+    text = html.escape(choice(SHRUGS))
+    await kst.sod(f"<pre>{text}</pre>", parse_mode="html")
 
 
 @kasta_cmd(
@@ -68,7 +87,7 @@ async def _(kst):
         dice = "🎰"
     async with kst.client.action(kst.chat_id, action="game"):
         await kst.try_delete()
-        await kst.reply(file=InputMediaDice(dice))
+        await kst.reply(file=typ.InputMediaDice(dice))
 
 
 @kasta_cmd(
@@ -138,9 +157,9 @@ async def _(kst):
         "💝",
     )
     yy = await kst.eor("🖤")
-    for i in range(54):
+    for x in range(54):
         await asyncio.sleep(0.5)
-        await yy.eor(chars[i % 18])
+        await yy.eor(chars[x % 18])
 
 
 @kasta_cmd(
@@ -159,9 +178,9 @@ async def _(kst):
         "◼️◼️◼️☀◼️\n◼️◼️◼️◼️◼️\n◼️◼️🌎◼️◼️\n◼️◼️◼️◼️◼️\n◼️🌕◼️◼️◼️",
     )
     yy = await kst.eor("`solarsystem`")
-    for i in range(80):
+    for x in range(80):
         await asyncio.sleep(0.1)
-        await yy.eor(chars[i % 8], parse_mode=parse_pre)
+        await yy.eor(chars[x % 8], parse_mode=parse_pre)
 
 
 @kasta_cmd(
@@ -490,9 +509,9 @@ async def _(kst):
         "THINKING...🤔",
     )
     yy = await kst.eor("`Thinking...`")
-    for i in range(288):
+    for x in range(288):
         await asyncio.sleep(0.05)
-        await yy.eor(chars[i % 36])
+        await yy.eor(chars[x % 36])
 
 
 @kasta_cmd(

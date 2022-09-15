@@ -5,26 +5,18 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
-import math
-import os
 import re
-import sys
-from functools import partial, wraps, reduce
-from io import BytesIO
+import typing
+from functools import partial
 from textwrap import shorten
-from typing import Union, Tuple, Optional
-from uuid import uuid4
-import aiofiles
-import aiohttp
-from bs4 import BeautifulSoup
-from emoji import replace_emoji
-from markdown import markdown
+from telethon.client.telegramclient import TelegramClient
+from telethon.helpers import add_surrogate
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.messages import GetFullChatRequest
 from telethon.tl.types import (
     MessageEntityMentionName,
     MessageEntityPre,
+    PeerUser,
     User,
     UserStatusOnline,
     UserStatusOffline,
@@ -32,21 +24,38 @@ from telethon.tl.types import (
     UserStatusLastMonth,
     UserStatusRecently,
 )
-from telethon.utils import add_surrogate, get_display_name
-from .. import __version__, LOOP, EXECUTOR
+from telethon.utils import get_display_name
 from ..logger import LOGS
+
+TELEGRAM_LINK_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog)/)([\w-]+)$"
+USERNAME_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog)/)"
+MSG_ID_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog)/)(?:c\/|)(.*)\/(.*)"
 
 
 def is_telegram_link(url: str) -> bool:
-    return bool(re.match(r"^(?:https?://)?(?:www\.|)(?:t\.me|telegram\.(?:dog|me))/(\w+)$", url, flags=re.I))
+    # TODO: support for username.t.me
+    return bool(re.match(TELEGRAM_LINK_RE, url, flags=re.I))
 
 
 def get_username(url: str) -> str:
-    return re.sub(r"^(?:https?://)?(?:www\.|)(?:t\.me|telegram\.(?:dog|me))/", "@", url, flags=re.I)
+    # TODO: support for username.t.me
+    return re.sub(USERNAME_RE, "@", url, flags=re.I)
+
+
+def get_msg_id(link: str) -> typing.Optional[typing.Tuple[typing.Union[str, int]]]:
+    # TODO: support for username.t.me
+    idx = re.findall(MSG_ID_RE, link, flags=re.I)
+    ids = next((_ for _ in idx), None)
+    if not ids:
+        return None, None
+    chat, msg_id = ids
+    if chat.isdecimal():
+        chat = int("-100" + chat)
+    return chat, int(msg_id)
 
 
 def mentionuser(
-    user_id: Union[int, str],
+    user_id: typing.Union[int, str],
     name: str,
     sep: str = "",
     width: int = 20,
@@ -56,18 +65,61 @@ def mentionuser(
     return f"<a href=tg://user?id={user_id}>{sep}{name}</a>" if html else f"[{sep}{name}](tg://user?id={user_id})"
 
 
-def display_name(user) -> str:
-    name = get_display_name(user)
-    return name and name or "{}".format(user.first_name or "none")
+def display_name(obj) -> str:
+    name = get_display_name(obj)
+    return name if name else "{}".format(obj.first_name or "none")
 
 
-def get_doc_mime(media) -> str:
-    media_type = str((str(media)).split("(", maxsplit=1)[0])
-    return media_type == "MessageMediaDocument" and media.document.mime_type or ""
+def normalize_chat_id(chat_id) -> typing.Union[int, str]:
+    if str(chat_id).startswith(("-100", "-")) and str(chat_id)[1:].isdecimal():
+        chat_id = int(str(chat_id).replace("-100", "").replace("-", ""))
+    elif str(chat_id).isdecimal():
+        chat_id = int(chat_id)
+    return chat_id
 
 
-def humanbool(b) -> str:
-    return str(b).lower() in ("false", "none", "0", "") and "No" or "Yes"
+async def get_chat_id(
+    kst: TelegramClient,
+    group: int = 1,
+) -> typing.Optional[int]:
+    chat_id = None
+    target = await get_text(kst, group=group)
+    if not target:
+        return int(str(kst.chat_id).replace("-100", "").replace("-", ""))
+    target = target.split(" ")[0]
+    chat_id = normalize_chat_id(target)
+    if isinstance(chat_id, str):
+        if is_telegram_link(chat_id):
+            chat_id = get_username(chat_id)
+        try:
+            full = await kst.client(GetFullChatRequest(chat_id))
+            chat_id = full.full_chat.id
+        except BaseException:
+            try:
+                full = await kst.client(GetFullChannelRequest(chat_id))
+                chat_id = full.full_chat.id
+            except BaseException:
+                return None
+    return chat_id
+
+
+async def get_text(
+    kst: TelegramClient,
+    group: int = 1,
+    plain: bool = True,
+    strip: bool = True,
+) -> str:
+    match = kst.pattern_match.group(group)
+    if kst.is_reply:
+        reply = await kst.get_reply_message()
+        if not match:
+            text = str(reply.message if plain else reply.text)
+            if strip:
+                text = text.strip()
+            return text
+    if strip:
+        match = match.strip()
+    return match
 
 
 def get_user_status(user: User) -> str:
@@ -88,9 +140,12 @@ def get_user_status(user: User) -> str:
     return status
 
 
-async def get_user(kst, group=1):
-    args = kst.pattern_match.group(group).split(" ", 1)
-    extra = None
+async def get_user(
+    kst: TelegramClient,
+    group: int = 1,
+) -> typing.Optional[typing.Tuple[User, str]]:
+    args = kst.pattern_match.group(group).strip().split(" ", 1)
+    extra = ""
     try:
         if args:
             user = args[0]
@@ -102,10 +157,10 @@ async def get_user(kst, group=1):
                 mention = kst.message.entities[0]
                 if isinstance(mention, MessageEntityMentionName):
                     user_id = mention.user_id
-                    user_obj = await kst.client.get_entity(user_id)
+                    user_obj = await kst.client.get_entity(PeerUser(user_id))
                     return user_obj, extra
-            if isinstance(user, int) or user.startswith("@"):
-                user_obj = await kst.client.get_entity(user)
+            if isinstance(user, int) or user.startswith("@") or len(user) >= 5:
+                user_obj = await kst.client.get_entity(PeerUser(user))
                 return user_obj, extra
     except ValueError:
         if args:
@@ -113,27 +168,40 @@ async def get_user(kst, group=1):
             if len(args) > 1:
                 extra = "".join(args[1:])
             if user.isdecimal() or (user.startswith("-") and user[1:].isdecimal()):
-                obj = partial(type, "user", ())
-                user_obj = obj({"id": int(user), "first_name": user})
+                await kst.client.get_dialogs()
+                obj = partial(type, "User", ())
+                user_obj = obj(
+                    {
+                        "id": int(user),
+                        "first_name": user,
+                    }
+                )
                 return user_obj, extra
             return None, None
-        else:
-            return None, None
+        return None, None
     except Exception as err:
         LOGS.error(str(err))
     try:
-        extra = kst.pattern_match.group(group)
+        extra = kst.pattern_match.group(group).strip()
         if kst.is_private:
             user_obj = await kst.get_chat()
             return user_obj, extra
         if kst.is_reply:
-            user_id = (await kst.get_reply_message()).sender_id
+            reply = await kst.get_reply_message()
+            if reply.from_id is None:
+                return None, None
+            user_id = reply.sender_id
             try:
-                user_obj = await kst.client.get_entity(user_id)
+                user_obj = await kst.client.get_entity(PeerUser(user_id))
                 return user_obj, extra
             except ValueError:
-                obj = partial(type, "user", ())
-                user_obj = obj({"id": user_id, "first_name": str(user_id)})
+                obj = partial(type, "User", ())
+                user_obj = obj(
+                    {
+                        "id": user_id,
+                        "first_name": str(user_id),
+                    }
+                )
                 return user_obj, extra
         if not args:
             return None, None
@@ -142,45 +210,58 @@ async def get_user(kst, group=1):
     return None, None
 
 
-async def get_chat_id(kst):
-    target = kst.pattern_match.group(1)
-    chat_id = None
-    if not target:
-        return int(str(kst.chat_id).replace("-100", ""))
-    if str(target).isdecimal() or (str(target).startswith("-") and str(target)[1:].isdecimal()):
-        if str(target).startswith("-100"):
-            chat_id = int(str(target).replace("-100", ""))
-        elif str(target).startswith("-"):
-            chat_id = int(str(target).replace("-", ""))
-        else:
-            chat_id = int(target)
-    else:
-        if isinstance(target, str):
-            if is_telegram_link(target):
-                target = get_username(target)
-        try:
-            req = await kst.client(GetFullChatRequest(chat_id=target))
-            chat_id = req.full_chat.id
-        except BaseException:
-            try:
-                req = await kst.client(GetFullChannelRequest(channel=target))
-                chat_id = req.full_chat.id
-            except Exception as err:
-                return await kst.eor(str(err), parse_mode=parse_pre)
-    return chat_id
+async def is_admin(
+    kst: TelegramClient,
+    chat_id: int,
+    user_id: int,
+) -> bool:
+    try:
+        prm = await kst.client.get_permissions(chat_id, user_id)
+        if prm.is_admin:
+            return True
+        return False
+    except BaseException:
+        return False
 
 
-def get_chat_msg_id(link: str) -> Tuple[Union[str, int], int]:
-    matches = re.findall(r"(?:https?://)?(?:www\.|)(?:t\.me|telegram\.(?:dog|me))/(c\/|)(.*)\/(.*)", link)
-    if not matches:
-        return None, None
-    _, chat, msg_id = matches[0]
-    if chat.isdecimal():
-        chat = int("-100" + chat)
-    return chat, int(msg_id)
+async def admin_check(
+    kst: TelegramClient,
+    chat_id: int,
+    user_id: int,
+    require: typing.Optional[str] = None,
+) -> bool:
+    if kst.is_private:
+        return True
+    try:
+        prm = await kst.client.get_permissions(chat_id, user_id)
+    except BaseException:
+        return False
+    if not prm.is_admin:
+        return False
+    if require and not getattr(prm, require, False):
+        return False
+    return True
 
 
-def parse_pre(text: str) -> str:
+def to_privilege(privilege: str) -> str:
+    privileges = {
+        "change_info": "can_change_info",
+        "post_messages": "can_post_messages",
+        "edit_messages": "can_edit_messages",
+        "delete_messages": "can_delete_messages",
+        "ban_users": "can_restrict_members",
+        "invite_users": "can_invite_users",
+        "pin_messages": "can_pin_messages",
+        "add_admins": "can_promote_members",
+        "manage_call": "can_manage_video_chats",
+        "anonymous": "is_anonymous",
+    }
+    if privilege not in privileges.keys():
+        raise ValueError(f"{privilege} is not valid privileges")
+    return privileges[privilege]
+
+
+def parse_pre(text: str) -> typing.Tuple[str, typing.List[MessageEntityPre]]:
     text = text.strip()
     return (
         text,
@@ -188,255 +269,38 @@ def parse_pre(text: str) -> str:
     )
 
 
-def replace_all(
-    text: str,
-    repls: dict,
-    regex: bool = False,
-) -> str:
-    if regex:
-        return reduce(lambda a, kv: re.sub(*kv, a, flags=re.I), repls.items(), text)
-    return reduce(lambda a, kv: a.replace(*kv), repls.items(), text)
-
-
-def md_to_html(text: str) -> str:
-    repls = {
-        "<p>(.*)</p>": "\\1",
-        r"\=\=(.*)\=\=": "<u>\\1</u>",
-        r"\~\~(.*)\~\~": "<del>\\1</del>",
-        r"\-\-(.*)\-\-": "<u>\\1</u>",
-        r"\_\_(.*)\_\_": "<em>\\1</em>",
-        r"\|\|(.*)\|\|": "<spoiler>\\1</spoiler>",
-    }
-    return replace_all(markdown(text), repls, regex=True)
-
-
-def strip_format(text: str) -> str:
-    repls = {
-        "==": "",
-        "~~": "",
-        "--": "",
-        "__": "",
-        "||": "",
-    }
-    return replace_all(BeautifulSoup(markdown(text), features="html.parser").get_text(), repls)
-
-
-def strip_emoji(text: str) -> str:
-    return replace_emoji(text, "")
-
-
-def strip_ascii(text: str) -> str:
-    return text.encode("ascii", "ignore").decode("ascii")
-
-
-def chunk(lst: list, size: int = 2) -> list:
-    return list(map(lambda x: lst[x * size : x * size + size], list(range(math.ceil(len(lst) / size)))))  # noqa: C417
-
-
-def sort_dict(dct: dict, reverse: bool = False) -> dict:
-    return dict(sorted(dct.items(), reverse=reverse))
-
-
-def humanbytes(size: Union[int, float]) -> str:
-    if not size:
-        return "0 B"
-    power = 1024
-    pos = 0
-    power_dict = {
-        0: "",
-        1: "Ki",
-        2: "Mi",
-        3: "Gi",
-        4: "Ti",
-        5: "Pi",
-        6: "Ei",
-        7: "Zi",
-        8: "Yi",
-    }
-    while size > power:
-        size /= power
-        pos += 1
-    return "{:.2f} {}B".format(size, power_dict[pos])
-
-
-def time_formatter(ms: Union[int, str]) -> str:
-    minutes, seconds = divmod(int(ms / 1000), 60)
-    hours, minutes = divmod(minutes, 60)
-    days, hours = divmod(hours, 24)
-    weeks, days = divmod(days, 7)
-    tmp = (
-        ((str(weeks) + "w,") if weeks else "")
-        + ((str(days) + "d,") if days else "")
-        + ((str(hours) + "h,") if hours else "")
-        + ((str(minutes) + "m,") if minutes else "")
-        + ((str(seconds) + "s,") if seconds else "")
-    )
-    return tmp and tmp[:-1] or "0s"
-
-
-def get_random_hex(chars: int = 12) -> str:
-    return uuid4().hex[:chars]
-
-
-def mask_email(email: str) -> str:
-    at = email.find("@")
-    return email[0] + "*" * int(at - 2) + email[at - 1 :]
-
-
-def todict(obj, classkey=None):
-    if isinstance(obj, dict):
-        data = {}
-        for (k, v) in obj.items():
-            data[k] = todict(v, classkey)
-        return data
-    elif hasattr(obj, "_ast"):
-        return todict(obj._ast())
-    elif hasattr(obj, "__iter__") and not isinstance(obj, str):
-        return [todict(v, classkey) for v in obj]
-    elif hasattr(obj, "__dict__"):
-        data = dict(  # noqa: C404
-            [
-                (key, todict(val, classkey))
-                for key, val in obj.__dict__.items()
-                if not callable(val) and not key.startswith("_")
-            ]
-        )
-        if classkey and hasattr(obj, "__class__"):
-            data[classkey] = obj.__class__.__name__
-        return data
-    return obj
-
-
-async def run_async(func, *args, **kwargs):
-    return await LOOP.run_in_executor(executor=EXECUTOR, func=partial(func, *args, **kwargs))
-
-
-def make_async(func):
-    @wraps(func)
-    async def wrapper(*args, **kwargs):
-        return await run_async(func, *args, **kwargs)
-
-    return wrapper
-
-
-async def Runner(cmd: str) -> Tuple[str, str, int, int]:
-    proc = await asyncio.create_subprocess_shell(
-        cmd,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    stdout, stderr = await proc.communicate()
-    return (
-        stdout.decode("utf-8", "replace").strip(),
-        stderr.decode("utf-8", "replace").strip(),
-        proc.returncode,
-        proc.pid,
-    )
-
-
-async def Searcher(
-    url: str,
-    post: bool = None,
-    headers: dict = None,
-    params: dict = None,
-    json: dict = None,
-    data: dict = None,
-    ssl=None,
-    re_json: bool = False,
-    re_content: bool = False,
-    real: bool = False,
-    *args,
-    **kwargs,
-):
-    if not headers:
-        headers = {
-            "User-Agent": "Python/{0[0]}.{0[1]} aiohttp/{1} getter/{2}".format(
-                sys.version_info,
-                aiohttp.__version__,
-                __version__,
-            )
-        }
-    async with aiohttp.ClientSession(headers=headers) as session:
-        try:
-            if post:
-                resp = await session.post(
-                    url=url,
-                    json=json,
-                    data=data,
-                    ssl=ssl,
-                    raise_for_status=False,
-                    *args,
-                    **kwargs,
-                )
+def get_media_type(media: typing.Any) -> str:
+    mdt = str((str(media)).split("(", maxsplit=1)[0])
+    ret = ""
+    if mdt == "MessageMediaDocument":
+        mim = media.document.mime_type
+        if mim == "application/x-tgsticker":
+            ret = "sticker_anim"
+        elif "image" in mim:
+            if mim == "image/webp":
+                ret = "sticker"
+            elif mim == "image/gif":
+                ret = "gif_doc"
             else:
-                resp = await session.get(
-                    url=url,
-                    params=params,
-                    ssl=ssl,
-                    raise_for_status=False,
-                    *args,
-                    **kwargs,
-                )
-        except asyncio.exceptions.TimeoutError:
-            return None
-        if resp.status not in (
-            200,
-            201,
-            301,
-            302,
-            307,
-            308,
-        ):
-            return None
-        if re_json:
-            return await resp.json(content_type=None)
-        if re_content:
-            return await resp.read()
-        if real:
-            return resp
-        return await resp.text()
-
-
-async def Carbon(
-    code,
-    url="https://carbonara-42.herokuapp.com/api/cook",
-    file_name="carbon",
-    download=False,
-    rayso=False,
-    **kwargs,
-):
-    kwargs["code"] = code
-    if rayso:
-        url = "https://rayso.herokuapp.com/api"
-        kwargs["title"] = kwargs.get("title", "getter")
-        kwargs["theme"] = kwargs.get("theme", "raindrop")
-        kwargs["darkMode"] = kwargs.get("darkMode", True)
-        kwargs["background"] = kwargs.get("background", True)
-    res = await Searcher(
-        url=url,
-        post=True,
-        json=kwargs,
-        re_content=True,
-    )
-    if not res:
-        return None
-    file_name = f"{file_name}_{get_random_hex()}.jpg"
-    if not download:
-        file = BytesIO(res)
-        file.name = file_name
-    else:
-        file = "downloads/" + file_name
-        async with aiofiles.open(file, mode="wb") as f:
-            await f.write(res)
-    return file
-
-
-async def Screenshot(
-    video_file: str,
-    duration: int,
-    output_file: str = "",
-) -> Optional[str]:
-    ttl = duration // 2
-    command = f'''ffmpeg -v quiet -ss {ttl} -i "{video_file}" -vframes 1 "{output_file}"'''
-    await Runner(command)
-    return os.path.exists(output_file) and output_file or None
+                ret = "pic_doc"
+        elif "video" in mim:
+            if "DocumentAttributeAnimated" in str(media):
+                ret = "gif"
+            elif "DocumentAttributeVideo" in str(media):
+                if "supports_streaming=True" in str(media.document.attributes[0]):
+                    ret = "video"
+                ret = "video_doc"
+            else:
+                ret = "video"
+        elif "audio" in mim:
+            ret = "audio"
+        else:
+            if mim.startswith(("text", "application")):
+                ret = "text"
+            else:
+                ret = "document"
+    elif mdt == "MessageMediaPhoto":
+        ret = "pic"
+    elif mdt == "MessageMediaWebPage":
+        ret = "web"
+    return ret

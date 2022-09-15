@@ -19,7 +19,6 @@ RUN set -ex \
     && apt-get -qqy update \
     && apt-get -qqy install --no-install-recommends \
         sudo \
-        bash \
         gnupg2 \
         git \
         curl \
@@ -32,6 +31,7 @@ RUN set -ex \
         locales \
         tzdata \
         ffmpeg \
+        cairosvg \
         libjpeg-dev \
         libpng-dev \
         unzip \
@@ -41,18 +41,18 @@ RUN set -ex \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && dpkg-reconfigure --force -f noninteractive tzdata \
     && groupadd -g 1000 app \
-    && useradd -u 1000 -ms /bin/bash -g app app \
+    && useradd -u 1000 -ms /bin/sh -g app app \
     && echo "app ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/app \
     && chmod 0440 /etc/sudoers.d/app \
-    && mkdir -p /home/app/$PROJECT/bin \
+    && mkdir -p /home/app/$PROJECT \
     && chmod 777 /home/app/$PROJECT \
     && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
     && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
     && apt-get -qqy update \
     && apt-get -qqy install google-chrome-stable \
-    && wget -N https://chromedriver.storage.googleapis.com/$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip -P ~/ \
-    && unzip ~/chromedriver_linux64.zip -d ~/ \
-    && rm ~/chromedriver_linux64.zip \
+    && wget -qN https://chromedriver.storage.googleapis.com/$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip -P ~/ \
+    && unzip -qq ~/chromedriver_linux64.zip -d ~/ \
+    && rm -rf ~/chromedriver_linux64.zip \
     && mv -f ~/chromedriver /usr/bin/chromedriver \
     && chown root:root /usr/bin/chromedriver \
     && chmod 0755 /usr/bin/chromedriver
@@ -64,7 +64,7 @@ ENV PATH=$VIRTUAL_ENV/bin:/home/app/.local/bin:/home/app/$PROJECT/bin:$PATH \
     DISPLAY=:99
 
 RUN set -ex \
-    && python3 -m pip install -U pip \
+    && python3 -m pip install -Uq pip \
     && python3 -m venv $VIRTUAL_ENV \
     && pip3 install --no-cache-dir -r requirements.txt \
     && sudo -- sh -c "apt-get -qqy purge --auto-remove tzdata unzip apt-utils build-essential; apt-get -qqy clean; rm -rf -- /home/app/.cache /root/.cache /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/* /usr/share/man/* /usr/share/doc/* /var/log/* /tmp/* /var/tmp/* /etc/sudoers.d/app"

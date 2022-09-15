@@ -5,7 +5,6 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import aiofiles
 from . import (
     Root,
     kasta_cmd,
@@ -13,7 +12,7 @@ from . import (
     choice,
     suppress,
     mentionuser,
-    get_doc_mime,
+    get_media_type,
     Carbon,
     CARBON_PRESETS,
     RAYSO_THEMES,
@@ -22,27 +21,23 @@ from . import (
 
 @kasta_cmd(
     pattern=r"carbon(?: |$)([\s\S]*)",
-    no_crash=True,
 )
 async def _(kst):
+    ga = kst.client
     match = kst.pattern_match.group(1)
     args = match.split(" ")
-    if args[0] in CARBON_PRESETS.keys():
+    if args[0] in CARBON_PRESETS:
         is_theme, theme = True, args[0]
     else:
         is_theme, theme = False, choice(list(CARBON_PRESETS))
     if kst.is_reply:
         reply = await kst.get_reply_message()
-        if reply.media and bool([x for x in ("text", "application") if x in get_doc_mime(reply.media)]):
-            file = await kst.client.download_media(reply)
-            code = None
-            async with aiofiles.open(file, mode="r") as f:
-                code = await f.read()
-            if not code:
-                return await kst.try_delete()
+        if reply.media and get_media_type(reply.media) == "text":
+            file = await reply.download_media()
+            code = (Root / file).read_text()
             (Root / file).unlink(missing_ok=True)
         else:
-            code = reply.text
+            code = reply.message
     else:
         try:
             code = match.split(maxsplit=1)[1] if is_theme else match
@@ -60,17 +55,16 @@ async def _(kst):
         fontFamily="Fira Code",
         theme=theme,
         backgroundColor=backgroundColor,
-        dropShadow=True if windowTheme != "bw" else False,
+        dropShadow=windowTheme != "bw",
         windowTheme=windowTheme,
     )
     if not carbon:
         await yy.eod("`Carbon API not responding.`")
         return
     with suppress(BaseException):
-        await kst.client.send_file(
-            kst.chat_id,
+        await kst.respond(
+            "Carboniz by {}".format(mentionuser(ga.uid, ga.full_name, html=True)),
             file=carbon,
-            caption="Carboniz by {}".format(mentionuser(kst.client.uid, kst.client.full_name, html=True)),
             parse_mode="html",
             force_document=False,
             allow_cache=False,
@@ -83,9 +77,9 @@ async def _(kst):
 
 @kasta_cmd(
     pattern=r"rayso(?: |$)([\s\S]*)",
-    no_crash=True,
 )
 async def _(kst):
+    ga = kst.client
     match = kst.pattern_match.group(1)
     args = match.split(" ")
     if args[0] in RAYSO_THEMES:
@@ -94,16 +88,12 @@ async def _(kst):
         is_theme, theme = False, choice(RAYSO_THEMES)
     if kst.is_reply:
         reply = await kst.get_reply_message()
-        if reply.media and bool([x for x in ("text", "application") if x in get_doc_mime(reply.media)]):
-            file = await kst.client.download_media(reply)
-            code = None
-            async with aiofiles.open(file, mode="r") as f:
-                code = await f.read()
-            if not code:
-                return await kst.try_delete()
+        if reply.media and get_media_type(reply.media) == "text":
+            file = await reply.download_media()
+            code = (Root / file).read_text()
             (Root / file).unlink(missing_ok=True)
         else:
-            code = reply.text
+            code = reply.message
     else:
         try:
             code = match.split(maxsplit=1)[1] if is_theme else match
@@ -125,10 +115,9 @@ async def _(kst):
         await yy.eod("`Rayso API not responding.`")
         return
     with suppress(BaseException):
-        await kst.client.send_file(
-            kst.chat_id,
+        await kst.respond(
+            "Raysoniz by {}".format(mentionuser(ga.uid, ga.full_name, html=True)),
             file=rayso,
-            caption="Raysoniz by {}".format(mentionuser(kst.client.uid, kst.client.full_name, html=True)),
             parse_mode="html",
             force_document=False,
             allow_cache=False,
@@ -151,7 +140,7 @@ async def _(kst):
 
 
 plugins_help["beautify"] = {
-    "{i}carbon [theme] [text/reply (text or readable file)]": "Carboniz the text with choosing theme or random themes.",
-    "{i}rayso [theme] [text/reply (text or readable file)]": "Raysoniz the text with choosing theme or random themes.",
-    "{i}theme": "Show all theme name.",
+    "{i}carbon [theme] [text]/[reply (text or readable file)]": "Carboniz the text with choosing theme or random themes.",
+    "{i}rayso [theme] [text]/[reply (text or readable file)]": "Raysoniz the text with choosing theme or random themes.",
+    "{i}theme": "List all themes name.",
 }

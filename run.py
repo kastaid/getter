@@ -28,10 +28,11 @@ app_watch = f"{python} -m scripts.autoreload {app}"
 black = "black --line-length 120 --exclude version.py ."
 isort = "isort --settings-file=setup.cfg ."
 flake8 = "flake8 --config=setup.cfg ."
+mypy = "mypy --config-file=setup.cfg ."
 prettyjson = f"{nocache} -m scripts.prettyjson"
 
 
-def run_command(cmd) -> None:
+def run_cmd(cmd) -> None:
     try:
         proc = run(shlex.split(cmd), shell=False)
         if proc.returncode != 0:
@@ -43,21 +44,21 @@ def run_command(cmd) -> None:
 
 def clean() -> None:
     with suppress(BaseException):
-        for f in Path(".").rglob("*.py[co]"):
-            f.unlink(missing_ok=True)
-        for d in Path(".").rglob("__pycache__"):
-            d.rmdir()
+        for _ in Path(".").rglob("*.py[co]"):
+            _.unlink(missing_ok=True)
+        for _ in Path(".").rglob("__pycache__"):
+            _.rmdir()
 
 
 def lint() -> None:
     print(f"{CYAN}>> {prettyjson}{RST}")
-    run_command(prettyjson)
+    run_cmd(prettyjson)
     print(f"{CYAN}>> {black}{RST}")
-    run_command(black)
+    run_cmd(black)
     print(f"{CYAN}>> {isort}{RST}")
-    run_command(isort)
+    run_cmd(isort)
     print(f"{CYAN}>> {flake8}{RST}")
-    run_command(flake8)
+    run_cmd(flake8)
 
 
 class CapitalisedHelpFormatter(argparse.HelpFormatter):
@@ -79,6 +80,7 @@ parser.add_argument("-p", "--prod", help="run in production mode", action="store
 parser.add_argument("-d", "--dev", help="run in development mode", action="store_true")
 parser.add_argument("-w", "--watch", help="run and watch in development mode", action="store_true")
 parser.add_argument("-l", "--lint", help="run linting and format code", action="store_true")
+parser.add_argument("-t", "--type", help="run type checker only", action="store_true")
 parser.add_argument("-c", "--clean", help="remove python caches", action="store_true")
 parser.add_argument(
     "-v",
@@ -102,22 +104,26 @@ def main() -> None:
         print(f"{BOLD}{GREEN}PRODUCTION MODE...{RST}")
         clean()
         print(f"{BOLD}{BLUE}>> {app}{RST}")
-        run_command(app)
+        run_cmd(app)
     elif args.dev:
         print(f"{BOLD}{GREEN}DEVELOPMENT MODE...{RST}")
         clean()
         lint()
         print(f"{BOLD}{BLUE}>> {app}{RST}")
-        run_command(app)
+        run_cmd(app)
     elif args.watch:
         print(f"{BOLD}{GREEN}WATCHED DEVELOPMENT MODE...{RST}")
         clean()
         print(f"{BOLD}{BLUE}>> {app_watch}{RST}")
-        run_command(app_watch)
+        run_cmd(app_watch)
     elif args.lint:
         print(f"{BOLD}{YELLOW}Run linting and format code...{RST}")
         clean()
         lint()
+    elif args.type:
+        print(f"{BOLD}{YELLOW}Run type checker...{RST}")
+        clean()
+        run_cmd(mypy)
     elif args.clean:
         clean()
     else:

@@ -7,11 +7,11 @@
 
 import asyncio
 from contextlib import suppress
-import aiofiles
+from io import BytesIO
 from telethon.errors.rpcerrorlist import MessageIdInvalidError, MessageNotModifiedError
 from telethon.tl.types import MessageService
-from .. import Root, MAX_MESSAGE_LEN
-from .functions import strip_format
+from ..config import MAX_MESSAGE_LEN
+from .utils import strip_format
 
 
 async def eor(
@@ -24,29 +24,35 @@ async def eor(
     force_reply=False,
     **args,
 ):
-    reply_to = kst.reply_to_msg_id or (kst if force_reply else None)
+    _ = args.get("reply_to", None)
+    reply_to = _ if _ else (kst.reply_to_msg_id or (kst if force_reply else None))
+    for arg in (
+        "entity",
+        "message",
+        "text",
+        "link_preview",
+        "silent",
+        "reply_to",
+    ):
+        if arg in args:
+            del args[arg]
     if len(text) > MAX_MESSAGE_LEN:
-        text = strip_format(text)
-        file = Root / "downloads/eor_message.txt"
-        async with aiofiles.open(file, mode="w") as f:
-            await f.write(text)
-        with suppress(BaseException):
-            await kst.client.send_file(
-                kst.chat_id,
+        with suppress(BaseException), BytesIO(str.encode(strip_format(text))) as file:
+            file.name = "message.txt"
+            await kst.respond(
+                r"\\**#Getter**// Message Too Long",
                 file=file,
-                caption=r"\\**#Getter**// `Message Too Long`",
                 force_document=True,
                 allow_cache=False,
                 reply_to=reply_to,
                 silent=True,
             )
-        await _try_delete(kst)
-        return (file).unlink(missing_ok=True)
+        return await try_delete(kst)
     if kst.out and not isinstance(kst, MessageService):
         if edit_time:
             await asyncio.sleep(edit_time)
         try:
-            res = await kst.edit(
+            yy = await kst.edit(
                 text,
                 link_preview=link_preview,
                 **args,
@@ -54,20 +60,20 @@ async def eor(
         except MessageIdInvalidError:  # keep functions running
             return
         except MessageNotModifiedError:
-            res = kst
+            yy = kst
     else:
-        res = await kst.client.send_message(
-            kst.chat_id,
-            text,
-            link_preview=link_preview,
-            silent=silent,
-            reply_to=reply_to,
-            **args,
-        )
+        with suppress(BaseException):
+            yy = await kst.respond(
+                message=text,
+                link_preview=link_preview,
+                silent=silent,
+                reply_to=reply_to,
+                **args,
+            )
     if time:
         await asyncio.sleep(time)
-        return await _try_delete(res)
-    return res
+        return await try_delete(yy)
+    return yy
 
 
 async def eod(kst, text=None, **kwargs):
@@ -78,6 +84,7 @@ async def eod(kst, text=None, **kwargs):
 async def sod(
     kst,
     text=None,
+    chat_id=None,
     link_preview=False,
     silent=False,
     time=None,
@@ -86,40 +93,47 @@ async def sod(
     delete=True,
     **args,
 ):
-    reply_to = kst.reply_to_msg_id or (kst if force_reply else None)
+    chat_id = chat_id or kst.chat_id
+    _ = args.get("reply_to", None)
+    reply_to = _ if _ else (kst.reply_to_msg_id or (kst if force_reply else None))
+    for arg in (
+        "entity",
+        "message",
+        "link_preview",
+        "silent",
+        "reply_to",
+    ):
+        if arg in args:
+            del args[arg]
     if delete:
-        await _try_delete(kst)
+        await try_delete(kst)
     if len(text) > MAX_MESSAGE_LEN:
-        text = strip_format(text)
-        file = Root / "downloads/sod_message.txt"
-        async with aiofiles.open(file, mode="w") as f:
-            await f.write(text)
-        with suppress(BaseException):
-            await kst.client.send_file(
-                kst.chat_id,
+        with suppress(BaseException), BytesIO(str.encode(strip_format(text))) as file:
+            file.name = "message.txt"
+            await kst.respond(
+                r"\\**#Getter**// Message Too Long",
                 file=file,
-                caption=r"\\**#Getter**// `Message Too Long`",
                 force_document=True,
                 allow_cache=False,
                 reply_to=reply_to,
                 silent=True,
             )
-        await _try_delete(kst)
-        return (file).unlink(missing_ok=True)
-    res = await kst.client.send_message(
-        kst.chat_id,
-        text,
-        link_preview=link_preview,
-        silent=silent,
-        reply_to=reply_to,
-        **args,
-    )
+        return await try_delete(kst)
+    with suppress(BaseException):
+        yy = await kst.client.send_message(
+            entity=chat_id,
+            message=text,
+            link_preview=link_preview,
+            silent=silent,
+            reply_to=reply_to,
+            **args,
+        )
     if time:
         await asyncio.sleep(time)
-        return await _try_delete(res)
-    return res
+        return await try_delete(yy)
+    return yy
 
 
-async def _try_delete(kst):
+async def try_delete(kst):
     with suppress(BaseException):
         return await kst.delete()

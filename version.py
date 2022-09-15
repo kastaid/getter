@@ -7,7 +7,7 @@
 
 def get_version() -> str:
     import json
-    with open("manifest.json", mode="r") as f:
-        data = json.load(f)
-    return data["version"] or "unknown"
+    with open("manifest.json", mode="r") as fp:
+        data = json.load(fp)
+    return data.get("version", "unknown")
 __version__ = get_version()

@@ -8,9 +8,9 @@
 import os
 import signal
 import sys
+import time
 from contextlib import suppress
 from subprocess import CalledProcessError, Popen, check_call
-from time import sleep
 from typing import Generator
 from . import (
     Root,
@@ -33,8 +33,8 @@ finally:
 
 def file_times() -> Generator[int, None, None]:
     with suppress(BaseException):
-        for f in filter(lambda p: p.suffix in EXTS, Root.rglob("*")):
-            yield f.stat().st_mtime
+        for _ in filter(lambda p: p.suffix in EXTS, Root.rglob("*")):
+            yield _.stat().st_mtime
 
 
 def print_stdout(procs) -> None:
@@ -48,8 +48,8 @@ def kill_process_tree(procs) -> None:
         parent = psu.Process(procs.pid)
         child = parent.children(recursive=True)
         child.append(parent)
-        for p in child:
-            p.send_signal(signal.SIGTERM)
+        for _ in child:
+            _.send_signal(signal.SIGTERM)
     procs.terminate()
 
 
@@ -69,7 +69,7 @@ def main() -> None:
                 print(f"{BOLD}{YELLOW}Restarting >> {procs.args}{RST}")
                 kill_process_tree(procs)
                 procs = Popen(cmd, shell=True)
-            sleep(WAIT_FOR)
+            time.sleep(WAIT_FOR)
     except CalledProcessError as err:
         kill_process_tree(procs)
         sys.exit(err.returncode)

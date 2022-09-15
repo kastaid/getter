@@ -6,29 +6,30 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import json
-from time import sleep
+import sys
+import time
 from . import Root
 
 
 def main() -> None:
     try:
-        for file in Root.rglob("*.json"):
-            with open(file, "r", encoding="utf-8") as f:
-                input = json.load(f)
-            with open(file, "w", encoding="utf-8") as f:
+        for file in filter(lambda p: ".mypy_cache" not in set(str(p.parent).split("/")), Root.rglob("*.json")):
+            with open(file, "r", encoding="utf-8") as fp:
+                obj = json.load(fp)
+            with open(file, "w", encoding="utf-8") as fp:
                 json.dump(
-                    input,
-                    f,
+                    obj,
+                    fp,
                     indent=4,
                     sort_keys=False,
                     ensure_ascii=False,
                 )
                 # outfile.write("\n")
                 print(f"Pretty print : {file.name}")
-            sleep(0.5)
+            time.sleep(0.3)
     except BaseException:
         print(f"Failed to pretty print : {file}")
-        raise
+        sys.exit(1)
 
 
 if __name__ == "__main__":

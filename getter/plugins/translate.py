@@ -17,7 +17,7 @@ from . import (
     strip_emoji,
     strip_ascii,
     sort_dict,
-    run_async,
+    aioify,
 )
 
 DEFAULT_LANG = "id"
@@ -31,12 +31,12 @@ DEFAULT_LANG = "id"
 async def _(kst):
     match = kst.pattern_match.group(1)
     args = match.split(" ")
-    if args[0] in LANG_CODES.keys():
+    if args[0] in LANG_CODES:
         is_lang, lang = True, args[0]
     else:
         is_lang, lang = False, DEFAULT_LANG
     if kst.is_reply:
-        words = (await kst.get_reply_message()).text
+        words = (await kst.get_reply_message()).message
     else:
         try:
             words = match.split(maxsplit=1)[1] if is_lang else match
@@ -48,14 +48,6 @@ async def _(kst):
     yy = await kst.eor("`...`")
     try:
         text = strip_format(strip_emoji(words))
-        """
-        from gpyts.asyncGpyts import Gpyts
-        gpyts = Gpyts(tld="com")
-        translation = await gpyts.translate(text, to_lang=lang)
-        translation.src,
-        lang,
-        translation.text,
-        """
         translator = Translator()
         translation = await translator(text, targetlang=lang)
         tr = "**Detected:** `{}`\n**Translated:** `{}`\n\n```{}```".format(
@@ -73,21 +65,15 @@ async def _(kst):
     edited=True,
     no_crash=True,
 )
-@kasta_cmd(
-    pattern=r"tl(?: |$)([\s\S]*)",
-    no_handler=True,
-    edited=True,
-    no_crash=True,
-)
 async def _(kst):
     match = kst.pattern_match.group(1)
     args = match.split(" ")
-    if args[0] in LANG_CODES.keys():
+    if args[0] in LANG_CODES:
         is_lang, lang = True, args[0]
     else:
         is_lang, lang = False, DEFAULT_LANG
     if kst.is_reply:
-        words = (await kst.get_reply_message()).text
+        words = (await kst.get_reply_message()).message
     else:
         try:
             words = match.split(maxsplit=1)[1] if is_lang else match
@@ -106,19 +92,19 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern=r"tts(?: |$)([\s\S]*)",
+    pattern=r"t(t|)s(?: |$)([\s\S]*)",
     edited=True,
     no_crash=True,
 )
 async def _(kst):
-    match = kst.pattern_match.group(1)
+    match = kst.pattern_match.group(2)
     args = match.split(" ")
-    if args[0] in LANG_CODES.keys():
+    if args[0] in LANG_CODES:
         is_lang, lang = True, args[0]
     else:
         is_lang, lang = False, DEFAULT_LANG
     if kst.is_reply:
-        words = (await kst.get_reply_message()).text
+        words = (await kst.get_reply_message()).message
     else:
         try:
             words = match.split(maxsplit=1)[1] if is_lang else match
@@ -130,8 +116,11 @@ async def _(kst):
     yy = await kst.eor("`...`")
     try:
         text = strip_ascii(strip_format(strip_emoji(words)))
+        if kst.pattern_match.group(1).strip() != "t":
+            translator = Translator()
+            text = (await translator(text, targetlang=lang)).text
         file = Root / "downloads/voice.mp3"
-        voice = await run_async(gTTS, text, lang=lang, slow=False)
+        voice = await aioify(gTTS, text, lang=lang, slow=False)
         voice.save(file)
         await kst.client.send_file(
             kst.chat_id,
@@ -157,12 +146,13 @@ async def _(kst):
 
 
 plugins_help["translate"] = {
-    "{i}tr [lang_code] [text/reply]": "Translate the message to required language.",
-    "{i}tl [lang_code] [text/reply]": "Send or reply message as translated.",
-    "{i}tts [lang_code] [text/reply]": "Text to speech",
-    "{i}lang": """Show all language code.
+    "{i}tr [lang_code] [text]/[reply]": "Translate the message to required language.",
+    "{i}tl [lang_code] [text]/[reply]": "Send or reply message as translated.",
+    "{i}tts [lang_code] [text]/[reply]": "Text to speech.",
+    "{i}ts [lang_code] [text]/[reply]": "Translate the message then text to speech.",
+    "{i}lang": f"""List all language code.
 
-**Note:** Default [lang_code] is `{}`.""".format(
-        DEFAULT_LANG
-    ),
+**Note:**
+- Default [lang_code] is `{DEFAULT_LANG}`.
+""",
 }

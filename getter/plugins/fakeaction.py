@@ -7,10 +7,10 @@
 
 import asyncio
 from . import (
-    DEVS,
     kasta_cmd,
     plugins_help,
     choice,
+    time_formatter,
 )
 
 
@@ -20,34 +20,34 @@ from . import (
 )
 @kasta_cmd(
     pattern="gf(typing|audio|contact|document|game|location|sticker|photo|round|video)(?: |$)(.*)",
-    own=True,
-    senders=DEVS,
+    dev=True,
     no_crash=True,
 )
 async def _(kst):
-    is_devs = True if not kst.out else False
-    if is_devs:
+    if kst.is_dev:
         await asyncio.sleep(choice((4, 6, 8)))
+    ga = kst.client
     action = kst.pattern_match.group(1)
+    act = action
     if action in ("audio", "round", "video"):
         action = "record-" + action
-    sec = kst.pattern_match.group(2)
-    sec = 60 if not sec.replace(".", "", 1).isdecimal() else sec
-    act = kst.pattern_match.group(1).capitalize()
-    await kst.eor(f'Starting "Fake {act}" for `{sec}` seconds.', time=3)
-    async with kst.client.action(kst.chat_id, action=action):
-        await asyncio.sleep(int(sec))
+    sec = await ga.get_text(kst, group=2)
+    sec = int(60 if not sec.replace(".", "", 1).isdecimal() else sec)
+    typefor = time_formatter(sec * 1000)
+    await kst.eor(f"`Starting fake {act} for {typefor}...`", time=3)
+    async with ga.action(kst.chat_id, action=action):
+        await asyncio.sleep(sec)
 
 
 plugins_help["fakeaction"] = {
-    "{i}ftyping [time/in seconds]": "Show Fake Typing action in current chat.",
-    "{i}faudio [time/in seconds]": "Show Fake Recording action in current chat.",
-    "{i}fvideo [time/in seconds]": "Show Fake Video action in current chat.",
-    "{i}fgame [time/in seconds]": "Show Fake Game Playing action in current chat.",
-    "{i}fsticker [time/in seconds]": "Show Fake Sticker Choosing action in current chat.",
-    "{i}flocation [time/in seconds]": "Show Fake Location action in current chat.",
-    "{i}fcontact [time/in seconds]": "Show Fake Contact Choosing action in current chat.",
-    "{i}fround [time/in seconds]": "Show Fake Video Message action in current chat.",
-    "{i}fphoto [time/in seconds]": "Show Fake Sending Photo action in current chat.",
-    "{i}fdocument [time/in seconds]": "Show Fake Sending Document action in current chat.",
+    "{i}ftyping [seconds]/[reply]": "Show Fake Typing action in current chat.",
+    "{i}faudio [seconds]/[reply]": "Show Fake Recording action in current chat.",
+    "{i}fvideo [seconds]/[reply]": "Show Fake Video action in current chat.",
+    "{i}fgame [seconds]/[reply]": "Show Fake Game Playing action in current chat.",
+    "{i}fsticker [seconds]/[reply]": "Show Fake Sticker Choosing action in current chat.",
+    "{i}flocation [seconds]/[reply]": "Show Fake Location action in current chat.",
+    "{i}fcontact [seconds]/[reply]": "Show Fake Contact Choosing action in current chat.",
+    "{i}fround [seconds]/[reply]": "Show Fake Video Message action in current chat.",
+    "{i}fphoto [seconds]/[reply]": "Show Fake Sending Photo action in current chat.",
+    "{i}fdocument [seconds]/[reply]": "Show Fake Sending Document action in current chat.",
 }
