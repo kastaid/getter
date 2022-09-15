@@ -31,16 +31,16 @@ async def _(kst):
         from selenium.webdriver.chrome.service import Service
     except ImportError:
         return
-    link = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(1)
+    link = await kst.client.get_text(kst)
     if not link:
         await kst.eor("`Provide a valid link!`", time=5)
         return
     toss = link
     check_link = is_url(toss)
-    if check_link is not True:
+    if not (check_link is True):
         toss = f"http://{link}"
         check_link = is_url(toss)
-    if check_link is not True:
+    if not (check_link is True):
         return await kst.eod("`Input is not supported link!`")
     yy = await kst.eor("`Processing...`")
     start_time = time.time()
@@ -74,21 +74,16 @@ async def _(kst):
     await yy.eor("`Screenshot Taked...`")
     driver.close()
     taken = time_formatter((time.time() - start_time) * 1000)
-    with suppress(BaseException):
-        with BytesIO(ss_png) as file:
-            file.name = f"ss_{link}.png"
-            caption = rf"""\\**#Getter**//
-**URL:** `{link}`
-**Taken:** `{taken}`"""
-            await kst.client.send_file(
-                kst.chat_id,
-                file=file,
-                caption=caption,
-                force_document=True,
-                allow_cache=False,
-                reply_to=kst.reply_to_msg_id,
-                silent=True,
-            )
+    with suppress(BaseException), BytesIO(ss_png) as file:
+        file.name = f"ss_{link}.png"
+        await kst.respond(
+            f"**URL:** `{link}`\n**Taken:** `{taken}`",
+            file=file,
+            force_document=True,
+            allow_cache=False,
+            reply_to=kst.reply_to_msg_id,
+            silent=True,
+        )
     await yy.try_delete()
 
 
@@ -101,16 +96,16 @@ async def _(kst):
         from tweetcapture.utils.utils import is_valid_tweet_url
     except ImportError:
         return
-    link = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(1)
+    link = await kst.client.get_text(kst)
     if not link:
         await kst.eor("`Provide a valid tweet link!`", time=5)
         return
     toss = link
     check_link = is_url(toss)
-    if check_link is not True:
+    if not (check_link is True):
         toss = f"http://{link}"
         check_link = is_url(toss)
-    if check_link is not True or not is_valid_tweet_url(link):
+    if not (check_link is True) or not is_valid_tweet_url(link):
         return await kst.eod("`Input is not valid tweet link!`")
     yy = await kst.eor("`Processing...`")
     start_time = time.time()
@@ -131,13 +126,9 @@ async def _(kst):
     await yy.eor("`Tweet Screenshot Taked...`")
     taken = time_formatter((time.time() - start_time) * 1000)
     with suppress(BaseException):
-        caption = rf"""\\**#Getter**//
-**URL:** `{link}`
-**Taken:** `{taken}`"""
-        await kst.client.send_file(
-            kst.chat_id,
+        await kst.respond(
+            f"**URL:** `{link}`\n**Taken:** `{taken}`",
             file=file,
-            caption=caption,
             force_document=False,
             allow_cache=False,
             reply_to=kst.reply_to_msg_id,
@@ -148,8 +139,14 @@ async def _(kst):
 
 
 plugins_help["screenshot"] = {
-    "{i}ss [link/reply]": """Take a full screenshot of a website.
-**Example:** `{i}ss https://google.com`""",
-    "{i}tss [link/reply]": """Gives screenshot of tweet.
-**Example:** `{i}tss https://twitter.com/jack/status/969234275420655616`""",
+    "{i}ss [link]/[reply]": "Take a full screenshot of website.",
+    "{i}tss [link]/[reply]": """Gives screenshot of tweet.
+
+**Examples:**
+- Take a screenshot of website.
+-> `{i}ss https://google.com`
+
+- Take a screenshot of tweet.
+-> `{i}tss https://twitter.com/jack/status/969234275420655616`
+""",
 }

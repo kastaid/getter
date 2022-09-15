@@ -7,19 +7,23 @@
 
 import asyncio
 import base64
-import binascii
 import re
 from . import (
     kasta_cmd,
     plugins_help,
     parse_pre,
-    Searcher,
+    strip_format,
+    strip_emoji,
+    camel,
+    snake,
+    kebab,
     FLIP_MAP,
+    Fetch,
 )
 
 
 @kasta_cmd(
-    pattern="noformat$",
+    pattern="getformat$",
     func=lambda e: e.is_reply,
     no_crash=True,
 )
@@ -29,6 +33,19 @@ async def _(kst):
         return await kst.try_delete()
     text = reply.text
     await kst.eor(text, parse_mode=parse_pre)
+
+
+@kasta_cmd(
+    pattern="noformat$",
+    func=lambda e: e.is_reply,
+    no_crash=True,
+)
+async def _(kst):
+    reply = await kst.get_reply_message()
+    if not getattr(reply, "message", None):
+        return await kst.try_delete()
+    text = strip_format(reply.message)
+    await kst.eor(text)
 
 
 @kasta_cmd(
@@ -45,6 +62,19 @@ async def _(kst):
 
 
 @kasta_cmd(
+    pattern="noemoji$",
+    func=lambda e: e.is_reply,
+    no_crash=True,
+)
+async def _(kst):
+    reply = await kst.get_reply_message()
+    if not getattr(reply, "text", None):
+        return await kst.try_delete()
+    text = strip_emoji(reply.text)
+    await kst.eor(text)
+
+
+@kasta_cmd(
     pattern="repeat(?: |$)(.*)",
     func=lambda e: e.is_reply,
     no_crash=True,
@@ -57,7 +87,7 @@ async def _(kst):
     count = int(count) if count.isdecimal() else 1
     txt = reply.text
     text = txt + "\n"
-    for _ in range(0, count - 1):
+    for _ in range(count - 1):
         text += txt + "\n"
     await kst.eor(text)
 
@@ -67,7 +97,7 @@ async def _(kst):
     no_crash=True,
 )
 async def _(kst):
-    text = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(1)
+    text = await kst.client.get_text(kst)
     if not text:
         return await kst.try_delete()
     count = len(re.findall(r"(\S+)", text))
@@ -80,7 +110,7 @@ async def _(kst):
     no_crash=True,
 )
 async def _(kst):
-    text = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(2)
+    text = await kst.client.get_text(kst, group=2, plain=False)
     if not text:
         return await kst.try_delete()
     cmd = kst.pattern_match.group(1)
@@ -106,7 +136,7 @@ async def _(kst):
     no_crash=False,
 )
 async def _(kst):
-    text = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(2)
+    text = await kst.client.get_text(kst, group=2)
     if not text:
         return await kst.try_delete()
     text = base64.b64encode(text.encode("utf-8")).decode()
@@ -118,12 +148,12 @@ async def _(kst):
     no_crash=False,
 )
 async def _(kst):
-    text = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(2)
+    text = await kst.client.get_text(kst, group=2)
     if not text:
         return await kst.try_delete()
     try:
         text = base64.b64decode(text).decode("utf-8", "replace")
-    except (binascii.Error, ValueError) as err:
+    except Exception as err:
         text = f"Invalid Base64 data: {err}"
     await kst.eor(text, parse_mode=parse_pre)
 
@@ -133,7 +163,7 @@ async def _(kst):
     no_crash=True,
 )
 async def _(kst):
-    text = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(2)
+    text = await kst.client.get_text(kst, group=2)
     if not text:
         return await kst.try_delete()
     cmd = kst.pattern_match.group(1)
@@ -141,7 +171,7 @@ async def _(kst):
     yy = await kst.eor("`...`")
     text = text.encode("utf-8")
     url = f"https://notapi.vercel.app/api/morse?{api}={text}"
-    res = await Searcher(url=url, re_json=True)
+    res = await Fetch(url, re_json=True)
     if not res:
         return await yy.eod("`Try again now!`")
     await yy.eor(res.get("result"))
@@ -152,7 +182,7 @@ async def _(kst):
     no_crash=True,
 )
 async def _(kst):
-    text = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(2)
+    text = await kst.client.get_text(kst, group=2)
     if not text:
         return await kst.try_delete()
     cmd = kst.pattern_match.group(1)
@@ -160,7 +190,7 @@ async def _(kst):
     yy = await kst.eor("`...`")
     text = text.encode("utf-8")
     url = f"https://notapi.vercel.app/api/romans?{api}={text}"
-    res = await Searcher(url=url, re_json=True)
+    res = await Fetch(url, re_json=True)
     if not res:
         return await yy.eod("`Try again now!`")
     await yy.eor(res.get("result"))
@@ -171,7 +201,7 @@ async def _(kst):
     no_crash=True,
 )
 async def _(kst):
-    text = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(2)
+    text = await kst.client.get_text(kst, group=2, plain=False)
     if not text:
         return await kst.try_delete()
     text = f"||{text}||"
@@ -206,64 +236,40 @@ async def _(kst):
     no_crash=True,
 )
 async def _(kst):
-    text = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(1)
+    text = await kst.client.get_text(kst, plain=False)
     if not text:
         return await kst.try_delete()
     text = "  ".join(text)
     final_text = ""
     for char in text:
-        if char in FLIP_MAP.keys():
-            new_char = FLIP_MAP[char]
-        else:
-            new_char = char
+        new_char = FLIP_MAP.get(char, char)
         final_text += new_char
     if text != final_text:
         return await kst.eor(final_text)
     await kst.eor(text)
 
 
-def camel(s: str) -> str:
-    s = re.sub(r"(_|-)+", " ", s).title().replace(" ", "")
-    return "".join([s[0].lower(), s[1:]])
-
-
-def snake(s: str) -> str:
-    return "_".join(re.sub("([A-Z][a-z]+)", r" \1", re.sub("([A-Z]+)", r" \1", s.replace("-", " "))).split()).lower()
-
-
-def kebab(s: str) -> str:
-    return "-".join(
-        re.sub(
-            r"(\s|_|-)+",
-            " ",
-            re.sub(
-                r"[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+",
-                lambda mo: " " + mo.group(0).lower(),
-                s,
-            ),
-        ).split()
-    )
-
-
 plugins_help["text"] = {
-    "{i}noformat [reply]": "Convert replied message without format.",
-    "{i}nospace [reply]": "Remove all spaces in text.",
+    "{i}getformat [reply]": "Get a replied message format.",
+    "{i}noformat [reply]": "Clean format in replied message.",
+    "{i}nospace [reply]": "Remove all spaces in replied message.",
+    "{i}noemoji [reply]": "Remove all emoji in replied message.",
     "{i}repeat [count] [reply]": "Repeat text in replied message.",
-    "{i}count [text/reply]": "Count words in text message.",
-    "{i}upper [text/reply]": "Convert text to UPPERCASE.",
-    "{i}lower [text/reply]": "Convert text to lowercase.",
-    "{i}title [text/reply]": "Convert text to TitleCase.",
-    "{i}capital [text/reply]": "Convert first word to Capital.",
-    "{i}camel [text/reply]": "Convert text to camelCase.",
-    "{i}snake [text/reply]": "Convert text to snake_case.",
-    "{i}kebab [text/reply]": "Convert text to kebab-case.",
-    "{i}b64encode|{i}b64e [text/reply]": "Encode text into Base64.",
-    "{i}b64decode|{i}b64d [text/reply]": "Decode Base64 data.",
-    "{i}morse [text/reply]": "Encode text into Morse code.",
-    "{i}unmorse [text/reply]": "Decode Morse code.",
-    "{i}roman [text/reply]": "Convert any number less than 4000 to roman numerals.",
-    "{i}unroman [text/reply]": "Convert roman numeral to number.",
-    "{i}spoiler|{i}sp [text/reply]": "Create a spoiler message.",
+    "{i}count [text]/[reply]": "Count words in text message.",
+    "{i}upper [text]/[reply]": "Convert text to UPPERCASE.",
+    "{i}lower [text]/[reply]": "Convert text to lowercase.",
+    "{i}title [text]/[reply]": "Convert text to TitleCase.",
+    "{i}capital [text]/[reply]": "Convert first word to Capital.",
+    "{i}camel [text]/[reply]": "Convert text to camelCase.",
+    "{i}snake [text]/[reply]": "Convert text to snake_case.",
+    "{i}kebab [text]/[reply]": "Convert text to kebab-case.",
+    "{i}b64encode|{i}b64e [text]/[reply]": "Encode text into Base64.",
+    "{i}b64decode|{i}b64d [text]/[reply]": "Decode Base64 data.",
+    "{i}morse [text]/[reply]": "Encode text into Morse code.",
+    "{i}unmorse [text]/[reply]": "Decode Morse code.",
+    "{i}roman [text]/[reply]": "Convert any number less than 4000 to roman numerals.",
+    "{i}unroman [text]/[reply]": "Convert roman numeral to number.",
+    "{i}spoiler|{i}sp [text]/[reply]": "Create a spoiler message.",
     "{i}type [text]": "Edits the message and shows like someone is typing.",
-    "{i}flip [text/reply]": "Flip text upside down.",
+    "{i}flip [text]/[reply]": "Flip text upside down.",
 }

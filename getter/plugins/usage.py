@@ -22,8 +22,9 @@ from . import (
     todict,
     mask_email,
     USERAGENTS,
-    Searcher,
-    Hk,
+    Fetch,
+    hk,
+    sendlog,
 )
 
 dyno_text = """
@@ -41,7 +42,6 @@ dyno_text = """
 -> <b>Dyno hours quota remaining this month:</b>
     •  <code>{}h  {}m  {}%</code>
 """
-
 usage_text = """
 <b>🖥️ Uptime</b>
 <b>App:</b> <code>{}</code>
@@ -68,7 +68,7 @@ usage_text = """
 )
 async def _(kst):
     yy = await kst.eor("`Processing...`")
-    if Hk.is_heroku:
+    if hk.is_heroku:
         usage = default_usage() + await heroku_usage()
     else:
         usage = default_usage()
@@ -80,43 +80,42 @@ async def _(kst):
 )
 async def _(kst):
     yy = await kst.eor("`Processing...`")
-    if not Hk.api:
-        await yy.eor("Please set `HEROKU_API` in Config Vars.")
+    if not hk.api:
+        await yy.eod("Please set `HEROKU_API` in Config Vars.")
         return
-    if not Hk.name:
-        await yy.eor("Please set `HEROKU_APP_NAME` in Config Vars.")
+    if not hk.name:
+        await yy.eod("Please set `HEROKU_APP_NAME` in Config Vars.")
         return
     try:
-        conn = Hk.heroku()
-        app = conn.app(Hk.name)
+        conn = hk.heroku()
+        app = conn.app(hk.name)
     except Exception as err:
         return await yy.eor(f"**ERROR:**\n`{err}`")
-    uid = kst.client.uid
     account = json.dumps(todict(conn.account()), indent=2, default=str)
     capp = json.dumps(todict(app.info), indent=2, default=str)
     dyno = json.dumps(todict(app.dynos()), indent=2, default=str)
     addons = json.dumps(todict(app.addons()), indent=2, default=str)
     buildpacks = json.dumps(todict(app.buildpacks()), indent=2, default=str)
     configs = json.dumps(app.config().to_dict(), indent=2, default=str)
-    await kst.client.send_message(uid, f"<b>Account:</b>\n<pre>{html.escape(account)}</pre>", parse_mode="html")
+    await sendlog(f"<b>Account:</b>\n<pre>{html.escape(account)}</pre>", parse_mode="html")
     await asyncio.sleep(1)
-    await kst.client.send_message(uid, f"<b>App:</b>\n<pre>{html.escape(capp)}</pre>", parse_mode="html")
+    await sendlog(f"<b>App:</b>\n<pre>{html.escape(capp)}</pre>", parse_mode="html")
     await asyncio.sleep(1)
-    await kst.client.send_message(uid, f"<b>Dyno:</b>\n<pre>{html.escape(dyno)}</pre>", parse_mode="html")
+    await sendlog(f"<b>Dyno:</b>\n<pre>{html.escape(dyno)}</pre>", parse_mode="html")
     await asyncio.sleep(1)
-    await kst.client.send_message(uid, f"<b>Addons:</b>\n<pre>{html.escape(addons)}</pre>", parse_mode="html")
+    await sendlog(f"<b>Addons:</b>\n<pre>{html.escape(addons)}</pre>", parse_mode="html")
     await asyncio.sleep(1)
-    await kst.client.send_message(uid, f"<b>Buildpacks:</b>\n<pre>{html.escape(buildpacks)}</pre>", parse_mode="html")
+    await sendlog(f"<b>Buildpacks:</b>\n<pre>{html.escape(buildpacks)}</pre>", parse_mode="html")
     await asyncio.sleep(1)
-    await kst.client.send_message(uid, f"<b>Configs:</b>\n<pre>{html.escape(configs)}</pre>", parse_mode="html")
-    await yy.eor("`Heroku details sent at saved messages.`")
+    await sendlog(f"<b>Configs:</b>\n<pre>{html.escape(configs)}</pre>", parse_mode="html")
+    await yy.eor("`Heroku details sent at botlogs.`")
 
 
 def default_usage() -> str:
     import psutil
 
     app_uptime = time_formatter((time.time() - StartTime) * 1000)
-    system_uptime = datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%d/%m/%Y %H:%M:%S")
+    system_uptime = datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S")
     total, used, free = shutil.disk_usage(".")
     try:
         cpu_freq = psutil.cpu_freq().current
@@ -130,10 +129,22 @@ def default_usage() -> str:
             CPU = "{}%".format(psutil.cpu_percent())
         except BaseException:
             CPU = "0%"
-    RAM = "{}%".format(psutil.virtual_memory().percent)
-    DISK = "{}%".format(psutil.disk_usage("/").percent)
-    UPLOAD = humanbytes(psutil.net_io_counters().bytes_sent)
-    DOWN = humanbytes(psutil.net_io_counters().bytes_recv)
+    try:
+        RAM = "{}%".format(psutil.virtual_memory().percent)
+    except BaseException:
+        RAM = "0%"
+    try:
+        DISK = "{}%".format(psutil.disk_usage("/").percent)
+    except BaseException:
+        DISK = "0%"
+    try:
+        UPLOAD = humanbytes(psutil.net_io_counters().bytes_sent)
+    except BaseException:
+        UPLOAD = 0
+    try:
+        DOWN = humanbytes(psutil.net_io_counters().bytes_recv)
+    except BaseException:
+        DOWN = 0
     TOTAL = humanbytes(total)
     USED = humanbytes(used)
     FREE = humanbytes(free)
@@ -153,18 +164,18 @@ def default_usage() -> str:
 
 async def heroku_usage() -> str:
     try:
-        conn = Hk.heroku()
+        conn = hk.heroku()
         user = conn.account().id
-        app = conn.app(Hk.name)
+        app = conn.app(hk.name)
     except Exception as err:
         return f"<b>ERROR:</b>\n<code>{err}</code>"
     headers = {
         "User-Agent": choice(USERAGENTS),
-        "Authorization": f"Bearer {Hk.api}",
+        "Authorization": f"Bearer {hk.api}",
         "Accept": "application/vnd.heroku+json; version=3.account-quotas",
     }
     url = f"https://api.heroku.com/accounts/{user}/actions/get-quota"
-    res = await Searcher(url, headers=headers, re_json=True)
+    res = await Fetch(url, headers=headers, re_json=True)
     if not res:
         return "<code>Try again now!</code>"
     quota = res["account_quota"]
@@ -189,8 +200,8 @@ async def heroku_usage() -> str:
         app.name,
         app.stack.name,
         app.region.name,
-        app.created_at.strftime("%d/%m/%Y %H:%M:%S"),
-        app.updated_at.strftime("%d/%m/%Y %H:%M:%S"),
+        app.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+        app.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
         mask_email(app.owner.email),
         AppHours,
         AppMinutes,
@@ -203,5 +214,5 @@ async def heroku_usage() -> str:
 
 plugins_help["usage"] = {
     "{i}usage": "Get overall usage, also heroku stats.",
-    "{i}heroku": "Get the heroku information (account, app, dyno, addons, buildpacks, configs) and save in Saved Messages.",
+    "{i}heroku": "Get the heroku information (account, app, dyno, addons, buildpacks, configs) and save in botlogs.",
 }

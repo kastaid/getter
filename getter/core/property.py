@@ -8,14 +8,14 @@
 import asyncio
 import re
 import sys
+import time
+import typing
 from base64 import b64decode
-from typing import Union, List, Set
-from cache import AsyncTTL
+from asyncache import cached
+from cachetools import TTLCache
 from .. import __license__, __copyright__
 from ..logger import LOGS
-from .functions import Searcher
-
-Props = Union[List[Union[int, str]], Set[Union[int, str]]]
+from .tools import Fetch
 
 _c, _u, _g, _v = (
     b64decode("a2FzdGFpZA==").decode("utf-8"),
@@ -33,18 +33,18 @@ def do_not_remove_credit() -> None:
         sys.exit(1)
 
 
-@AsyncTTL(time_to_live=(120 * 30), maxsize=1024)  # 1 hours
+@cached(TTLCache(maxsize=1024, ttl=(120 * 30), timer=time.perf_counter))  # 1 hours
 async def get_blacklisted(
     url: str,
     is_json: bool = False,
     attempts: int = 3,
-    fallbacks: Props = [],
-) -> Props:
+    fallbacks: typing.Optional[typing.Tuple[typing.Union[int, str]]] = None,
+) -> typing.Set[typing.Union[int, str]]:
     count = 0
-    is_content = False if is_json else True
+    is_content = not is_json
     while count < attempts:
-        res = await Searcher(
-            url=url,
+        res = await Fetch(
+            url,
             re_json=is_json,
             re_content=is_content,
         )
@@ -53,13 +53,13 @@ async def get_blacklisted(
             if count != attempts:
                 await asyncio.sleep(1)
                 continue
-            ids = fallbacks
+            ids: typing.Optional[typing.Tuple[typing.Union[int, str]]] = fallbacks or []
             break
         if is_content:
             reg = r"[^\s#,\[\]\{\}]+"
             data = re.findall(reg, res.decode("utf-8"))
-            ids = {int(x) for x in data if x.isdecimal() or (x.startswith("-") and x[1:].isdecimal())}
+            ids = [int(x) for x in data if x.isdecimal() or (x.startswith("-") and x[1:].isdecimal())]
         else:
-            ids = set(res)
+            ids = list(res)
         break
-    return ids
+    return set(ids)

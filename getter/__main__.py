@@ -18,48 +18,55 @@ from . import (
     __tlversion__,
     __layer__,
     __pyversion__,
-    LOOP,
 )
-from .config import Var, HANDLER
+from .config import Var, hl
 from .core.client import getter_app
-from .core.functions import time_formatter
 from .core.helper import plugins_help
 from .core.property import do_not_remove_credit
 from .core.startup import (
     trap,
     migrations,
-    all_plugins,
+    autopilot,
+    verify,
     autous,
+    finishing,
+    all_plugins,
 )
+from .core.utils import time_formatter
 from .logger import LOGS
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 success_msg = ">> Visit @kastaid for Updates !!"
-
 if Var.DEV_MODE:
     trap()
-    LOGS.warning(
-        "\nDEV_MODE config enabled.\nSome codes and functions will not work.\nIf you need to run in production then comment DEV_MODE or set value to False or remove them!"
+    print(
+        "\nDEV_MODE config enabled.\n"
+        + "Some codes and functionality will not work normally.\n"
+        + "If you need to run in Production then comment DEV_MODE or set value to False or remove them!\n"
     )
 
 
 async def main() -> None:
-    LOGS.info(">> Migrations...")
     migrations()
+    await autopilot()
+    await verify()
     LOGS.info(">> Load Plugins...")
     load = time.time()
+    no_print = ("_watcher",)
     plugins, basepath = all_plugins()
     for plugin in plugins:
         try:
             import_module(basepath + plugin)
-            LOGS.success("[+] " + plugin)
+            if plugin not in no_print:
+                LOGS.success("[+] " + plugin)
         except Exception as err:
-            LOGS.exception("[-] {} : {}".format(plugin, err))
+            LOGS.exception(f"[-] {plugin} : {err}")
     loaded_time = time_formatter((time.time() - load) * 1000)
+    [plugins.remove(_) for _ in no_print]
     loaded_msg = ">> Loaded Plugins: {} , Commands: {} (took {}) : {}".format(
-        len(plugins),
-        sum(len(v) for v in plugins_help.values()),
+        plugins_help.count,
+        plugins_help.total,
         loaded_time,
         tuple(plugins),
     )
@@ -73,12 +80,12 @@ async def main() -> None:
         __tlversion__,
         __layer__,
     )
-    launch_msg = ">> 🚀 Getter v{} launch ({} - {}) in {} with handler [{}ping]".format(
+    launch_msg = ">> 🚀 Getter v{} launch ({} - {}) in {} with handler [ {}ping ]".format(
         __version__,
         getter_app.full_name,
         getter_app.uid,
         launch_time,
-        HANDLER,
+        hl,
     )
     LOGS.info(python_msg)
     LOGS.info(telethon_msg)
@@ -86,24 +93,23 @@ async def main() -> None:
     LOGS.info(__license__)
     LOGS.info(__copyright__)
     await autous(getter_app.uid)
+    await finishing(launch_msg)
     LOGS.success(success_msg)
     await getter_app.run()
 
 
 if __name__ == "__main__":
     try:
-        LOOP.run_until_complete(main())
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(main())
     except (
         KeyboardInterrupt,
         ConnectionError,
         asyncio.exceptions.CancelledError,
     ):
         pass
-    except (ImportError, ModuleNotFoundError) as err:
-        LOGS.exception("[MAIN_MODULE_IMPORT] : {}".format(err))
-        sys.exit(1)
     except Exception as err:
-        LOGS.exception("[MAIN_ERROR] : {}".format(err))
+        LOGS.exception(f"[MAIN_ERROR] : {err}")
     finally:
-        LOGS.warning("[MAIN] - App Stopped...")
+        LOGS.warning("[MAIN] - Getter Stopped...")
         sys.exit(0)

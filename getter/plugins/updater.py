@@ -14,45 +14,60 @@ import aiofiles
 from git import Repo
 from git.exc import GitCommandError, InvalidGitRepositoryError, NoSuchPathError
 from . import (
-    StartTime,
     __version__,
+    __tlversion__,
+    __layer__,
+    __pyversion__,
+    StartTime,
     Root,
-    DEVS,
     Var,
+    tz,
     hl,
     kasta_cmd,
     plugins_help,
     choice,
     suppress,
+    sgvar,
+    gvar,
     strip_format,
     time_formatter,
     get_random_hex,
-    make_async,
+    humanbool,
     Runner,
     MAX_MESSAGE_LEN,
-    Hk,
+    hk,
 )
 
 _UPDATE_LOCK = asyncio.Lock()
 UPSTREAM_REPO = "https://github.com/kastaid/getter.git"
 UPSTREAM_BRANCH = "main"
-help_text = f"""❯ `{hl}update <now|pull>`
-Temporary update as locally.
+help_text = f"""
+❯ `{hl}update [now/pull]`
+Temporarily update as locally.
 
-❯ `{hl}update <deploy|push>`
+❯ `{hl}update [deploy/push]`
 Permanently update as heroku.
 
 ❯ `{hl}update force`
-Force temporary update as locally.
+Force temporarily update as locally.
 """
 test_text = """
-<b>ID:</b> <code>{}</code>
-<b>Heroku App:</b> <code>{}</code>
-<b>Heroku Stack:</b> <code>{}</code>
-<b>Getter Version:</b> <code>{}</code>
-<b>Speed:</b> <code>{}ms</code>
-<b>Uptime:</b> <code>{}</code>
-<b>UTC Now:</b> <code>{}</code>
+├  <b>User:</b> <code>{}</code>
+├  <b>ID:</b> <code>{}</code>
+├  <b>Getter Version:</b> <code>{}</code>
+├  <b>Python Version:</b> <code>{}</code>
+├  <b>Telethon Version:</b> <code>{}</code>
+├  <b>Telegram Layer:</b> <code>{}</code>
+├  <b>Handler:</b> <code>{}</code>
+├  <b>Sudo:</b> <code>{}</code>
+├  <b>PM-Guard:</b> <code>{}</code>
+├  <b>PM-Block:</b> <code>{}</code>
+├  <b>Anti-PM:</b> <code>{}</code>
+├  <b>Heroku App:</b> <code>{}</code>
+├  <b>Heroku Stack:</b> <code>{}</code>
+├  <b>Uptime:</b> <code>{}</code>
+├  <b>UTC Now:</b> <code>{}</code>
+└  <b>Local Now:</b> <code>{}</code>
 """
 
 
@@ -62,12 +77,10 @@ test_text = """
 @kasta_cmd(
     pattern="getterup(?: |$)(force|now|deploy|pull|push)?(?: |$)(.*)",
     edited=True,
-    own=True,
-    senders=DEVS,
+    dev=True,
 )
 async def _(kst):
-    is_devs = True if not kst.out else False
-    if not is_devs and _UPDATE_LOCK.locked():
+    if not kst.is_dev and _UPDATE_LOCK.locked():
         await kst.eor("`Please wait until previous • update • finished...`", time=5, silent=True)
         return
     async with _UPDATE_LOCK:
@@ -86,7 +99,7 @@ async def _(kst):
             state = "[DEPLOY] "
         else:
             state = "[CHECK] "
-        if is_devs and opt:
+        if kst.is_dev and opt:
             user_id = version = None
             try:
                 user_id = int(opt)
@@ -96,7 +109,7 @@ async def _(kst):
                 return
             if not user_id and version == __version__:
                 return
-        if is_devs:
+        if kst.is_dev:
             await asyncio.sleep(choice((5, 7, 9)))
         yy = await kst.eor(f"`{state}Fetching...`", silent=True)
         try:
@@ -116,7 +129,7 @@ async def _(kst):
             repo.heads.main.checkout(True)
         await Runner(f"git fetch origin {UPSTREAM_BRANCH}")
         if is_deploy:
-            if is_devs:
+            if kst.is_dev:
                 await asyncio.sleep(5)
             await yy.eor(f"`{state}Updating ~ Please Wait...`")
             await Pushing(yy, state, repo)
@@ -129,7 +142,7 @@ async def _(kst):
             await yy.eor(rf"\\**#Getter**// `v{__version__} up-to-date as {UPSTREAM_BRANCH}`")
             return
         if not (mode or is_force):
-            changelog = await generate_changelog(repo, f"HEAD..origin/{UPSTREAM_BRANCH}")
+            changelog = generate_changelog(repo, f"HEAD..origin/{UPSTREAM_BRANCH}")
             await show_changelog(yy, changelog)
             return
         if is_force:
@@ -156,15 +169,17 @@ async def _(kst):
     pattern="test$",
 )
 @kasta_cmd(
+    pattern="test$",
+    sudo=True,
+)
+@kasta_cmd(
     pattern="gtest(?: |$)(.*)",
     edited=True,
-    own=True,
-    senders=DEVS,
+    dev=True,
 )
 async def _(kst):
-    is_devs = True if not kst.out else False
     clean = False
-    if is_devs:
+    if kst.is_dev:
         opt = kst.pattern_match.group(1)
         if opt:
             user_id = version = None
@@ -179,24 +194,32 @@ async def _(kst):
             clean = True
         if not clean:
             await asyncio.sleep(choice((4, 6, 8)))
-    start = time.perf_counter()
+    if kst.is_sudo:
+        await asyncio.sleep(choice((4, 6, 8)))
     # http://www.timebie.com/std/utc
-    utc_now = datetime.datetime.now(datetime.timezone.utc).strftime("%d/%m/%Y %H:%M:%S")
+    utc_now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    local_now = datetime.datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
     yy = await kst.eor("`Processing...`", silent=True, force_reply=True)
-    end = time.perf_counter()
-    speed = end - start
     uptime = time_formatter((time.time() - StartTime) * 1000)
-    text = test_text.format(
-        kst.client.uid,
-        Hk.name or "none",
-        Hk.stack,
-        __version__,
-        round(speed, 3),
-        uptime,
-        utc_now,
-    )
     await yy.eor(
-        text,
+        test_text.format(
+            kst.client.full_name,
+            kst.client.uid,
+            __version__,
+            __pyversion__,
+            __tlversion__,
+            __layer__,
+            hl,
+            humanbool(gvar("_sudo", use_cache=True), toggle=True),
+            humanbool(gvar("_pmguard", use_cache=True), toggle=True),
+            humanbool(gvar("_pmblock", use_cache=True), toggle=True),
+            humanbool(gvar("_antipm", use_cache=True), toggle=True),
+            hk.name or "none",
+            hk.stack,
+            uptime,
+            utc_now,
+            local_now,
+        ),
         parse_mode="html",
         time=20 if clean else 0,
     )
@@ -224,7 +247,7 @@ async def force_pull() -> None:
 
 
 async def force_push() -> str:
-    push = f"git push --force https://heroku:{Hk.api}@git.heroku.com/{Hk.name}.git HEAD:main"
+    push = f"git push --force https://heroku:{hk.api}@git.heroku.com/{hk.name}.git HEAD:main"
     _, err, _, _ = await Runner(push)
     return err
 
@@ -236,14 +259,13 @@ def verify(repo, diff) -> bool:
     return bool(v)
 
 
-@make_async
 def generate_changelog(repo, diff) -> str:
     chlog = ""
     rep = UPSTREAM_REPO.replace(".git", "")
     ch = rf"\\<b>#Getter</b>// <b>v{__version__} New UPDATE available for <a href={rep}/tree/{UPSTREAM_BRANCH}>[{UPSTREAM_BRANCH}]</a>:</b>"
-    date = "%d/%m/%Y %H:%M:%S"
-    for c in repo.iter_commits(diff):
-        chlog += f"\n\n<b>#{c.count()}</b> [<code>{c.committed_datetime.strftime(date)}</code>]\n<code>{c.hexsha}</code>\n<b><a href={rep.rstrip('/')}/commit/{c}>[{c.summary}]</a></b> ~ <code>{c.author}</code>"
+    date = "%Y-%m-%d %H:%M:%S"
+    for _ in repo.iter_commits(diff):
+        chlog += f"\n\n<b>#{_.count()}</b> [<code>{_.committed_datetime.strftime(date)}</code>]\n<code>{_.hexsha}</code>\n<b><a href={rep.rstrip('/')}/commit/{_}>[{_.summary}]</a></b> ~ <code>{_.author}</code>"
     if chlog:
         return str(ch + chlog)
     return chlog
@@ -256,11 +278,9 @@ async def show_changelog(kst, changelog) -> None:
         async with aiofiles.open(file, mode="w") as f:
             await f.write(changelog)
         try:
-            chat = await kst.get_input_chat()
-            chlog = await kst.client.send_file(
-                chat,
+            chlog = await kst.respond(
+                r"\\**#Getter**// View this file to see changelog.",
                 file=file,
-                caption=r"\\**#Getter**// `View this file to see changelog.`",
                 force_document=True,
                 allow_cache=False,
                 reply_to=kst.reply_to_msg_id,
@@ -275,32 +295,34 @@ async def show_changelog(kst, changelog) -> None:
 
 
 async def Pulling(kst, state) -> None:
-    import psutil
-
     if not Var.DEV_MODE:
         await force_pull()
         # await ignores()
         await update_packages()
     up = rf"""\\**#Getter**// `{state}Updated Successfully...`
 Wait for a few seconds, then run `{hl}ping` command."""
-    await kst.eor(up)
+    yy = await kst.eor(up)
     with suppress(BaseException):
+        sgvar("_restart", f"{kst.chat_id}|{yy.id}")
+    with suppress(BaseException):
+        import psutil
+
         proc = psutil.Process(os.getpid())
-        for p in proc.open_files() + proc.connections():
-            os.close(p.fd)
+        for _ in proc.open_files() + proc.connections():
+            os.close(_.fd)
     os.execl(sys.executable, sys.executable, "-m", "getter")
 
 
 async def Pushing(kst, state, repo) -> None:
-    if not Hk.api:
+    if not hk.api:
         await kst.eod("Please set `HEROKU_API` in Config Vars.")
         return
-    if not Hk.name:
+    if not hk.name:
         await kst.eod("Please set `HEROKU_APP_NAME` in Config Vars.")
         return
     try:
-        conn = Hk.heroku()
-        app = conn.app(Hk.name)
+        conn = hk.heroku()
+        app = conn.app(hk.name)
     except Exception as err:
         if str(err).lower().startswith("401 client error: unauthorized"):
             msg = "HEROKU_API invalid or expired... Please re-check."
@@ -313,7 +335,9 @@ async def Pushing(kst, state, repo) -> None:
     await force_pull()
     up = rf"""\\**#Getter**// `{state}Updated Successfully...`
 Wait for a few minutes, then run `{hl}ping` command."""
-    await kst.eor(up)
+    yy = await kst.eor(up)
+    with suppress(BaseException):
+        sgvar("_restart", f"{kst.chat_id}|{yy.id}")
     """
     err = await force_push()
     if err:
@@ -328,7 +352,7 @@ Wait for a few minutes, then run `{hl}ping` command."""
         if msg:
             await kst.eor(msg)
     """
-    url = app.git_url.replace("https://", f"https://api:{Hk.api}@")
+    url = app.git_url.replace("https://", f"https://api:{hk.api}@")
     if "heroku" in repo.remotes:
         remote = repo.remote("heroku")
         remote.set_url(url)
@@ -345,9 +369,9 @@ Try again later or view logs for more info."""
 
 plugins_help["updater"] = {
     "{i}update": "Checks for updates, also displaying the changelog.",
-    "{i}update [now|pull]": "Temporary update as locally.",
-    "{i}update [deploy|push]": "Permanently update as heroku.",
-    "{i}update force": "Force temporary update as locally.",
+    "{i}update [now/pull]": "Temporarily update as locally.",
+    "{i}update [deploy/push]": "Permanently update as heroku.",
+    "{i}update force": "Force temporarily update as locally.",
     "{i}repo": "Get repo link.",
-    "{i}test": "Check the response.",
+    "{i}test": "Check the details.",
 }

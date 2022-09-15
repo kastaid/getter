@@ -7,9 +7,12 @@
 
 import asyncio
 from telethon.errors.rpcerrorlist import YouBlockedUserError
-from telethon.events import NewMessage
-from telethon.tl.functions.contacts import UnblockRequest
-from . import kasta_cmd, plugins_help, suppress
+from . import (
+    kasta_cmd,
+    plugins_help,
+    events,
+    suppress,
+)
 
 TW_BOT = "tweedlbot"
 TT_BOT = "downloader_tiktok_bot"
@@ -17,16 +20,15 @@ TT_BOT = "downloader_tiktok_bot"
 
 @kasta_cmd(
     pattern="tw(?: |$)(.*)",
-    no_crash=True,
 )
 async def _(kst):
-    link = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(1)
+    ga = kst.client
+    link = await ga.get_text(kst)
     if not link:
         await kst.eor("`Provide a valid tweet link!`", time=5)
         return
     yy = await kst.eor("`Downloading...`")
-    resp = None
-    async with kst.client.conversation(TW_BOT) as conv:
+    async with ga.conversation(TW_BOT) as conv:
         resp = await conv_tw(conv, link)
     if not resp:
         return await yy.eod("`Bot did not respond.`")
@@ -34,32 +36,29 @@ async def _(kst):
         return await yy.eod(f"`{resp.message.message}`")
     file = resp.message.media
     with suppress(BaseException):
-        await kst.client.send_file(
-            kst.chat_id,
+        await kst.respond(
+            f"**Link:** `{link}`",
             file=file,
             force_document=False,
-            caption=f"**Link:** `{link}`",
             allow_cache=False,
             reply_to=kst.reply_to_msg_id,
             silent=True,
         )
-    with suppress(BaseException):
-        await kst.client.delete_dialog(TW_BOT, revoke=True)
+    await ga.delete_chat(TW_BOT, revoke=True)
     await yy.try_delete()
 
 
 @kasta_cmd(
     pattern="tt(?: |$)(.*)",
-    no_crash=True,
 )
 async def _(kst):
-    link = (await kst.get_reply_message()).text if kst.is_reply else kst.pattern_match.group(1)
+    ga = kst.client
+    link = await ga.get_text(kst)
     if not link:
         await kst.eor("`Provide a valid tiktok link!`", time=5)
         return
     yy = await kst.eor("`Downloading...`")
-    resp = None
-    async with kst.client.conversation(TT_BOT) as conv:
+    async with ga.conversation(TT_BOT) as conv:
         resp = await conv_tt(conv, link)
     if not resp:
         return await yy.eod("`Bot did not respond.`")
@@ -67,23 +66,21 @@ async def _(kst):
         return await yy.eod(f"`{resp.message.message}`")
     file = resp.message.media
     with suppress(BaseException):
-        await kst.client.send_file(
-            kst.chat_id,
+        await kst.respond(
+            f"**Link:** `{link}`",
             file=file,
             force_document=False,
-            caption=f"**Link:** `{link}`",
             allow_cache=False,
             reply_to=kst.reply_to_msg_id,
             silent=True,
         )
-    with suppress(BaseException):
-        await kst.client.delete_dialog(TT_BOT, revoke=True)
+    await ga.delete_chat(TT_BOT, revoke=True)
     await yy.try_delete()
 
 
 async def conv_tt(conv, link):
     try:
-        resp = conv.wait_event(NewMessage(incoming=True, from_users=conv.chat_id))
+        resp = conv.wait_event(events.NewMessage(incoming=True, from_users=conv.chat_id))
         await conv.send_message(link)
         resp = await resp
         await resp.mark_read(clear_mentions=True)
@@ -91,13 +88,13 @@ async def conv_tt(conv, link):
     except asyncio.exceptions.TimeoutError:
         return None
     except YouBlockedUserError:
-        await conv._client(UnblockRequest(conv.chat_id))
+        await conv._client.unblock(conv.chat_id)
         return await conv_tt(conv, link)
 
 
 async def conv_tw(conv, link):
     try:
-        resp = conv.wait_event(NewMessage(incoming=True, from_users=conv.chat_id))
+        resp = conv.wait_event(events.NewMessage(incoming=True, from_users=conv.chat_id))
         await conv.send_message(link)
         resp = await resp
         await resp.mark_read(clear_mentions=True)
@@ -105,11 +102,11 @@ async def conv_tw(conv, link):
     except asyncio.exceptions.TimeoutError:
         return None
     except YouBlockedUserError:
-        await conv._client(UnblockRequest(conv.chat_id))
+        await conv._client.unblock(conv.chat_id)
         return await conv_tw(conv, link)
 
 
 plugins_help["downloader"] = {
-    "{i}tw [link/reply]": "Download high quality of video from Twitter.",
-    "{i}tt [link/reply]": "Download video from TikTok without watermark.",
+    "{i}tw [link]/[reply]": "Download high quality of video from Twitter.",
+    "{i}tt [link]/[reply]": "Download video from TikTok without watermark.",
 }
