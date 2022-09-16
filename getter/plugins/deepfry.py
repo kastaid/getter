@@ -200,6 +200,7 @@ def deepfry(img: Image) -> Image:
 
 
 def check_media(reply):
+    data = False
     if reply and reply.media:
         if reply.photo:
             data = reply.photo
