@@ -8,6 +8,7 @@
 import asyncio
 import importlib
 import os
+import re
 import subprocess
 import sys
 import typing
@@ -35,22 +36,20 @@ async def aioify(func, *args, **kwargs):
 
 
 def import_lib(
-    library_name: str,
-    package_name: typing.Optional[str] = None,
+    lib_name: str,
+    pkg_name: typing.Optional[str] = None,
 ) -> typing.Any:
-    if package_name is None:
-        package_name = library_name
-    REQUIREMENTS_LIST.append(package_name)
-    library_name = "".join(library_name.replace(">", "").replace("~", "").split("=")[:-1])
+    if pkg_name is None:
+        pkg_name = lib_name
+    REQUIREMENTS_LIST.append(pkg_name)
+    lib_name = re.sub(r"(=|>|<|~).*", "", lib_name)
     try:
-        return importlib.import_module(library_name)
+        return importlib.import_module(lib_name)
     except ImportError:
-        completed = subprocess.run(["python3", "-m", "pip", "install", "--no-cache-dir", "-U", package_name])
+        completed = subprocess.run(["python3", "-m", "pip", "install", "--no-cache-dir", "-U", pkg_name])
         if completed.returncode != 0:
-            raise AssertionError(
-                f"Failed to install library {package_name} (pip exited with code {completed.returncode})"
-            )
-        return importlib.import_module(library_name)
+            raise AssertionError(f"Failed to install library {pkg_name} (pip exited with code {completed.returncode})")
+        return importlib.import_module(lib_name)
 
 
 async def Runner(cmd: str) -> typing.Tuple[str, str, int, int]:

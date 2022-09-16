@@ -247,11 +247,12 @@ def kasta_cmd(
                         text = r"\\<b>#Getter_Error</b>// An error occurred, check the error here: {}".format(
                             error_log.message_link if kst.is_private else f"<code>{error_log.message_link}</code>",
                         )
-                        await kst.edit(
-                            text,
-                            link_preview=False,
-                            parse_mode="html",
-                        )
+                        with suppress(BaseException):
+                            await kst.edit(
+                                text,
+                                link_preview=False,
+                                parse_mode="html",
+                            )
 
         superuser = dev or sudo
         cmd = None
