@@ -5,10 +5,13 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+import datetime
 import mimetypes
+import re
 import time
 import aiofiles
 import telegraph
+from bs4 import BeautifulSoup
 from geopy.geocoders import Nominatim
 from kbbi import KBBI
 from PIL import Image
@@ -122,6 +125,26 @@ async def _(kst):
     except BaseException:
         return await yy.eod(f"**No Results for:** `{word}`")
     text = f"• **Given Word:** `{word}`\n{mean}"
+    await yy.eor(text)
+
+
+@kasta_cmd(
+    pattern="eod$",
+)
+async def _(kst):
+    yy = await kst.eor("`Processing...`")
+    url = "https://daysoftheyear.com"
+    now = datetime.datetime.now()
+    month = now.strftime("%b")
+    url += f"/days/{month}/" + now.strftime("%F").split("-")[2]
+    res = await Fetch(url, re_content=True)
+    if not res:
+        return await yy.eod("`Try again now!`")
+    soup = BeautifulSoup(res, "html.parser", from_encoding="utf-8")
+    days = soup.find_all("a", "js-link-target", href=re.compile("daysoftheyear.com/days"))
+    text = "🎊 **Events of the Day**\n"
+    for x in days[:5]:
+        text += "• [{}]({})\n".format(x.text, x["href"])
     await yy.eor(text)
 
 
@@ -381,6 +404,7 @@ plugins_help["utility"] = {
     "{i}ud [word]/[reply]": "Fetch the word defenition from urbandictionary.",
     "{i}mean [word]/[reply]": "Get the meaning of the word.",
     "{i}kbbi [word]/[reply]": "Get the meaning of the word/phrase with KBBI Daring.",
+    "{i}eod": "Get event of the today.",
     "{i}haste [text]/[reply]": "Upload text to hastebin.",
     "{i}github [username]/[reply]": "Get full information about an user on GitHub of given username.",
     "{i}tgh [text]/[reply]": "Upload text or media to Telegraph.",

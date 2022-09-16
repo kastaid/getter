@@ -47,12 +47,12 @@ class JSONData:
 
     @property
     def gblacklist(self) -> typing.Set[int]:
-        return {int(_) for _ in self.gblack().keys()}
+        return {int(_) for _ in self.gblack()}
 
     @property
     @cached(LRUCache(maxsize=1024))
     def sudo_users(self) -> typing.List[int]:
-        return [int(_) for _ in self.sudos().keys()]
+        return [int(_) for _ in self.sudos()]
 
 
 class Heroku:

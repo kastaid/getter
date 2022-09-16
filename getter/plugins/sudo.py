@@ -145,7 +145,7 @@ async def _(kst):
     pattern="delallsudos$",
 )
 async def _(kst):
-    if len(jdata.sudo_users) == 0:
+    if not jdata.sudo_users:
         return await kst.eor("`You got no sudo users!`", time=3)
     del_col("sudos")
     done = await kst.eor("`Successfully to delete all sudo users!`")

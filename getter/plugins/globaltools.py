@@ -54,55 +54,61 @@ from . import (
 )
 
 gban_text = r"""
-\\<b>#GBanned</b>// User  {}  in +{}-{} chats!
+\\<b>#GBanned</b>// User {} in +{}-{} chats!
 <b>Date:</b> <code>{}</code>
 <b>Taken:</b> <code>{}</code>
 <b>Reported:</b> <code>{}</code>
 <b>Reason:</b> {}
 
-<i>Added to gbanwatch!</i>
+<i>Added to GBanned_Watch.</i>
 """
 ungban_text = r"""
-\\<b>#UnGBanned</b>// User  {}  in +{}-{} chats!
+\\<b>#UnGBanned</b>// User {} in +{}-{} chats!
 <b>Taken:</b> <code>{}</code>
+
+<i>Wait for 1 minutes before released.</i>
 """
 gmute_text = r"""
-\\<b>#GMuted</b>// User  {}  in +{}-{} groups!
+\\<b>#GMuted</b>// User {} in +{}-{} groups!
 <b>Date:</b> <code>{}</code>
 <b>Taken:</b> <code>{}</code>
 <b>Reason:</b> {}
 
-<i>Added to gmutewatch!</i>
+<i>Added to GMuted_Watch.</i>
 """
 ungmute_text = r"""
-\\<b>#UnGMuted</b>// User  {}  in +{}-{} groups!
+\\<b>#UnGMuted</b>// User {} in +{}-{} groups!
 <b>Taken:</b> <code>{}</code>
+
+<i>Wait for 1 minutes before released.</i>
 """
 gdel_text = r"""
-\\<b>#GDeleted</b>// User  {}  in chats!
+\\<b>#GDeleted</b>// User {} in chats!
 <b>Date:</b> <code>{}</code>
 <b>Reason:</b> {}
 """
 ungdel_text = r"""
-\\<b>#UnGDeleted</b>// User  {}  in chats!
+\\<b>#UnGDeleted</b>// User {} in chats!
+
+<i>Wait for 30 seconds before released.</i>
 """
 reason_text = r"""
-\\<b>#{}</b>// Reason for  {}  updated!
+\\<b>#{}</b>// Reason for {} updated!
 <b>Previous Reason:</b> <pre>{}</pre>
 <b>Latest Reason:</b> <pre>{}</pre>
 """
 gkick_text = r"""
-\\<b>#GKicked</b>// User  {}  in +{}-{} chats!
+\\<b>#GKicked</b>// User {} in +{}-{} chats!
 <b>Taken:</b> <code>{}</code>
 <b>Reason:</b> {}
 """
 gpromote_text = r"""
-\\<b>#GPromoted</b>// User  {}  in +{}-{} {}!
+\\<b>#GPromoted</b>// User {} in +{}-{} {}!
 <b>Title:</b> <code>{}</code>
 <b>Taken:</b> <code>{}</code>
 """
 gdemote_text = r"""
-\\<b>#GDemoted</b>// User  {}  in +{}-{} {}!
+\\<b>#GDemoted</b>// User {} in +{}-{} {}!
 <b>Taken:</b> <code>{}</code>
 """
 _GBAN_LOCK = asyncio.Lock()
@@ -991,6 +997,7 @@ async def gblacklisted(kst, mode):
         }
         gblack[str(chat_id)] = chatdata
         add_col("gblack", gblack)
+        forwhat = "Added"
     elif mode == "remove":
         if chat_id in system_gblack:
             return await yy.eor("`Cannot remove built-in gblacklist.`", time=4)
@@ -998,7 +1005,8 @@ async def gblacklisted(kst, mode):
             return await yy.eor("`Chat is not gblacklist.`", time=4)
         del gblack[str(chat_id)]
         add_col("gblack", gblack)
-    await yy.eor(f"**Global Broadcasts:**\n{mode.title()}ed [`{chat_id}`]")
+        forwhat = "Removed"
+    await yy.eor(f"<b><u>Global Broadcasts Blacklist</u></b>\n{forwhat} [<code>{chat_id}</code>]", parse_mode="html")
 
 
 @kasta_cmd(
@@ -1024,18 +1032,18 @@ async def _(kst):
     pattern="rmallgblack$",
 )
 async def _(kst):
-    if len(jdata.gblacklist) == 0:
+    if not jdata.gblacklist:
         return await kst.eor("`You got no gblacklist chats!`", time=3)
     del_col("gblack")
     await kst.eor("`Successfully to remove all gblacklist chats!`")
 
 
 plugins_help["globaltools"] = {
-    "{i}gban [reply]/[in_private]/[username/mention/id] [reason]": "Globally Banned user in groups/channels permanently, possible also blocked, archived and report them as spam. Watcher per-id is cached in 2 minutes.",
+    "{i}gban [reply]/[in_private]/[username/mention/id] [reason]": "Globally Banned user in groups/channels permanently, possible also blocked, archived and report them as spam. Watcher per-id is cached in 1 minutes.",
     "{i}ungban [reply]/[in_private]/[username/mention/id]": "Release user from gbanwatch also force unban globally.",
-    "{i}gmute [reply]/[in_private]/[username/mention/id] [reason]": "Globally Muted user in groups permanently. Watcher per-id is cached in 2 minutes.",
+    "{i}gmute [reply]/[in_private]/[username/mention/id] [reason]": "Globally Muted user in groups permanently. Watcher per-id is cached in 1 minutes.",
     "{i}ungmute [reply]/[in_private]/[username/mention/id]": "Release user from gmutewatch also force unmute globally.",
-    "{i}gdel [reply]/[in_private]/[username/mention/id] [reason]": "Globally Delete user messages in chats every send. Watcher per-id is cached in 1 minutes.",
+    "{i}gdel [reply]/[in_private]/[username/mention/id] [reason]": "Globally Delete user messages in chats every send. Watcher per-id is cached in 30 seconds.",
     "{i}ungdel [reply]/[in_private]/[username/mention/id]": "Release user from gdel.",
     "{i}setgban [reply]/[in_private]/[username/mention/id] [reason]": "Update gban reason.",
     "{i}setgmute [reply]/[in_private]/[username/mention/id] [reason]": "Update gmute reason.",

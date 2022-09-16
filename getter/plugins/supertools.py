@@ -19,8 +19,8 @@ async def _(kst):
     chat_id = kst.chat_id
     ga = kst.client
     opts = kst.pattern_match.group(1).lower()
-    rockers = "-s" in opts
-    if rockers:
+    rocker = "-s" in opts
+    if rocker:
         await kst.try_delete()
     else:
         yy = await kst.eor("`Rocker...`")
@@ -29,7 +29,7 @@ async def _(kst):
         if not (x.id in DEVS or x.is_self or hasattr(x.participant, "admin_rights")):
             try:
                 crying = await ga.edit_permissions(chat_id, x.id, view_messages=False)
-                if rockers and crying:
+                if rocker and crying:
                     cry = [_.id for _ in crying.updates if hasattr(_, "id")]
                     if cry:
                         await ga.delete_messages(chat_id, cry)
@@ -41,7 +41,7 @@ async def _(kst):
                 await asyncio.sleep(fw.seconds + 10)
                 try:
                     crying = await ga.edit_permissions(chat_id, x.id, view_messages=False)
-                    if rockers and crying:
+                    if rocker and crying:
                         cry = [_.id for _ in crying.updates if hasattr(_, "id")]
                         if cry:
                             await ga.delete_messages(chat_id, cry)
@@ -53,7 +53,7 @@ async def _(kst):
                     failed += 1
             except BaseException:
                 failed += 1
-    if not rockers:
+    if not rocker:
         await yy.eor(f"👏 **Congratulations +{success}-{failed}**\n__From now, you have no friends!__", time=15)
 
 

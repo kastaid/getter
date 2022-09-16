@@ -22,6 +22,7 @@ from . import (
     normalize_chat_id,
     get_chat_id,
     NOCHATS,
+    BOTLOGS,
 )
 
 
@@ -183,17 +184,19 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="(f|)saved$",
+    pattern="(f|)saved(l|)$",
     func=lambda e: e.is_reply,
     no_crash=True,
 )
 async def _(kst):
     ga = kst.client
+    group = kst.pattern_match.group
     reply = await kst.get_reply_message()
-    if kst.pattern_match.group(1).strip() == "f":
-        await reply.forward_to(ga.uid)
+    where = BOTLOGS if group(2).strip() == "l" else ga.uid
+    if group(1).strip() == "f":
+        await reply.forward_to(where)
     else:
-        await ga.send_message(ga.uid, reply)
+        await ga.send_message(where, reply)
     await kst.eor("`saved`", time=5)
 
 
@@ -379,8 +382,8 @@ plugins_help["chat"] = {
     "{i}purgeall [reply]": "Delete all messages from replied user. This cannot be undone!",
     "{i}copy [reply]": "Copy the replied message.",
     "{i}send|{i}dm [username/id] [text]/[reply]": "Send message to user or chat.",
-    "{i}saved [reply]": "Save that replied message to Saved Messages.",
-    "{i}fsaved [reply]": "Forward that replied message to Saved Messages.",
+    "{i}saved [reply]": "Save that replied message to Saved Messages or BOTLOGS for savedl.",
+    "{i}fsaved [reply]": "Forward that replied message to Saved Messages or BOTLOGS for fsavedl.",
     "{i}react [reply]": "Give a random react to replied message.",
     "{i}delayspam|{i}ds [seconds] [count] [text]": "Spam chat with delays in seconds (min 2 seconds).",
     "{i}report_spam [reply]/[in_private]/[username/mention/id]": "Report spam message from user.",

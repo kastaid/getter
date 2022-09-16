@@ -29,7 +29,7 @@ async def _(kst):
     if args[0] in CARBON_PRESETS:
         is_theme, theme = True, args[0]
     else:
-        is_theme, theme = False, choice(list(CARBON_PRESETS))
+        is_theme, theme = False, choice(tuple(CARBON_PRESETS))
     if kst.is_reply:
         reply = await kst.get_reply_message()
         if reply.media and get_media_type(reply.media) == "text":
@@ -38,11 +38,14 @@ async def _(kst):
             (Root / file).unlink(missing_ok=True)
         else:
             code = reply.message
+        if is_theme:
+            with suppress(BaseException):
+                code = match.split(maxsplit=1)[1]
     else:
-        try:
-            code = match.split(maxsplit=1)[1] if is_theme else match
-        except IndexError:
-            code = match
+        code = match
+        if is_theme:
+            with suppress(BaseException):
+                code = match.split(maxsplit=1)[1]
     if not code:
         return await kst.eod("`Reply to text message or readable file.`")
     yy = await kst.eor("`Processing...`")
@@ -94,11 +97,14 @@ async def _(kst):
             (Root / file).unlink(missing_ok=True)
         else:
             code = reply.message
+        if is_theme:
+            with suppress(BaseException):
+                code = match.split(maxsplit=1)[1]
     else:
-        try:
-            code = match.split(maxsplit=1)[1] if is_theme else match
-        except IndexError:
-            code = match
+        code = match
+        if is_theme:
+            with suppress(BaseException):
+                code = match.split(maxsplit=1)[1]
     if not code:
         return await kst.eod("`Reply to text message or readable file.`")
     yy = await kst.eor("`Processing...`")
@@ -133,7 +139,7 @@ async def _(kst):
     no_crash=True,
 )
 async def _(kst):
-    carbon = "**Carbon Themes:**\n" + "\n".join([f"- `{x}`" for x in CARBON_PRESETS.keys()])
+    carbon = "**Carbon Themes:**\n" + "\n".join([f"- `{x}`" for x in CARBON_PRESETS])
     rayso = "**Rayso Themes:**\n" + "\n".join([f"- `{x}`" for x in RAYSO_THEMES])
     await kst.sod(carbon)
     await kst.sod(rayso)

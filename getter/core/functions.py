@@ -168,7 +168,6 @@ async def get_user(
             if len(args) > 1:
                 extra = "".join(args[1:])
             if user.isdecimal() or (user.startswith("-") and user[1:].isdecimal()):
-                await kst.client.get_dialogs()
                 obj = partial(type, "User", ())
                 user_obj = obj(
                     {
@@ -256,7 +255,7 @@ def to_privilege(privilege: str) -> str:
         "manage_call": "can_manage_video_chats",
         "anonymous": "is_anonymous",
     }
-    if privilege not in privileges.keys():
+    if privilege not in privileges:
         raise ValueError(f"{privilege} is not valid privileges")
     return privileges[privilege]
 

@@ -6,6 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
+from telethon.errors.rpcerrorlist import UserAlreadyParticipantError
 from telethon.tl import functions as fun
 from . import (
     CALLS,
@@ -13,10 +14,14 @@ from . import (
     kasta_cmd,
     plugins_help,
     suppress,
+    mentionuser,
+    display_name,
+    get_user,
     normalize_chat_id,
     get_chat_id,
     is_termux,
     import_lib,
+    humanbool,
 )
 
 
@@ -27,13 +32,13 @@ from . import (
 )
 async def _(kst):
     ga = kst.client
-    chat_id = normalize_chat_id(kst.chat_id)
     yy = await kst.eor("`Starting video chat...`")
     args = kst.pattern_match.group(1).split(" ")
     is_silent = "-s" in args[0].lower()
     title = " ".join(args[1:] if is_silent else args).strip()
+    chat_id = normalize_chat_id(kst.chat_id)
     try:
-        req = await ga(
+        res = await ga(
             fun.phone.CreateGroupCallRequest(
                 chat_id,
                 title=title,
@@ -47,10 +52,10 @@ async def _(kst):
         await yy.eor("`Video chat started.`", time=5)
         return
     await yy.try_delete()
-    if req:
-        reqs = [_.id for _ in req.updates if hasattr(_, "id")]
-        if reqs:
-            await ga.delete_messages(chat_id, reqs)
+    if res:
+        ids = [_.id for _ in res.updates if hasattr(_, "id")]
+        if ids:
+            await ga.delete_messages(chat_id, ids)
 
 
 @kasta_cmd(
@@ -60,16 +65,16 @@ async def _(kst):
 )
 async def _(kst):
     ga = kst.client
-    chat_id = normalize_chat_id(kst.chat_id)
     yy = await kst.eor("`Stopping video chat...`")
     args = kst.pattern_match.group(1).split(" ")
     is_silent = "-s" in args[0].lower()
-    call = await get_call(kst, chat_id)
+    chat_id = normalize_chat_id(kst.chat_id)
+    call = await get_call(chat_id)
     if not call:
         await yy.eor("`No video chat!`", time=5)
         return
     try:
-        req = await ga(fun.phone.DiscardGroupCallRequest(call))
+        res = await ga(fun.phone.DiscardGroupCallRequest(call))
     except BaseException:
         return await yy.eor("`An error occurred. Try again now!`", time=5)
     if CALLS.get(chat_id):
@@ -78,21 +83,135 @@ async def _(kst):
         await yy.eor("`Video chat stopped.`", time=5)
         return
     await yy.try_delete()
-    if req:
-        reqs = [_.id for _ in req.updates if hasattr(_, "id")]
-        if reqs:
-            await ga.delete_messages(chat_id, reqs)
+    if res:
+        ids = [_.id for _ in res.updates if hasattr(_, "id")]
+        if ids:
+            await ga.delete_messages(chat_id, ids)
+
+
+@kasta_cmd(
+    pattern="vctitle(?: |$)(.*)",
+    admins_only=True,
+    require="manage_call",
+)
+async def _(kst):
+    ga = kst.client
+    yy = await kst.eor("`Processing...`")
+    title = await ga.get_text(kst)
+    chat_id = normalize_chat_id(kst.chat_id)
+    call = await get_call(chat_id)
+    if not call:
+        await yy.eor("`No video chat!`", time=5)
+        return
+    try:
+        await ga(fun.phone.EditGroupCallTitleRequest(call, title=title))
+        await yy.eor("`Video chat title changed.`", time=5)
+    except BaseException:
+        await yy.eor("`Unchanged video chat title!`", time=5)
+
+
+@kasta_cmd(
+    pattern="vcinvite(?: |$)(.*)",
+    groups_only=True,
+)
+async def _(kst):
+    ga = kst.client
+    yy = await kst.eor("`Inviting to video chat...`")
+    user, _ = await get_user(kst)
+    if not user:
+        return await yy.eor("`Reply to message or add username/id.`", time=5)
+    if user.id == ga.uid:
+        return await yy.eor("`Cannot invite to myself.`", time=3)
+    chat_id = normalize_chat_id(kst.chat_id)
+    call = await get_call(chat_id)
+    if not call:
+        await yy.eor("`No video chat!`", time=5)
+        return
+    try:
+        await ga(fun.phone.InviteToGroupCallRequest(call, users=[user.id]))
+        text = "`Invited to video chat.`"
+    except UserAlreadyParticipantError:
+        text = "`User is already invited.`"
+    except BaseException:
+        text = "`Cannot invite a user!`"
+    await yy.eor(text, time=5)
+
+
+"""
+@kasta_cmd(
+    pattern="vcinviteall$",
+    groups_only=True,
+)
+async def _(kst):
+    ga = kst.client
+    yy = await kst.eor("`Inviting members to video chat...`")
+    call = await get_call(kst.chat_id)
+    if not call:
+        await yy.eor("`No video chat!`", time=5)
+        return
+    users, done = [], 0
+    async for x in ga.iter_participants(kst.chat_id):
+        if not (
+            x.deleted
+            or x.bot
+            or x.is_self
+            or (hasattr(x.participant, "admin_rights") and x.participant.admin_rights.anonymous)
+        ) and get_user_status(x) != "long_time_ago":
+            users.append(x.id)
+    for user in chunk(users, 6):
+        try:
+            await ga(InviteToGroupCallRequest(call, users=user))
+            done += 6
+        except FloodWaitError as fw:
+            # from telethon.errors.rpcerrorlist import FloodWaitError
+            flood = fw.seconds
+            await yy.eor("`Inviting wait in {}...`".format(time_formatter((flood + 5) * 1000)))
+            await asyncio.sleep(flood + 5)
+            await ga(InviteToGroupCallRequest(call=call, users=user))
+            done += 6
+        except BaseException:
+            pass
+    await yy.eod(f"`Invited {done} users.`")
+"""
+
+
+@kasta_cmd(
+    pattern="vcinfos?$",
+    groups_only=True,
+)
+async def _(kst):
+    ga = kst.client
+    yy = await kst.eor("`Processing...`")
+    chat_id = normalize_chat_id(kst.chat_id)
+    call = await get_call(chat_id)
+    if not call:
+        await yy.eor("`No video chat!`", time=5)
+        return
+    try:
+        res = await ga(fun.phone.GetGroupCallRequest(call, limit=1))
+    except BaseException:
+        return await yy.eor("`An error occurred. Try again now!`", time=5)
+    text = "<b><u>Video Chat Information</u></b>\n"
+    text += f"<b>Title:</b> <code>{res.call.title or ''}</code>\n"
+    text += f"<b>Join Muted:</b> <code>{humanbool(res.call.join_muted)}</code>\n"
+    text += f"<b>Participants Count:</b> <code>{res.call.participants_count}</code>\n\n"
+    if res.call.participants_count > 0:
+        text += "<b><u>Participants</u></b>\n"
+        for x in res.users:
+            mention = mentionuser(x.id, display_name(x), html=True, width=15)
+            text += f"● <code>{x.id}</code> – {mention}\n"
+    await yy.eor(text, parse_mode="html")
 
 
 @kasta_cmd(
     pattern="joinvc(?: |$)(.*)",
 )
 async def _(kst):
+    yy = await kst.eor("`Joining video chat...`")
     chat_id = await get_chat_id(kst)
     if not chat_id:
-        return await kst.try_delete()
-    yy = await kst.eor("`Joining video chat...`")
-    call = await get_call(kst, chat_id)
+        return await yy.try_delete()
+    call = await get_call(chat_id)
     if not call:
         await yy.eor("`No video chat!`", time=5)
         return
@@ -103,6 +222,7 @@ async def _(kst):
             text = "`Joined video chat.`"
             with suppress(BaseException):
                 await asyncio.sleep(3)
+                # https://tl.telethon.dev/methods/phone/edit_group_call_participant
                 await in_call.edit_group_call(muted=True)
         except BaseException:
             if is_termux():
@@ -118,11 +238,11 @@ async def _(kst):
     pattern="leavevc(?: |$)(.*)",
 )
 async def _(kst):
+    yy = await kst.eor("`Leaving video chat...`")
     chat_id = await get_chat_id(kst)
     if not chat_id:
-        return await kst.try_delete()
-    yy = await kst.eor("`Leaving video chat...`")
-    call = await get_call(kst, chat_id)
+        return await yy.try_delete()
+    call = await get_call(chat_id)
     if not call:
         await yy.eor("`No video chat!`", time=5)
         return
@@ -138,27 +258,6 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="vctitle(?: |$)(.*)",
-    admins_only=True,
-    require="manage_call",
-)
-async def _(kst):
-    ga = kst.client
-    chat_id = normalize_chat_id(kst.chat_id)
-    yy = await kst.eor("`Processing...`")
-    title = await ga.get_text(kst)
-    call = await get_call(kst, chat_id)
-    if not call:
-        await yy.eor("`No video chat!`", time=5)
-        return
-    try:
-        await ga(fun.phone.EditGroupCallTitleRequest(call, title=title))
-        await yy.eor("`Video chat title changed.`", time=5)
-    except BaseException:
-        await yy.eor("`Unchanged video chat title!`", time=5)
-
-
-@kasta_cmd(
     pattern="listvc$",
 )
 async def _(kst):
@@ -171,47 +270,9 @@ async def _(kst):
     await kst.eor(text, time=5)
 
 
-"""
-@kasta_cmd(
-    pattern="vcinvite$",
-    groups_only=True,
-)
-async def _(kst):
-    ga = kst.client
-    yy = await kst.eor("`Inviting members to video chat...`")
-    call = await get_call(kst, kst.chat_id)
-    if not call:
-        await yy.eor("`No video chat!`", time=5)
-        return
-    users, done = [], 0
-    async for x in ga.iter_participants(kst.chat_id):
-        if not (
-            x.deleted
-            or x.bot
-            or x.is_self
-            or (hasattr(x.participant, "admin_rights") and x.participant.admin_rights.anonymous)
-        ) and get_user_status(x) != "long_time_ago":
-            users.append(x.id)
-    for user in chunk(users, 6):
-        try:
-            await ga(InviteToGroupCallRequest(call=call, users=user))
-            done += 6
-        except FloodWaitError as fw:
-            # from telethon.errors.rpcerrorlist import FloodWaitError
-            flood = fw.seconds
-            await yy.eor("`Inviting wait in {}...`".format(time_formatter((flood + 5) * 1000)))
-            await asyncio.sleep(flood + 5)
-            await ga(InviteToGroupCallRequest(call=call, users=user))
-            done += 6
-        except BaseException:
-            pass
-    await yy.eod(f"`Invited {done} users.`")
-"""
-
-
-async def get_call(kst, chat_id):
+async def get_call(chat_id: int):
     try:
-        call = await kst.client(fun.channels.GetFullChannelRequest(chat_id))
+        call = await getter_app(fun.channels.GetFullChannelRequest(chat_id))
         return call.full_chat.call
     except BaseException:
         return None
@@ -250,9 +311,11 @@ def group_call(chat_id: int):
 plugins_help["vctools"] = {
     "{i}startvc [-s] [title]": "Start or restart the video chat in current group/channel. Add '-s' to started silently.",
     "{i}stopvc [-s]": "Stop the video chat in current group/channel. Add '-s' to stopped silently.",
+    "{i}vctitle [title]/[reply]": "Change the video chat title or reset to default (without title) in current group/channel.",
+    "{i}vcinvite [reply]/[username/mention/id]": "Invite user to current video chat.",
+    # "{i}vcinviteall": "Invite all members to current video chat. **(YOU MUST BE JOINED)**",
+    "{i}vcinfo": "Get information of current video chat.",
     "{i}joinvc [current/chat_id/username]/[reply]": "Join the video chat in group/channel.",
     "{i}leavevc [current/chat_id/username]/[reply]": "Leave the video chat in group/channel.",
-    "{i}vctitle [title]/[reply]": "Change the video chat title or reset to default (without title) in current group/channel.",
     "{i}listvc": "List all joined video chats.",
-    # "{i}vcinvite": "Invite all members to current video chat. **(YOU MUST BE JOINED)**",
 }
