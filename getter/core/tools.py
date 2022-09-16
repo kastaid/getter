@@ -26,6 +26,10 @@ from .utils import get_random_hex
 _TGH: typing.List[telegraph.api.Telegraph] = []
 
 
+def is_termux() -> bool:
+    return "/com.termux" in sys.executable
+
+
 async def aioify(func, *args, **kwargs):
     return await asyncio.get_event_loop().run_in_executor(executor=EXECUTOR, func=partial(func, *args, **kwargs))
 
