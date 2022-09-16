@@ -41,6 +41,7 @@ def import_lib(
     if package_name is None:
         package_name = library_name
     REQUIREMENTS_LIST.append(package_name)
+    library_name = "".join(library_name.replace(">", "").replace("~", "").split("=")[:-1])
     try:
         return importlib.import_module(library_name)
     except ImportError:
