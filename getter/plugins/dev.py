@@ -83,7 +83,7 @@ async def _(kst):
     else:
         await yy.try_delete()
     if mode == "carbon":
-        theme = choice(list(CARBON_PRESETS))
+        theme = choice(tuple(CARBON_PRESETS))
         backgroundColor = CARBON_PRESETS[theme]
         for file in get_terminal_logs():
             code = (Root / file).read_text()
@@ -205,7 +205,7 @@ async def _(kst):
     if ret != 0:
         return await yy.try_delete()
     info = (Root / file).read_text()
-    theme = choice(list(CARBON_PRESETS))
+    theme = choice(tuple(CARBON_PRESETS))
     backgroundColor = CARBON_PRESETS[theme]
     neofetch = await Carbon(
         info.replace("\n\n", "").strip(),
@@ -256,7 +256,7 @@ async def _(kst):
         elif "docker" in str(p).lower():
             _dockers.append(("🐋", p))
         else:
-            for x in LSFILES_MAP.keys():
+            for x in LSFILES_MAP:
                 if p.suffix in x:
                     _allfiles.append((LSFILES_MAP[x], p))
                     break

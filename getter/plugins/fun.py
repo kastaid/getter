@@ -124,9 +124,9 @@ async def _(kst):
         emot = "🚶🏃🚶🏃🚶🏃🚶🏃"
     elif cmd == "boxs":
         emot = "🟥🟧🟨🟩🟦🟪🟫⬛⬜"
-    deq = deque(list(emot))
+    deq = deque(emot)
     for _ in range(48):
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.2)
         await kst.eor("".join(deq))
         deq.rotate(1)
 
@@ -179,7 +179,7 @@ async def _(kst):
     )
     yy = await kst.eor("`solarsystem`")
     for x in range(80):
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.3)
         await yy.eor(chars[x % 8], parse_mode=parse_pre)
 
 
@@ -510,12 +510,12 @@ async def _(kst):
     )
     yy = await kst.eor("`Thinking...`")
     for x in range(288):
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(0.1)
         await yy.eor(chars[x % 36])
 
 
 @kasta_cmd(
-    pattern="call$",
+    pattern="durov$",
     no_crash=True,
 )
 async def _(kst):
@@ -591,6 +591,6 @@ plugins_help["fun"] = {
     "{i}dick|{i}doggy|{i}dog|{i}fucku|{i}rose|{i}pki|{i}pistol|{i}ok": "Show the ascii art text by name.",
     "{i}baa|{i}bgst": "Some funny expressions.",
     "{i}thinking": "Thinking animation.",
-    "{i}call": "Call to durov.",
+    "{i}durov": "Call to durov.",
     "{i}deploy": "Deploy simulation.",
 }

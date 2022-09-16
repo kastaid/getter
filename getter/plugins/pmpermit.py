@@ -39,8 +39,9 @@ from . import (
     deny_all,
 )
 
+pmcredit = "\n- Protected by getter"
 pmtotal_default = 3
-pmbye_default = "You are automatically {mode}!"
+pmbye_default = "~ You are automatically {mode}!"
 pmmsg_default = """Hello {fullname} this is an automated message,
 Please wait until you got allowed to PM,
 And please Do Not Spam!
@@ -187,10 +188,10 @@ async def PMPermit(kst):
         total=total,
         mode=mode,
     )
-    # pmcredit = "\n- Protected by getter"
-    # text += pmcredit
+    text += pmcredit
     with suppress(BaseException):
         await ga.delete_messages(user.id, [NESLAST[towarn]])
+    await asyncio.sleep(1)
     last = await kst.reply(text)
     NESLAST[towarn] = last.id
     add_col("pmwarns", PMWARN, NESLAST)
@@ -314,7 +315,7 @@ async def _(kst):
     pattern="denyall$",
 )
 async def _(kst):
-    if len(all_allow()) == 0:
+    if not all_allow():
         return await kst.eor("`You got no allowed users!`", time=3)
     deny_all()
     done = await kst.eor("`Successfully to delete all allowed users!`")

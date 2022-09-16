@@ -52,7 +52,7 @@ from .functions import display_name, admin_check, to_privilege
 from .helper import jdata, get_botlogs
 from .property import do_not_remove_credit, get_blacklisted
 from .tools import Runner
-from .utils import strip_format, time_formatter
+from .utils import time_formatter
 from .wrappers import (
     eor,
     eod,
@@ -226,7 +226,7 @@ def kasta_cmd(
                     send_to = BOTLOGS or chat_id
                     reply_to = None if BOTLOGS else kst.id
                     if len(ftext) > MAX_MESSAGE_LEN:
-                        with suppress(BaseException), BytesIO(str.encode(strip_format(ftext))) as file:
+                        with suppress(BaseException), BytesIO(ftext.encode()) as file:
                             file.name = "getter_error.txt"
                             error_log = await getter_app.send_file(
                                 send_to,

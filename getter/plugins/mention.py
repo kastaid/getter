@@ -22,8 +22,7 @@ from . import (
     EMOJI_TAGS,
 )
 
-ATAGS = []
-ETAGS = []
+ATAGS, ETAGS = [], []
 DEFAULT_PERUSER = 6
 DEFAULT_SEP = "|"
 

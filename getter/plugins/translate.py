@@ -12,6 +12,7 @@ from . import (
     kasta_cmd,
     plugins_help,
     LANG_CODES,
+    suppress,
     parse_pre,
     strip_format,
     strip_emoji,
@@ -37,11 +38,14 @@ async def _(kst):
         is_lang, lang = False, DEFAULT_LANG
     if kst.is_reply:
         words = (await kst.get_reply_message()).message
+        if is_lang:
+            with suppress(BaseException):
+                words = match.split(maxsplit=1)[1]
     else:
-        try:
-            words = match.split(maxsplit=1)[1] if is_lang else match
-        except IndexError:
-            words = match
+        words = match
+        if is_lang:
+            with suppress(BaseException):
+                words = match.split(maxsplit=1)[1]
     if not words:
         await kst.eor("`Reply to text message or provide a text!`", time=5)
         return
@@ -74,11 +78,14 @@ async def _(kst):
         is_lang, lang = False, DEFAULT_LANG
     if kst.is_reply:
         words = (await kst.get_reply_message()).message
+        if is_lang:
+            with suppress(BaseException):
+                words = match.split(maxsplit=1)[1]
     else:
-        try:
-            words = match.split(maxsplit=1)[1] if is_lang else match
-        except IndexError:
-            words = match
+        words = match
+        if is_lang:
+            with suppress(BaseException):
+                words = match.split(maxsplit=1)[1]
     if not words:
         await kst.eor("`Reply to text message or provide a text!`", time=5)
         return
@@ -105,11 +112,14 @@ async def _(kst):
         is_lang, lang = False, DEFAULT_LANG
     if kst.is_reply:
         words = (await kst.get_reply_message()).message
+        if is_lang:
+            with suppress(BaseException):
+                words = match.split(maxsplit=1)[1]
     else:
-        try:
-            words = match.split(maxsplit=1)[1] if is_lang else match
-        except IndexError:
-            words = match
+        words = match
+        if is_lang:
+            with suppress(BaseException):
+                words = match.split(maxsplit=1)[1]
     if not words:
         await kst.eor("`Reply to text message or provide a text!`", time=5)
         return
@@ -146,13 +156,24 @@ async def _(kst):
 
 
 plugins_help["translate"] = {
-    "{i}tr [lang_code] [text]/[reply]": "Translate the message to required language.",
+    "{i}tr [lang_code] [text]/[reply]": f"Translate the message to required language. Default lang_code for all is `{DEFAULT_LANG}`.",
     "{i}tl [lang_code] [text]/[reply]": "Send or reply message as translated.",
     "{i}tts [lang_code] [text]/[reply]": "Text to speech.",
     "{i}ts [lang_code] [text]/[reply]": "Translate the message then text to speech.",
-    "{i}lang": f"""List all language code.
+    "{i}lang": """List all language code.
 
-**Note:**
-- Default [lang_code] is `{DEFAULT_LANG}`.
+**Examples:**
+- Use default lang_code.
+-> `{i}tr ready`
+- With choosing lang_code.
+-> `{i}tr en siap`
+
+- Translate the replied message.
+-> `{i}tr [reply]`
+-> `{i}tr en [reply]`
+- Reply a message with translated text (must have lang_code).
+-> `{i}tr en siap`
+
+Examples above both for all commands!
 """,
 }

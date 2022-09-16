@@ -8,7 +8,7 @@
 
 from .engine import *
 
-_GMUTE_CACHE = TTLCache(maxsize=1024, ttl=120, timer=perf_counter)  # 2 mins
+_GMUTE_CACHE = TTLCache(maxsize=1024, ttl=60, timer=perf_counter)  # 1 mins
 _GMUTE_LOCK = RLock()
 
 

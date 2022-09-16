@@ -21,12 +21,12 @@ from . import (
 )
 
 gbanned_text = r"""
-\\<b>#GBanned_Watch</b>// User  {}  joined and banned!
+\\<b>#GBanned_Watch</b>// User {} joined and banned!
 <b>Reported:</b> <code>{}</code>
 <b>Reason:</b> {}
 """
 gmuted_text = r"""
-\\<b>#GMuted_Watch</b>// User  {}  joined and muted!
+\\<b>#GMuted_Watch</b>// User {} joined and muted!
 <b>Reason:</b> {}
 """
 
