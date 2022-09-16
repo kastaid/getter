@@ -42,6 +42,7 @@ logging.getLogger("asyncio").setLevel(logging.ERROR)
 logging.getLogger("urllib3").disabled = True
 logging.getLogger("urllib3.connectionpool").disabled = True
 logging.getLogger("webdriver_manager").disabled = True
+logging.getLogger("pytgcalls").setLevel(logging.ERROR)
 logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
 TelethonLogger = logging.getLogger("telethon")
 TelethonLogger.setLevel(logging.ERROR)

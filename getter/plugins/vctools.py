@@ -229,7 +229,7 @@ def group_call_instance(chat_id: int):
             getter_app,
             pytgcalls.GroupCallFactory.MTPROTO_CLIENT_TYPE.TELETHON,
             enable_logs_to_console=False,
-            path_to_log_file=None,
+            path_to_log_file="",
         ).get_file_group_call(
             input_filename="",
             play_on_repeat=False,
