@@ -31,6 +31,3 @@ icmplib==3.0.3
 lottie==0.7.0
 Pillow>=9.1.1
 CairoSVG==2.5.2
-tweet-capture==0.0.14
-selenium==4.4.3
-pytgcalls==3.0.0.dev22

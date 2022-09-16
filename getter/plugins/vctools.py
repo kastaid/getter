@@ -15,6 +15,8 @@ from . import (
     suppress,
     normalize_chat_id,
     get_chat_id,
+    is_termux,
+    import_lib,
 )
 
 
@@ -103,11 +105,13 @@ async def _(kst):
                 await asyncio.sleep(3)
                 await in_call.edit_group_call(muted=True)
         except BaseException:
-            text = "`Cannot join video chat!`"
+            if is_termux():
+                text = "`This command doesn't not supported Termux. Use proot-distro instantly!`"
+            else:
+                text = "`Cannot join video chat!`"
     else:
         text = "`Already joined video chat!`"
     await yy.eor(text, time=5)
-    await asyncio.sleep(3)
 
 
 @kasta_cmd(
@@ -131,7 +135,6 @@ async def _(kst):
     else:
         text = "`Not joined video chat!`"
     await yy.eor(text, time=5)
-    await asyncio.sleep(3)
 
 
 @kasta_cmd(
@@ -153,7 +156,19 @@ async def _(kst):
         await yy.eor("`Video chat title changed.`", time=5)
     except BaseException:
         await yy.eor("`Unchanged video chat title!`", time=5)
-    await asyncio.sleep(3)
+
+
+@kasta_cmd(
+    pattern="listvc$",
+)
+async def _(kst):
+    if len(CALLS) > 0:
+        text = f"<b><u>{len(CALLS)} Video Chats</u></b>\n"
+        for x in CALLS:
+            text += f"<code>-100{x}</code>\n"
+        return await kst.eor(text, parse_mode="html")
+    text = "`You got no joined video chat!`"
+    await kst.eor(text, time=5)
 
 
 """
@@ -206,7 +221,9 @@ def group_call_instance(chat_id: int):
     try:
         import pytgcalls
     except ImportError:
-        return
+        if is_termux():
+            return
+        pytgcalls = import_lib("pytgcalls==3.0.0.dev22")
     if chat_id not in CALLS:
         CALLS[chat_id] = pytgcalls.GroupCallFactory(
             getter_app,
@@ -236,5 +253,6 @@ plugins_help["vctools"] = {
     "{i}joinvc [current/chat_id/username]/[reply]": "Join the video chat in group/channel.",
     "{i}leavevc [current/chat_id/username]/[reply]": "Leave the video chat in group/channel.",
     "{i}vctitle [title]/[reply]": "Change the video chat title or reset to default (without title) in current group/channel.",
+    "{i}listvc": "List all joined video chats.",
     # "{i}vcinvite": "Invite all members to current video chat. **(YOU MUST BE JOINED)**",
 }

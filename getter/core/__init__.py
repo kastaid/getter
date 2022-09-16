@@ -38,6 +38,7 @@ from .helper import (
 )
 from .property import get_blacklisted, do_not_remove_credit
 from .tools import (
+    is_termux,
     aioify,
     import_lib,
     Runner,
