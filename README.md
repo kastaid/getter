@@ -45,7 +45,7 @@
     - [Config](#config)
     - [Run](#run)
   - [Example Plugin](#example-plugin)
-- [Credits](#credits)
+- [Credits and Thanks](#credits-and-thanks)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -130,13 +130,17 @@ async def _(event):
     await event.eor("Hello **World**.")
 ```
 
-## Credits
+## Credits and Thanks
 
-* [RaphielGang](https://github.com/RaphielGang) - Telegram-Paperplane
-* [BianSepang](https://github.com/BianSepang) - WeebProject
-* [userbotindo](https://github.com/userbotindo) - Userbot Indonesia Community
+* [LonamiWebs](https://github.com/LonamiWebs/Telethon) - Telethon
+* [MarshalX](https://github.com/MarshalX/tgcalls) - pytgcalls
 * [TeamUltroid](https://github.com/TeamUltroid) - Team Ultroid
-* [mrismanaziz](https://github.com/mrismanaziz) - Man-Userbot
+* [UsergeTeam](https://github.com/UsergeTeam) - UsergeTeam
+* [Dragon-Userbot](https://github.com/Dragon-Userbot) - Dragon Userbot
+* [TgCatUB](https://github.com/TgCatUB) - CatUserbot
+* [userbotindo](https://github.com/userbotindo) - Userbot Indonesia Community
+* [illvart](https://github.com/illvart) - Core Developer
+* [notudope](https://github.com/notudope) - Core Developer
 
 and [everyone](https://github.com/kastaid/getter/graphs/contributors) 🦄
 
