@@ -23,12 +23,12 @@ from . import (
 )
 
 try:
-    import psutil as psu
+    import psutil
 except ModuleNotFoundError:
     print("Installing psutil...")
     check_call([sys.executable, "-m", "pip", "install", "--no-cache-dir", "-U", "psutil"])
 finally:
-    import psutil as psu
+    import psutil
 
 
 def file_times() -> Generator[int, None, None]:
@@ -44,8 +44,8 @@ def print_stdout(procs) -> None:
 
 
 def kill_process_tree(procs) -> None:
-    with suppress(psu.NoSuchProcess):
-        parent = psu.Process(procs.pid)
+    with suppress(psutil.NoSuchProcess):
+        parent = psutil.Process(procs.pid)
         child = parent.children(recursive=True)
         child.append(parent)
         for _ in child:
