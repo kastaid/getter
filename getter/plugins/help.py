@@ -5,17 +5,14 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import time
 from . import (
     __version__,
     __tlversion__,
     __layer__,
     __pyversion__,
-    StartTime,
     hl,
     kasta_cmd,
     plugins_help,
-    time_formatter,
     chunk,
     humanbool,
     gvar,
@@ -57,8 +54,9 @@ help_text = """
     edited=True,
 )
 async def _(kst):
-    plugin_name = (await kst.client.get_text(kst)).lower()
+    ga = kst.client
     yy = await kst.eor("`Loading...`")
+    plugin_name = (await ga.get_text(kst)).lower()
     if plugin_name:
         name = None
         if plugin_name in plugins_help:
@@ -87,16 +85,15 @@ async def _(kst):
             _pr += f"<code>{_}</code> • "
         _pr = _pr[:-3]
         plugins += f"\n{_pr}"
-    uptime = time_formatter((time.time() - StartTime) * 1000)
     await yy.sod(
         help_text.format(
-            kst.client.full_name,
-            kst.client.uid,
+            ga.full_name,
+            ga.uid,
             __version__,
             __pyversion__,
             __tlversion__,
             __layer__,
-            uptime,
+            ga.uptime,
             plugins_help.count,
             plugins_help.total,
             humanbool(gvar("_sudo", use_cache=True), toggle=True),

@@ -483,10 +483,10 @@ async def _(kst):
     pattern=r"set(gban|gmute|gdel)(?: |$)([\s\S]*)",
 )
 async def _(kst):
+    ga = kst.client
     yy = await kst.eor("`Processing...`")
     cmd = kst.pattern_match.group(1)
     user, reason = await get_user(kst, 2)
-    ga = kst.client
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:

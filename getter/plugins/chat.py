@@ -152,6 +152,21 @@ async def _(kst):
 
 
 @kasta_cmd(
+    pattern=r"sd(m|)(?: |$)(\d*)(?: |$)([\s\S]*)",
+    no_crash=True,
+)
+async def _(kst):
+    group = kst.pattern_match.group
+    text = await kst.client.get_text(kst, group=3, plain=False)
+    if not text:
+        return await kst.try_delete()
+    ttl = int(group(2) or 1)
+    if group(1).strip() == "m":
+        text += f"\n\n`self-destruct message in {ttl} seconds`"
+    await kst.eor(text, time=ttl)
+
+
+@kasta_cmd(
     pattern="(send|dm)(?: |$)(.*)",
     no_crash=True,
 )
@@ -192,7 +207,7 @@ async def _(kst):
     ga = kst.client
     group = kst.pattern_match.group
     reply = await kst.get_reply_message()
-    where = BOTLOGS if group(2).strip() == "l" else ga.uid
+    where = (BOTLOGS if group(2).strip() == "l" else ga.uid) or ga.uid
     if group(1).strip() == "f":
         await reply.forward_to(where)
     else:
@@ -381,6 +396,8 @@ plugins_help["chat"] = {
     "{i}purgeme [number]/[reply]": "Purge my messages from given number or from replied message.",
     "{i}purgeall [reply]": "Delete all messages from replied user. This cannot be undone!",
     "{i}copy [reply]": "Copy the replied message.",
+    "{i}sd [seconds] [text]/[reply]": "Make self-destructible messages after particular time.",
+    "{i}sdm [seconds] [text]/[reply]": "Same as sd command above but showing a note “self-destruct message in ? seconds”.",
     "{i}send|{i}dm [username/id] [text]/[reply]": "Send message to user or chat.",
     "{i}saved [reply]": "Save that replied message to Saved Messages or BOTLOGS for savedl.",
     "{i}fsaved [reply]": "Forward that replied message to Saved Messages or BOTLOGS for fsavedl.",

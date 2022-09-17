@@ -88,16 +88,20 @@ async def PMPermit(kst):
             del PMWARN[towarn]
             add_col("pmwarns", PMWARN, NESLAST)
         mention = mentionuser(user.id, display_name(user), width=70)
+        antipm_text = r"\\**#Anti_PM**//"
+        antipm_text += f"\nUser **{mention}** [`{user.id}`] has messaged you and got "
         await ga.report_spam(user.id)
         await ga.block(user.id)
         if antipm == "del":
-            await sendlog(f"#ANTI_PM\n**{mention}** [`{user.id}`] has messaged you and got blocked and deleted!")
+            antipm_text += "blocked and deleted!"
+            await sendlog(antipm_text)
             await asyncio.sleep(1)
             await sendlog(kst.message, forward=True)
             await asyncio.sleep(1)
             await ga.delete_chat(user.id, revoke=True)
         else:
-            await sendlog(f"#ANTI_PM\n**{mention}** [`{user.id}`] has messaged you and got blocked!")
+            antipm_text += "blocked!"
+            await sendlog(antipm_text)
         return
     if towarn not in PMWARN:
         PMWARN[towarn] = 0
@@ -122,6 +126,7 @@ async def PMPermit(kst):
     is_block = bool(gvar("_pmblock", use_cache=True))
     mode = "blocked" if is_block else "archived"
     if PMWARN[towarn] > total:
+        warnend_text = f"\nUser **{mention}** [`{user.id}`] has been "
         with suppress(BaseException):
             await ga.delete_messages(user.id, [NESLAST[towarn]])
         if "_pmbye" in _PMBYE_CACHE:
@@ -160,11 +165,13 @@ async def PMPermit(kst):
                 )
             await ga.block(user.id)
             await asyncio.sleep(1)
-            await sendlog(f"#BLOCKED\n**{mention}** [`{user.id}`] has been blocked due to spamming in PM !!")
+            warnend_text += "blocked due to spamming in PM !!"
+            await sendlog(r"\\**#Blocked**//" + warnend_text)
         else:
             await ga.archive(user.id)
             await asyncio.sleep(1)
-            await sendlog(f"#ARCHIVED\n{mention} has been archived due to spamming in PM !!")
+            warnend_text += "archived due to spamming in PM !!"
+            await sendlog(r"\\**#Archived**//" + warnend_text)
         del PMWARN[towarn]
         add_col("pmwarns", PMWARN, NESLAST)
         return
@@ -197,7 +204,9 @@ async def PMPermit(kst):
     add_col("pmwarns", PMWARN, NESLAST)
     await ga.read(user.id, clear_mentions=True, clear_reactions=True)
     await asyncio.sleep(1)
-    await sendlog(f"#NEW_MESSAGE from **{mention}** [`{user.id}`] with **{warn}/{total}** warns!")
+    newmsg_text = r"\\**#New_Message**//"
+    newmsg_text += f"\nUser **{mention}** [`{user.id}`] has messaged you with **{warn}/{total}** warns!"
+    await sendlog(newmsg_text)
     await asyncio.sleep(1)
     await sendlog(kst.message, forward=True)
 
@@ -255,11 +264,9 @@ async def _(kst):
         return await yy.eor("`User is already Allowed.`", time=4)
     date = datetime.datetime.now().timestamp()
     allow_user(user.id, date, reason)
-    text = "User {} allowed to PM!\n<b>Date:</b> <code>{}</code>\n<b>Reason:</b> {}".format(
-        display_name(user),
-        datetime.datetime.fromtimestamp(date).strftime("%Y-%m-%d"),
-        f"<pre>{reason}</pre>" if reason else "No reason.",
-    )
+    text = "<b><u>User {} allowed to PM!</u></b>\n".format(display_name(user))
+    text += "<b>Date:</b> <code>{}</code>\n".format(datetime.datetime.fromtimestamp(date).strftime("%Y-%m-%d"))
+    text += "<b>Reason:</b> {}".format(f"<pre>{reason}</pre>" if reason else "No reason.")
     done = await yy.eor(text, parse_mode="html")
     towarn, PMWARN = str(user.id), jdata.pmwarns()
     if towarn in PMWARN:
@@ -287,9 +294,7 @@ async def _(kst):
     if user.id == ga.uid:
         return await yy.eor("`Cannot deny to myself.`", time=3)
     deny_user(user.id)
-    done = await yy.eor(
-        f"<code>User {display_name(user)} deleted in allowed list and disallowed to PM!</code>", parse_mode="html"
-    )
+    done = await yy.eor(f"<code>User {display_name(user)} disallowed to PM!</code>", parse_mode="html")
     msg = await done.reply("`Rebooting to apply...`", silent=True)
     await kst.client.reboot(msg)
 

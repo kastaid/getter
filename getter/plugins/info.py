@@ -10,7 +10,7 @@ import html
 import math
 import time
 from cachetools import LRUCache, TTLCache
-from telethon.errors.rpcerrorlist import YouBlockedUserError
+from telethon.errors.rpcerrorlist import YouBlockedUserError, FloodWaitError
 from telethon.tl import functions as fun, types as typ, custom
 from . import (
     kasta_cmd,
@@ -148,9 +148,17 @@ async def _(kst):
         from_user = (await kst.get_reply_message()).sender_id
     else:
         from_user = "me"
+    chat = await kst.get_input_chat()
     try:
         msg = await ga.get_messages(
-            kst.chat_id,
+            chat,
+            limit=0,
+            from_user=from_user,
+        )
+    except FloodWaitError as fw:
+        await asyncio.sleep(fw.seconds + 10)
+        msg = await ga.get_messages(
+            chat,
             limit=0,
             from_user=from_user,
         )

@@ -16,7 +16,6 @@ from pathlib import Path
 import aiofiles
 from . import (
     __version__,
-    StartTime,
     Root,
     DEV_CMDS,
     DEVS,
@@ -28,7 +27,6 @@ from . import (
     strip_format,
     parse_pre,
     humanbytes,
-    time_formatter,
     todict,
     Runner,
     Carbon,
@@ -51,7 +49,7 @@ async def _(kst):
     start_time = time.perf_counter()
     yy = await kst.edit("Ping !")
     speedy = round(time.perf_counter() - start_time, 3)
-    uptime = time_formatter((time.time() - StartTime) * 1000)
+    uptime = kst.client.uptime
     await yy.edit(
         f"🏓 Pong !!\n├  <b>Speedy</b> – <code>{speedy}ms</code>\n├  <b>Uptime</b> – <code>{uptime}</code>\n└  <b>Version</b> – <code>{__version__}</code>",
         parse_mode="html",

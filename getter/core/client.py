@@ -10,6 +10,7 @@ import asyncio
 import inspect
 import os
 import sys
+import time
 from contextlib import suppress
 from logging import Logger
 from random import choice
@@ -25,12 +26,13 @@ from telethon.errors.rpcerrorlist import (
 from telethon.network.connection.tcpfull import ConnectionTcpFull
 from telethon.sessions.string import StringSession
 from telethon.tl import functions as fun, types as typ
-from .. import __version__
+from .. import StartTime, __version__
 from ..config import Var, DEVS
 from ..logger import LOGS, TelethonLogger
 from .db import sgvar
 from .functions import display_name, get_text
 from .property import do_not_remove_credit, get_blacklisted
+from .utils import time_formatter
 
 delattr(fun.account, "DeleteAccountRequest")
 
@@ -130,8 +132,8 @@ class KastaClient(TelegramClient):
     def run_in_loop(self, func):
         return self.loop.run_until_complete(func)
 
-    async def run(self):
-        await self.run_until_disconnected()
+    def run(self):
+        self.run_until_disconnected()
 
     def add_handler(self, func, *args, **kwargs):
         if func in [_[0] for _ in self.list_event_handlers()]:
@@ -160,6 +162,14 @@ class KastaClient(TelegramClient):
     @property
     def uid(self):
         return self.me.id
+
+    @property
+    def is_bot(self) -> bool:
+        return bool(self.me.bot)
+
+    @property
+    def uptime(self) -> str:
+        return time_formatter((time.time() - StartTime) * 1000)
 
     def to_dict(self):
         return dict(inspect.getmembers(self))

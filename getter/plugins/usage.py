@@ -11,14 +11,12 @@ import html
 import json
 import math
 import shutil
-import time
 from . import (
-    StartTime,
+    getter_app,
     kasta_cmd,
     plugins_help,
     choice,
     humanbytes,
-    time_formatter,
     todict,
     mask_email,
     USERAGENTS,
@@ -97,25 +95,23 @@ async def _(kst):
     addons = json.dumps(todict(app.addons()), indent=2, default=str)
     buildpacks = json.dumps(todict(app.buildpacks()), indent=2, default=str)
     configs = json.dumps(app.config().to_dict(), indent=2, default=str)
-    await sendlog(f"<b>Account:</b>\n<pre>{html.escape(account)}</pre>", parse_mode="html")
+    await sendlog(f"<b>Account:</b>\n<pre>{html.escape(account)}</pre>", fallback=True, parse_mode="html")
     await asyncio.sleep(1)
-    await sendlog(f"<b>App:</b>\n<pre>{html.escape(capp)}</pre>", parse_mode="html")
+    await sendlog(f"<b>App:</b>\n<pre>{html.escape(capp)}</pre>", fallback=True, parse_mode="html")
     await asyncio.sleep(1)
-    await sendlog(f"<b>Dyno:</b>\n<pre>{html.escape(dyno)}</pre>", parse_mode="html")
+    await sendlog(f"<b>Dyno:</b>\n<pre>{html.escape(dyno)}</pre>", fallback=True, parse_mode="html")
     await asyncio.sleep(1)
-    await sendlog(f"<b>Addons:</b>\n<pre>{html.escape(addons)}</pre>", parse_mode="html")
+    await sendlog(f"<b>Addons:</b>\n<pre>{html.escape(addons)}</pre>", fallback=True, parse_mode="html")
     await asyncio.sleep(1)
-    await sendlog(f"<b>Buildpacks:</b>\n<pre>{html.escape(buildpacks)}</pre>", parse_mode="html")
+    await sendlog(f"<b>Buildpacks:</b>\n<pre>{html.escape(buildpacks)}</pre>", fallback=True, parse_mode="html")
     await asyncio.sleep(1)
-    await sendlog(f"<b>Configs:</b>\n<pre>{html.escape(configs)}</pre>", parse_mode="html")
+    await sendlog(f"<b>Configs:</b>\n<pre>{html.escape(configs)}</pre>", fallback=True, parse_mode="html")
     await yy.eor("`Heroku details sent at botlogs.`")
 
 
 def default_usage() -> str:
     import psutil
 
-    app_uptime = time_formatter((time.time() - StartTime) * 1000)
-    system_uptime = datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S")
     total, used, free = shutil.disk_usage(".")
     try:
         cpu_freq = psutil.cpu_freq().current
@@ -149,8 +145,8 @@ def default_usage() -> str:
     USED = humanbytes(used)
     FREE = humanbytes(free)
     return usage_text.format(
-        app_uptime,
-        system_uptime,
+        getter_app.uptime,
+        datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S"),
         UPLOAD,
         DOWN,
         TOTAL,

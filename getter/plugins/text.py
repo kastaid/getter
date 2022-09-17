@@ -8,6 +8,7 @@
 import asyncio
 import base64
 import re
+import string
 from . import (
     kasta_cmd,
     plugins_help,
@@ -213,9 +214,9 @@ async def _(kst):
     no_crash=True,
 )
 async def _(kst):
-    match = kst.pattern_match.group(1)
+    match = await kst.client.get_text(kst)
     if not match:
-        return await kst.sod("`Give me something to type!`")
+        return await kst.try_delete()
     text = "\u2060" * 602
     yy = await kst.eor(text)
     typing_symbol = "|"
@@ -249,6 +250,19 @@ async def _(kst):
     await kst.eor(text)
 
 
+@kasta_cmd(
+    pattern=r"small(?: |$)([\s\S]*)",
+    no_crash=True,
+)
+async def _(kst):
+    text = await kst.client.get_text(kst)
+    if not text:
+        return await kst.try_delete()
+    small_caps = "ᴀʙᴄᴅᴇғɢʜɪᴊᴋʟᴍɴᴏᴘϙʀsᴛᴜᴠᴡxʏᴢ"
+    text = text.lower().translate(str.maketrans(string.ascii_lowercase, small_caps))
+    await kst.eor(text)
+
+
 plugins_help["text"] = {
     "{i}getformat [reply]": "Get a replied message format.",
     "{i}noformat [reply]": "Clean format in replied message.",
@@ -270,6 +284,7 @@ plugins_help["text"] = {
     "{i}roman [text]/[reply]": "Convert any number less than 4000 to roman numerals.",
     "{i}unroman [text]/[reply]": "Convert roman numeral to number.",
     "{i}spoiler|{i}sp [text]/[reply]": "Create a spoiler message.",
-    "{i}type [text]": "Edits the message and shows like someone is typing.",
+    "{i}type [text]/[reply]": "Edits the message and shows like someone is typing.",
     "{i}flip [text]/[reply]": "Flip text upside down.",
+    "{i}small [text]/[reply]": "Make caps text smaller.",
 }
