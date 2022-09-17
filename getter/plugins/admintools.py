@@ -31,8 +31,8 @@ from . import (
     require="ban_users",
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     yy = await kst.eor("`Banning...`")
     user, reason = await get_user(kst)
     if not user:
@@ -74,8 +74,8 @@ async def _(kst):
     func=lambda e: e.is_reply,
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     yy = await kst.eor("`Dbanning...`")
     user, reason = await get_user(kst)
     if not user:
@@ -117,8 +117,8 @@ async def _(kst):
     require="ban_users",
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     user, _ = await get_user(kst)
     await kst.try_delete()
     if not user:
@@ -148,8 +148,8 @@ async def _(kst):
     require="ban_users",
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     yy = await kst.eor("`Tbanning...`")
     user, args = await get_user(kst)
     if not user:
@@ -182,8 +182,8 @@ async def _(kst):
     require="ban_users",
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     yy = await kst.eor("`Unbanning...`")
     user, reason = await get_user(kst)
     if not user:
@@ -207,8 +207,8 @@ async def _(kst):
     require="ban_users",
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     yy = await kst.eor("`Muting...`")
     user, reason = await get_user(kst)
     if not user:
@@ -235,8 +235,8 @@ async def _(kst):
     func=lambda e: e.is_reply,
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     yy = await kst.eor("`Dmuting...`")
     user, reason = await get_user(kst)
     if not user:
@@ -264,8 +264,8 @@ async def _(kst):
     require="ban_users",
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     user, _ = await get_user(kst)
     await kst.try_delete()
     if not user:
@@ -284,8 +284,8 @@ async def _(kst):
     require="ban_users",
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     yy = await kst.eor("`Tmuting...`")
     user, args = await get_user(kst)
     if not user:
@@ -318,8 +318,8 @@ async def _(kst):
     require="ban_users",
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     yy = await kst.eor("`Unmuting...`")
     user, reason = await get_user(kst)
     if not user:
@@ -345,8 +345,8 @@ async def _(kst):
     require="ban_users",
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     yy = await kst.eor("`Kicking...`")
     user, reason = await get_user(kst)
     if not user:
@@ -373,8 +373,8 @@ async def _(kst):
     func=lambda e: e.is_reply,
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     yy = await kst.eor("`Dkicking...`")
     user, reason = await get_user(kst)
     if not user:
@@ -501,8 +501,8 @@ async def _(kst):
     func=lambda e: e.is_reply,
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     opts = kst.pattern_match.group(1).strip().lower().split(" ")
     sec = opts[0]
     if not (sec or sec.isdecimal()):
@@ -552,6 +552,7 @@ async def _(kst):
 )
 async def _(kst):
     ga = kst.client
+    yy = await kst.eor("`Processing...`")
     chat = await kst.get_chat()
     if isinstance(chat, typ.Chat):
         where = await ga(fun.messages.GetFullChatRequest(chat.id))
@@ -561,18 +562,18 @@ async def _(kst):
         return
     msg_id = where.full_chat.pinned_msg_id
     if not msg_id:
-        return await kst.eor("`No Pinned!`", time=5)
+        return await yy.eor("`No Pinned!`", time=5)
     msg = await ga.get_messages(chat.id, ids=msg_id)
     if msg:
-        await kst.eor("Pinned message is [here]({}).".format(msg.message_link))
+        await yy.eor("Pinned message [in here]({}).".format(msg.message_link))
 
 
 @kasta_cmd(
     pattern="listpinned$",
 )
 async def _(kst):
-    chat_id = normalize_chat_id(kst.chat_id)
     ga = kst.client
+    chat_id = normalize_chat_id(kst.chat_id)
     yy = await kst.eor("`Processing...`")
     chat_title = display_name(kst.chat)
     pinned = ""
@@ -597,8 +598,8 @@ async def _(kst):
     require="add_admins",
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     yy = await kst.eor("`Promoting...`")
     user, args = await get_user(kst)
     if not user:
@@ -649,8 +650,8 @@ async def _(kst):
     require="add_admins",
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     yy = await kst.eor("`Demoting...`")
     user, _ = await get_user(kst)
     if not user:
@@ -686,8 +687,8 @@ async def _(kst):
     require="ban_users",
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     yy = await kst.eor("`Processing...`")
     user = (await ga.get_text(kst)).lower()
     total, kicked = 0, 0
@@ -779,8 +780,8 @@ async def _(kst):
     require="ban_users",
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     title = kst.chat.title
     yy = await kst.eor("`Kicking deleted accounts...`")
     try:
@@ -800,8 +801,8 @@ async def _(kst):
     require="ban_users",
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     title = kst.chat.title
     yy = await kst.eor("`Unbanning all banned users...`")
     done = 0

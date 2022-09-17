@@ -118,8 +118,7 @@ async def OnAFK(kst):
         start = datetime.datetime.fromtimestamp(is_afk().start)
         end = datetime.datetime.now().replace(microsecond=0)
         afk_time = time_formatter((end - start).seconds * 1000)
-        text = ""
-        text += "<b><u>I`m AFK ツ</u></b>\n"
+        text = "<b><u>I`m AFK ツ</u></b>\n"
         text += f"Last seen {afk_time} ago."
         reason = f"<pre>{is_afk().reason}</pre>" if is_afk().reason else "No reason."
         text += f"\n\n<b>Reason:</b> {reason}"

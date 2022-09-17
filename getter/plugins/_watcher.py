@@ -9,6 +9,7 @@ from telethon.tl import types as typ
 from . import (
     LOGS,
     getter_app,
+    sendlog,
     events,
     suppress,
     mentionuser,
@@ -21,12 +22,12 @@ from . import (
 )
 
 gbanned_text = r"""
-\\<b>#GBanned_Watch</b>// User {} joined and banned!
+\\<b>#GBanned_Watch</b>// User {} joined and quickly banned!
 <b>Reported:</b> <code>{}</code>
 <b>Reason:</b> {}
 """
 gmuted_text = r"""
-\\<b>#GMuted_Watch</b>// User {} joined and muted!
+\\<b>#GMuted_Watch</b>// User {} joined and quickly muted!
 <b>Reason:</b> {}
 """
 
@@ -70,11 +71,14 @@ async def JoinedHandler(kst):
     user = await kst.get_user()
     gban = is_gban(user.id, use_cache=True)
     if gban:
+        mention = mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True)
         is_reported = bool(await ga.report_spam(user.id))
+        logs_text = r"\\<b>#GBanned_Watch</b>//"
+        logs_text += f"\nUser <b>{mention}</b> [<code>{user.id}</code>] detected joining chat in <code>{chat.title} - {chat.id}</code> and quickly banned!\n"
         if kst.is_group:
             await kst.reply(
                 gbanned_text.format(
-                    mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
+                    mention,
                     humanbool(is_reported),
                     f"<pre>{gban.reason}</pre>" if gban.reason else "No reason.",
                 ),
@@ -83,11 +87,18 @@ async def JoinedHandler(kst):
             )
         with suppress(BaseException):
             await ga.edit_permissions(chat.id, user.id, view_messages=False)
+        logs_text += "<b>Reported:</b> <code>{}</code>\n".format(humanbool(is_reported))
+        logs_text += "<b>Reason:</b> {}\n".format(f"<pre>{gban.reason}</pre>" if gban.reason else "No reason.")
+        await sendlog(logs_text)
+
     gmute = is_gmute(user.id, use_cache=True)
     if gmute and kst.is_group:
+        mention = mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True)
+        logs_text = r"\\<b>#GMuted_Watch</b>//"
+        logs_text += f"\nUser <b>{mention}</b> [<code>{user.id}</code>] detected joining chat in <code>{chat.title} - {chat.id}</code> and quickly muted!\n"
         await kst.reply(
             gmuted_text.format(
-                mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
+                mention,
                 f"<pre>{gmute.reason}</pre>" if gmute.reason else "No reason.",
             ),
             parse_mode="html",
@@ -95,3 +106,5 @@ async def JoinedHandler(kst):
         )
         with suppress(BaseException):
             await ga.edit_permissions(chat.id, user.id, send_messages=False)
+        logs_text += "<b>Reason:</b> {}\n".format(f"<pre>{gban.reason}</pre>" if gban.reason else "No reason.")
+        await sendlog(logs_text)

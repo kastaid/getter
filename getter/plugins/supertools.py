@@ -16,8 +16,8 @@ from . import DEVS, kasta_cmd
     require="add_admins",
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     opts = kst.pattern_match.group(1).lower()
     rocker = "-s" in opts
     if rocker:
@@ -63,8 +63,8 @@ async def _(kst):
     require="add_admins",
 )
 async def _(kst):
-    chat_id = kst.chat_id
     ga = kst.client
+    chat_id = kst.chat_id
     opts = kst.pattern_match.group(1).lower()
     lucifer = "-s" in opts
     if lucifer:

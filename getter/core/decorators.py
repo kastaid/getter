@@ -315,9 +315,12 @@ def kasta_cmd(
 async def sendlog(
     message: typ.Message,
     forward: bool = False,
+    fallback: bool = False,
     **args,
 ) -> typing.Optional[typ.Message]:
     BOTLOGS = get_botlogs()
+    if not BOTLOGS and fallback:
+        BOTLOGS = getter_app.uid
     if not BOTLOGS:
         return None
     try:
@@ -337,6 +340,7 @@ async def sendlog(
         return await sendlog(
             message=message,
             forward=forward,
+            fallback=fallback,
             **args,
         )
     except Exception as err:

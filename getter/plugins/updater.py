@@ -9,7 +9,6 @@ import asyncio
 import datetime
 import os
 import sys
-import time
 import aiofiles
 from git import Repo
 from git.exc import GitCommandError, InvalidGitRepositoryError, NoSuchPathError
@@ -18,7 +17,6 @@ from . import (
     __tlversion__,
     __layer__,
     __pyversion__,
-    StartTime,
     Root,
     Var,
     tz,
@@ -30,7 +28,6 @@ from . import (
     sgvar,
     gvar,
     strip_format,
-    time_formatter,
     get_random_hex,
     humanbool,
     Runner,
@@ -178,6 +175,7 @@ async def _(kst):
     dev=True,
 )
 async def _(kst):
+    ga = kst.client
     clean = False
     if kst.is_dev:
         opt = kst.pattern_match.group(1)
@@ -187,7 +185,7 @@ async def _(kst):
                 user_id = int(opt)
             except ValueError:
                 version = opt
-            if not version and user_id != kst.client.uid:
+            if not version and user_id != ga.uid:
                 return
             if not user_id and version == __version__:
                 return
@@ -200,11 +198,10 @@ async def _(kst):
     utc_now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     local_now = datetime.datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
     yy = await kst.eor("`Processing...`", silent=True, force_reply=True)
-    uptime = time_formatter((time.time() - StartTime) * 1000)
     await yy.eor(
         test_text.format(
-            kst.client.full_name,
-            kst.client.uid,
+            ga.full_name,
+            ga.uid,
             __version__,
             __pyversion__,
             __tlversion__,
@@ -216,7 +213,7 @@ async def _(kst):
             humanbool(gvar("_antipm", use_cache=True), toggle=True),
             hk.name or "none",
             hk.stack,
-            uptime,
+            ga.uptime,
             utc_now,
             local_now,
         ),

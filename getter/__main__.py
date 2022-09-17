@@ -11,7 +11,6 @@ import time
 from importlib import import_module
 from requests.packages import urllib3
 from . import (
-    StartTime,
     __license__,
     __copyright__,
     __version__,
@@ -72,7 +71,6 @@ async def main() -> None:
     )
     LOGS.info(loaded_msg)
     do_not_remove_credit()
-    launch_time = time_formatter((time.time() - StartTime) * 1000)
     python_msg = ">> Python Version - {}".format(
         __pyversion__,
     )
@@ -84,7 +82,7 @@ async def main() -> None:
         __version__,
         getter_app.full_name,
         getter_app.uid,
-        launch_time,
+        getter_app.uptime,
         hl,
     )
     LOGS.info(python_msg)
@@ -95,13 +93,12 @@ async def main() -> None:
     await autous(getter_app.uid)
     await finishing(launch_msg)
     LOGS.success(success_msg)
-    await getter_app.run()
 
 
 if __name__ == "__main__":
     try:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(main())
+        getter_app.run_in_loop(main())
+        getter_app.run()
     except (
         KeyboardInterrupt,
         ConnectionError,
