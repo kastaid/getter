@@ -1,4 +1,3 @@
-# type: ignore
 # getter < https://t.me/kastaid >
 # Copyright (C) 2022 kastaid
 #
@@ -11,10 +10,11 @@ import inspect
 import os
 import sys
 import time
+import typing
 from contextlib import suppress
 from logging import Logger
 from random import choice
-from telethon import utils
+from telethon import hints, utils
 from telethon.client.telegramclient import TelegramClient
 from telethon.errors.rpcerrorlist import (
     ApiIdInvalidError,
@@ -24,13 +24,19 @@ from telethon.errors.rpcerrorlist import (
     AccessTokenInvalidError,
 )
 from telethon.network.connection.tcpfull import ConnectionTcpFull
-from telethon.sessions.string import StringSession
+from telethon.sessions.abstract import Session
+from telethon.sessions.string import CURRENT_VERSION, StringSession
 from telethon.tl import functions as fun, types as typ
 from .. import StartTime, __version__
 from ..config import Var, DEVS
 from ..logger import LOGS, TelethonLogger
 from .db import sgvar
-from .functions import display_name, get_text
+from .functions import (
+    display_name,
+    get_chat_id,
+    get_text,
+    get_user,
+)
 from .property import do_not_remove_credit, get_blacklisted
 from .utils import time_formatter
 
@@ -40,10 +46,10 @@ delattr(fun.account, "DeleteAccountRequest")
 class KastaClient(TelegramClient):
     def __init__(
         self,
-        session,
-        api_id=None,
-        api_hash=None,
-        bot_token=None,
+        session: typing.Union[str, Session],
+        api_id: typing.Optional[int] = None,
+        api_hash: typing.Optional[str] = None,
+        bot_token: typing.Optional[str] = None,
         logger: Logger = LOGS,
         *args,
         **kwargs,
@@ -68,11 +74,11 @@ class KastaClient(TelegramClient):
         )
 
     @property
-    def __dict__(self):
+    def __dict__(self) -> typing.Optional[dict]:
         if self.me:
             return self.me.to_dict()
 
-    async def start_client(self, **kwargs):
+    async def start_client(self, **kwargs) -> None:
         try:
             do_not_remove_credit()
             await asyncio.sleep(choice((4, 6, 8)))
@@ -129,20 +135,25 @@ class KastaClient(TelegramClient):
             self.logger.exception(f"[KastaClient] - {err}")
             sys.exit(1)
 
-    def run_in_loop(self, func):
+    def run_in_loop(self, func: asyncio.Future) -> None:
         return self.loop.run_until_complete(func)
 
-    def run(self):
+    def run(self) -> None:
         self.run_until_disconnected()
 
-    def add_handler(self, func, *args, **kwargs):
+    def add_handler(
+        self,
+        func: asyncio.Future,
+        *args,
+        **kwargs,
+    ) -> None:
         if func in [_[0] for _ in self.list_event_handlers()]:
             return
         self.add_event_handler(func, *args, **kwargs)
 
-    def reboot(self, kst):
+    def reboot(self, message: typ.Message) -> None:
         with suppress(BaseException):
-            sgvar("_reboot", f"{kst.chat_id}|{kst.id}")
+            sgvar("_reboot", f"{message.chat_id}|{message.id}")
         with suppress(BaseException):
             import psutil
 
@@ -152,15 +163,15 @@ class KastaClient(TelegramClient):
         os.execl(sys.executable, sys.executable, "-m", "getter")
 
     @property
-    def utils(self):
+    def utils(self) -> typing.Any:
         return utils
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
         return display_name(self.me)
 
     @property
-    def uid(self):
+    def uid(self) -> int:
         return self.me.id
 
     @property
@@ -171,62 +182,94 @@ class KastaClient(TelegramClient):
     def uptime(self) -> str:
         return time_formatter((time.time() - StartTime) * 1000)
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return dict(inspect.getmembers(self))
 
-    async def get_id(self, entity):
+    async def get_id(self, entity: hints.EntityLike) -> int:
         with suppress(ValueError):
             entity = int(entity)
         return await self.get_peer_id(entity)
 
-    async def get_text(self, *args, **kwargs):
+    async def get_chat_id(self, *args, **kwargs) -> typing.Optional[int]:
+        return await get_chat_id(*args, **kwargs)
+
+    async def get_text(self, *args, **kwargs) -> str:
         return await get_text(*args, **kwargs)
 
-    async def read(self, *args, **kwargs):
+    async def get_user(self, *args, **kwargs) -> typing.Optional[typing.Tuple[typ.User, str]]:
+        return await get_user(*args, **kwargs)
+
+    async def read(self, *args, **kwargs) -> bool:
         with suppress(BaseException):
             return await self.send_read_acknowledge(*args, **kwargs)
-        return None
+        return False
 
-    async def block(self, entity):
+    async def block(self, entity: hints.EntityLike) -> bool:
         with suppress(BaseException):
             entity = await self.get_input_entity(entity)
             return await self(fun.contacts.BlockRequest(entity))
-        return None
+        return False
 
-    async def unblock(self, entity):
+    async def unblock(self, entity: hints.EntityLike) -> bool:
         with suppress(BaseException):
             entity = await self.get_input_entity(entity)
             return await self(fun.contacts.UnblockRequest(entity))
-        return None
+        return False
 
-    async def archive(self, entity):
+    async def archive(self, entity: hints.EntityLike) -> typing.Optional[typ.Updates]:
         with suppress(BaseException):
             return await self.edit_folder(entity, folder=1)
         return None
 
-    async def unarchive(self, entity):
+    async def unarchive(self, entity: hints.EntityLike) -> typing.Optional[typ.Updates]:
         with suppress(BaseException):
             return await self.edit_folder(entity, folder=0)
         return None
 
-    async def delete_chat(self, entity, revoke=False):
+    async def delete_chat(
+        self,
+        entity: hints.EntityLike,
+        revoke: bool = False,
+    ) -> typing.Optional[typ.Updates]:
         with suppress(BaseException):
             return await self.delete_dialog(entity, revoke=revoke)
         return None
 
-    async def report_spam(self, entity):
+    async def report_spam(self, entity: hints.EntityLike) -> bool:
         with suppress(BaseException):
             entity = await self.get_input_entity(entity)
             return await self(fun.messages.ReportSpamRequest(entity))
+        return False
+
+    async def send_reaction(
+        self,
+        entity: hints.EntityLike,
+        message: hints.MessageIDLike,
+        big: bool = False,
+        add_to_recent: bool = False,
+        reaction: typing.Optional[str] = None,
+    ) -> typing.Optional[typ.Updates]:
+        with suppress(BaseException):
+            message = self.utils.get_message_id(message) or 0
+            entity = await self.get_input_entity(entity)
+            return await self(
+                fun.messages.SendReactionRequest(
+                    big=big,
+                    add_to_recent=add_to_recent,
+                    peer=entity,
+                    msg_id=message,
+                    reaction=[typ.ReactionEmoji(emoticon=reaction)],
+                )
+            )
         return None
 
-    async def join_to(self, entity):
+    async def join_to(self, entity: hints.EntityLike) -> typing.Optional[typ.Updates]:
         with suppress(BaseException):
             entity = await self.get_input_entity(entity)
             return await self(fun.channels.JoinChannelRequest(entity))
         return None
 
-    async def mute_chat(self, entity):
+    async def mute_chat(self, entity: hints.EntityLike) -> bool:
         with suppress(BaseException):
             entity = await self.get_input_entity(entity)
             return await self(
@@ -240,15 +283,15 @@ class KastaClient(TelegramClient):
                     ),
                 )
             )
-        return None
+        return False
 
     async def create_group(
         self,
-        title: str,
+        title: str = "Getter",
         about: str = "",
-        users: list = None,
-        photo: str = None,
-    ):
+        users: typing.Optional[typing.List[typing.Union[str, int]]] = None,
+        photo: typing.Optional[str] = None,
+    ) -> typing.Tuple[typing.Optional[str], typing.Optional[int]]:
         users = users or []
         try:
             created = await self(
@@ -285,11 +328,12 @@ class KastaClient(TelegramClient):
         return link, chat_id
 
 
-if Var.STRING_SESSION:
-    if len(Var.STRING_SESSION) != 353:
+_ssn = Var.STRING_SESSION
+if _ssn:
+    if _ssn.startswith(CURRENT_VERSION) and len(_ssn) != 353:
         LOGS.critical("STRING_SESSION wrong. Copy paste correctly! Quitting...")
         sys.exit(1)
-    session = StringSession(Var.STRING_SESSION)
+    session = StringSession(_ssn)
 else:
     LOGS.critical("STRING_SESSION empty. Please filling! Quitting...")
     sys.exit(1)

@@ -6,6 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import datetime
+import html
 import mimetypes
 import re
 import time
@@ -25,9 +26,9 @@ from . import (
     parse_pre,
     normalize_chat_id,
     time_formatter,
-    get_random_hex,
     get_msg_id,
     get_media_type,
+    replace_all,
     Runner,
     Fetch,
     Telegraph,
@@ -35,7 +36,7 @@ from . import (
 
 
 @kasta_cmd(
-    pattern=r"spcheck(?: |$)([\s\S]*)",
+    pattern="spcheck(?: |$)((?s).*)",
 )
 async def _(kst):
     ga = kst.client
@@ -48,7 +49,7 @@ async def _(kst):
         check = TextBlob(sentence)
         correct = check.correct()
     except Exception as err:
-        return await yy.eod(str(err), parse_mode=parse_pre)
+        return await yy.eor(str(err), parse_mode=parse_pre)
     text = "• **Given Phrase:** `{}`\n• **Corrected Phrase:** `{}`".format(
         sentence,
         correct.strip(),
@@ -111,7 +112,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern=r"kbbi(?: |$)(.*)",
+    pattern="kbbi(?: |$)(.*)",
 )
 async def _(kst):
     ga = kst.client
@@ -133,9 +134,9 @@ async def _(kst):
 )
 async def _(kst):
     yy = await kst.eor("`Processing...`")
-    url = "https://daysoftheyear.com"
     now = datetime.datetime.now()
     month = now.strftime("%b")
+    url = "https://daysoftheyear.com"
     url += f"/days/{month}/" + now.strftime("%F").split("-")[2]
     res = await Fetch(url, re_content=True)
     if not res:
@@ -149,7 +150,78 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern=r"haste(?: |$)([\s\S]*)",
+    pattern="lorem$",
+)
+async def _(kst):
+    yy = await kst.eor("`Processing...`")
+    url = "https://loripsum.net/api/plaintext"
+    res = await Fetch(url)
+    if not res:
+        return await yy.eod("`Try again now!`")
+    await yy.eor(res.strip(), parse_mode=parse_pre)
+
+
+@kasta_cmd(
+    pattern="wtr(s|p|)(?: |$)(.*)",
+)
+async def _(kst):
+    ga = kst.client
+    mode = kst.pattern_match.group(1).strip()
+    city = await ga.get_text(kst, group=2)
+    yy = await kst.eor("`Processing...`")
+    city = city.replace(" ", "%20")
+    if mode == "p":
+        url = f"https://wttr.in/{city}_2&lang=en.png"
+    elif mode == "s":
+        url = "https://wttr.in/" + (city + "?format=%l:+%c+%t,+%w+%m" if city else "?format=%l:+%c+%t,+%w+%m&lang=en")
+    else:
+        url = f"https://wttr.in/{city}?m?M?0?q?T&lang=en"
+    res = await Fetch(url, re_content=mode == "p")
+    if not res:
+        return await yy.eod("`Try again now!`")
+    if mode != "p":
+        res = html.escape(res)
+        await yy.eor(f"<pre>{res}</pre>", parse_mode="html")
+    else:
+        await kst.respond(
+            file=res,
+            force_document=False,
+            allow_cache=False,
+            reply_to=kst.reply_to_msg_id,
+            silent=True,
+        )
+        await yy.try_delete()
+
+
+@kasta_cmd(
+    pattern="calc(?: |$)(.*)",
+)
+async def _(kst):
+    ga = kst.client
+    text = await ga.get_text(kst)
+    yy = await kst.eor("`Processing...`")
+    if not text:
+        await kst.eor("`Provide a math!`", time=5)
+        return
+    text = " ".join(text.split())
+    newtext = replace_all(
+        text.lower(),
+        {
+            ":": "/",
+            "÷": "/",
+            "×": "*",
+            "x": "*",
+        },
+    )
+    try:
+        answer = "{} = {}".format(text, eval(newtext))
+    except Exception as err:
+        answer = "{} = {}".format(text, err)
+    await yy.eor(answer, parse_mode=parse_pre)
+
+
+@kasta_cmd(
+    pattern="haste(?: |$)((?s).*)",
 )
 async def _(kst):
     ga = kst.client
@@ -245,7 +317,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern=r"tgh(?: |$)([\s\S]*)",
+    pattern="tgh(?: |$)((?s).*)",
 )
 async def _(kst):
     ga = kst.client
@@ -271,7 +343,7 @@ async def _(kst):
         if mt not in ("document", "text"):
             try:
                 link = "https://telegra.ph" + next((_ for _ in telegraph.upload_file(res)), "")
-                push = f"**Uploaded to Telegraph:** [Telegraph Link]({link})"
+                push = f"**Telegraph:** [Telegraph Link]({link})"
             except Exception as err:
                 push = f"**ERROR:**\n`{err}`"
             (Root / res).unlink(missing_ok=True)
@@ -287,7 +359,7 @@ async def _(kst):
     res = push.get("url")
     if not res:
         return await yy.eod("`Try again now!`")
-    await yy.eor(f"**Pasted to Telegraph:** [Telegraph Link]({res})")
+    await yy.eor(f"**Telegraph:** [Telegraph Link]({res})")
 
 
 @kasta_cmd(
@@ -340,17 +412,17 @@ async def _(kst):
     try:
         from_msg = await ga.get_messages(chat, ids=msg_id)
     except Exception as err:
-        await kst.eor(f"**ERROR**\n`{err}`")
+        return await yy.eor(str(err), parse_mode=parse_pre)
     if not from_msg.media:
         await yy.try_delete()
     else:
         start_time = time.time()
         await yy.eor("`Downloading...`")
         if isinstance(from_msg.media, typ.MessageMediaPhoto):
-            file = "getmsg_" + get_random_hex() + ".jpg"
+            file = "getmsg_" + str(msg_id) + ".jpg"
         else:
             mimetype = from_msg.media.document.mime_type
-            file = "getmsg_" + get_random_hex() + mimetypes.guess_extension(mimetype)
+            file = "getmsg_" + str(msg_id) + mimetypes.guess_extension(mimetype)
         with suppress(BaseException):
             await ga.download_file(from_msg.media, file=file)
             taken = time_formatter((time.time() - start_time) * 1000)
@@ -368,7 +440,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="search( -r|)(?: |$)(.*)",
+    pattern="search( -r|revert|)(?: |$)(.*)",
 )
 async def _(kst):
     ga = kst.client
@@ -405,10 +477,15 @@ plugins_help["utility"] = {
     "{i}mean [word]/[reply]": "Get the meaning of the word.",
     "{i}kbbi [word]/[reply]": "Get the meaning of the word/phrase with KBBI Daring.",
     "{i}eod": "Get event of the today.",
+    "{i}lorem": "Get lorem ipsum.",
+    "{i}wtr [city]/[reply]": "Get ASCII-Art of current weather by city.",
+    "{i}wtrs [city]/[reply]": "Get a simple weather.",
+    "{i}wtrp [city]/[reply]": "Get a weather pictures.",
+    "{i}calc [math]/[reply]": "Simpler calculator supported ( : ÷ × x ). E.g: 2 x 2",
     "{i}haste [text]/[reply]": "Upload text to hastebin.",
     "{i}github [username]/[reply]": "Get full information about an user on GitHub of given username.",
     "{i}tgh [text]/[reply]": "Upload text or media to Telegraph.",
     "{i}gps [location/coordinates]/[reply]": "Send the map a given location.",
     "{i}getmsg [link]/[reply]": "Get any media from messages forward/copy restrictions or replied message.",
-    "{i}search [-r] [text]/[reply] : [number]": "Search messages in current chat. Add '-r' to reverse order. Limit number of result is 99.",
+    "{i}search [-r/revert] [text]/[reply] : [number]": "Search messages in current chat. Add '-r' to reverse order. Limit number of result is 99.",
 }

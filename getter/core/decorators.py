@@ -16,7 +16,7 @@ from functools import wraps
 from io import BytesIO
 from pathlib import Path
 from traceback import format_exc
-from telethon import events
+from telethon import hints, events
 from telethon.errors.rpcerrorlist import (
     AuthKeyDuplicatedError,
     ChatSendGifsForbiddenError,
@@ -57,7 +57,8 @@ from .wrappers import (
     eor,
     eod,
     sod,
-    try_delete,
+    _try_delete,
+    _react,
 )
 
 CommandChats = typing.Union[typing.List[int], typing.Set[int], typing.Tuple[int], None]
@@ -82,7 +83,6 @@ def kasta_cmd(
     edited: bool = False,
     ignore_case: bool = False,
     no_handler: bool = False,
-    no_crash: bool = False,
     no_chats: bool = False,
     users: typing.Optional[CommandChats] = None,
     chats: typing.Optional[CommandChats] = None,
@@ -96,11 +96,11 @@ def kasta_cmd(
     sudo: bool = False,
     require: typing.Optional[str] = None,
 ) -> typing.Callable:
-    def decorator(fun) -> None:
+    def decorator(fun: typing.Callable) -> None:
         do_not_remove_credit()
 
         @wraps(fun)
-        async def wrapper(kst) -> typing.Callable:
+        async def wrapper(kst: typ.Message) -> typing.Callable:
             kst.is_dev = False
             kst.is_sudo = False
             if not kst.out:
@@ -164,11 +164,10 @@ def kasta_cmd(
                 FLOOD_WAIT = fw.seconds
                 FLOOD_WAIT_HUMAN = time_formatter((FLOOD_WAIT + 10) * 1000)
                 LOGS.warning(f"A FloodWait Error of {FLOOD_WAIT}. Sleeping for {FLOOD_WAIT_HUMAN} and try again.")
-                await try_delete(kst)
+                await _try_delete(kst)
                 await getter_app.disconnect()
                 await asyncio.sleep(FLOOD_WAIT + 10)
-                await getter_app.connect()
-                return
+                return await getter_app.connect()
             except (
                 MessageIdInvalidError,
                 MessageNotModifiedError,
@@ -189,70 +188,72 @@ def kasta_cmd(
                 raise events.StopPropagation
             except Exception as err:
                 LOGS.exception(f"[KASTA_CMD] - {err}")
-                if not no_crash:
-                    date = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-                    if kst.is_private:
-                        chat_type = "private"
-                    elif kst.is_group:
-                        chat_type = "group"
-                    else:
-                        chat_type = "channel"
-                    ftext = r"\\**#Getter_Error**// Forward this to @kastaot"
-                    ftext += "\n\n**Getter Version:** `" + str(__version__)
-                    ftext += "`\n**Python Version:** `" + str(__pyversion__)
-                    ftext += "`\n**Telethon Version:** `" + str(__tlversion__)
-                    ftext += "`\n**Telegram Layer:** `" + str(__layer__) + "`\n\n"
-                    ftext += "**--START GETTER ERROR LOG--**"
-                    ftext += "\n\n**Date:** `" + date
-                    ftext += "`\n**Chat Type:** `" + chat_type
-                    ftext += "`\n**Chat ID:** `" + str(chat_id)
-                    ftext += "`\n**Chat Title:** `" + display_name(chat)
-                    ftext += "`\n**User ID:** `" + str(myself)
-                    ftext += "`\n**Replied:** `" + str(kst.is_reply)
-                    ftext += "`\n\n**Event Trigger:**`\n"
-                    ftext += str(kst.text)
-                    ftext += "`\n\n**Traceback Info:**```\n"
-                    ftext += str(format_exc())
-                    ftext += "```\n\n**Error Text:**`\n"
-                    ftext += str(sys.exc_info()[1])
-                    ftext += "`\n\n**--END GETTER ERROR LOG--**"
-                    if not Var.DEV_MODE:
-                        ftext += "\n\n\n**Last 5 Commits:**`\n"
-                        stdout, stderr, _, _ = await Runner('git log --pretty=format:"%an: %s" -5')
-                        result = stdout + stderr
-                        ftext += result + "`"
-                    error_log = None
-                    BOTLOGS = get_botlogs()
-                    send_to = BOTLOGS or chat_id
-                    reply_to = None if BOTLOGS else kst.id
-                    if len(ftext) > MAX_MESSAGE_LEN:
-                        with suppress(BaseException), BytesIO(ftext.encode()) as file:
-                            file.name = "getter_error.txt"
-                            error_log = await getter_app.send_file(
-                                send_to,
-                                file=file,
-                                caption=r"\\**#Getter_Error**// Forward this to @kastaot",
-                                force_document=True,
-                                allow_cache=False,
-                                reply_to=reply_to,
-                            )
-                    else:
-                        error_log = await getter_app.send_message(
+                date = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+                if kst.is_private:
+                    chat_type = "private"
+                elif kst.is_group:
+                    chat_type = "group"
+                else:
+                    chat_type = "channel"
+                ftext = r"\\**#Getter_Error**// Forward this to @kastaot"
+                ftext += "\n\n**Getter Version:** `" + str(__version__)
+                ftext += "`\n**Python Version:** `" + str(__pyversion__)
+                ftext += "`\n**Telethon Version:** `" + str(__tlversion__)
+                ftext += "`\n**Telegram Layer:** `" + str(__layer__) + "`\n\n"
+                ftext += "**--START GETTER ERROR LOG--**"
+                ftext += "\n\n**Date:** `" + date
+                ftext += "`\n**Chat Type:** `" + chat_type
+                ftext += "`\n**Chat ID:** `" + str(chat_id)
+                ftext += "`\n**Chat Title:** `" + display_name(chat)
+                ftext += "`\n**User ID:** `" + str(myself)
+                ftext += "`\n**Replied:** `" + str(kst.is_reply)
+                ftext += "`\n\n**Event Trigger:**`\n"
+                ftext += str(kst.text)
+                ftext += "`\n\n**Traceback Info:**```\n"
+                ftext += str(format_exc())
+                ftext += "```\n\n**Error Text:**`\n"
+                ftext += str(sys.exc_info()[1])
+                ftext += "`\n\n**--END GETTER ERROR LOG--**"
+                if not Var.DEV_MODE:
+                    ftext += "\n\n\n**Last 5 Commits:**`\n"
+                    stdout, stderr, _, _ = await Runner('git log --pretty=format:"%an: %s" -5')
+                    result = stdout + stderr
+                    ftext += result + "`"
+                error_log = None
+                BOTLOGS = get_botlogs()
+                send_to = BOTLOGS or chat_id
+                reply_to = None if BOTLOGS else kst.id
+                if len(ftext) > MAX_MESSAGE_LEN:
+                    with suppress(BaseException), BytesIO(ftext.encode()) as file:
+                        file.name = "getter_error.txt"
+                        error_log = await getter_app.send_file(
                             send_to,
-                            ftext,
-                            link_preview=False,
+                            file=file,
+                            caption=r"\\**#Getter_Error**// Forward this to @kastaot",
+                            force_document=True,
+                            allow_cache=False,
                             reply_to=reply_to,
                         )
-                    if kst.out and BOTLOGS and error_log:
-                        text = r"\\<b>#Getter_Error</b>// An error occurred, check the error here: {}".format(
-                            error_log.message_link if kst.is_private else f"<code>{error_log.message_link}</code>",
+                else:
+                    error_log = await getter_app.send_message(
+                        send_to,
+                        ftext,
+                        link_preview=False,
+                        reply_to=reply_to,
+                    )
+                if kst.out and BOTLOGS and error_log:
+                    text = r"\\<b>#Getter_Error</b>//"
+                    text += "\n<b>An error details:</b> {}"
+                    if kst.is_private:
+                        text = text.format(error_log.message_link)
+                    else:
+                        text = text.format(f"<code>{error_log.message_link}</code>")
+                    with suppress(BaseException):
+                        await kst.edit(
+                            text,
+                            link_preview=False,
+                            parse_mode="html",
                         )
-                        with suppress(BaseException):
-                            await kst.edit(
-                                text,
-                                link_preview=False,
-                                parse_mode="html",
-                            )
 
         superuser = dev or sudo
         cmd = None
@@ -313,7 +314,7 @@ def kasta_cmd(
 
 
 async def sendlog(
-    message: typ.Message,
+    message: hints.MessageLike,
     forward: bool = False,
     fallback: bool = False,
     **args,
@@ -351,4 +352,5 @@ async def sendlog(
 Message.eor = eor
 Message.eod = eod
 Message.sod = sod
-Message.try_delete = try_delete
+Message.try_delete = _try_delete
+Message.react = _react

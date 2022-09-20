@@ -17,7 +17,7 @@ aiohttp[speedups]==3.8.1
 async-timeout==4.0.2
 Markdown==3.4.1
 beautifulsoup4==4.11.1
-emoji==2.0.0
+emoji==2.1.0
 validators==0.20.0
 gpytranslate==1.4.0
 gTTS==2.2.4

@@ -17,7 +17,8 @@ from . import (
     plugins_help,
     choice,
     humanbytes,
-    todict,
+    to_dict,
+    parse_pre,
     mask_email,
     USERAGENTS,
     Fetch,
@@ -88,12 +89,12 @@ async def _(kst):
         conn = hk.heroku()
         app = conn.app(hk.name)
     except Exception as err:
-        return await yy.eor(f"**ERROR:**\n`{err}`")
-    account = json.dumps(todict(conn.account()), indent=2, default=str)
-    capp = json.dumps(todict(app.info), indent=2, default=str)
-    dyno = json.dumps(todict(app.dynos()), indent=2, default=str)
-    addons = json.dumps(todict(app.addons()), indent=2, default=str)
-    buildpacks = json.dumps(todict(app.buildpacks()), indent=2, default=str)
+        return await yy.eor(str(err), parse_mode=parse_pre)
+    account = json.dumps(to_dict(conn.account()), indent=2, default=str)
+    capp = json.dumps(to_dict(app.info), indent=2, default=str)
+    dyno = json.dumps(to_dict(app.dynos()), indent=2, default=str)
+    addons = json.dumps(to_dict(app.addons()), indent=2, default=str)
+    buildpacks = json.dumps(to_dict(app.buildpacks()), indent=2, default=str)
     configs = json.dumps(app.config().to_dict(), indent=2, default=str)
     await sendlog(f"<b>Account:</b>\n<pre>{html.escape(account)}</pre>", fallback=True, parse_mode="html")
     await asyncio.sleep(1)

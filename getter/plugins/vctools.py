@@ -16,9 +16,7 @@ from . import (
     suppress,
     mentionuser,
     display_name,
-    get_user,
     normalize_chat_id,
-    get_chat_id,
     is_termux,
     import_lib,
     humanbool,
@@ -34,7 +32,7 @@ async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Starting video chat...`")
     args = kst.pattern_match.group(1).split(" ")
-    is_silent = "-s" in args[0].lower()
+    is_silent = [_ for _ in ("-s", "silent") if _ in args[0].lower()]
     title = " ".join(args[1:] if is_silent else args).strip()
     chat_id = normalize_chat_id(kst.chat_id)
     try:
@@ -67,7 +65,7 @@ async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Stopping video chat...`")
     args = kst.pattern_match.group(1).split(" ")
-    is_silent = "-s" in args[0].lower()
+    is_silent = [_ for _ in ("-s", "silent") if _ in args[0].lower()]
     chat_id = normalize_chat_id(kst.chat_id)
     call = await get_call(chat_id)
     if not call:
@@ -117,7 +115,7 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Inviting to video chat...`")
-    user, _ = await get_user(kst)
+    user, _ = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
@@ -207,8 +205,9 @@ async def _(kst):
     pattern="joinvc(?: |$)(.*)",
 )
 async def _(kst):
+    ga = kst.client
     yy = await kst.eor("`Joining video chat...`")
-    chat_id = await get_chat_id(kst)
+    chat_id = await ga.get_chat_id(kst)
     if not chat_id:
         return await yy.try_delete()
     call = await get_call(chat_id)
@@ -238,8 +237,9 @@ async def _(kst):
     pattern="leavevc(?: |$)(.*)",
 )
 async def _(kst):
+    ga = kst.client
     yy = await kst.eor("`Leaving video chat...`")
-    chat_id = await get_chat_id(kst)
+    chat_id = await ga.get_chat_id(kst)
     if not chat_id:
         return await yy.try_delete()
     call = await get_call(chat_id)
@@ -309,8 +309,8 @@ def group_call(chat_id: int):
 
 
 plugins_help["vctools"] = {
-    "{i}startvc [-s] [title]": "Start or restart the video chat in current group/channel. Add '-s' to started silently.",
-    "{i}stopvc [-s]": "Stop the video chat in current group/channel. Add '-s' to stopped silently.",
+    "{i}startvc [-s/silent] [title]": "Start or restart the video chat in current group/channel. Add '-s' to started silently.",
+    "{i}stopvc [-s/silent]": "Stop the video chat in current group/channel. Add '-s' to stopped silently.",
     "{i}vctitle [title]/[reply]": "Change the video chat title or reset to default (without title) in current group/channel.",
     "{i}vcinvite [reply]/[username/mention/id]": "Invite user to current video chat.",
     # "{i}vcinviteall": "Invite all members to current video chat. **(YOU MUST BE JOINED)**",

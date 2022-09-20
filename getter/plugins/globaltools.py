@@ -22,7 +22,6 @@ from . import (
     suppress,
     parse_pre,
     time_formatter,
-    get_user,
     mentionuser,
     display_name,
     strip_emoji,
@@ -54,7 +53,7 @@ from . import (
 )
 
 gban_text = r"""
-\\<b>#GBanned</b>// User {} in +{}-{} chats!
+\\<b>#GBanned</b>// User {} in {}-{}={} chats!
 <b>Date:</b> <code>{}</code>
 <b>Taken:</b> <code>{}</code>
 <b>Reported:</b> <code>{}</code>
@@ -63,13 +62,13 @@ gban_text = r"""
 <i>Added to GBanned_Watch.</i>
 """
 ungban_text = r"""
-\\<b>#UnGBanned</b>// User {} in +{}-{} chats!
+\\<b>#UnGBanned</b>// User {} in {}-{}={} chats!
 <b>Taken:</b> <code>{}</code>
 
 <i>Wait for 1 minutes before released.</i>
 """
 gmute_text = r"""
-\\<b>#GMuted</b>// User {} in +{}-{} groups!
+\\<b>#GMuted</b>// User {} in {}-{}={} groups!
 <b>Date:</b> <code>{}</code>
 <b>Taken:</b> <code>{}</code>
 <b>Reason:</b> {}
@@ -77,7 +76,7 @@ gmute_text = r"""
 <i>Added to GMuted_Watch.</i>
 """
 ungmute_text = r"""
-\\<b>#UnGMuted</b>// User {} in +{}-{} groups!
+\\<b>#UnGMuted</b>// User {} in {}-{}={} groups!
 <b>Taken:</b> <code>{}</code>
 
 <i>Wait for 1 minutes before released.</i>
@@ -98,17 +97,17 @@ reason_text = r"""
 <b>Latest Reason:</b> <pre>{}</pre>
 """
 gkick_text = r"""
-\\<b>#GKicked</b>// User {} in +{}-{} chats!
+\\<b>#GKicked</b>// User {} in {}-{}={} chats!
 <b>Taken:</b> <code>{}</code>
 <b>Reason:</b> {}
 """
 gpromote_text = r"""
-\\<b>#GPromoted</b>// User {} in +{}-{} {}!
+\\<b>#GPromoted</b>// User {} in {}-{}={} {}!
 <b>Title:</b> <code>{}</code>
 <b>Taken:</b> <code>{}</code>
 """
 gdemote_text = r"""
-\\<b>#GDemoted</b>// User {} in +{}-{} {}!
+\\<b>#GDemoted</b>// User {} in {}-{}={} {}!
 <b>Taken:</b> <code>{}</code>
 """
 _GBAN_LOCK = asyncio.Lock()
@@ -125,27 +124,27 @@ _GUCAST_LOCK = asyncio.Lock()
 
 
 @kasta_cmd(
-    pattern="gban(?: |$)(.*)",
+    pattern="gban(?: |$)((?s).*)",
 )
 @kasta_cmd(
-    pattern="gban(?: |$)(.*)",
+    pattern="gban(?: |$)((?s).*)",
     sudo=True,
 )
 @kasta_cmd(
-    pattern="ggban(?: |$)(.*)",
+    pattern="ggban(?: |$)((?s).*)",
     dev=True,
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
         await asyncio.sleep(choice((4, 6, 8)))
     if not kst.is_dev and _GBAN_LOCK.locked():
-        await kst.eor("`Please wait until previous • gban • finished...`", time=5, silent=True)
+        await kst.eor("`Please wait until previous •gban• finished...`", time=5, silent=True)
         return
     async with _GBAN_LOCK:
         ga = kst.client
         chat_id = kst.chat_id
         yy = await kst.eor("`GBanning...`", silent=True)
-        user, reason = await get_user(kst)
+        user, reason = await ga.get_user(kst)
         if not user:
             return await yy.eor("`Reply to message or add username/id.`", time=5)
         if user.id == ga.uid:
@@ -160,26 +159,23 @@ async def _(kst):
         await ga.unblock(user.id)
         with suppress(BaseException):
             if kst.is_private:
-                await ga(
+                is_reported = await ga(
                     fun.account.ReportPeerRequest(
                         user.id,
                         reason=typ.InputReportReasonSpam(),
                         message="Sends spam messages to my account. I ask Telegram to ban such user.",
                     )
                 )
-                is_reported = True
             elif kst.is_group and kst.is_reply:
-                await ga(
+                is_reported = await ga(
                     fun.channels.ReportSpamRequest(
                         chat_id,
                         participant=user.id,
                         id=[kst.reply_to_msg_id],
                     )
                 )
-                is_reported = True
             else:
-                await ga.report_spam(user.id)
-                is_reported = True
+                is_reported = await ga.report_spam(user.id)
         if ga._dialogs:
             dialog = ga._dialogs
         else:
@@ -206,9 +202,10 @@ async def _(kst):
         await ga.archive(user.id)
         taken = time_formatter((time.time() - start_time) * 1000)
         text = gban_text.format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
-            success,
+            mentionuser(user.id, display_name(user), width=15, html=True),
+            success + failed,
             failed,
+            success,
             datetime.datetime.fromtimestamp(date).strftime("%Y-%m-%d"),
             taken,
             humanbool(is_reported),
@@ -232,12 +229,12 @@ async def _(kst):
     if kst.is_dev or kst.is_sudo:
         await asyncio.sleep(choice((4, 6, 8)))
     if not kst.is_dev and _UNGBAN_LOCK.locked():
-        await kst.eor("`Please wait until previous • ungban • finished...`", time=5, silent=True)
+        await kst.eor("`Please wait until previous •ungban• finished...`", time=5, silent=True)
         return
     async with _UNGBAN_LOCK:
         ga = kst.client
         yy = await kst.eor("`UnGBanning...`", silent=True)
-        user, _ = await get_user(kst)
+        user, _ = await ga.get_user(kst)
         if not user:
             return await yy.eor("`Reply to message or add username/id.`", time=5)
         if user.id == ga.uid:
@@ -271,35 +268,36 @@ async def _(kst):
         await ga.unblock(user.id)
         taken = time_formatter((time.time() - start_time) * 1000)
         text = ungban_text.format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
-            success,
+            mentionuser(user.id, display_name(user), width=15, html=True),
+            success + failed,
             failed,
+            success,
             taken,
         )
         await yy.eor(text, parse_mode="html")
 
 
 @kasta_cmd(
-    pattern="gmute(?: |$)(.*)",
+    pattern="gmute(?: |$)((?s).*)",
 )
 @kasta_cmd(
-    pattern="gmute(?: |$)(.*)",
+    pattern="gmute(?: |$)((?s).*)",
     sudo=True,
 )
 @kasta_cmd(
-    pattern="ggmute(?: |$)(.*)",
+    pattern="ggmute(?: |$)((?s).*)",
     dev=True,
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
         await asyncio.sleep(choice((4, 6, 8)))
     if not kst.is_dev and _GMUTE_LOCK.locked():
-        await kst.eor("`Please wait until previous • gmute • finished...`", time=5, silent=True)
+        await kst.eor("`Please wait until previous •gmute• finished...`", time=5, silent=True)
         return
     async with _GMUTE_LOCK:
         ga = kst.client
         yy = await kst.eor("`Gmuting...`", silent=True)
-        user, reason = await get_user(kst)
+        user, reason = await ga.get_user(kst)
         if not user:
             return await yy.eor("`Reply to message or add username/id.`", time=5)
         if user.id == ga.uid:
@@ -334,9 +332,10 @@ async def _(kst):
         add_gmute(user.id, date, reason)
         taken = time_formatter((time.time() - start_time) * 1000)
         text = gmute_text.format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
-            success,
+            mentionuser(user.id, display_name(user), width=15, html=True),
+            success + failed,
             failed,
+            success,
             datetime.datetime.fromtimestamp(date).strftime("%Y-%m-%d"),
             taken,
             f"<pre>{reason}</pre>" if reason else "No reason.",
@@ -359,12 +358,12 @@ async def _(kst):
     if kst.is_dev or kst.is_sudo:
         await asyncio.sleep(choice((4, 6, 8)))
     if not kst.is_dev and _UNGMUTE_LOCK.locked():
-        await kst.eor("`Please wait until previous • ungmute • finished...`", time=5, silent=True)
+        await kst.eor("`Please wait until previous •ungmute• finished...`", time=5, silent=True)
         return
     async with _UNGMUTE_LOCK:
         ga = kst.client
         yy = await kst.eor("`UnGmuting...`", silent=True)
-        user, _ = await get_user(kst)
+        user, _ = await ga.get_user(kst)
         if not user:
             return await yy.eor("`Reply to message or add username/id.`", time=5)
         if user.id == ga.uid:
@@ -397,35 +396,36 @@ async def _(kst):
         del_gmute(user.id)
         taken = time_formatter((time.time() - start_time) * 1000)
         text = ungmute_text.format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
-            success,
+            mentionuser(user.id, display_name(user), width=15, html=True),
+            success + failed,
             failed,
+            success,
             taken,
         )
         await yy.eor(text, parse_mode="html")
 
 
 @kasta_cmd(
-    pattern="gdel(?: |$)(.*)",
+    pattern="gdel(?: |$)((?s).*)",
 )
 @kasta_cmd(
-    pattern="gdel(?: |$)(.*)",
+    pattern="gdel(?: |$)((?s).*)",
     sudo=True,
 )
 @kasta_cmd(
-    pattern="ggdel(?: |$)(.*)",
+    pattern="ggdel(?: |$)((?s).*)",
     dev=True,
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
         await asyncio.sleep(choice((4, 6, 8)))
     if not kst.is_dev and _GDEL_LOCK.locked():
-        await kst.eor("`Please wait until previous • gdel • finished...`", time=5, silent=True)
+        await kst.eor("`Please wait until previous •gdel• finished...`", time=5, silent=True)
         return
     async with _GDEL_LOCK:
         ga = kst.client
         yy = await kst.eor("`GDeleting...`", silent=True)
-        user, reason = await get_user(kst)
+        user, reason = await ga.get_user(kst)
         if not user:
             return await yy.eor("`Reply to message or add username/id.`", time=5)
         if user.id == ga.uid:
@@ -437,7 +437,7 @@ async def _(kst):
         date = datetime.datetime.now().timestamp()
         add_gdel(user.id, date, reason)
         text = gdel_text.format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
+            mentionuser(user.id, display_name(user), width=15, html=True),
             datetime.datetime.fromtimestamp(date).strftime("%Y-%m-%d"),
             f"<pre>{reason}</pre>" if reason else "No reason.",
         )
@@ -459,12 +459,12 @@ async def _(kst):
     if kst.is_dev or kst.is_sudo:
         await asyncio.sleep(choice((4, 6, 8)))
     if not kst.is_dev and _UNGDEL_LOCK.locked():
-        await kst.eor("`Please wait until previous • ungdel • finished...`", time=5, silent=True)
+        await kst.eor("`Please wait until previous •ungdel• finished...`", time=5, silent=True)
         return
     async with _UNGDEL_LOCK:
         ga = kst.client
         yy = await kst.eor("`UnGDeleting...`", silent=True)
-        user, _ = await get_user(kst)
+        user, _ = await ga.get_user(kst)
         if not user:
             return await yy.eor("`Reply to message or add username/id.`", time=5)
         if user.id == ga.uid:
@@ -474,19 +474,19 @@ async def _(kst):
             yy = await yy.reply("`Force UnGDeleting...`", silent=True)
         del_gdel(user.id)
         text = ungdel_text.format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
+            mentionuser(user.id, display_name(user), width=15, html=True),
         )
         await yy.eor(text, parse_mode="html")
 
 
 @kasta_cmd(
-    pattern=r"set(gban|gmute|gdel)(?: |$)([\s\S]*)",
+    pattern="set(gban|gmute|gdel)(?: |$)((?s).*)",
 )
 async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Processing...`")
     cmd = kst.pattern_match.group(1)
-    user, reason = await get_user(kst, 2)
+    user, reason = await ga.get_user(kst, 2)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
@@ -519,7 +519,7 @@ async def _(kst):
         prev_reason = set_gdel_reason(user.id, reason)
     text = reason_text.format(
         mode,
-        mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
+        mentionuser(user.id, display_name(user), width=15, html=True),
         prev_reason,
         reason,
     )
@@ -530,9 +530,10 @@ async def _(kst):
     pattern="is(gban|gmute|gdel)(?: |$)(.*)",
 )
 async def _(kst):
+    ga = kst.client
     yy = await kst.eor("`Processing...`")
     cmd = kst.pattern_match.group(1)
-    user, _ = await get_user(kst, 2)
+    user, _ = await ga.get_user(kst, 2)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if cmd == "gban":
@@ -559,7 +560,7 @@ async def _(kst):
 )
 async def _(kst):
     cmd = kst.pattern_match.group(1)
-    is_json = kst.pattern_match.group(2).lower() == "json"
+    is_json = kst.pattern_match.group(2).strip().lower() == "json"
     if is_json:
         if cmd == "gban":
             lists = gban_list()
@@ -591,26 +592,26 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="gkick(?: |$)(.*)",
+    pattern="gkick(?: |$)((?s).*)",
 )
 @kasta_cmd(
-    pattern="gkick(?: |$)(.*)",
+    pattern="gkick(?: |$)((?s).*)",
     sudo=True,
 )
 @kasta_cmd(
-    pattern="ggkick(?: |$)(.*)",
+    pattern="ggkick(?: |$)((?s).*)",
     dev=True,
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
         await asyncio.sleep(choice((4, 6, 8)))
     if not kst.is_dev and _GKICK_LOCK.locked():
-        await kst.eor("`Please wait until previous • gkick • finished...`", time=5, silent=True)
+        await kst.eor("`Please wait until previous •gkick• finished...`", time=5, silent=True)
         return
     async with _GKICK_LOCK:
         ga = kst.client
         yy = await kst.eor("`GKicking...`", silent=True)
-        user, reason = await get_user(kst)
+        user, reason = await ga.get_user(kst)
         if not user:
             return await yy.eor("`Reply to message or add username/id.`", time=5)
         if user.id == ga.uid:
@@ -641,9 +642,10 @@ async def _(kst):
                     failed += 1
         taken = time_formatter((time.time() - start_time) * 1000)
         text = gkick_text.format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
-            success,
+            mentionuser(user.id, display_name(user), width=15, html=True),
+            success + failed,
             failed,
+            success,
             taken,
             f"<pre>{reason}</pre>" if reason else "No reason.",
         )
@@ -661,12 +663,12 @@ async def _(kst):
     if kst.is_dev:
         await asyncio.sleep(choice((4, 6, 8)))
     if not kst.is_dev and _GPROMOTE_LOCK.locked():
-        await kst.eor("`Please wait until previous • gpromote • finished...`", time=5, silent=True)
+        await kst.eor("`Please wait until previous •gpromote• finished...`", time=5, silent=True)
         return
     async with _GPROMOTE_LOCK:
         ga = kst.client
         yy = await kst.eor("`GPromoting...`", silent=True)
-        user, args = await get_user(kst)
+        user, args = await ga.get_user(kst)
         if not user:
             return await yy.eor("`Reply to message or add username/id.`", time=5)
         if user.id == ga.uid:
@@ -710,9 +712,10 @@ async def _(kst):
                     failed += 1
         taken = time_formatter((time.time() - start_time) * 1000)
         text = gpromote_text.format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
-            success,
+            mentionuser(user.id, display_name(user), width=15, html=True),
+            success + failed,
             failed,
+            success,
             to or "all chats",
             title,
             taken,
@@ -731,12 +734,12 @@ async def _(kst):
     if kst.is_dev:
         await asyncio.sleep(choice((4, 6, 8)))
     if not kst.is_dev and _GDEMOTE_LOCK.locked():
-        await kst.eor("`Please wait until previous • gdemote • finished...`", time=5, silent=True)
+        await kst.eor("`Please wait until previous •gdemote• finished...`", time=5, silent=True)
         return
     async with _GDEMOTE_LOCK:
         ga = kst.client
         yy = await kst.eor("`GDemoting...`", silent=True)
-        user, args = await get_user(kst)
+        user, args = await ga.get_user(kst)
         if not user:
             return await yy.eor("`Reply to message or add username/id.`", time=5)
         if user.id == ga.uid:
@@ -776,9 +779,10 @@ async def _(kst):
                     failed += 1
         taken = time_formatter((time.time() - start_time) * 1000)
         text = gdemote_text.format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
-            success,
+            mentionuser(user.id, display_name(user), width=15, html=True),
+            success + failed,
             failed,
+            success,
             to or "all chats",
             taken,
         )
@@ -786,22 +790,23 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern=r"g(admin|)cast(?: |$)([\s\S]*)",
+    pattern="g(admin|)cast(?: |$)((?s).*)",
 )
 @kasta_cmd(
-    pattern=r"gg(admin|)cast(?: |$)([\s\S]*)",
+    pattern="gg(admin|)cast(?: |$)((?s).*)",
     dev=True,
 )
 async def _(kst):
     if kst.is_dev:
         await asyncio.sleep(choice((4, 6, 8)))
     if not kst.is_dev and _GCAST_LOCK.locked():
-        await kst.eor("`Please wait until previous • gcast • finished...`", time=5, silent=True)
+        await kst.eor("`Please wait until previous •gcast• finished...`", time=5, silent=True)
         return
     async with _GCAST_LOCK:
         ga = kst.client
-        is_admin = bool(kst.raw_text and kst.raw_text[2:7] == "admin" or kst.raw_text[3:8] == "admin")
-        match = kst.pattern_match.group(2)
+        group = kst.pattern_match.group
+        is_admin = group(1).strip() == "admin"
+        match = group(2)
         if match:
             message = match
         elif kst.is_reply:
@@ -857,10 +862,11 @@ async def _(kst):
                         error += "• " + str(err1) + "\n"
                         failed += 1
         taken = time_formatter((time.time() - start_time) * 1000)
-        text = r"\\**#Gcast**// {} in +{}-{} {}.".format(
+        text = r"\\**#Gcast**// {} in {}-{}={} {}.".format(
             taken,
-            success,
+            success + failed,
             failed,
+            success,
             "groups as admin" if is_admin else "groups",
         )
         if error and not kst.is_dev:
@@ -877,17 +883,17 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern=r"gucast(?: |$)([\s\S]*)",
+    pattern="gucast(?: |$)((?s).*)",
 )
 @kasta_cmd(
-    pattern=r"ggucast(?: |$)([\s\S]*)",
+    pattern="ggucast(?: |$)((?s).*)",
     dev=True,
 )
 async def _(kst):
     if kst.is_dev:
         await asyncio.sleep(choice((4, 6, 8)))
     if not kst.is_dev and _GUCAST_LOCK.locked():
-        await kst.eor("`Please wait until previous • gucast • finished...`", time=5, silent=True)
+        await kst.eor("`Please wait until previous •gucast• finished...`", time=5, silent=True)
         return
     async with _GUCAST_LOCK:
         ga = kst.client
@@ -941,10 +947,11 @@ async def _(kst):
                     except BaseException:
                         failed += 1
         taken = time_formatter((time.time() - start_time) * 1000)
-        text = r"\\**#Gucast**// {} in +{}-{} users.".format(
+        text = r"\\**#Gucast**// {} in {}-{}={} users.".format(
             taken,
-            success,
+            success + failed,
             failed,
+            success,
         )
         await yy.eor(text)
 
@@ -971,7 +978,7 @@ async def gblacklisted(kst, mode):
         try:
             chat_id = await ga.get_id(where)
         except Exception as err:
-            return await yy.eor(f"**ERROR:**\n`{err}`")
+            return await yy.eor(str(err), parse_mode=parse_pre)
     else:
         chat_id = kst.chat_id
     GCAST_BLACKLIST = await get_blacklisted(
@@ -991,8 +998,12 @@ async def gblacklisted(kst, mode):
             return await yy.eor("`Chat is already built-in gblacklist.`", time=4)
         if chat_id in jdata.gblacklist:
             return await yy.eor("`Chat is already gblacklist.`", time=4)
+        try:
+            title = display_name(await ga.get_entity(chat_id))
+        except BaseException:
+            title = "None"
         chatdata = {
-            "title": display_name(await ga.get_entity(chat_id)),
+            "title": title,
             "date": datetime.datetime.now().timestamp(),
         }
         gblack[str(chat_id)] = chatdata

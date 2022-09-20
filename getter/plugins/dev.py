@@ -14,6 +14,7 @@ import time
 from io import BytesIO
 from pathlib import Path
 import aiofiles
+from telethon.tl import functions as fun
 from . import (
     __version__,
     Root,
@@ -27,7 +28,7 @@ from . import (
     strip_format,
     parse_pre,
     humanbytes,
-    todict,
+    to_dict,
     Runner,
     Carbon,
     LSFILES_MAP,
@@ -40,17 +41,30 @@ from . import (
 
 
 @kasta_cmd(
+    pattern="alive$",
+)
+async def _(kst):
+    await kst.eod("**Hey, I am alive !!**")
+
+
+@kasta_cmd(
+    pattern="(uptime|up)$",
+)
+async def _(kst):
+    await kst.eod(f"**Uptime:** {kst.client.uptime}")
+
+
+@kasta_cmd(
     pattern="ping$|([p]ing)$",
     ignore_case=True,
     edited=True,
-    no_crash=True,
 )
 async def _(kst):
     start_time = time.perf_counter()
-    yy = await kst.edit("Ping !")
+    await kst.client(fun.PingRequest(ping_id=0))
     speedy = round(time.perf_counter() - start_time, 3)
     uptime = kst.client.uptime
-    await yy.edit(
+    await kst.eor(
         f"🏓 Pong !!\n├  <b>Speedy</b> – <code>{speedy}ms</code>\n├  <b>Uptime</b> – <code>{uptime}</code>\n└  <b>Version</b> – <code>{__version__}</code>",
         parse_mode="html",
     )
@@ -58,12 +72,10 @@ async def _(kst):
 
 @kasta_cmd(
     pattern="logs?(?: |$)(heroku|carbon|open)?",
-    no_crash=True,
 )
 @kasta_cmd(
     pattern="glogs?(?: |$)(heroku|carbon|open)?(?: |$)(.*)",
     dev=True,
-    no_crash=True,
 )
 async def _(kst):
     mode = kst.pattern_match.group(1)
@@ -106,12 +118,10 @@ async def _(kst):
                     silent=True,
                 )
             (Root / logs).unlink(missing_ok=True)
-        await asyncio.sleep(3)
     elif mode == "open":
         for file in get_terminal_logs():
             logs = (Root / file).read_text()
             await yy.sod(logs, parse_mode=parse_pre)
-        await asyncio.sleep(3)
     else:
         with suppress(BaseException):
             for file in get_terminal_logs():
@@ -123,21 +133,18 @@ async def _(kst):
                     reply_to=kst.reply_to_msg_id,
                     silent=True,
                 )
-            await asyncio.sleep(3)
 
 
 @kasta_cmd(
     pattern="restart$",
-    no_crash=True,
 )
 @kasta_cmd(
     pattern="grestart(?: |$)(.*)",
     dev=True,
-    no_crash=True,
 )
 async def _(kst):
     if kst.is_dev:
-        opt = kst.pattern_match.group(2)
+        opt = kst.pattern_match.group(1)
         user_id = None
         with suppress(ValueError):
             user_id = int(opt)
@@ -163,33 +170,31 @@ async def _(kst):
 
 @kasta_cmd(
     pattern="sleep(?: |$)(.*)",
-    no_crash=True,
 )
 async def _(kst):
     sec = await kst.client.get_text(kst)
-    counter = int(sec) if sec.replace(".", "", 1).isdecimal() else 5
-    counter = 5 if counter > 50 else counter
-    await kst.eor("`sleep...`")
-    time.sleep(counter)
-    await kst.eor("`wake-up`", time=5)
+    timer = int(sec) if sec.replace(".", "", 1).isdecimal() else 3
+    timer = 3 if timer > 30 else timer
+    yy = await kst.eor(f"`sleep in {timer} seconds...`")
+    time.sleep(timer)
+    await yy.eod(f"`wake-up from {timer} seconds`")
 
 
 @kasta_cmd(
     pattern="(raw|json)$",
-    no_crash=True,
 )
 async def _(kst):
     mode = kst.pattern_match.group(1)
     msg = await kst.get_reply_message() if kst.is_reply else kst
     if mode == "json":
         text = json.dumps(
-            todict(msg),
+            to_dict(msg),
             indent=2,
             default=str,
             sort_keys=False,
         )
     else:
-        text = f"{msg.stringify()}"
+        text = msg.stringify()
     await kst.eor(f"<pre>{html.escape(text)}</pre>", parse_mode="html")
 
 
@@ -315,7 +320,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern=r"(shell|sh)(?: |$)([\s\S]*)",
+    pattern="(shell|sh)(?: |$)((?s).*)",
 )
 async def _(kst):
     cmd = await kst.client.get_text(kst, group=2)
@@ -375,7 +380,6 @@ async def _(kst):
     dev=True,
 )
 async def _(kst):
-    await kst.try_delete()
     raise ValueError("not an error, just for testing (>_")
 
 
@@ -394,8 +398,7 @@ async def heroku_logs(kst) -> None:
         app = hk.heroku().app(hk.name)
         logs = app.get_log(lines=100)
     except Exception as err:
-        await kst.eor(f"**ERROR:**\n`{err}`")
-        return
+        return await kst.eor(str(err), parse_mode=parse_pre)
     await kst.eor("`Downloading Logs...`")
     file = Root / "downloads/getter-heroku.log"
     async with aiofiles.open(file, mode="w") as f:
@@ -425,13 +428,15 @@ async def restart_app() -> None:
 
 
 plugins_help["dev"] = {
-    "{i}ping|ping|Ping": "Check response time.",
+    "{i}alive": "Just showing alive.",
+    "{i}uptime|{i}up": "Check current uptime.",
+    "{i}ping|ping|Ping": "Check how long it takes to ping.",
     "{i}logs": "Get the full terminal logs.",
     "{i}logs open": "Open logs as text message.",
     "{i}logs carbon": "Get the carbonized terminal logs.",
     "{i}logs heroku": "Get the latest 100 lines of heroku logs.",
     "{i}restart": "Restart the app.",
-    "{i}sleep [seconds]/[reply]": "Sleep the bot in few seconds (max 50).",
+    "{i}sleep [seconds]/[reply]": "Sleep the bot in few seconds (max 30).",
     "{i}raw [reply]": "Get the raw data of message.",
     "{i}json [reply]": "Raw data with json format.",
     "{i}sysinfo": "Shows System Info.",

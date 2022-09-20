@@ -16,7 +16,6 @@ from . import (
     parse_pre,
     humanbytes,
     humanbool,
-    aioify,
     Fetch,
     MyIp,
     Pinger,
@@ -25,7 +24,6 @@ from . import (
 
 @kasta_cmd(
     pattern="(google|duck|yandex|bing|yahoo|baidu|ecosia)(?: |$)(.*)",
-    no_crash=True,
 )
 async def _(kst):
     engine = kst.pattern_match.group(1)
@@ -62,7 +60,6 @@ async def _(kst):
 
 @kasta_cmd(
     pattern="(un|)short(?: |$)(.*)",
-    no_crash=True,
 )
 async def _(kst):
     text = await kst.client.get_text(kst, group=2)
@@ -91,7 +88,6 @@ async def _(kst):
 
 @kasta_cmd(
     pattern="ip$",
-    no_crash=True,
 )
 async def _(kst):
     yy = await kst.eor("`Processing...`")
@@ -101,7 +97,6 @@ async def _(kst):
 
 @kasta_cmd(
     pattern="ipinfos?(?: |$)(.*)",
-    no_crash=True,
 )
 async def _(kst):
     ipaddr = await kst.client.get_text(kst)
@@ -127,7 +122,7 @@ async def _(kst):
 ├  <b>Time Zone:</b> <code>{}</code>
 ├  <b>ISP:</b> <code>{}</code>
 ├  <b>Mobile:</b> <code>{}</code>
-└  <b>Google Map:</b> <code>{}</code>""".format(
+└  <b>Map:</b> <code>{}</code>""".format(
             res.get("query"),
             res.get("city") or "?",
             res.get("regionName") or "?",
@@ -155,13 +150,12 @@ async def _(kst):
 
 @kasta_cmd(
     pattern="speedtest$",
-    no_crash=True,
 )
 async def _(kst):
     start = time.perf_counter()
     yy = await kst.eor("`Processing...`")
     try:
-        st = await aioify(speedtest.Speedtest)
+        st = speedtest.Speedtest()
         st.get_best_server()
         st.download()
         st.upload()
@@ -188,12 +182,11 @@ async def _(kst):
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
-        await yy.eor(f"**ERROR:**\n`{err}`")
+        await yy.eor(str(err), parse_mode=parse_pre)
 
 
 @kasta_cmd(
     pattern="dns(?: |$)(.*)",
-    no_crash=True,
 )
 async def _(kst):
     link = await kst.client.get_text(kst)
@@ -219,7 +212,6 @@ async def _(kst):
 
 @kasta_cmd(
     pattern="whois(?: |$)(.*)",
-    no_crash=True,
 )
 async def _(kst):
     link = await kst.client.get_text(kst)
@@ -248,7 +240,6 @@ async def _(kst):
 
 @kasta_cmd(
     pattern="http(?: |$)(.*)",
-    no_crash=True,
 )
 async def _(kst):
     link = await kst.client.get_text(kst)
@@ -273,7 +264,6 @@ async def _(kst):
 
 @kasta_cmd(
     pattern="pinger(?: |$)(.*)",
-    no_crash=True,
 )
 async def _(kst):
     dns = await kst.client.get_text(kst)

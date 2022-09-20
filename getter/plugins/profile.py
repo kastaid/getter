@@ -84,10 +84,11 @@ async def _(kst):
             await ga(fun.photos.UploadProfilePhotoRequest(file))
         else:
             await ga(fun.photos.UploadProfilePhotoRequest(video=file))
+        (Root / pull).unlink(missing_ok=True)
         await yy.eod("`Successfully change my profile picture.`")
     except Exception as err:
+        (Root / pull).unlink(missing_ok=True)
         await yy.eor(str(err), parse_mode=parse_pre)
-    (Root / pull).unlink(missing_ok=True)
 
 
 @kasta_cmd(
@@ -132,6 +133,38 @@ async def _(kst):
         await yy.eor(str(err), parse_mode=parse_pre)
 
 
+@kasta_cmd(
+    pattern="getpp(?: |$)(.*)",
+)
+async def _(kst):
+    ga = kst.client
+    yy = await kst.eor("`Processing...`")
+    user, args = await ga.get_user(kst)
+    if not user:
+        return await yy.eor("`Reply to message or add username/id.`", time=5)
+    is_all = [_ for _ in ("-a", "all") if _ in args.lower()]
+    total = (await ga.get_profile_photos(user.id, limit=0)).total or 0
+    if not total:
+        await yy.eor("`User doesn't have profile picture!`", time=3)
+        return
+    try:
+        async for photo in ga.iter_profile_photos(user.id):
+            await kst.respond(
+                file=photo,
+                force_document=False,
+                allow_cache=False,
+                reply_to=kst.reply_to_msg_id,
+                silent=True,
+            )
+            if not is_all:
+                break
+            await asyncio.sleep(1)
+        total = total if is_all else 1
+        await yy.sod(f"`Successfully to get {total} profile picture(s).`", time=8)
+    except Exception as err:
+        await yy.eor(str(err), parse_mode=parse_pre)
+
+
 plugins_help["profile"] = {
     "{i}pbio [bio]": "Change my profile bio. If empty the current bio removed.",
     "{i}pname [first_name] ; [last_name]": "Change my profile name. If empty the current name set to blank `ㅤ`.",
@@ -140,4 +173,5 @@ plugins_help["profile"] = {
     "{i}delpp [number]/[all]": "Delete my profile picture by given number or delete one if empty or add 'all' to delete all profile pictures.",
     "{i}hidepp": "Hidden my profile pictures for everyone (change privacy).",
     "{i}showpp": "Showing my profile pictures.",
+    "{i}getpp [reply]/[username/mention/id] [-a/all]": "Get profile pictures of user. Add '-a' to get all pictures.",
 }

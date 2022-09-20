@@ -101,6 +101,7 @@ if __name__ == "__main__":
         getter_app.run()
     except (
         KeyboardInterrupt,
+        SystemExit,
         ConnectionError,
         asyncio.exceptions.CancelledError,
     ):

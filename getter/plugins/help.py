@@ -33,7 +33,7 @@ help_text = """
 ┣  <b>Commands</b>  –  <code>{}</code>
 ┣  <b>Sudo</b>  –  <code>{}</code>
 ┗━━━━━━━━━━━━━━━━━━━━━━━━
-<b>~ All plugins names and commands:</b>
+<b>~ All plugins name and commands:</b>
 
 {}
 

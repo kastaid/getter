@@ -71,10 +71,10 @@ async def JoinedHandler(kst):
     user = await kst.get_user()
     gban = is_gban(user.id, use_cache=True)
     if gban:
-        mention = mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True)
-        is_reported = bool(await ga.report_spam(user.id))
+        mention = mentionuser(user.id, display_name(user), width=15, html=True)
+        is_reported = await ga.report_spam(user.id)
         logs_text = r"\\<b>#GBanned_Watch</b>//"
-        logs_text += f"\nUser <b>{mention}</b> [<code>{user.id}</code>] detected joining chat in <code>{chat.title} - {chat.id}</code> and quickly banned!\n"
+        logs_text += f"\nUser {mention} [<code>{user.id}</code>] detected joining chat in <code>{chat.title} - {chat.id}</code> and quickly banned!\n"
         if kst.is_group:
             await kst.reply(
                 gbanned_text.format(
@@ -93,9 +93,9 @@ async def JoinedHandler(kst):
 
     gmute = is_gmute(user.id, use_cache=True)
     if gmute and kst.is_group:
-        mention = mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True)
+        mention = mentionuser(user.id, display_name(user), width=15, html=True)
         logs_text = r"\\<b>#GMuted_Watch</b>//"
-        logs_text += f"\nUser <b>{mention}</b> [<code>{user.id}</code>] detected joining chat in <code>{chat.title} - {chat.id}</code> and quickly muted!\n"
+        logs_text += f"\nUser {mention} [<code>{user.id}</code>] detected joining chat in <code>{chat.title} - {chat.id}</code> and quickly muted!\n"
         await kst.reply(
             gmuted_text.format(
                 mention,

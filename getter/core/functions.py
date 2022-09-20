@@ -9,23 +9,10 @@ import re
 import typing
 from functools import partial
 from textwrap import shorten
-from telethon.client.telegramclient import TelegramClient
+from telethon import hints
 from telethon.helpers import add_surrogate
-from telethon.tl.functions.channels import GetFullChannelRequest
-from telethon.tl.functions.messages import GetFullChatRequest
-from telethon.tl.types import (
-    MessageEntityMentionName,
-    MessageEntityPre,
-    PeerUser,
-    User,
-    UserStatusOnline,
-    UserStatusOffline,
-    UserStatusLastWeek,
-    UserStatusLastMonth,
-    UserStatusRecently,
-)
+from telethon.tl import functions as fun, types as typ
 from telethon.utils import get_display_name
-from ..logger import LOGS
 
 TELEGRAM_LINK_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog)/)([\w-]+)$"
 USERNAME_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog)/)"
@@ -42,7 +29,7 @@ def get_username(url: str) -> str:
     return re.sub(USERNAME_RE, "@", url, flags=re.I)
 
 
-def get_msg_id(link: str) -> typing.Optional[typing.Tuple[typing.Union[str, int]]]:
+def get_msg_id(link: str) -> typing.Tuple[typing.Union[str, None], typing.Union[int, None]]:
     # TODO: support for username.t.me
     idx = re.findall(MSG_ID_RE, link, flags=re.I)
     ids = next((_ for _ in idx), None)
@@ -62,15 +49,17 @@ def mentionuser(
     html: bool = False,
 ) -> str:
     name = shorten(name, width=width, placeholder="...")
+    if name == "ㅤ":
+        name = "?"
     return f"<a href=tg://user?id={user_id}>{sep}{name}</a>" if html else f"[{sep}{name}](tg://user?id={user_id})"
 
 
-def display_name(obj) -> str:
-    name = get_display_name(obj)
-    return name if name else "{}".format(obj.first_name or "none")
+def display_name(entity: hints.Entity) -> str:
+    name = get_display_name(entity)
+    return name if name else "{}".format(entity.first_name or "none")
 
 
-def normalize_chat_id(chat_id) -> typing.Union[int, str]:
+def normalize_chat_id(chat_id: typing.Union[int, str]) -> typing.Union[int, str]:
     if str(chat_id).startswith(("-100", "-")) and str(chat_id)[1:].isdecimal():
         chat_id = int(str(chat_id).replace("-100", "").replace("-", ""))
     elif str(chat_id).isdecimal():
@@ -79,24 +68,24 @@ def normalize_chat_id(chat_id) -> typing.Union[int, str]:
 
 
 async def get_chat_id(
-    kst: TelegramClient,
+    message: typ.Message,
     group: int = 1,
-) -> typing.Optional[int]:
+) -> typing.Union[int, str, None]:
     chat_id = None
-    target = await get_text(kst, group=group)
+    target = await get_text(message, group=group)
     if not target:
-        return int(str(kst.chat_id).replace("-100", "").replace("-", ""))
+        return int(str(message.chat_id).replace("-100", "").replace("-", ""))
     target = target.split(" ")[0]
     chat_id = normalize_chat_id(target)
     if isinstance(chat_id, str):
         if is_telegram_link(chat_id):
             chat_id = get_username(chat_id)
         try:
-            full = await kst.client(GetFullChatRequest(chat_id))
+            full = await message.client(fun.messages.GetFullChatRequest(chat_id))
             chat_id = full.full_chat.id
         except BaseException:
             try:
-                full = await kst.client(GetFullChannelRequest(chat_id))
+                full = await message.client(fun.channels.GetFullChannelRequest(chat_id))
                 chat_id = full.full_chat.id
             except BaseException:
                 return None
@@ -104,14 +93,14 @@ async def get_chat_id(
 
 
 async def get_text(
-    kst: TelegramClient,
+    message: typ.Message,
     group: int = 1,
     plain: bool = True,
     strip: bool = True,
 ) -> str:
-    match = kst.pattern_match.group(group)
-    if kst.is_reply:
-        reply = await kst.get_reply_message()
+    match = message.pattern_match.group(group)
+    if message.is_reply:
+        reply = await message.get_reply_message()
         if not match:
             text = str(reply.message if plain else reply.text)
             if strip:
@@ -122,18 +111,18 @@ async def get_text(
     return match
 
 
-def get_user_status(user: User) -> str:
+def get_user_status(user: typ.User) -> str:
     if user.bot or user.support:
         status = "none"
-    if isinstance(user.status, UserStatusOnline):
+    if isinstance(user.status, typ.UserStatusOnline):
         status = "online"
-    elif isinstance(user.status, UserStatusOffline):
+    elif isinstance(user.status, typ.UserStatusOffline):
         status = "offline"
-    elif isinstance(user.status, UserStatusRecently):
+    elif isinstance(user.status, typ.UserStatusRecently):
         status = "recently"
-    elif isinstance(user.status, UserStatusLastWeek):
+    elif isinstance(user.status, typ.UserStatusLastWeek):
         status = "within_week"
-    elif isinstance(user.status, UserStatusLastMonth):
+    elif isinstance(user.status, typ.UserStatusLastMonth):
         status = "within_month"
     else:
         status = "long_time_ago"
@@ -141,10 +130,10 @@ def get_user_status(user: User) -> str:
 
 
 async def get_user(
-    kst: TelegramClient,
+    message: typ.Message,
     group: int = 1,
-) -> typing.Optional[typing.Tuple[User, str]]:
-    args = kst.pattern_match.group(group).strip().split(" ", 1)
+) -> typing.Tuple[typing.Union[typ.User, None], typing.Union[str, None]]:
+    args = message.pattern_match.group(group).strip().split(" ", 1)
     extra = ""
     try:
         if args:
@@ -153,14 +142,14 @@ async def get_user(
                 extra = "".join(args[1:])
             if user.isdecimal() or (user.startswith("-") and user[1:].isdecimal()):
                 user = int(user)
-            if kst.message.entities:
-                mention = kst.message.entities[0]
-                if isinstance(mention, MessageEntityMentionName):
+            if message.message.entities:
+                mention = message.message.entities[0]
+                if isinstance(mention, typ.MessageEntityMentionName):
                     user_id = mention.user_id
-                    user_obj = await kst.client.get_entity(PeerUser(user_id))
+                    user_obj = await message.client.get_entity(typ.PeerUser(user_id))
                     return user_obj, extra
             if isinstance(user, int) or user.startswith("@") or len(user) >= 5:
-                user_obj = await kst.client.get_entity(PeerUser(user))
+                user_obj = await message.client.get_entity(typ.PeerUser(user))
                 return user_obj, extra
     except ValueError:
         if args:
@@ -178,20 +167,20 @@ async def get_user(
                 return user_obj, extra
             return None, None
         return None, None
-    except Exception as err:
-        LOGS.error(str(err))
+    except BaseException:
+        pass
     try:
-        extra = kst.pattern_match.group(group).strip()
-        if kst.is_private:
-            user_obj = await kst.get_chat()
+        extra = message.pattern_match.group(group).strip()
+        if message.is_private:
+            user_obj = await message.get_chat()
             return user_obj, extra
-        if kst.is_reply:
-            reply = await kst.get_reply_message()
+        if message.is_reply:
+            reply = await message.get_reply_message()
             if reply.from_id is None:
                 return None, None
             user_id = reply.sender_id
             try:
-                user_obj = await kst.client.get_entity(PeerUser(user_id))
+                user_obj = await message.client.get_entity(typ.PeerUser(user_id))
                 return user_obj, extra
             except ValueError:
                 obj = partial(type, "User", ())
@@ -204,18 +193,18 @@ async def get_user(
                 return user_obj, extra
         if not args:
             return None, None
-    except Exception as err:
-        LOGS.error(str(err))
+    except BaseException:
+        pass
     return None, None
 
 
 async def is_admin(
-    kst: TelegramClient,
-    chat_id: int,
-    user_id: int,
+    message: typ.Message,
+    chat_id: hints.EntityLike,
+    user_id: hints.EntityLike,
 ) -> bool:
     try:
-        prm = await kst.client.get_permissions(chat_id, user_id)
+        prm = await message.client.get_permissions(chat_id, user_id)
         if prm.is_admin:
             return True
         return False
@@ -224,15 +213,15 @@ async def is_admin(
 
 
 async def admin_check(
-    kst: TelegramClient,
-    chat_id: int,
-    user_id: int,
+    message: typ.Message,
+    chat_id: hints.EntityLike,
+    user_id: hints.EntityLike,
     require: typing.Optional[str] = None,
 ) -> bool:
-    if kst.is_private:
+    if message.is_private:
         return True
     try:
-        prm = await kst.client.get_permissions(chat_id, user_id)
+        prm = await message.client.get_permissions(chat_id, user_id)
     except BaseException:
         return False
     if not prm.is_admin:
@@ -260,15 +249,15 @@ def to_privilege(privilege: str) -> str:
     return privileges[privilege]
 
 
-def parse_pre(text: str) -> typing.Tuple[str, typing.List[MessageEntityPre]]:
+def parse_pre(text: str) -> typing.Tuple[str, typing.List[typ.MessageEntityPre]]:
     text = text.strip()
     return (
         text,
-        [MessageEntityPre(offset=0, length=len(add_surrogate(text)), language="")],
+        [typ.MessageEntityPre(offset=0, length=len(add_surrogate(text)), language="")],
     )
 
 
-def get_media_type(media: typing.Any) -> str:
+def get_media_type(media: typ.TypeMessageMedia) -> str:
     mdt = str((str(media)).split("(", maxsplit=1)[0])
     ret = ""
     if mdt == "MessageMediaDocument":
