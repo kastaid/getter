@@ -7,7 +7,7 @@
 
 from .afk_db import *
 from .collections_db import *
-from .engine import db_url
+from .engine import *
 from .gban_db import *
 from .gdel_db import *
 from .globals_db import *

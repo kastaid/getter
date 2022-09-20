@@ -78,13 +78,11 @@ test_text = """
 )
 async def _(kst):
     if not kst.is_dev and _UPDATE_LOCK.locked():
-        await kst.eor("`Please wait until previous • update • finished...`", time=5, silent=True)
+        await kst.eor("`Please wait until previous •update• finished...`", time=5, silent=True)
         return
     async with _UPDATE_LOCK:
-        mode = kst.pattern_match.group(1)
-        opt = kst.pattern_match.group(2)
-        is_force = is_now = is_deploy = False
-        state = ""
+        group = kst.pattern_match.group
+        mode, opt, is_force, is_now, is_deploy, state = group(1), group(2), False, False, False, ""
         if not Var.DEV_MODE and mode == "force":
             is_force = True
             state = "[FORCE] "

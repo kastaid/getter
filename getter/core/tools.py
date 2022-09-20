@@ -46,9 +46,9 @@ def import_lib(
     try:
         return importlib.import_module(lib_name)
     except ImportError:
-        completed = subprocess.run(["python3", "-m", "pip", "install", "--no-cache-dir", "-U", pkg_name])
-        if completed.returncode != 0:
-            raise AssertionError(f"Failed to install library {pkg_name} (pip exited with code {completed.returncode})")
+        done = subprocess.run(["python3", "-m", "pip", "install", "--no-cache-dir", "-U", pkg_name])
+        if done.returncode != 0:
+            raise AssertionError(f"Failed to install library {pkg_name} (pip exited with code {done.returncode})")
         return importlib.import_module(lib_name)
 
 
@@ -131,7 +131,7 @@ async def Carbon(
     file_name: str = "carbon",
     download: bool = False,
     rayso: bool = False,
-    **kwargs,
+    **kwargs: typing.Optional[typing.Any],
 ) -> typing.Any:
     kwargs["code"] = code
     if rayso:

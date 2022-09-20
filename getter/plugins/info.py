@@ -20,7 +20,6 @@ from . import (
     display_name,
     humanbool,
     get_user_status,
-    get_user,
     parse_pre,
     Fetch,
     is_gban,
@@ -45,7 +44,6 @@ _CAS_CACHE = TTLCache(maxsize=512, ttl=120, timer=time.perf_counter)  # 2 mins
 
 @kasta_cmd(
     pattern="dc$",
-    no_crash=True,
 )
 async def _(kst):
     dc = await kst.client(fun.help.GetNearestDcRequest())
@@ -63,7 +61,7 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Processing...`")
-    user, _ = await get_user(kst)
+    user, _ = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     text = []
@@ -121,7 +119,7 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Processing...`")
-    user, _ = await get_user(kst)
+    user, _ = await ga.get_user(kst)
     if user:
         user_id = user.id
     else:
@@ -136,7 +134,6 @@ async def _(kst):
 
 @kasta_cmd(
     pattern="total(?: |$)(.*)",
-    no_crash=True,
 )
 async def _(kst):
     ga = kst.client
@@ -284,7 +281,6 @@ async def _(kst):
 
 @kasta_cmd(
     pattern="ids?(?: |$)(.*)",
-    no_crash=True,
 )
 async def _(kst):
     ga = kst.client
@@ -319,7 +315,7 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Processing...`")
-    user, _ = await get_user(kst)
+    user, _ = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
@@ -343,7 +339,7 @@ async def _(kst):
             text = f"<b>0 Groups in common with:</b> <code>{whois}</code>"
         await yy.eor(text, parse_mode="html")
     except Exception as err:
-        return await yy.eor(f"**ERROR:**\n`{err}`")
+        await yy.eor(str(err), parse_mode=parse_pre)
 
 
 @kasta_cmd(
@@ -352,11 +348,11 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Processing...`")
-    target, args = await get_user(kst)
+    target, args = await ga.get_user(kst)
     if target:
         user_id = target.id
         opts = args.split(" ")
-        is_full = opts[0].lower() == "-f"
+        is_full = [_ for _ in ("-f", "full") if _ in opts[0].lower()]
     else:
         user_id = ga.uid
         is_full = True
@@ -367,7 +363,7 @@ async def _(kst):
     except ValueError:
         return await yy.eod("`Cannot fetch user info.`")
     except Exception as err:
-        return await yy.eor(f"**ERROR:**\n`{err}`")
+        return await yy.eor(str(err), parse_mode=parse_pre)
     created = ""
     with suppress(BaseException):
         async with ga.conversation(CREATED_BOT) as conv:
@@ -508,6 +504,57 @@ async def _(kst):
 
 
 @kasta_cmd(
+    pattern="chatstats?(?: |$)(.*)",
+)
+async def _(kst):
+    ga = kst.client
+    yy = await kst.eor("`Processing...`")
+    where = await ga.get_text(kst)
+    if where:
+        try:
+            chat_id = await ga.get_id(where)
+        except Exception as err:
+            return await yy.eor(str(err), parse_mode=parse_pre)
+    else:
+        chat_id = kst.chat_id
+    total = str((await ga.get_messages(chat_id, limit=0)).total)
+    photo = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterPhotos())).total)
+    video = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterVideo())).total)
+    music = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterMusic())).total)
+    voice_note = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterVoice())).total)
+    video_note = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterRoundVideo())).total)
+    files = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterDocument())).total)
+    urls = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterUrl())).total)
+    gifs = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterGif())).total)
+    maps = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterGeo())).total)
+    contact = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterContacts())).total)
+    text = """<b><u>{} TOTAL MESSAGES</u></b>
+├  <b>Photo:</b> <code>{}</code>
+├  <b>Video:</b> <code>{}</code>
+├  <b>Music:</b> <code>{}</code>
+├  <b>Voice Note:</b> <code>{}</code>
+├  <b>Video Note:</b> <code>{}</code>
+├  <b>Document:</b> <code>{}</code>
+├  <b>URL:</b> <code>{}</code>
+├  <b>Gif:</b> <code>{}</code>
+├  <b>Map:</b> <code>{}</code>
+└  <b>Contact:</b> <code>{}</code>""".format(
+        total,
+        photo,
+        video,
+        music,
+        voice_note,
+        video_note,
+        files,
+        urls,
+        gifs,
+        maps,
+        contact,
+    )
+    await yy.eor(text, parse_mode="html")
+
+
+@kasta_cmd(
     pattern="chatinfos?(?: |$)(.*)",
 )
 async def _(kst):
@@ -518,13 +565,13 @@ async def _(kst):
         try:
             chat = await ga.get_id(where)
         except Exception as err:
-            return await yy.eor(f"**ERROR:**\n`{err}`")
+            return await yy.eor(str(err), parse_mode=parse_pre)
     else:
         chat = kst.chat_id
     try:
         entity = await ga.get_entity(chat)
     except Exception as err:
-        return await yy.eor(f"**ERROR:**\n`{err}`")
+        return await yy.eor(str(err), parse_mode=parse_pre)
     photo, caption = await get_chat_info(kst, entity)
     if not photo:
         return await yy.eor(caption, parse_mode="html")
@@ -789,7 +836,7 @@ async def get_cas_banned(kst, user_id: int) -> bool:
     return res.get("ok")
 
 
-def sglist(text) -> tuple:
+def sglist(text: str) -> tuple:
     for x in text:
         if x.startswith("🔗"):
             text.remove(x)
@@ -810,6 +857,7 @@ plugins_help["info"] = {
     "{i}stats": "Show my profile stats. Total stickers and bots is cached in 2 minutes.",
     "{i}id [reply]/[current/username]": "Get current chat/user/message id.",
     "{i}cc [reply]/[in_private]/[username/mention/id]": "Get groups in common with user.",
-    "{i}info [reply]/[in_private]/[username/mention/id] [-f]": "Get information about user. Add '-f' to get full information including Rose Fban, SpamWatch, CAS Banned, GBanned, etc. Per-id is cached in 2 minutes.",
+    "{i}info [reply]/[in_private]/[username/mention/id] [-f/full]": "Get information about user. Add '-f' to get full information including Rose Fban, SpamWatch, CAS Banned, GBanned, etc. Per-id is cached in 2 minutes.",
+    "{i}chatstats [reply]/[current/username]": "Get total messages by types.",
     "{i}chatinfo [reply]/[current/username]": "Get details information about group/channel.",
 }

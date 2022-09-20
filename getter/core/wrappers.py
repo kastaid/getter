@@ -6,26 +6,28 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
+import typing
 from contextlib import suppress
 from io import BytesIO
+from telethon import hints
 from telethon.errors.rpcerrorlist import MessageIdInvalidError, MessageNotModifiedError
-from telethon.tl.types import MessageService
+from telethon.tl import types as typ
 from ..config import MAX_MESSAGE_LEN
 from .utils import strip_format
 
 
 async def eor(
-    kst,
-    text=None,
-    link_preview=False,
-    silent=False,
-    time=None,
-    edit_time=None,
-    force_reply=False,
+    message: typ.Message,
+    text: str,
+    link_preview: bool = False,
+    silent: bool = False,
+    time: typing.Optional[typing.Union[int, float]] = None,
+    edit_time: typing.Optional[typing.Union[int, float]] = None,
+    force_reply: bool = False,
     **args,
-):
+) -> typing.Optional[typing.Union[typ.Message, typing.Sequence[typ.messages.AffectedMessages]]]:
     _ = args.get("reply_to", None)
-    reply_to = _ if _ else (kst.reply_to_msg_id or (kst if force_reply else None))
+    reply_to = _ if _ else (message.reply_to_msg_id or (message if force_reply else None))
     for arg in (
         "entity",
         "message",
@@ -39,7 +41,7 @@ async def eor(
     if len(text) > MAX_MESSAGE_LEN:
         with suppress(BaseException), BytesIO(str.encode(strip_format(text))) as file:
             file.name = "message.txt"
-            await kst.respond(
+            await message.respond(
                 r"\\**#Getter**// Message Too Long",
                 file=file,
                 force_document=True,
@@ -47,55 +49,60 @@ async def eor(
                 reply_to=reply_to,
                 silent=True,
             )
-        return await try_delete(kst)
-    if kst.out and not isinstance(kst, MessageService):
+        if message.out:
+            return await _try_delete(message)
+    if message.out and not isinstance(message, typ.MessageService):
         if edit_time:
             await asyncio.sleep(edit_time)
         try:
-            yy = await kst.edit(
+            yy = await message.edit(
                 text,
                 link_preview=link_preview,
                 **args,
             )
         except MessageIdInvalidError:  # keep functions running
-            return
+            return None
         except MessageNotModifiedError:
-            yy = kst
+            yy = message
     else:
         with suppress(BaseException):
-            yy = await kst.respond(
+            yy = await message.respond(
                 message=text,
                 link_preview=link_preview,
                 silent=silent,
                 reply_to=reply_to,
                 **args,
             )
-    if time:
+    if yy and time:
         await asyncio.sleep(time)
-        return await try_delete(yy)
+        return await _try_delete(yy)
     return yy
 
 
-async def eod(kst, text=None, **kwargs):
+async def eod(
+    message: typ.Message,
+    text: str,
+    **kwargs,
+) -> typing.Optional[typing.Union[typ.Message, typing.Sequence[typ.messages.AffectedMessages]]]:
     kwargs["time"] = kwargs.get("time", 8)
-    return await eor(kst, text, **kwargs)
+    return await eor(message, text, **kwargs)
 
 
 async def sod(
-    kst,
-    text=None,
-    chat_id=None,
-    link_preview=False,
-    silent=False,
-    time=None,
-    edit_time=None,
-    force_reply=False,
-    delete=True,
+    message: typ.Message,
+    text: str,
+    chat_id: typing.Optional[hints.EntityLike] = None,
+    link_preview: bool = False,
+    silent: bool = False,
+    time: typing.Optional[typing.Union[int, float]] = None,
+    edit_time: typing.Optional[typing.Union[int, float]] = None,
+    force_reply: bool = False,
+    delete: bool = True,
     **args,
-):
-    chat_id = chat_id or kst.chat_id
+) -> typing.Optional[typing.Union[typ.Message, typing.Sequence[typ.messages.AffectedMessages]]]:
+    chat_id = chat_id or message.chat_id
     _ = args.get("reply_to", None)
-    reply_to = _ if _ else (kst.reply_to_msg_id or (kst if force_reply else None))
+    reply_to = _ if _ else (message.reply_to_msg_id or (message if force_reply else None))
     for arg in (
         "entity",
         "message",
@@ -105,12 +112,10 @@ async def sod(
     ):
         if arg in args:
             del args[arg]
-    if delete:
-        await try_delete(kst)
     if len(text) > MAX_MESSAGE_LEN:
         with suppress(BaseException), BytesIO(str.encode(strip_format(text))) as file:
             file.name = "message.txt"
-            await kst.respond(
+            await message.respond(
                 r"\\**#Getter**// Message Too Long",
                 file=file,
                 force_document=True,
@@ -118,9 +123,12 @@ async def sod(
                 reply_to=reply_to,
                 silent=True,
             )
-        return await try_delete(kst)
+        if message.out:
+            return await _try_delete(message)
+    if message.out and delete:
+        await _try_delete(message)
     with suppress(BaseException):
-        yy = await kst.client.send_message(
+        yy = await message.client.send_message(
             entity=chat_id,
             message=text,
             link_preview=link_preview,
@@ -128,12 +136,18 @@ async def sod(
             reply_to=reply_to,
             **args,
         )
-    if time:
+    if yy and time:
         await asyncio.sleep(time)
-        return await try_delete(yy)
+        return await _try_delete(yy)
     return yy
 
 
-async def try_delete(kst):
+async def _try_delete(message: typ.Message) -> typing.Optional[typing.Sequence[typ.messages.AffectedMessages]]:
     with suppress(BaseException):
-        return await kst.delete()
+        return await message.delete()
+    return None
+
+
+async def _react(message: typ.Message, *args, **kwargs) -> typing.Optional[typ.Updates]:
+    kwargs["message"] = message.id
+    return await message.client.send_reaction(await message.get_input_chat(), *args, **kwargs)

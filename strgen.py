@@ -30,13 +30,13 @@ finally:
 
 
 usage = """
-Please go-to "my.telegram.org" (to get API_ID and API_HASH):
+Please go-to "my.telegram.org/apps" (to get API_ID and API_HASH):
 ~ Login using your Telegram account.
 ~ Click on API development tools.
 ~ Create a new application, by entering the required details.
 
-API_ID is "App api_id"
-API_HASH is "App api_hash"
+API_ID is "App api_id:"
+API_HASH is "App api_hash:"
 
 Or use:
 - @apiscrapperbot

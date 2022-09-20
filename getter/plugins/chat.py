@@ -18,9 +18,7 @@ from . import (
     parse_pre,
     display_name,
     mentionuser,
-    get_user,
     normalize_chat_id,
-    get_chat_id,
     NOCHATS,
     BOTLOGS,
 )
@@ -29,7 +27,6 @@ from . import (
 @kasta_cmd(
     pattern="(read|r)$",  # (read|r)$|([rR])$
     edited=True,
-    no_crash=True,
 )
 async def _(kst):
     await kst.try_delete()
@@ -42,7 +39,6 @@ async def _(kst):
     pattern="(del|d)$|([d](el)?)$",
     ignore_case=True,
     edited=True,
-    no_crash=True,
 )
 async def _(kst):
     await kst.try_delete()
@@ -53,7 +49,6 @@ async def _(kst):
 @kasta_cmd(
     pattern="purge$",
     func=lambda e: e.is_reply,
-    no_crash=True,
 )
 async def _(kst):
     total = 0
@@ -70,17 +65,14 @@ async def _(kst):
 
 @kasta_cmd(
     pattern="purgeme(?: |$)(.*)",
-    no_crash=True,
 )
 @kasta_cmd(
     pattern="purgeme(?: |$)(.*)",
     sudo=True,
-    no_crash=True,
 )
 @kasta_cmd(
     pattern="gpurgeme(?: |$)(.*)",
     dev=True,
-    no_crash=True,
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
@@ -123,7 +115,6 @@ async def _(kst):
 @kasta_cmd(
     pattern="purgeall$",
     func=lambda e: e.is_reply,
-    no_crash=True,
 )
 async def _(kst):
     total = 0
@@ -143,7 +134,6 @@ async def _(kst):
 @kasta_cmd(
     pattern="copy$",
     func=lambda e: e.is_reply,
-    no_crash=True,
 )
 async def _(kst):
     await kst.try_delete()
@@ -152,23 +142,21 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern=r"sd(m|)(?: |$)(\d*)(?: |$)([\s\S]*)",
-    no_crash=True,
+    pattern="sd(m|)(?: |$)(\\d*)(?: |$)((?s).*)",
 )
 async def _(kst):
     group = kst.pattern_match.group
     text = await kst.client.get_text(kst, group=3, plain=False)
     if not text:
         return await kst.try_delete()
-    ttl = int(group(2) or 1)
+    ttl = int(group(2).strip() or 1)
     if group(1).strip() == "m":
         text += f"\n\n`self-destruct message in {ttl} seconds`"
     await kst.eor(text, time=ttl)
 
 
 @kasta_cmd(
-    pattern="(send|dm)(?: |$)(.*)",
-    no_crash=True,
+    pattern="(send|dm)(?: |$)((?s).*)",
 )
 async def _(kst):
     ga = kst.client
@@ -179,8 +167,7 @@ async def _(kst):
     try:
         chat_id = await ga.get_id(chat)
     except Exception as err:
-        await kst.eor(f"**ERROR:**\n`{err}`")
-        return
+        return await kst.eor(str(err), parse_mode=parse_pre)
     if len(kst.text.split()) > 2:
         message = kst.text.split(maxsplit=2)[2]
     elif kst.is_reply:
@@ -195,13 +182,12 @@ async def _(kst):
             delivered = f"[{delivered}]({sent.message_link})"
         await kst.eor(delivered)
     except Exception as err:
-        await kst.eor(f"**ERROR:**\n`{err}`")
+        await kst.eor(str(err), parse_mode=parse_pre)
 
 
 @kasta_cmd(
     pattern="(f|)saved(l|)$",
     func=lambda e: e.is_reply,
-    no_crash=True,
 )
 async def _(kst):
     ga = kst.client
@@ -218,14 +204,14 @@ async def _(kst):
 @kasta_cmd(
     pattern="react$",
     func=lambda e: e.is_reply,
-    no_crash=True,
 )
 async def _(kst):
+    yy = await kst.eor("`Reaction...`")
     reaction = choice(
         (
             "👍",
             "👎",
-            "❤️",
+            "❤",
             "🔥",
             "🥰",
             "👏",
@@ -242,16 +228,15 @@ async def _(kst):
             "🙏",
         )
     )
-    yy = await kst.eor("`Reaction...`")
     with suppress(BaseException):
         reply = await kst.get_reply_message()
         await reply.react(reaction=reaction)
-    await yy.eor(f"`reacted {reaction}`", time=3)
+        return await yy.eor(f"`reacted {reaction}`", time=3)
+    await yy.eor("`no react`", time=3)
 
 
 @kasta_cmd(
     pattern="(delayspam|ds)(?: |$)(.*)",
-    no_crash=True,
 )
 async def _(kst):
     try:
@@ -266,7 +251,7 @@ async def _(kst):
     try:
         delay = 2 if delay and int(delay) < 2 else delay
         for _ in range(count):
-            await kst.respond(msg)
+            await kst.respond(msg, reply_to=kst.reply_to_msg_id)
             await asyncio.sleep(delay)
     except BaseException:
         pass
@@ -289,7 +274,7 @@ async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
     yy = await kst.eor("`Reporting...`", silent=True)
-    user, _ = await get_user(kst)
+    user, _ = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
@@ -300,7 +285,7 @@ async def _(kst):
     with suppress(BaseException):
         if kst.is_private:
             # https://stackoverflow.com/a/57327383
-            await ga(
+            is_reported = await ga(
                 fun.account.ReportPeerRequest(
                     user.id,
                     reason=typ.InputReportReasonSpam(),
@@ -308,22 +293,19 @@ async def _(kst):
                     # in many chats, we request
                 )
             )
-            is_reported = True
         elif kst.is_group and kst.is_reply:
-            await ga(
+            is_reported = await ga(
                 fun.channels.ReportSpamRequest(
                     chat_id,
                     participant=user.id,
                     id=[kst.reply_to_msg_id],
                 )
             )
-            is_reported = True
         else:
-            await ga.report_spam(user.id)
-            is_reported = True
+            is_reported = await ga.report_spam(user.id)
     await yy.eor(
-        "Message from {} {} reported!".format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
+        "User {} {} reported!".format(
+            mentionuser(user.id, display_name(user), width=15, html=True),
             "was" if is_reported else "not",
         ),
         parse_mode="html",
@@ -375,7 +357,7 @@ async def _(kst):
 )
 async def _(kst):
     ga = kst.client
-    chat_id = await get_chat_id(kst)
+    chat_id = await ga.get_chat_id(kst)
     is_current = chat_id == normalize_chat_id(kst.chat_id)
     if is_current and kst.is_private:
         return await kst.eod("`Use this in group/channel.`")

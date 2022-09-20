@@ -28,9 +28,9 @@ async def _(kst):
     hah = kst.pattern_match.group(1).strip()
     username = gvar("ig") or "illvart_"
     if hah == "u":
-        ig = "**INSTAGRAM  ➥**  `@{}`".format(username)
+        ig = "𝐈𝐍𝐒𝐓𝐀𝐆𝐑𝐀𝐌  ➥  `@{}`".format(username)
     else:
-        ig = "**INSTAGRAM  ➥**  [@{}](https://www.instagram.com/{})".format(username, username)
+        ig = "𝐈𝐍𝐒𝐓𝐀𝐆𝐑𝐀𝐌  ➥  [@{}](https://www.instagram.com/{})".format(username, username)
     await kst.sod(ig)
 
 
@@ -41,11 +41,11 @@ async def _(kst):
     hah = kst.pattern_match.group(1).strip()
     username = gvar("sfs") or "kastaid"
     if hah == "p":
-        sfs = "**SFS  ➥**  `t.me/{}`".format(username)
+        sfs = "𝐒𝐔𝐁𝐒 𝐅𝐎𝐑 𝐒𝐔𝐁𝐒  ➥  `t.me/{}`".format(username)
     elif hah == "u":
-        sfs = "**SFS  ➥**  `@{}`".format(username)
+        sfs = "𝐒𝐔𝐁𝐒 𝐅𝐎𝐑 𝐒𝐔𝐁𝐒  ➥  `@{}`".format(username)
     else:
-        sfs = "**SFS  ➥**  [@{}](https://t.me/{})".format(username, username)
+        sfs = "𝐒𝐔𝐁𝐒 𝐅𝐎𝐑 𝐒𝐔𝐁𝐒  ➥  [@{}](https://t.me/{})".format(username, username)
     await kst.sod(sfs)
 
 
@@ -53,7 +53,7 @@ async def _(kst):
     pattern="set(ig|sfs)(?: |$)(.*)",
 )
 async def _(kst):
-    var = kst.pattern_match.group(1).strip()
+    var = kst.pattern_match.group(1)
     val = await kst.client.get_text(kst, group=2)
     forwhat = gvar(var) or ""
     if not val:

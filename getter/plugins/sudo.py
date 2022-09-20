@@ -15,7 +15,6 @@ from . import (
     dgvar,
     sgvar,
     gvar,
-    get_user,
     add_col,
     del_col,
     jdata,
@@ -27,9 +26,15 @@ from . import (
 @kasta_cmd(
     pattern="sudo(?: |$)(yes|on|true|1|no|off|false|0)?",
 )
+@kasta_cmd(
+    pattern="gsudo(?: |$)(yes|on|true|1|no|off|false|0)?",
+    dev=True,
+)
 async def _(kst):
+    if kst.is_dev:
+        await asyncio.sleep(choice((4, 6, 8)))
     ga = kst.client
-    yy = await kst.eor("`Processing...`")
+    yy = await kst.eor("`Processing...`", silent=True)
     toggle = kst.pattern_match.group(1)
     sudo = bool(gvar("_sudo"))
     if not toggle:
@@ -74,7 +79,7 @@ async def _(kst):
         await asyncio.sleep(choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Processing...`", silent=True)
-    user, _ = await get_user(kst)
+    user, _ = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
@@ -105,7 +110,7 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Processing...`", silent=True)
-    user, _ = await get_user(kst)
+    user, _ = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
@@ -162,7 +167,7 @@ plugins_help["sudo"] = {
     "{i}delallsudos": """Delete all sudo users.
 
 **Note:**
-- Handler for sudo commands is [ , ] comma. **E.g:** `,test`
+- Handler for sudo commands is [ , ] comma. E.g: `,test`
 - The sudo, addsudo, delsudo, and delsudos commands are automatically reboot after changes, this to apply changes!
 """,
 }

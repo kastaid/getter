@@ -93,7 +93,6 @@ _ADDING_LOCK = asyncio.Lock()
 @kasta_cmd(
     pattern="limit$",
     edited=True,
-    no_crash=True,
     no_chats=True,
     chats=NOCHATS,
 )
@@ -130,7 +129,7 @@ async def _(kst):
             return
         await asyncio.sleep(choice((4, 6, 8)))
     if INVITE_WORKER.get(chat_id) or _INVITING_LOCK.locked():
-        await kst.eor("`Please wait until previous • invite • finished...`", time=5, silent=True)
+        await kst.eor("`Please wait until previous •invite• finished...`", time=5, silent=True)
         return
     async with _INVITING_LOCK:
         ga = kst.client
@@ -218,7 +217,7 @@ async def _(kst):
 async def _(kst):
     chat_id = normalize_chat_id(kst.chat_id)
     if _SCRAPING_LOCK.locked():
-        await kst.eor("`Please wait until previous • scraping • finished...`", time=5)
+        await kst.eor("`Please wait until previous •scraping• finished...`", time=5)
         return
     async with _SCRAPING_LOCK:
         ga = kst.client
@@ -360,7 +359,7 @@ async def _(kst):
 async def _(kst):
     chat_id = normalize_chat_id(kst.chat_id)
     if INVITE_WORKER.get(chat_id) or _ADDING_LOCK.locked():
-        await kst.eor("`Please wait until previous • adding • finished...`", time=5)
+        await kst.eor("`Please wait until previous •adding• finished...`", time=5)
         return
     async with _ADDING_LOCK:
         ga = kst.client

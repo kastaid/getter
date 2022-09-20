@@ -16,17 +16,17 @@ from . import (
     suppress,
     parse_pre,
     normalize_chat_id,
-    get_user,
     mentionuser,
     display_name,
     strip_emoji,
     time_formatter,
     until_time,
+    normalize,
 )
 
 
 @kasta_cmd(
-    pattern="ban(?: |$)(.*)",
+    pattern="ban(?: |$)((?s).*)",
     admins_only=True,
     require="ban_users",
 )
@@ -34,7 +34,7 @@ async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
     yy = await kst.eor("`Banning...`")
-    user, reason = await get_user(kst)
+    user, reason = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
@@ -44,21 +44,19 @@ async def _(kst):
     is_reported = False
     with suppress(BaseException):
         if kst.is_group and kst.is_reply:
-            await ga(
+            is_reported = await ga(
                 fun.channels.ReportSpamRequest(
                     chat_id,
                     participant=user.id,
                     id=[kst.reply_to_msg_id],
                 )
             )
-            is_reported = True
         else:
-            await ga.report_spam(user.id)
-            is_reported = True
+            is_reported = await ga.report_spam(user.id)
     try:
         await ga.edit_permissions(chat_id, user.id, view_messages=False)
         text = "{} banned and {} reported!{}".format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
+            mentionuser(user.id, display_name(user), width=15, html=True),
             "was" if is_reported else "not",
             f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
         )
@@ -68,7 +66,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="dban(?: |$)(.*)",
+    pattern="dban(?: |$)((?s).*)",
     admins_only=True,
     require="ban_users",
     func=lambda e: e.is_reply,
@@ -77,7 +75,7 @@ async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
     yy = await kst.eor("`Dbanning...`")
-    user, reason = await get_user(kst)
+    user, reason = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to user message.`", time=5)
     if user.id == ga.uid:
@@ -87,22 +85,20 @@ async def _(kst):
     is_reported = False
     with suppress(BaseException):
         if kst.is_group:
-            await ga(
+            is_reported = await ga(
                 fun.channels.ReportSpamRequest(
                     chat_id,
                     participant=user.id,
                     id=[kst.reply_to_msg_id],
                 )
             )
-            is_reported = True
         else:
-            await ga.report_spam(user.id)
-            is_reported = True
+            is_reported = await ga.report_spam(user.id)
     try:
         await ga.edit_permissions(chat_id, user.id, view_messages=False)
         await (await kst.get_reply_message()).try_delete()
         text = "{} dbanned and {} reported!{}".format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
+            mentionuser(user.id, display_name(user), width=15, html=True),
             "was" if is_reported else "not",
             f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
         )
@@ -119,7 +115,7 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
-    user, _ = await get_user(kst)
+    user, _ = await ga.get_user(kst)
     await kst.try_delete()
     if not user:
         return
@@ -143,7 +139,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="tban(?: |$)(.*)",
+    pattern="tban(?: |$)((?s).*)",
     admins_only=True,
     require="ban_users",
 )
@@ -151,7 +147,7 @@ async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
     yy = await kst.eor("`Tbanning...`")
-    user, args = await get_user(kst)
+    user, args = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
@@ -167,7 +163,7 @@ async def _(kst):
     try:
         await ga.edit_permissions(chat_id, user.id, until_date=until_date, view_messages=False)
         text = "{} temporarily banned!\n<b>Duration:</b> {}{}".format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
+            mentionuser(user.id, display_name(user), width=15, html=True),
             f"{timing[:-1]} {duration}",
             f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
         )
@@ -177,7 +173,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="unban(?: |$)(.*)",
+    pattern="unban(?: |$)((?s).*)",
     admins_only=True,
     require="ban_users",
 )
@@ -185,7 +181,7 @@ async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
     yy = await kst.eor("`Unbanning...`")
-    user, reason = await get_user(kst)
+    user, reason = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
@@ -193,7 +189,7 @@ async def _(kst):
     try:
         await ga.edit_permissions(chat_id, user.id)
         text = "{} unbanned!{}".format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
+            mentionuser(user.id, display_name(user), width=15, html=True),
             f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
         )
         await yy.eor(text, parse_mode="html")
@@ -202,7 +198,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="mute(?: |$)(.*)",
+    pattern="mute(?: |$)((?s).*)",
     admins_only=True,
     require="ban_users",
 )
@@ -210,7 +206,7 @@ async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
     yy = await kst.eor("`Muting...`")
-    user, reason = await get_user(kst)
+    user, reason = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
@@ -220,7 +216,7 @@ async def _(kst):
     try:
         await ga.edit_permissions(chat_id, user.id, send_messages=False)
         text = "{} muted!{}".format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
+            mentionuser(user.id, display_name(user), width=15, html=True),
             f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
         )
         await yy.eor(text, parse_mode="html")
@@ -229,7 +225,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="dmute(?: |$)(.*)",
+    pattern="dmute(?: |$)((?s).*)",
     admins_only=True,
     require="ban_users",
     func=lambda e: e.is_reply,
@@ -238,7 +234,7 @@ async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
     yy = await kst.eor("`Dmuting...`")
-    user, reason = await get_user(kst)
+    user, reason = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to user message.`", time=5)
     if user.id == ga.uid:
@@ -250,7 +246,7 @@ async def _(kst):
         await ga.edit_permissions(chat_id, user.id, send_messages=False)
         await reply.try_delete()
         text = "{} dmuted!{}".format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
+            mentionuser(user.id, display_name(user), width=15, html=True),
             f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
         )
         await yy.eor(text, parse_mode="html")
@@ -266,7 +262,7 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
-    user, _ = await get_user(kst)
+    user, _ = await ga.get_user(kst)
     await kst.try_delete()
     if not user:
         return
@@ -279,7 +275,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="tmute(?: |$)(.*)",
+    pattern="tmute(?: |$)((?s).*)",
     admins_only=True,
     require="ban_users",
 )
@@ -287,7 +283,7 @@ async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
     yy = await kst.eor("`Tmuting...`")
-    user, args = await get_user(kst)
+    user, args = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
@@ -303,7 +299,7 @@ async def _(kst):
     try:
         await ga.edit_permissions(chat_id, user.id, until_date=until_date, send_messages=False)
         text = "{} temporarily muted!\n<b>Duration:</b> {}{}".format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
+            mentionuser(user.id, display_name(user), width=15, html=True),
             f"{timing[:-1]} {duration}",
             f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
         )
@@ -313,7 +309,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="unmute(?: |$)(.*)",
+    pattern="unmute(?: |$)((?s).*)",
     admins_only=True,
     require="ban_users",
 )
@@ -321,7 +317,7 @@ async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
     yy = await kst.eor("`Unmuting...`")
-    user, reason = await get_user(kst)
+    user, reason = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
@@ -331,7 +327,7 @@ async def _(kst):
     try:
         await ga.edit_permissions(chat_id, user.id, send_messages=True)
         text = "{} unmuted!{}".format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
+            mentionuser(user.id, display_name(user), width=15, html=True),
             f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
         )
         await yy.eor(text, parse_mode="html")
@@ -340,7 +336,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="kick(?: |$)(.*)",
+    pattern="kick(?: |$)((?s).*)",
     admins_only=True,
     require="ban_users",
 )
@@ -348,7 +344,7 @@ async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
     yy = await kst.eor("`Kicking...`")
-    user, reason = await get_user(kst)
+    user, reason = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
@@ -358,7 +354,7 @@ async def _(kst):
     try:
         await ga.kick_participant(chat_id, user.id)
         text = "{} kicked!{}".format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
+            mentionuser(user.id, display_name(user), width=15, html=True),
             f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
         )
         await yy.eor(text, parse_mode="html")
@@ -367,7 +363,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="dkick(?: |$)(.*)",
+    pattern="dkick(?: |$)((?s).*)",
     admins_only=True,
     require="ban_users",
     func=lambda e: e.is_reply,
@@ -376,7 +372,7 @@ async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
     yy = await kst.eor("`Dkicking...`")
-    user, reason = await get_user(kst)
+    user, reason = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to user message.`", time=5)
     if user.id == ga.uid:
@@ -388,7 +384,7 @@ async def _(kst):
         await ga.kick_participant(chat_id, user.id)
         await reply.try_delete()
         text = "{} dkicked!{}".format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
+            mentionuser(user.id, display_name(user), width=15, html=True),
             f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
         )
         await yy.eor(text, parse_mode="html")
@@ -403,7 +399,7 @@ async def _(kst):
 )
 async def _(kst):
     ga = kst.client
-    user, _ = await get_user(kst)
+    user, _ = await ga.get_user(kst)
     await kst.try_delete()
     if not user:
         return
@@ -445,8 +441,8 @@ async def _(kst):
     admins_only=True,
 )
 async def _(kst):
-    match = kst.pattern_match.group(1).strip().lower()
-    is_safety = "-s" in match
+    match = kst.pattern_match.group(1).lower()
+    is_safety = [_ for _ in ("-s", "safety") if _ in match]
     try:
         if is_safety:
             await kst.client.edit_permissions(
@@ -481,8 +477,8 @@ async def _(kst):
     func=lambda e: e.is_reply,
 )
 async def _(kst):
-    match = kst.pattern_match.group(1).strip().lower()
-    is_notify = "-n" in match
+    match = kst.pattern_match.group(1).lower()
+    is_notify = [_ for _ in ("-n", "notify") if _ in match]
     if kst.is_private:
         text = "Pinned!"
     else:
@@ -503,13 +499,13 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
-    opts = kst.pattern_match.group(1).strip().lower().split(" ")
+    opts = kst.pattern_match.group(1).lower().split(" ")
     sec = opts[0]
     if not (sec or sec.isdecimal()):
         return await kst.eor("`Provide a valid seconds!`", time=5)
     sec = int(sec)
     pinfor = time_formatter(sec * 1000)
-    is_notify = "-n" in " ".join(opts[1:]).strip()
+    is_notify = [_ for _ in ("-n", "notify") if _ in " ".join(opts[1:]).strip()]
     msg_id = kst.reply_to_msg_id
     try:
         await ga.pin_message(chat_id, msg_id, notify=is_notify)
@@ -575,7 +571,7 @@ async def _(kst):
     ga = kst.client
     chat_id = normalize_chat_id(kst.chat_id)
     yy = await kst.eor("`Processing...`")
-    chat_title = display_name(kst.chat)
+    title = display_name(kst.chat)
     pinned = ""
     count = 1
     async for x in ga.iter_messages(chat_id, filter=typ.InputMessagesFilterPinned):
@@ -586,7 +582,7 @@ async def _(kst):
             btn = "Go to message..."
         pinned += f"{count}. <a href=https://t.me/c/{chat_id}/{x.id}>{btn}</a>\n"
         count += 1
-    text = f"<b>Pinned message(s) in {chat_title}:</b>\n"
+    text = f"<b>Pinned message(s) in {normalize(title).lower()}:</b>\n"
     if not pinned:
         return await yy.eor("`No Pinned!`", time=5)
     await yy.eor(text + pinned, parse_mode="html")
@@ -601,13 +597,13 @@ async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
     yy = await kst.eor("`Promoting...`")
-    user, args = await get_user(kst)
+    user, args = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
         return await yy.eor("`Cannot promote to myself.`", time=3)
     opts = args.split(" ")
-    is_full = opts[0].lower() == "-f"
+    is_full = [_ for _ in ("-f", "full") if _ in opts[0].lower()]
     title = " ".join(strip_emoji(" ".join(opts[1:] if is_full else opts)).split()).strip()
     if len(title) > 16:
         title = title[:16]
@@ -636,7 +632,7 @@ async def _(kst):
                 title=title,
             )
         text = "{} is now admin with title {}".format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
+            mentionuser(user.id, display_name(user), width=15, html=True),
             title,
         )
         await yy.eor(text, parse_mode="html")
@@ -653,7 +649,7 @@ async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
     yy = await kst.eor("`Demoting...`")
-    user, _ = await get_user(kst)
+    user, _ = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
@@ -674,7 +670,7 @@ async def _(kst):
             anonymous=False,
         )
         text = "{} is no longer admin.".format(
-            mentionuser(user.id, display_name(user), sep="➥ ", width=15, html=True),
+            mentionuser(user.id, display_name(user), width=15, html=True),
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
@@ -782,7 +778,6 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
-    title = kst.chat.title
     yy = await kst.eor("`Kicking deleted accounts...`")
     try:
         done = [
@@ -790,7 +785,7 @@ async def _(kst):
             for x in await ga.get_participants(chat_id)
             if not hasattr(x.participant, "admin_rights") and x.deleted
         ]
-        await yy.eor(f"`Successfully kicked {len(done)} deleted account(s) in {title}.`")
+        await yy.eor(f"`Successfully kicked {len(done)} deleted account(s) in {normalize(kst.chat.title).lower()}.`")
     except Exception as err:
         await yy.eor(str(err), parse_mode=parse_pre)
 
@@ -803,7 +798,6 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
-    title = kst.chat.title
     yy = await kst.eor("`Unbanning all banned users...`")
     done = 0
     async for x in ga.iter_participants(
@@ -824,7 +818,32 @@ async def _(kst):
                 pass
         except BaseException:
             pass
-    await yy.eor(f"`Successfully unbanned {done} users in {title}.`")
+    await yy.eor(f"`Successfully unbanned {done} users in {normalize(kst.chat.title).lower()}.`")
+
+
+@kasta_cmd(
+    pattern="adminlist$",
+    groups_only=True,
+)
+async def _(kst):
+    ga = kst.client
+    chat_id = kst.chat_id
+    yy = await kst.eor("`Processing...`")
+    total = 0
+    text = f"<b>Admins in {normalize(kst.chat.title).lower()}:</b>\n"
+    async for x in ga.iter_participants(chat_id, filter=typ.ChannelParticipantsAdmins):
+        if not (x.deleted or x.participant.admin_rights.anonymous):
+            if isinstance(x.participant, typ.ChannelParticipantCreator):
+                text += "- {} Owner\n".format(mentionuser(x.id, display_name(x), html=True))
+            elif x.bot:
+                text += "- {} Bot\n".format(mentionuser(x.id, display_name(x), html=True))
+            elif x.is_self:
+                text += "- {} Me\n".format(mentionuser(x.id, display_name(x), html=True))
+            else:
+                text += "- {}\n".format(mentionuser(x.id, display_name(x), html=True))
+            total += 1
+    text += f"\n<i>Found {total} admins without anonymously.</i>"
+    await yy.eor(text, parse_mode="html")
 
 
 plugins_help["admintools"] = {
@@ -842,18 +861,19 @@ plugins_help["admintools"] = {
     "{i}dkick [reply] [reason]": "Kick user by reply, and delete their message.",
     "{i}skick [reply]/[username/mention/id]": "Silently a kick user, and delete my message.",
     "{i}lock": "Lock current group, allowing read only for non-admins.",
-    "{i}unlock [-s]": "Unlock current group, allowing read/write for non-admins (excludes: change_info, pin_messages). Add '-s' to allowing just for typing.",
-    "{i}pin [reply] [-n]": "Pin the replied message. Add '-n' to send a notification.",
-    "{i}tpin [reply] [seconds] [-n]": "Temporarily pin the replied message. Add '-n' to send a notification.",
+    "{i}unlock [-s/safety]": "Unlock current group, allowing read/write for non-admins (excludes: change_info, pin_messages). Add '-s' to allowing just for typing.",
+    "{i}pin [reply] [-n/notify]": "Pin the replied message. Add '-n' to send a notification.",
+    "{i}tpin [reply] [seconds] [-n/notify]": "Temporarily pin the replied message. Add '-n' to send a notification.",
     "{i}unpin [reply]": "Unpin the replied message.",
     "{i}unpinall": "Unpins all pinned messages.",
     "{i}pinned": "Get the current pinned message.",
     "{i}listpinned": "Get all pinned messages.",
-    "{i}promote [reply]/[username/mention/id] [-f] [title]": "Promote user as admin. To full permissions add '-f'. The title must be less than 16 characters and emoji are not allowed, or use the default localized title.",
+    "{i}promote [reply]/[username/mention/id] [-f/full] [title]": "Promote user as admin. To full permissions add '-f'. The title must be less than 16 characters and emoji are not allowed, or use the default localized title.",
     "{i}demote [reply]/[username/mention/id]": "Demote user from admin.",
     "{i}kickusers": "Kick users specifically.",
     "{i}kickdel": "Kick all deleted accounts.",
-    "{i}unbanall": """Unban all banned users.
+    "{i}unbanall": "Unban all banned users.",
+    "{i}adminlist": """Get list all admins by type in current group.
 
 **Examples:**
 - Mute user for two hours.

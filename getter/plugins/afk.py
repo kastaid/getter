@@ -5,7 +5,6 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
 import datetime
 import html
 from . import (
@@ -31,10 +30,10 @@ from . import (
 
 
 @kasta_cmd(
-    pattern=r"afk(?: |$)([\s\S]*)",
+    pattern="afk(?: |$)((?s).*)",
 )
 @kasta_cmd(
-    pattern=r"brb(?: |$)([\s\S]*)",
+    pattern="brb(?: |$)((?s).*)",
     no_handler=True,
 )
 async def _(kst):
@@ -46,7 +45,7 @@ async def _(kst):
     text = "<b><u>I`m Going AFK ツ</u></b>"
     if reason:
         reason = html.escape(reason)
-        text += f"\n\n<b>Reason:</b> <pre>{reason}</pre>"
+        text += f"\n<b>Reason:</b> <pre>{reason}</pre>"
     add_afk(reason, start)
     getter_app.add_handler(
         StopAFK,
@@ -85,14 +84,13 @@ async def StopAFK(kst):
                 await kst.client.delete_messages(int(x), [y])
         del_afk()
         afk_out = str(choice(OUTS_AFK).format(html.escape(kst.client.full_name)))
-        text = f"<b>{afk_out}</b>\n<i>Was away for</i> ~ {afk_time}"
-        done = await kst.respond(
+        text = f"<b>{afk_out}</b>\n"
+        text += f"<i>Was away for</i> ~ {afk_time}"
+        await kst.respond(
             text,
             link_preview=False,
             parse_mode="html",
         )
-        await asyncio.sleep(10)
-        await done.try_delete()
 
 
 async def OnAFK(kst):
@@ -121,7 +119,7 @@ async def OnAFK(kst):
         text = "<b><u>I`m AFK ツ</u></b>\n"
         text += f"Last seen {afk_time} ago."
         reason = f"<pre>{is_afk().reason}</pre>" if is_afk().reason else "No reason."
-        text += f"\n\n<b>Reason:</b> {reason}"
+        text += f"\n<b>Reason:</b> {reason}"
         chat_id = str(kst.chat_id)
         if chat_id in is_afk().last:
             with suppress(BaseException):

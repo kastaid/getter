@@ -20,7 +20,7 @@ from . import (
 
 
 @kasta_cmd(
-    pattern=r"carbon(?: |$)([\s\S]*)",
+    pattern="carbon(?: |$)((?s).*)",
 )
 async def _(kst):
     ga = kst.client
@@ -79,7 +79,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern=r"rayso(?: |$)([\s\S]*)",
+    pattern="rayso(?: |$)((?s).*)",
 )
 async def _(kst):
     ga = kst.client
@@ -136,11 +136,10 @@ async def _(kst):
 
 @kasta_cmd(
     pattern="theme$",
-    no_crash=True,
 )
 async def _(kst):
-    carbon = "**Carbon Themes:**\n" + "\n".join([f"- `{x}`" for x in CARBON_PRESETS])
-    rayso = "**Rayso Themes:**\n" + "\n".join([f"- `{x}`" for x in RAYSO_THEMES])
+    carbon = f"**{len(CARBON_PRESETS)} Carbon Themes:**\n" + "\n".join([f"- `{_}`" for _ in CARBON_PRESETS])
+    rayso = f"**{len(RAYSO_THEMES)} Rayso Themes:**\n" + "\n".join([f"- `{_}`" for _ in RAYSO_THEMES])
     await kst.sod(carbon)
     await kst.sod(rayso)
 

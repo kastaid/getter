@@ -16,12 +16,10 @@ from . import (
 
 @kasta_cmd(
     pattern="f(typing|audio|contact|document|game|location|sticker|photo|round|video)(?: |$)(.*)",
-    no_crash=True,
 )
 @kasta_cmd(
     pattern="gf(typing|audio|contact|document|game|location|sticker|photo|round|video)(?: |$)(.*)",
     dev=True,
-    no_crash=True,
 )
 async def _(kst):
     if kst.is_dev:
@@ -35,7 +33,8 @@ async def _(kst):
     sec = int(60 if not sec.replace(".", "", 1).isdecimal() else sec)
     typefor = time_formatter(sec * 1000)
     await kst.eor(f"`Starting fake {act} for {typefor}...`", time=3)
-    async with ga.action(kst.chat_id, action=action):
+    chat = await kst.get_input_chat()
+    async with ga.action(chat, action=action):
         await asyncio.sleep(sec)
 
 

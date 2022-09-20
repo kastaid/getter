@@ -33,15 +33,16 @@ def tobool(val):
 @dataclass
 class Var:
     DEV_MODE: bool = tobool(getenv("DEV_MODE", "false").strip())
-    STRING_SESSION: str = getenv("STRING_SESSION", "").strip()
     API_ID: int = int(getenv("API_ID", "0").strip())
     API_HASH: str = getenv("API_HASH", "").strip()
+    STRING_SESSION: str = getenv("STRING_SESSION", "").strip()
+    DATABASE_URL: str = getenv("DATABASE_URL", "").strip()
     BOTLOGS: int = int(getenv("BOTLOGS", "0").strip())
     HANDLER: str = getenv("HANDLER", ".").strip()
     TZ: str = getenv("TZ", "Asia/Jakarta").strip()
+    LANG_CODE: str = getenv("LANG_CODE", "id").lower().strip()
     HEROKU_APP_NAME: str = getenv("HEROKU_APP_NAME", "").strip()
     HEROKU_API: str = getenv("HEROKU_API", "").strip()
-    DATABASE_URL: str = getenv("DATABASE_URL", "").strip()
 
 
 try:

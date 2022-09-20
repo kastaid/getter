@@ -48,3 +48,4 @@ logging.getLogger("PIL").disabled = True
 logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
 TelethonLogger = logging.getLogger("telethon")
 TelethonLogger.setLevel(logging.ERROR)
+logging.getLogger("telethon.network.mtprotosender").disabled = True

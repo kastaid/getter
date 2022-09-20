@@ -15,11 +15,11 @@ from . import (
     mentionuser,
     display_name,
     get_user_status,
-    get_user,
     normalize_chat_id,
     md_to_html,
+    normalize,
     chunk,
-    EMOJI_TAGS,
+    EMOJIS,
 )
 
 ATAGS, ETAGS = [], []
@@ -35,32 +35,36 @@ async def _(kst):
     ga = kst.client
     chat_id = normalize_chat_id(kst.chat_id)
     tag = "\U000e0020all"
-    yy = f"@{tag}"
-    slots = 4096 - len(yy)
+    text = f"@{tag}"
+    slots = 4096 - len(text)
     async for x in ga.iter_participants(chat_id):
         if exclude_user(x):
-            yy += mentionuser(x.id, "\u2063")
+            text += mentionuser(x.id, "\u2063")
             slots -= 1
             if slots == 0:
                 break
-    await kst.respond(yy, reply_to=kst.reply_to_msg_id)
+    await kst.respond(text, reply_to=kst.reply_to_msg_id)
     await kst.try_delete()
 
 
 @kasta_cmd(
-    pattern=r"atag(?: |$)([\s\S]*)",
+    pattern="atag(?: |$)((?s).*)",
     groups_only=True,
 )
 async def _(kst):
     ga = kst.client
     chat_id = normalize_chat_id(kst.chat_id)
     if chat_id in ATAGS:
-        await kst.eor("`Please wait until previous • atag • finished...`", time=5, silent=True)
+        await kst.eor("`Please wait until previous •atag• finished...`", time=5, silent=True)
         return
     caption = kst.pattern_match.group(1)
     users, limit = [], 0
     ATAGS.append(chat_id)
-    yy = await kst.sod("`In atag process...`", delete=False, force_reply=True)
+    yy = await kst.sod(
+        f"`Running atag process in {normalize(kst.chat.title).lower()}...`",
+        delete=False,
+        force_reply=True,
+    )
     async for x in ga.iter_participants(chat_id):
         if exclude_user(x):
             if not hasattr(x.participant, "admin_rights"):
@@ -89,27 +93,31 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern=r"etag(?: |$)([\s\S]*)",
+    pattern="etag(?: |$)((?s).*)",
     groups_only=True,
 )
 async def _(kst):
     ga = kst.client
     chat_id = normalize_chat_id(kst.chat_id)
     if chat_id in ETAGS:
-        await kst.eor("`Please wait until previous • etag • finished...`", time=5, silent=True)
+        await kst.eor("`Please wait until previous •etag• finished...`", time=5, silent=True)
         return
     caption = kst.pattern_match.group(1)
     users, limit = [], 0
     ETAGS.append(chat_id)
-    yy = await kst.sod("`In etag process...`", delete=False, force_reply=True)
+    yy = await kst.sod(
+        f"`Running etag process in {normalize(kst.chat.title).lower()}...`",
+        delete=False,
+        force_reply=True,
+    )
     async for x in ga.iter_participants(chat_id):
         if exclude_user(x):
             if not hasattr(x.participant, "admin_rights"):
-                users.append(mentionuser(x.id, choice(EMOJI_TAGS), html=True))
+                users.append(mentionuser(x.id, choice(EMOJIS), html=True))
             if isinstance(x.participant, typ.ChannelParticipantAdmin):
-                users.append("👮 {}".format(mentionuser(x.id, choice(EMOJI_TAGS), html=True)))
+                users.append("👮 {}".format(mentionuser(x.id, choice(EMOJIS), html=True)))
             if isinstance(x.participant, typ.ChannelParticipantCreator):
-                users.append("🤴 {}".format(mentionuser(x.id, choice(EMOJI_TAGS), html=True)))
+                users.append("🤴 {}".format(mentionuser(x.id, choice(EMOJIS), html=True)))
     caption = f"{md_to_html(caption)}\n" if caption else caption
     for men in chunk(users, DEFAULT_PERUSER):
         try:
@@ -141,14 +149,12 @@ async def _(kst):
         if chat_id not in ATAGS:
             await yy.eod("__No current atag are running.__")
             return
-        else:
-            ATAGS.remove(chat_id)
+        ATAGS.remove(chat_id)
     else:
         if chat_id not in ETAGS:
             await yy.eod("__No current etag are running.__")
             return
-        else:
-            ETAGS.remove(chat_id)
+        ETAGS.remove(chat_id)
     await yy.eor("`cancelled`", time=5)
 
 
@@ -161,19 +167,19 @@ async def _(kst):
     ga = kst.client
     chat_id = normalize_chat_id(kst.chat_id)
     tag = "\U000e0020admin"
-    yy = f"@{tag}"
+    text = f"@{tag}"
     async for x in ga.iter_participants(chat_id, filter=typ.ChannelParticipantsAdmins):
         if exclude_user(x):
-            yy += mentionuser(x.id, "\u2063")
-    await kst.respond(yy, reply_to=kst.reply_to_msg_id)
+            text += mentionuser(x.id, "\u2063")
+    await kst.respond(text, reply_to=kst.reply_to_msg_id)
     await kst.try_delete()
 
 
 @kasta_cmd(
-    pattern=r"(mention|men)(?: |$)([\s\S]*)",
+    pattern="men(tion|)(?: |$)((?s).*)",
 )
 async def _(kst):
-    user, name = await get_user(kst, 2)
+    user, name = await kst.client.get_user(kst, 2)
     if not user:
         return await kst.try_delete()
     name = name or display_name(user)

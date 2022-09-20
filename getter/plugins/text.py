@@ -24,61 +24,51 @@ from . import (
 
 
 @kasta_cmd(
-    pattern="getformat$",
-    func=lambda e: e.is_reply,
-    no_crash=True,
+    pattern="getformat(?: |$)((?s).*)",
 )
 async def _(kst):
-    reply = await kst.get_reply_message()
-    if not getattr(reply, "text", None):
+    text = await kst.client.get_text(kst, plain=False)
+    if not text:
         return await kst.try_delete()
-    text = reply.text
     await kst.eor(text, parse_mode=parse_pre)
 
 
 @kasta_cmd(
-    pattern="noformat$",
-    func=lambda e: e.is_reply,
-    no_crash=True,
+    pattern="noformat(?: |$)((?s).*)",
 )
 async def _(kst):
-    reply = await kst.get_reply_message()
-    if not getattr(reply, "message", None):
+    text = await kst.client.get_text(kst)
+    if not text:
         return await kst.try_delete()
-    text = strip_format(reply.message)
+    text = strip_format(text)
     await kst.eor(text)
 
 
 @kasta_cmd(
-    pattern="nospace$",
-    func=lambda e: e.is_reply,
-    no_crash=True,
+    pattern="nospace(?: |$)((?s).*)",
 )
 async def _(kst):
-    reply = await kst.get_reply_message()
-    if not getattr(reply, "text", None):
+    text = await kst.client.get_text(kst, plain=False)
+    if not text:
         return await kst.try_delete()
-    text = "".join(reply.text.split())
+    text = "".join(text.split())
     await kst.eor(text)
 
 
 @kasta_cmd(
-    pattern="noemoji$",
-    func=lambda e: e.is_reply,
-    no_crash=True,
+    pattern="noemoji(?: |$)((?s).*)",
 )
 async def _(kst):
-    reply = await kst.get_reply_message()
-    if not getattr(reply, "text", None):
+    text = await kst.client.get_text(kst, plain=False)
+    if not text:
         return await kst.try_delete()
-    text = strip_emoji(reply.text)
+    text = strip_emoji(text)
     await kst.eor(text)
 
 
 @kasta_cmd(
     pattern="repeat(?: |$)(.*)",
     func=lambda e: e.is_reply,
-    no_crash=True,
 )
 async def _(kst):
     count = kst.pattern_match.group(1)
@@ -86,16 +76,15 @@ async def _(kst):
     if not getattr(reply, "text", None):
         return await kst.try_delete()
     count = int(count) if count.isdecimal() else 1
-    txt = reply.text
-    text = txt + "\n"
+    orig = reply.text
+    text = orig + "\n"
     for _ in range(count - 1):
-        text += txt + "\n"
+        text += orig + "\n"
     await kst.eor(text)
 
 
 @kasta_cmd(
-    pattern=r"count(?: |$)([\s\S]*)",
-    no_crash=True,
+    pattern="count(?: |$)((?s).*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst)
@@ -107,8 +96,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern=r"(upper|lower|title|capital|camel|snake|kebab)(?: |$)([\s\S]*)",
-    no_crash=True,
+    pattern="(upper|lower|title|capital|camel|snake|kebab)(?: |$)((?s).*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst, group=2, plain=False)
@@ -133,73 +121,86 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="(b64encode|b64e)(?: |$)(.*)",
-    no_crash=False,
+    pattern="b64(encode|en|e)(?: |$)((?s).*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst, group=2)
     if not text:
         return await kst.try_delete()
+    yy = await kst.eor("`...`")
     text = base64.b64encode(text.encode("utf-8")).decode()
-    await kst.eor(text, parse_mode=parse_pre)
+    await yy.sod(text, parse_mode=parse_pre)
 
 
 @kasta_cmd(
-    pattern="(b64decode|b64d)(?: |$)(.*)",
-    no_crash=False,
+    pattern="b64(decode|de|d)(?: |$)(.*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst, group=2)
     if not text:
         return await kst.try_delete()
+    yy = await kst.eor("`...`")
     try:
         text = base64.b64decode(text).decode("utf-8", "replace")
     except Exception as err:
         text = f"Invalid Base64 data: {err}"
-    await kst.eor(text, parse_mode=parse_pre)
+    await yy.sod(text, parse_mode=parse_pre)
 
 
 @kasta_cmd(
-    pattern="(morse|unmorse)(?: |$)(.*)",
-    no_crash=True,
+    pattern="(to|no)bin(?: |$)((?s).*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst, group=2)
     if not text:
         return await kst.try_delete()
-    cmd = kst.pattern_match.group(1)
-    api = "en" if cmd == "morse" else "de"
     yy = await kst.eor("`...`")
+    cmd = kst.pattern_match.group(1)
+    if cmd == "to":
+        text = " ".join(f"{ord(_):08b}" for _ in text)
+    else:
+        text = "".join([chr(int(_, 2)) for _ in text.split(" ")])
+    await yy.sod(text, parse_mode=parse_pre)
+
+
+@kasta_cmd(
+    pattern="(no|)morse(?: |$)(.*)",
+)
+async def _(kst):
+    text = await kst.client.get_text(kst, group=2)
+    if not text:
+        return await kst.try_delete()
+    yy = await kst.eor("`...`")
+    cmd = kst.pattern_match.group(1).strip()
+    api = "de" if cmd == "no" else "en"
     text = text.encode("utf-8")
     url = f"https://notapi.vercel.app/api/morse?{api}={text}"
     res = await Fetch(url, re_json=True)
     if not res:
         return await yy.eod("`Try again now!`")
-    await yy.eor(res.get("result"))
+    await yy.sod(res.get("result"))
 
 
 @kasta_cmd(
-    pattern="(roman|unroman)(?: |$)(.*)",
-    no_crash=True,
+    pattern="(no|)roman(?: |$)(.*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst, group=2)
     if not text:
         return await kst.try_delete()
-    cmd = kst.pattern_match.group(1)
-    api = "en" if cmd == "roman" else "de"
     yy = await kst.eor("`...`")
+    cmd = kst.pattern_match.group(1).strip()
+    api = "de" if cmd == "no" else "en"
     text = text.encode("utf-8")
     url = f"https://notapi.vercel.app/api/romans?{api}={text}"
     res = await Fetch(url, re_json=True)
     if not res:
         return await yy.eod("`Try again now!`")
-    await yy.eor(res.get("result"))
+    await yy.sod(res.get("result"))
 
 
 @kasta_cmd(
-    pattern=r"(spoiler|sp)(?: |$)([\s\S]*)",
-    no_crash=True,
+    pattern="(spoiler|sp)(?: |$)((?s).*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst, group=2, plain=False)
@@ -210,8 +211,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern=r"type(?: |$)([\s\S]*)",
-    no_crash=True,
+    pattern="type(?: |$)((?s).*)",
 )
 async def _(kst):
     match = await kst.client.get_text(kst)
@@ -233,8 +233,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern=r"flip(?: |$)([\s\S]*)",
-    no_crash=True,
+    pattern="flip(?: |$)((?s).*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst, plain=False)
@@ -251,8 +250,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern=r"small(?: |$)([\s\S]*)",
-    no_crash=True,
+    pattern="small(?: |$)((?s).*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst)
@@ -264,10 +262,10 @@ async def _(kst):
 
 
 plugins_help["text"] = {
-    "{i}getformat [reply]": "Get a replied message format.",
-    "{i}noformat [reply]": "Clean format in replied message.",
-    "{i}nospace [reply]": "Remove all spaces in replied message.",
-    "{i}noemoji [reply]": "Remove all emoji in replied message.",
+    "{i}getformat [text]/[reply]": "Get a replied message format.",
+    "{i}noformat [text]/[reply]": "Clean format in replied message.",
+    "{i}nospace [text]/[reply]": "Remove all spaces in replied message.",
+    "{i}noemoji [text]/[reply]": "Remove all emoji in replied message.",
     "{i}repeat [count] [reply]": "Repeat text in replied message.",
     "{i}count [text]/[reply]": "Count words in text message.",
     "{i}upper [text]/[reply]": "Convert text to UPPERCASE.",
@@ -277,12 +275,14 @@ plugins_help["text"] = {
     "{i}camel [text]/[reply]": "Convert text to camelCase.",
     "{i}snake [text]/[reply]": "Convert text to snake_case.",
     "{i}kebab [text]/[reply]": "Convert text to kebab-case.",
-    "{i}b64encode|{i}b64e [text]/[reply]": "Encode text into Base64.",
-    "{i}b64decode|{i}b64d [text]/[reply]": "Decode Base64 data.",
-    "{i}morse [text]/[reply]": "Encode text into Morse code.",
-    "{i}unmorse [text]/[reply]": "Decode Morse code.",
+    "{i}b64encode|{i}b64en|{i}b64e [text]/[reply]": "Encode and convert text to base64 data.",
+    "{i}b64decode|{i}b64de|{i}b64d [text]/[reply]": "Decode and convert base64 data to text.",
+    "{i}tobin [text]/[reply]": "Encode and convert text to binary.",
+    "{i}nobin [text]/[reply]": "Decode and convert binary to text.",
+    "{i}morse [text]/[reply]": "Encode and convert text to morse code.",
+    "{i}nomorse [text]/[reply]": "Decode and convert morse code to text.",
     "{i}roman [text]/[reply]": "Convert any number less than 4000 to roman numerals.",
-    "{i}unroman [text]/[reply]": "Convert roman numeral to number.",
+    "{i}noroman [text]/[reply]": "Convert roman numeral to number.",
     "{i}spoiler|{i}sp [text]/[reply]": "Create a spoiler message.",
     "{i}type [text]/[reply]": "Edits the message and shows like someone is typing.",
     "{i}flip [text]/[reply]": "Flip text upside down.",
