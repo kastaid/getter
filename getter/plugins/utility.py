@@ -317,6 +317,41 @@ async def _(kst):
 
 
 @kasta_cmd(
+    pattern="tovn$",
+    func=lambda e: e.is_reply,
+)
+async def _(kst):
+    ga = kst.client
+    yy = await kst.eor("`Processing...`")
+    reply = await kst.get_reply_message()
+    if not reply.media:
+        await yy.eor("`Is not media message!`", time=5)
+        return
+    mt = get_media_type(reply.media)
+    if not mt.startswith(("audio", "video")):
+        await yy.eor("`Is not audio/video files!`", time=5)
+        return
+    file = await reply.download_media(file="downloads")
+    voice = "downloads/voice.opus"
+    await Runner(f"ffmpeg -i {file} -map 0:a -codec:a libopus -b:a 100k -vbr on {voice}")
+    (Root / file).unlink(missing_ok=True)
+    try:
+        await ga.send_file(
+            kst.chat_id,
+            file=voice,
+            reply_to=kst.reply_to_msg_id,
+            allow_cache=False,
+            force_document=False,
+            voice_note=True,
+            silent=True,
+        )
+        await yy.try_delete()
+    except Exception as err:
+        await yy.eor(str(err), parse_mode=parse_pre)
+    (Root / voice).unlink(missing_ok=True)
+
+
+@kasta_cmd(
     pattern="tgh(?: |$)((?s).*)",
 )
 async def _(kst):
@@ -484,6 +519,7 @@ plugins_help["utility"] = {
     "{i}calc [math]/[reply]": "Simpler calculator supported ( : ÷ × x ). E.g: 2 x 2",
     "{i}haste [text]/[reply]": "Upload text to hastebin.",
     "{i}github [username]/[reply]": "Get full information about an user on GitHub of given username.",
+    "{i}tovn [reply]": "Convert replied audio/video file to voice note.",
     "{i}tgh [text]/[reply]": "Upload text or media to Telegraph.",
     "{i}gps [location/coordinates]/[reply]": "Send the map a given location.",
     "{i}getmsg [link]/[reply]": "Get any media from messages forward/copy restrictions or replied message.",
