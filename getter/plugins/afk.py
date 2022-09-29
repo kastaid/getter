@@ -28,6 +28,18 @@ from . import (
     is_allow,
 )
 
+_ON_STOP = (
+    "afk",
+    "brb",
+    "getter",
+    "#anti_pm",
+    "#blocked",
+    "#archived",
+    "#new_message",
+    "#gbanned_watch",
+    "#gmuted_watch",
+)
+
 
 @kasta_cmd(
     pattern="afk(?: |$)((?s).*)",
@@ -51,27 +63,22 @@ async def _(kst):
         StopAFK,
         event=events.NewMessage(
             outgoing=True,
+            forwards=False,
         ),
     )
     getter_app.add_handler(
         OnAFK,
         event=events.NewMessage(
-            incoming=True, func=lambda e: bool(e.mentioned or e.is_private) and not (e.via_bot_id or e.fwd_from)
+            incoming=True,
+            func=lambda e: bool(e.mentioned or e.is_private),
+            forwards=False,
         ),
     )
     await yy.eod(text, parse_mode="html")
 
 
 async def StopAFK(kst):
-    if [
-        _
-        for _ in (
-            "afk",
-            "brb",
-            "#launch",
-        )
-        if _ in kst.raw_text.lower()
-    ]:
+    if any(_ in kst.raw_text.lower() for _ in _ON_STOP):
         return
     if kst.chat_id in NOCHATS and kst.client.uid not in DEVS:
         return
@@ -94,7 +101,7 @@ async def StopAFK(kst):
 
 
 async def OnAFK(kst):
-    if [_ for _ in ("afk", "brb") if _ in kst.raw_text.lower()]:
+    if any(_ in kst.raw_text.lower() for _ in ("afk", "brb")):
         return
     if not is_afk():
         return
@@ -137,12 +144,15 @@ if is_afk():
         StopAFK,
         event=events.NewMessage(
             outgoing=True,
+            forwards=False,
         ),
     )
     getter_app.add_handler(
         OnAFK,
         event=events.NewMessage(
-            incoming=True, func=lambda e: bool(e.mentioned or e.is_private) and not (e.via_bot_id or e.fwd_from)
+            incoming=True,
+            func=lambda e: bool(e.mentioned or e.is_private),
+            forwards=False,
         ),
     )
 

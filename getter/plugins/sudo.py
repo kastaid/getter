@@ -64,7 +64,7 @@ async def _(kst):
 )
 async def _(kst):
     cmds = "**Sudo Commands:**\n" + "\n".join(["- {}: {}".format(x, ", ".join(y)) for x, y in SUDO_CMDS.items()])
-    await kst.sod(cmds)
+    await kst.sod(cmds, parts=True)
 
 
 @kasta_cmd(
@@ -141,7 +141,7 @@ async def _(kst):
             text += f"User ID: {x}\n"
             text += "Username: {}\n".format(sudos[user_id]["username"])
             text += "Date: {}\n\n".format(datetime.datetime.fromtimestamp(sudos[user_id]["date"]).strftime("%Y-%m-%d"))
-        return await kst.eor(text, parse_mode="html")
+        return await kst.eor(text, parts=True, parse_mode="html")
     text = "`You got no sudo users!`"
     await kst.eor(text, time=5)
 

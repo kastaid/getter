@@ -9,7 +9,6 @@ import datetime
 import html
 import mimetypes
 import re
-import time
 import aiofiles
 import telegraph
 from bs4 import BeautifulSoup
@@ -21,13 +20,14 @@ from textblob import TextBlob
 from . import (
     Root,
     kasta_cmd,
+    sendlog,
     plugins_help,
     suppress,
     parse_pre,
     normalize_chat_id,
-    time_formatter,
     get_msg_id,
     get_media_type,
+    format_exc,
     replace_all,
     Runner,
     Fetch,
@@ -49,7 +49,7 @@ async def _(kst):
         check = TextBlob(sentence)
         correct = check.correct()
     except Exception as err:
-        return await yy.eor(str(err), parse_mode=parse_pre)
+        return await yy.eor(format_exc(err), parse_mode="html")
     text = "• **Given Phrase:** `{}`\n• **Corrected Phrase:** `{}`".format(
         sentence,
         correct.strip(),
@@ -158,7 +158,7 @@ async def _(kst):
     res = await Fetch(url)
     if not res:
         return await yy.eod("`Try again now!`")
-    await yy.eor(res.strip(), parse_mode=parse_pre)
+    await yy.eor(res.strip(), parts=True, parse_mode=parse_pre)
 
 
 @kasta_cmd(
@@ -183,14 +183,11 @@ async def _(kst):
         res = html.escape(res)
         await yy.eor(f"<pre>{res}</pre>", parse_mode="html")
     else:
-        await kst.respond(
+        await yy.eor(
             file=res,
             force_document=False,
             allow_cache=False,
-            reply_to=kst.reply_to_msg_id,
-            silent=True,
         )
-        await yy.try_delete()
 
 
 @kasta_cmd(
@@ -300,16 +297,13 @@ async def _(kst):
             async with aiofiles.open(file, mode="wb") as f:
                 await f.write(avatar)
             gavatar = file
-        await kst.respond(
+        await yy.eor(
             text,
             file=gavatar,
             force_document=False,
             allow_cache=True,
-            reply_to=kst.reply_to_msg_id,
             parse_mode="html",
-            silent=True,
         )
-        await yy.try_delete()
         if file:
             (file).unlink(missing_ok=True)
     except BaseException:
@@ -321,7 +315,6 @@ async def _(kst):
     func=lambda e: e.is_reply,
 )
 async def _(kst):
-    ga = kst.client
     yy = await kst.eor("`Processing...`")
     reply = await kst.get_reply_message()
     if not reply.media:
@@ -336,18 +329,14 @@ async def _(kst):
     await Runner(f"ffmpeg -i {file} -map 0:a -codec:a libopus -b:a 100k -vbr on {voice}")
     (Root / file).unlink(missing_ok=True)
     try:
-        await ga.send_file(
-            kst.chat_id,
+        await yy.eor(
             file=voice,
-            reply_to=kst.reply_to_msg_id,
             allow_cache=False,
             force_document=False,
             voice_note=True,
-            silent=True,
         )
-        await yy.try_delete()
     except Exception as err:
-        await yy.eor(str(err), parse_mode=parse_pre)
+        await yy.eor(format_exc(err), parse_mode="html")
     (Root / voice).unlink(missing_ok=True)
 
 
@@ -414,15 +403,11 @@ async def _(kst):
         lon = location.longitude
         addr = location.address
         details = f"**Location:** `{locco}`\n**Address:** `{addr}`\n**Coordinates:** `{lat},{lon}`"
-        with suppress(BaseException):
-            await kst.respond(
-                details,
-                file=typ.InputMediaGeoPoint(typ.InputGeoPoint(lat, lon)),
-                force_document=True,
-                reply_to=kst.reply_to_msg_id,
-                silent=True,
-            )
-        await yy.try_delete()
+        await yy.eor(
+            details,
+            file=typ.InputMediaGeoPoint(typ.InputGeoPoint(lat, lon)),
+            force_document=True,
+        )
         return
     await yy.eod(f"**No Location found:** `{locco}`")
 
@@ -438,8 +423,8 @@ async def _(kst):
         return
     yy = await kst.eor("`Processing...`")
     reply = await kst.get_reply_message()
-    if kst.is_reply and not reply.message:
-        link = reply.message_link
+    if kst.is_reply and not reply.message or reply.media:
+        link = reply.msg_link
     chat, msg_id = get_msg_id(link)
     if not (chat and msg_id):
         await yy.eor("Provide a valid message link!\n**E.g:** `https://t.me/tldevs/11` or `https://t.me/tldevs/19`")
@@ -447,30 +432,24 @@ async def _(kst):
     try:
         from_msg = await ga.get_messages(chat, ids=msg_id)
     except Exception as err:
-        return await yy.eor(str(err), parse_mode=parse_pre)
+        return await yy.eor(format_exc(err), parse_mode="html")
     if not from_msg.media:
         await yy.try_delete()
     else:
-        start_time = time.time()
         await yy.eor("`Downloading...`")
         if isinstance(from_msg.media, typ.MessageMediaPhoto):
             file = "getmsg_" + str(msg_id) + ".jpg"
         else:
             mimetype = from_msg.media.document.mime_type
             file = "getmsg_" + str(msg_id) + mimetypes.guess_extension(mimetype)
-        with suppress(BaseException):
-            await ga.download_file(from_msg.media, file=file)
-            taken = time_formatter((time.time() - start_time) * 1000)
-            await yy.eor("`Uploading...`")
-            await kst.respond(
-                f"**Source:** `{link}`\n**Taken:** `{taken}`",
-                file=file,
-                force_document=True,
-                allow_cache=False,
-                reply_to=kst.reply_to_msg_id,
-                silent=True,
-            )
-        await yy.try_delete()
+        await ga.download_file(from_msg.media, file=file)
+        msg = await yy.eor(
+            f"**Source:** `{link}`",
+            file=file,
+            force_document=True,
+            allow_cache=False,
+        )
+        await sendlog(msg, forward=True)
         (Root / file).unlink(missing_ok=True)
 
 

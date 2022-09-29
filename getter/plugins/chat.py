@@ -15,13 +15,15 @@ from . import (
     plugins_help,
     choice,
     suppress,
-    parse_pre,
+    format_exc,
     display_name,
     mentionuser,
     normalize_chat_id,
     NOCHATS,
     BOTLOGS,
 )
+
+_DS_TASKS = []
 
 
 @kasta_cmd(
@@ -30,9 +32,7 @@ from . import (
 )
 async def _(kst):
     await kst.try_delete()
-    with suppress(BaseException):
-        chat = await kst.get_input_chat()
-        await kst.client.read(chat, clear_mentions=True, clear_reactions=True)
+    await kst.read(clear_mentions=True, clear_reactions=True)
 
 
 @kasta_cmd(
@@ -137,8 +137,24 @@ async def _(kst):
 )
 async def _(kst):
     await kst.try_delete()
-    copy = await kst.get_reply_message()
-    await copy.reply(copy)
+    with suppress(BaseException):
+        copy = await kst.get_reply_message()
+        await copy.reply(copy)
+
+
+@kasta_cmd(
+    pattern="nodrafts?$",
+)
+async def _(kst):
+    ga = kst.client
+    drafts = 0
+    yy = await kst.eor("`Processing...`")
+    async for x in ga.iter_drafts():
+        await x.delete()
+        drafts += 1
+    if not drafts:
+        return await yy.eor("`no drafts found`", time=3)
+    await yy.eod(f"`cleared {drafts} drafts`")
 
 
 @kasta_cmd(
@@ -167,7 +183,7 @@ async def _(kst):
     try:
         chat_id = await ga.get_id(chat)
     except Exception as err:
-        return await kst.eor(str(err), parse_mode=parse_pre)
+        return await kst.eor(format_exc(err), parse_mode="html")
     if len(kst.text.split()) > 2:
         message = kst.text.split(maxsplit=2)[2]
     elif kst.is_reply:
@@ -179,10 +195,10 @@ async def _(kst):
         sent = await ga.send_message(chat_id, message=message)
         delivered = "Message Delivered!"
         if not sent.is_private:
-            delivered = f"[{delivered}]({sent.message_link})"
+            delivered = f"[{delivered}]({sent.msg_link})"
         await kst.eor(delivered)
     except Exception as err:
-        await kst.eor(str(err), parse_mode=parse_pre)
+        await kst.eor(format_exc(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -207,54 +223,55 @@ async def _(kst):
 )
 async def _(kst):
     yy = await kst.eor("`Reaction...`")
-    reaction = choice(
-        (
-            "👍",
-            "👎",
-            "❤",
-            "🔥",
-            "🥰",
-            "👏",
-            "😁",
-            "🤔",
-            "🤯",
-            "😱",
-            "🤬",
-            "😢",
-            "🎉",
-            "🤩",
-            "🤮",
-            "💩",
-            "🙏",
-        )
-    )
+    reaction = choice(("👍", "👎", "❤", "🔥", "🥰", "👏", "😁", "🤔", "🤯", "😱", "🤬", "😢", "🎉", "🤩", "🤮", "💩", "🙏"))  # fmt: skip
     with suppress(BaseException):
-        reply = await kst.get_reply_message()
-        await reply.react(reaction=reaction)
+        await (await kst.get_reply_message()).send_react(big=True, reaction=reaction)
         return await yy.eor(f"`reacted {reaction}`", time=3)
     await yy.eor("`no react`", time=3)
 
 
 @kasta_cmd(
-    pattern="(delayspam|ds)(?: |$)(.*)",
+    pattern="(delayspam|ds)(?: |$)((?s).*)",
 )
 async def _(kst):
+    chat_id = normalize_chat_id(kst.chat_id)
+    if chat_id in _DS_TASKS:
+        await kst.eor("`Please wait until previous •delayspam• finished...`", time=5, silent=True)
+        return
     try:
         args = kst.text.split(" ", 3)
         delay = float(args[1])
         count = int(args[2])
-        msg = str(args[3])
+        text = str(args[3])
     except BaseException:
         await kst.eor(f"`{hl}delayspam [seconds] [count] [text]`", time=10)
         return
     await kst.try_delete()
     try:
+        _DS_TASKS.append(chat_id)
         delay = 2 if delay and int(delay) < 2 else delay
         for _ in range(count):
-            await kst.respond(msg, reply_to=kst.reply_to_msg_id)
+            if chat_id not in _DS_TASKS:
+                break
+            await kst.sod(text, delete=False)
             await asyncio.sleep(delay)
     except BaseException:
         pass
+    if chat_id in _DS_TASKS:
+        _DS_TASKS.remove(chat_id)
+
+
+@kasta_cmd(
+    pattern="dcancel$",
+)
+async def _(kst):
+    chat_id = normalize_chat_id(kst.chat_id)
+    yy = await kst.eor("`Processing...`")
+    if chat_id not in _DS_TASKS:
+        await yy.eod("__No current delayspam are running.__")
+        return
+    _DS_TASKS.remove(chat_id)
+    await yy.eor("`cancelled`", time=5)
 
 
 @kasta_cmd(
@@ -333,7 +350,7 @@ async def _(kst):
                 )
                 await yy.eor(f"Successfully invited `{x}` to `{chat_id}`")
             except Exception as err:
-                await yy.eor(str(err), parse_mode=parse_pre)
+                await yy.eor(format_exc(err), parse_mode="html")
     else:
         for x in users.split(" "):
             try:
@@ -347,7 +364,7 @@ async def _(kst):
             except UserBotError:
                 await yy.eod("`Bots can only be added as admins in channel.`")
             except Exception as err:
-                await yy.eor(str(err), parse_mode=parse_pre)
+                await yy.eor(format_exc(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -378,13 +395,15 @@ plugins_help["chat"] = {
     "{i}purgeme [number]/[reply]": "Purge my messages from given number or from replied message.",
     "{i}purgeall [reply]": "Delete all messages from replied user. This cannot be undone!",
     "{i}copy [reply]": "Copy the replied message.",
+    "{i}nodraft": "Clear all drafts.",
     "{i}sd [seconds] [text]/[reply]": "Make self-destructible messages after particular time.",
     "{i}sdm [seconds] [text]/[reply]": "Same as sd command above but showing a note “self-destruct message in ? seconds”.",
     "{i}send|{i}dm [username/id] [text]/[reply]": "Send message to user or chat.",
     "{i}saved [reply]": "Save that replied message to Saved Messages or BOTLOGS for savedl.",
     "{i}fsaved [reply]": "Forward that replied message to Saved Messages or BOTLOGS for fsavedl.",
     "{i}react [reply]": "Give a random react to replied message.",
-    "{i}delayspam|{i}ds [seconds] [count] [text]": "Spam chat with delays in seconds (min 2 seconds).",
+    "{i}delayspam|{i}ds [seconds] [count] [text]": "Spam current chat with delays in seconds (min 2 seconds).",
+    "{i}dcancel": "Stop the current process of {i}delayspam|{i}ds.",
     "{i}report_spam [reply]/[in_private]/[username/mention/id]": "Report spam message from user.",
     "{i}invite [username/id]": "Add user to the current group/channel.",
     "{i}kickme [current/chat_id/username]/[reply]": "Leaves myself from group/channel.",

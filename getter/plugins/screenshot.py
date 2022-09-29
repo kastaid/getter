@@ -14,7 +14,6 @@ from . import (
     plugins_help,
     is_url,
     choice,
-    suppress,
     is_termux,
     time_formatter,
     get_random_hex,
@@ -78,17 +77,14 @@ async def _(kst):
     await yy.eor("`Screenshot Taked...`")
     driver.close()
     taken = time_formatter((time.time() - start_time) * 1000)
-    with suppress(BaseException), BytesIO(ss_png) as file:
+    with BytesIO(ss_png) as file:
         file.name = f"ss_{link}.png"
-        await kst.respond(
+        await yy.eor(
             f"**URL:** `{link}`\n**Taken:** `{taken}`",
             file=file,
             force_document=True,
             allow_cache=False,
-            reply_to=kst.reply_to_msg_id,
-            silent=True,
         )
-    await yy.try_delete()
 
 
 @kasta_cmd(
@@ -131,17 +127,13 @@ async def _(kst):
         return
     await yy.eor("`Tweet Screenshot Taked...`")
     taken = time_formatter((time.time() - start_time) * 1000)
-    with suppress(BaseException):
-        await kst.respond(
-            f"**URL:** `{link}`\n**Taken:** `{taken}`",
-            file=file,
-            force_document=False,
-            allow_cache=False,
-            reply_to=kst.reply_to_msg_id,
-            silent=True,
-        )
+    await yy.eor(
+        f"**URL:** `{link}`\n**Taken:** `{taken}`",
+        file=file,
+        force_document=False,
+        allow_cache=False,
+    )
     (Root / file).unlink(missing_ok=True)
-    await yy.try_delete()
 
 
 plugins_help["screenshot"] = {

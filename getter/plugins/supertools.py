@@ -19,7 +19,7 @@ async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
     opts = kst.pattern_match.group(1).lower()
-    rocker = [_ for _ in ("-s", "silent") if _ in opts]
+    rocker = any(_ in opts for _ in ("-s", "silent"))
     if rocker:
         await kst.try_delete()
     else:
@@ -66,7 +66,7 @@ async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
     opts = kst.pattern_match.group(1).lower()
-    lucifer = [_ for _ in ("-s", "silent") if _ in opts]
+    lucifer = any(_ in opts for _ in ("-s", "silent"))
     if lucifer:
         await kst.try_delete()
     else:

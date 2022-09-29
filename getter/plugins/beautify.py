@@ -64,17 +64,13 @@ async def _(kst):
     if not carbon:
         await yy.eod("`Carbon API not responding.`")
         return
-    with suppress(BaseException):
-        await kst.respond(
-            "Carboniz by {}".format(mentionuser(ga.uid, ga.full_name, html=True)),
-            file=carbon,
-            parse_mode="html",
-            force_document=False,
-            allow_cache=False,
-            reply_to=kst.reply_to_msg_id,
-            silent=True,
-        )
-    await yy.try_delete()
+    await yy.eor(
+        "Carboniz by {}".format(mentionuser(ga.uid, ga.full_name, html=True)),
+        file=carbon,
+        parse_mode="html",
+        force_document=False,
+        allow_cache=False,
+    )
     (Root / carbon).unlink(missing_ok=True)
 
 
@@ -120,17 +116,13 @@ async def _(kst):
     if not rayso:
         await yy.eod("`Rayso API not responding.`")
         return
-    with suppress(BaseException):
-        await kst.respond(
-            "Raysoniz by {}".format(mentionuser(ga.uid, ga.full_name, html=True)),
-            file=rayso,
-            parse_mode="html",
-            force_document=False,
-            allow_cache=False,
-            reply_to=kst.reply_to_msg_id,
-            silent=True,
-        )
-    await yy.try_delete()
+    await yy.eor(
+        "Raysoniz by {}".format(mentionuser(ga.uid, ga.full_name, html=True)),
+        file=rayso,
+        parse_mode="html",
+        force_document=False,
+        allow_cache=False,
+    )
     (Root / rayso).unlink(missing_ok=True)
 
 

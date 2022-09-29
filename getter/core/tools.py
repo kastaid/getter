@@ -58,7 +58,10 @@ async def Runner(cmd: str) -> typing.Tuple[str, str, int, int]:
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
-    stdout, stderr = await proc.communicate()
+    try:
+        stdout, stderr = await proc.communicate()
+    except BaseException:
+        stdout, stderr = "", ""
     return (
         stdout.decode().strip(),
         stderr.decode().strip(),

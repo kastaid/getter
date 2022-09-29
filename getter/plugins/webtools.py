@@ -14,6 +14,7 @@ from . import (
     plugins_help,
     is_url,
     parse_pre,
+    format_exc,
     humanbytes,
     humanbool,
     Fetch,
@@ -182,7 +183,7 @@ async def _(kst):
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
-        await yy.eor(str(err), parse_mode=parse_pre)
+        await yy.eor(format_exc(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -205,7 +206,7 @@ async def _(kst):
     url = f"https://da.gd/dns/{hostname}"
     res = await Fetch(url)
     if res:
-        await yy.eor(f"<b>DNS Records {hostname}</b>\n<pre>{res.strip()}</pre>", parse_mode="html")
+        await yy.eor(f"<b>DNS Records {hostname}</b>\n<pre>{res.strip()}</pre>", parts=True, parse_mode="html")
         return
     await yy.eor(f"`Cannot resolve {hostname} dns.`")
 
@@ -233,7 +234,7 @@ async def _(kst):
     url = f"https://da.gd/w/{hostname}"
     res = await Fetch(url)
     if res:
-        await yy.eor(f"<b>WHOIS For {hostname}</b>\n<pre>{res.strip()}</pre>", parse_mode="html")
+        await yy.eor(f"<b>WHOIS For {hostname}</b>\n<pre>{res.strip()}</pre>", parts=True, parse_mode="html")
         return
     await yy.eod(f"`Cannot resolve {hostname} whois.`")
 
@@ -257,7 +258,7 @@ async def _(kst):
     url = f"https://da.gd/headers?url={toget}"
     res = await Fetch(url)
     if res:
-        await yy.eor(f"<b>HTTP Headers {toget}</b>\n<pre>{res.strip()}</pre>", parse_mode="html")
+        await yy.eor(f"<b>HTTP Headers {toget}</b>\n<pre>{res.strip()}</pre>", parts=True, parse_mode="html")
         return
     await yy.eod(f"`Cannot resolve {toget} headers.`")
 

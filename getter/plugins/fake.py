@@ -74,7 +74,7 @@ async def _(kst):
             ga._dialogs.extend(dialog)
         for gg in dialog:
             if gg.is_group or gg.is_channel:
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.2)
                 done += 1
         taken = time_formatter((time.time() - start_time) * 1000)
         text = fgban_text.format(
@@ -122,7 +122,7 @@ async def _(kst):
             ga._dialogs.extend(dialog)
         for gg in dialog:
             if gg.is_group or gg.is_channel:
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.2)
                 done += 1
         taken = time_formatter((time.time() - start_time) * 1000)
         text = fungban_text.format(

@@ -10,7 +10,7 @@ from telethon.tl.custom.inlineresult import InlineResult
 from . import (
     kasta_cmd,
     plugins_help,
-    parse_pre,
+    format_exc,
     choice,
     Fetch,
     LANG_CODES,
@@ -35,9 +35,9 @@ async def _(kst):
         games = [getattr(_, "title", "") for _ in res if isinstance(_, InlineResult)]
         text = f"**{len(games)} Games:**\n" + "\n".join([f"- `{_}`" for _ in games])
         text += "\n\n__Choose one, tap or copy, then put to 'game' command!__"
-        await yy.eor(text)
+        await yy.eor(text, parts=True)
     except Exception as err:
-        await yy.eor(str(err), parse_mode=parse_pre)
+        await yy.eor(format_exc(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -72,7 +72,7 @@ async def _(kst):
     except IndexError:
         await yy.eod(f"**No Results for:** `{query}`")
     except Exception as err:
-        await yy.eor(str(err), parse_mode=parse_pre)
+        await yy.eor(format_exc(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -91,7 +91,7 @@ async def _(kst):
         await res[0].click(reply_to=kst.reply_to_msg_id)
         await yy.try_delete()
     except Exception as err:
-        await yy.eor(str(err), parse_mode=parse_pre)
+        await yy.eor(format_exc(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -119,7 +119,7 @@ async def _(kst):
         text += tod
         await yy.sod(text, parse_mode="html")
     except Exception as err:
-        await yy.eor(str(err), parse_mode=parse_pre)
+        await yy.eor(format_exc(err), parse_mode="html")
 
 
 plugins_help["games"] = {

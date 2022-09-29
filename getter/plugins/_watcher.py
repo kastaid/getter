@@ -32,7 +32,12 @@ gmuted_text = r"""
 """
 
 
-@getter_app.on(events.NewMessage(incoming=True, func=lambda e: e.is_private or e.is_group))
+@getter_app.on(
+    events.NewMessage(
+        incoming=True,
+        func=lambda e: e.is_private or e.is_group,
+    )
+)
 async def OnNewMessageFunc(kst):
     try:
         await DeletedUserHandler(kst)
@@ -42,7 +47,11 @@ async def OnNewMessageFunc(kst):
         LOGS.exception(err)
 
 
-@getter_app.on(events.ChatAction(func=lambda e: e.user_joined or e.user_added))
+@getter_app.on(
+    events.ChatAction(
+        func=lambda e: e.user_joined or e.user_added,
+    )
+)
 async def OnChatActionFunc(kst):
     try:
         await JoinedHandler(kst)

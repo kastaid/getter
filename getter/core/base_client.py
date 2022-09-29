@@ -14,7 +14,7 @@ import typing
 from contextlib import suppress
 from logging import Logger
 from random import choice
-from telethon import hints, utils
+from telethon import utils
 from telethon.client.telegramclient import TelegramClient
 from telethon.errors.rpcerrorlist import (
     ApiIdInvalidError,
@@ -31,16 +31,9 @@ from .. import StartTime, __version__
 from ..config import Var, DEVS
 from ..logger import LOGS, TelethonLogger
 from .db import sgvar
-from .functions import (
-    display_name,
-    get_chat_id,
-    get_text,
-    get_user,
-)
+from .functions import display_name
 from .property import do_not_remove_credit, get_blacklisted
 from .utils import time_formatter
-
-delattr(fun.account, "DeleteAccountRequest")
 
 
 class KastaClient(TelegramClient):
@@ -135,10 +128,10 @@ class KastaClient(TelegramClient):
             self.logger.exception(f"[KastaClient] - {err}")
             sys.exit(1)
 
-    def run_in_loop(self, func: asyncio.Future) -> None:
+    def run_in_loop(self, func: typing.Coroutine[typing.Any, typing.Any, None]) -> typing.Any:
         return self.loop.run_until_complete(func)
 
-    def run(self) -> None:
+    def run(self) -> typing.NoReturn:
         self.run_until_disconnected()
 
     def add_handler(
@@ -151,9 +144,10 @@ class KastaClient(TelegramClient):
             return
         self.add_event_handler(func, *args, **kwargs)
 
-    def reboot(self, message: typ.Message) -> None:
+    def reboot(self, message: typ.Message) -> typing.NoReturn:
         with suppress(BaseException):
-            sgvar("_reboot", f"{message.chat_id}|{message.id}")
+            chat_id = message.chat_id or message.from_id
+            sgvar("_reboot", f"{chat_id}|{message.id}")
         with suppress(BaseException):
             import psutil
 
@@ -184,148 +178,6 @@ class KastaClient(TelegramClient):
 
     def to_dict(self) -> dict:
         return dict(inspect.getmembers(self))
-
-    async def get_id(self, entity: hints.EntityLike) -> int:
-        with suppress(ValueError):
-            entity = int(entity)
-        return await self.get_peer_id(entity)
-
-    async def get_chat_id(self, *args, **kwargs) -> typing.Optional[int]:
-        return await get_chat_id(*args, **kwargs)
-
-    async def get_text(self, *args, **kwargs) -> str:
-        return await get_text(*args, **kwargs)
-
-    async def get_user(self, *args, **kwargs) -> typing.Optional[typing.Tuple[typ.User, str]]:
-        return await get_user(*args, **kwargs)
-
-    async def read(self, *args, **kwargs) -> bool:
-        with suppress(BaseException):
-            return await self.send_read_acknowledge(*args, **kwargs)
-        return False
-
-    async def block(self, entity: hints.EntityLike) -> bool:
-        with suppress(BaseException):
-            entity = await self.get_input_entity(entity)
-            return await self(fun.contacts.BlockRequest(entity))
-        return False
-
-    async def unblock(self, entity: hints.EntityLike) -> bool:
-        with suppress(BaseException):
-            entity = await self.get_input_entity(entity)
-            return await self(fun.contacts.UnblockRequest(entity))
-        return False
-
-    async def archive(self, entity: hints.EntityLike) -> typing.Optional[typ.Updates]:
-        with suppress(BaseException):
-            return await self.edit_folder(entity, folder=1)
-        return None
-
-    async def unarchive(self, entity: hints.EntityLike) -> typing.Optional[typ.Updates]:
-        with suppress(BaseException):
-            return await self.edit_folder(entity, folder=0)
-        return None
-
-    async def delete_chat(
-        self,
-        entity: hints.EntityLike,
-        revoke: bool = False,
-    ) -> typing.Optional[typ.Updates]:
-        with suppress(BaseException):
-            return await self.delete_dialog(entity, revoke=revoke)
-        return None
-
-    async def report_spam(self, entity: hints.EntityLike) -> bool:
-        with suppress(BaseException):
-            entity = await self.get_input_entity(entity)
-            return await self(fun.messages.ReportSpamRequest(entity))
-        return False
-
-    async def send_reaction(
-        self,
-        entity: hints.EntityLike,
-        message: hints.MessageIDLike,
-        big: bool = False,
-        add_to_recent: bool = False,
-        reaction: typing.Optional[str] = None,
-    ) -> typing.Optional[typ.Updates]:
-        with suppress(BaseException):
-            message = self.utils.get_message_id(message) or 0
-            entity = await self.get_input_entity(entity)
-            return await self(
-                fun.messages.SendReactionRequest(
-                    big=big,
-                    add_to_recent=add_to_recent,
-                    peer=entity,
-                    msg_id=message,
-                    reaction=[typ.ReactionEmoji(emoticon=reaction)],
-                )
-            )
-        return None
-
-    async def join_to(self, entity: hints.EntityLike) -> typing.Optional[typ.Updates]:
-        with suppress(BaseException):
-            entity = await self.get_input_entity(entity)
-            return await self(fun.channels.JoinChannelRequest(entity))
-        return None
-
-    async def mute_chat(self, entity: hints.EntityLike) -> bool:
-        with suppress(BaseException):
-            entity = await self.get_input_entity(entity)
-            return await self(
-                fun.account.UpdateNotifySettingsRequest(
-                    entity,
-                    settings=typ.InputPeerNotifySettings(
-                        show_previews=False,
-                        silent=True,
-                        mute_until=2**31 - 1,
-                        sound=None,
-                    ),
-                )
-            )
-        return False
-
-    async def create_group(
-        self,
-        title: str = "Getter",
-        about: str = "",
-        users: typing.Optional[typing.List[typing.Union[str, int]]] = None,
-        photo: typing.Optional[str] = None,
-    ) -> typing.Tuple[typing.Optional[str], typing.Optional[int]]:
-        users = users or []
-        try:
-            created = await self(
-                fun.channels.CreateChannelRequest(
-                    title=title,
-                    about=about,
-                    megagroup=True,
-                )
-            )
-            chat_id = created.chats[0].id
-            await asyncio.sleep(6)
-            link = await self(fun.messages.ExportChatInviteRequest(chat_id))
-            if users:
-                await asyncio.sleep(6)
-                await self(
-                    fun.channels.InviteToChannelRequest(
-                        chat_id,
-                        users=users,
-                    )
-                )
-            if photo:
-                await asyncio.sleep(6)
-                await self(
-                    fun.channels.EditPhotoRequest(
-                        chat_id,
-                        photo=typ.InputChatUploadedPhoto(photo),
-                    ),
-                )
-        except Exception as err:
-            self.logger.critical(err)
-            return None, None
-        if not str(chat_id).startswith("-100"):
-            chat_id = int("-100" + str(chat_id))
-        return link, chat_id
 
 
 _ssn = Var.STRING_SESSION

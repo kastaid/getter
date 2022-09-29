@@ -8,7 +8,7 @@
 from . import (
     kasta_cmd,
     plugins_help,
-    parse_pre,
+    format_exc,
     deep_get,
     Fetch,
     FUN_APIS,
@@ -36,16 +36,13 @@ async def _(kst):
                 out += "\n~ {}".format(res.get(source))
             await yy.eor(out)
         else:
-            await kst.respond(
+            await yy.eor(
                 file=out,
                 force_document=False,
                 allow_cache=False,
-                reply_to=kst.reply_to_msg_id,
-                silent=True,
             )
-            await yy.try_delete()
     except Exception as err:
-        await yy.eor(str(err), parse_mode=parse_pre)
+        await yy.eor(format_exc(err), parse_mode="html")
 
 
 plugins_help["random"] = {

@@ -5,179 +5,39 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
-import html
 import json
-import os
 import sys
-import time
-from io import BytesIO
+import traceback
+from io import BytesIO, StringIO
 from pathlib import Path
 import aiofiles
-from telethon.tl import functions as fun
+from telethon.tl import functions, types
 from . import (
-    __version__,
     Root,
-    DEV_CMDS,
     DEVS,
+    DEV_CMDS,
+    MAX_MESSAGE_LEN,
+    CARBON_PRESETS,
+    LSFILES_MAP,
+    DEFAULT_SHELL_BLACKLIST,
+    getter_app,
     kasta_cmd,
     plugins_help,
     choice,
     suppress,
-    sgvar,
     strip_format,
-    parse_pre,
     humanbytes,
     to_dict,
+    parse_pre,
+    format_exc,
     Runner,
     Carbon,
-    LSFILES_MAP,
-    MAX_MESSAGE_LEN,
-    CARBON_PRESETS,
-    DEFAULT_SHELL_BLACKLIST,
     get_blacklisted,
-    hk,
 )
 
-
-@kasta_cmd(
-    pattern="alive$",
-)
-async def _(kst):
-    await kst.eod("**Hey, I am alive !!**")
-
-
-@kasta_cmd(
-    pattern="(uptime|up)$",
-)
-async def _(kst):
-    await kst.eod(f"**Uptime:** {kst.client.uptime}")
-
-
-@kasta_cmd(
-    pattern="ping$|([p]ing)$",
-    ignore_case=True,
-    edited=True,
-)
-async def _(kst):
-    start_time = time.perf_counter()
-    await kst.client(fun.PingRequest(ping_id=0))
-    speedy = round(time.perf_counter() - start_time, 3)
-    uptime = kst.client.uptime
-    await kst.eor(
-        f"🏓 Pong !!\n├  <b>Speedy</b> – <code>{speedy}ms</code>\n├  <b>Uptime</b> – <code>{uptime}</code>\n└  <b>Version</b> – <code>{__version__}</code>",
-        parse_mode="html",
-    )
-
-
-@kasta_cmd(
-    pattern="logs?(?: |$)(heroku|carbon|open)?",
-)
-@kasta_cmd(
-    pattern="glogs?(?: |$)(heroku|carbon|open)?(?: |$)(.*)",
-    dev=True,
-)
-async def _(kst):
-    mode = kst.pattern_match.group(1)
-    if kst.is_dev:
-        opt = kst.pattern_match.group(2)
-        user_id = None
-        with suppress(ValueError):
-            user_id = int(opt)
-        if user_id and user_id != kst.client.uid:
-            return
-        await asyncio.sleep(choice((4, 6, 8)))
-    yy = await kst.eor("`Getting...`", silent=True)
-    if mode == "heroku":
-        return await heroku_logs(yy)
-    else:
-        await yy.try_delete()
-    if mode == "carbon":
-        theme = choice(tuple(CARBON_PRESETS))
-        backgroundColor = CARBON_PRESETS[theme]
-        for file in get_terminal_logs():
-            code = (Root / file).read_text()
-            logs = await Carbon(
-                code.strip()[-2500:],
-                file_name="carbon-getter-log",
-                download=True,
-                fontFamily="Hack",
-                theme=theme,
-                backgroundColor=backgroundColor,
-                dropShadow=True,
-            )
-            if not logs:
-                continue
-            with suppress(BaseException):
-                await kst.respond(
-                    r"\\**#Getter**// Carbon Terminal Logs",
-                    file=logs,
-                    force_document=True,
-                    allow_cache=False,
-                    reply_to=kst.reply_to_msg_id,
-                    silent=True,
-                )
-            (Root / logs).unlink(missing_ok=True)
-    elif mode == "open":
-        for file in get_terminal_logs():
-            logs = (Root / file).read_text()
-            await yy.sod(logs, parse_mode=parse_pre)
-    else:
-        with suppress(BaseException):
-            for file in get_terminal_logs():
-                await kst.respond(
-                    r"\\**#Getter**// Terminal Logs",
-                    file=file,
-                    force_document=True,
-                    allow_cache=False,
-                    reply_to=kst.reply_to_msg_id,
-                    silent=True,
-                )
-
-
-@kasta_cmd(
-    pattern="restart$",
-)
-@kasta_cmd(
-    pattern="grestart(?: |$)(.*)",
-    dev=True,
-)
-async def _(kst):
-    if kst.is_dev:
-        opt = kst.pattern_match.group(1)
-        user_id = None
-        with suppress(ValueError):
-            user_id = int(opt)
-        if user_id and user_id != kst.client.uid:
-            return
-        await asyncio.sleep(choice((4, 6, 8)))
-    yy = await kst.eor("`Restarting...`", silent=True)
-    with suppress(BaseException):
-        sgvar("_restart", f"{kst.chat_id}|{yy.id}")
-    if not hk.is_heroku:
-        await yy.eor(r"\\**#Getter**// `Restarting as locally...`")
-        await restart_app()
-        return
-    try:
-        await yy.eor(r"\\**#Getter**// `Restarting as heroku... Wait for a few minutes.`")
-        app = hk.heroku().app(hk.name)
-        app.restart()
-    except Exception as err:
-        reply = await yy.eor(f"**ERROR:**\n`{err}`")
-        await reply.reply(r"\\**#Getter**// `Restarting as locally...`", silent=True)
-        await restart_app()
-
-
-@kasta_cmd(
-    pattern="sleep(?: |$)(.*)",
-)
-async def _(kst):
-    sec = await kst.client.get_text(kst)
-    timer = int(sec) if sec.replace(".", "", 1).isdecimal() else 3
-    timer = 3 if timer > 30 else timer
-    yy = await kst.eor(f"`sleep in {timer} seconds...`")
-    time.sleep(timer)
-    await yy.eod(f"`wake-up from {timer} seconds`")
+fun = functions
+typ = types
+bot = getter_app
 
 
 @kasta_cmd(
@@ -189,13 +49,14 @@ async def _(kst):
     if mode == "json":
         text = json.dumps(
             to_dict(msg),
-            indent=2,
+            indent=1,
             default=str,
             sort_keys=False,
+            ensure_ascii=False,
         )
     else:
         text = msg.stringify()
-    await kst.eor(f"<pre>{html.escape(text)}</pre>", parse_mode="html")
+    await kst.eor(text, parts=True, parse_mode=parse_pre)
 
 
 @kasta_cmd(
@@ -220,15 +81,11 @@ async def _(kst):
     )
     if not neofetch:
         return await yy.try_delete()
-    with suppress(BaseException):
-        await kst.respond(
-            file=neofetch,
-            force_document=False,
-            allow_cache=False,
-            reply_to=kst.reply_to_msg_id,
-            silent=True,
-        )
-    await yy.try_delete()
+    await yy.eor(
+        file=neofetch,
+        force_document=False,
+        allow_cache=False,
+    )
     (Root / file).unlink(missing_ok=True)
 
 
@@ -304,19 +161,71 @@ async def _(kst):
         file = Root / "downloads/ls.txt"
         async with aiofiles.open(file, mode="w") as f:
             await f.write(directory)
-        with suppress(BaseException):
-            await kst.respond(
-                rf"\\**#Getter**// Directory {cat}",
-                file=file,
-                force_document=True,
-                allow_cache=False,
-                reply_to=kst.reply_to_msg_id,
-                silent=True,
-            )
-        await yy.try_delete()
+        await yy.eor(
+            rf"\\**#Getter**// Directory {cat}",
+            file=file,
+            force_document=True,
+            allow_cache=False,
+        )
         (file).unlink(missing_ok=True)
     else:
         await yy.eor(directory, parse_mode="html")
+
+
+@kasta_cmd(
+    pattern="eval(?: |$)((?s).*)",
+)
+async def _(kst):
+    code = await kst.client.get_text(kst)
+    if not code:
+        return await kst.try_delete()
+    yy = await kst.eor("`Evaluating...`")
+    try:
+        out = eval(code)
+        result = f"<b>Evaluate:</b>\n<pre>{code}</pre>\n\n"
+        result += f"<b>Result</b>:\n<pre>{out}</pre>"
+        await yy.sod(result, parse_mode="html")
+    except Exception as err:
+        await yy.eor(format_exc(err), parse_mode="html")
+
+
+@kasta_cmd(
+    pattern="exec(?: |$)((?s).*)",
+)
+async def _(kst):
+    code = await kst.client.get_text(kst)
+    if not code:
+        return await kst.try_delete()
+    yy = await kst.eor("`Executing...`")
+    old_stderr = sys.stderr
+    old_stdout = sys.stdout
+    redirected_output = sys.stdout = StringIO()
+    redirected_error = sys.stderr = StringIO()
+    stdout, stderr, exc = None, None, None
+    try:
+        value = await aexec(code, kst)
+    except BaseException:
+        value = None
+        exc = traceback.format_exc()
+    stdout = redirected_output.getvalue()
+    stderr = redirected_error.getvalue()
+    sys.stdout = old_stdout
+    sys.stderr = old_stderr
+    execute = exc or stderr or stdout or _parse_eval(value) or "Success"
+    result = f"<b>Execute:</b>\n<pre>{code}</pre>\n\n"
+    result += f"<b>Result:</b>\n<pre>{execute}</pre>"
+    if len(result) > MAX_MESSAGE_LEN:
+        with BytesIO(str.encode(strip_format(result))) as file:
+            file.name = "exec.txt"
+            await yy.eor(
+                f"<pre>{code}</pre>",
+                file=file,
+                force_document=True,
+                allow_cache=False,
+                parse_mode="html",
+            )
+        return
+    await yy.sod(result, parse_mode="html")
 
 
 @kasta_cmd(
@@ -333,33 +242,31 @@ async def _(kst):
         attempts=6,
         fallbacks=DEFAULT_SHELL_BLACKLIST,
     )
-    if [_ for _ in cmd.lower().split() if _.startswith(tuple(SHELL_BLACKLIST))] and kst.client.uid not in DEVS:
+    if any(_.startswith(tuple(SHELL_BLACKLIST)) for _ in cmd.lower().split()) and kst.client.uid not in DEVS:
         return await yy.eod("`Command not allowed.`")
     stdout, stderr, ret, _ = await Runner(cmd)
     icon = "❯" if ret == 0 else "❮"
-    shell = f"**{icon}**  ```{cmd}```\n\n"
-    err = out = ""
+    result = f"<b>{icon}</b>  <pre>{cmd}</pre>\n\n"
+    err, out = "", ""
     if stderr:
-        err = f"**ERROR:**\n```{stderr}```\n\n"
+        err = f"<b>Error:</b>\n<pre>{stderr}</pre>\n\n"
     if stdout:
-        out = f"**OUTPUT:**\n```{stdout}```"
-    if not (stderr or stdout):
-        out = "**OUTPUT:**\n`success`"
-    shell += err + out
-    if len(shell) > MAX_MESSAGE_LEN:
-        with suppress(BaseException), BytesIO(str.encode(strip_format(shell))) as file:
+        out = f"<b>Result:</b>\n<pre>{stdout}</pre>"
+    if not stderr and not stdout:
+        out = "<b>Result:</b>\n<code>success</code>"
+    result += err + out
+    if len(result) > MAX_MESSAGE_LEN:
+        with BytesIO(str.encode(strip_format(result))) as file:
             file.name = "shell.txt"
-            await kst.respond(
-                f"`{cmd}`" if len(cmd) < 998 else "Shell Output",
+            await yy.eor(
+                f"<pre>{cmd}</pre>",
                 file=file,
                 force_document=True,
                 allow_cache=False,
-                reply_to=kst.reply_to_msg_id,
-                silent=True,
+                parse_mode="html",
             )
-        await yy.try_delete()
         return
-    await yy.eor(shell)
+    await yy.sod(result, parse_mode="html")
 
 
 @kasta_cmd(
@@ -383,67 +290,56 @@ async def _(kst):
     raise ValueError("not an error, just for testing (>_")
 
 
-def get_terminal_logs():
-    return sorted((Root / "logs").rglob("getter-*.log"))
+def _parse_eval(value=None):
+    if not value:
+        return value
+    if hasattr(value, "stringify"):
+        with suppress(TypeError):
+            return value.stringify()
+    elif isinstance(value, dict):
+        with suppress(BaseException):
+            return json.dumps(value, indent=1, ensure_ascii=False)
+    return str(value)
 
 
-async def heroku_logs(kst) -> None:
-    if not hk.api:
-        await kst.eod("Please set `HEROKU_API` in Config Vars.")
-        return
-    if not hk.name:
-        await kst.eod("Please set `HEROKU_APP_NAME` in Config Vars.")
-        return
-    try:
-        app = hk.heroku().app(hk.name)
-        logs = app.get_log(lines=100)
-    except Exception as err:
-        return await kst.eor(str(err), parse_mode=parse_pre)
-    await kst.eor("`Downloading Logs...`")
-    file = Root / "downloads/getter-heroku.log"
-    async with aiofiles.open(file, mode="w") as f:
-        await f.write(logs)
-    with suppress(BaseException):
-        await kst.respond(
-            r"\\**#Getter**// Heroku Logs",
-            file=file,
-            force_document=True,
-            allow_cache=False,
-            reply_to=kst.reply_to_msg_id,
-            silent=True,
+def _stringify(text=None, *args, **kwargs):
+    if text:
+        text = _parse_eval(text)
+    return print(text, *args, **kwargs)
+
+
+async def aexec(code, event):
+    exec(
+        (
+            "async def __aexec(e, client): "
+            + "\n print = p = _stringify"
+            + "\n kst = message = event = e"
+            + "\n reply = await event.get_reply_message()"
+            + "\n chat = event.chat_id"
         )
-    await kst.try_delete()
-    (file).unlink(missing_ok=True)
-    await asyncio.sleep(3)
-
-
-async def restart_app() -> None:
-    with suppress(BaseException):
-        import psutil
-
-        proc = psutil.Process(os.getpid())
-        for _ in proc.open_files() + proc.connections():
-            os.close(_.fd)
-    os.execl(sys.executable, sys.executable, "-m", "getter")
+        + "".join(f"\n {_}" for _ in code.split("\n"))
+    )
+    return await locals()["__aexec"](event, event.client)
 
 
 plugins_help["dev"] = {
-    "{i}alive": "Just showing alive.",
-    "{i}uptime|{i}up": "Check current uptime.",
-    "{i}ping|ping|Ping": "Check how long it takes to ping.",
-    "{i}logs": "Get the full terminal logs.",
-    "{i}logs open": "Open logs as text message.",
-    "{i}logs carbon": "Get the carbonized terminal logs.",
-    "{i}logs heroku": "Get the latest 100 lines of heroku logs.",
-    "{i}restart": "Restart the app.",
-    "{i}sleep [seconds]/[reply]": "Sleep the bot in few seconds (max 30).",
-    "{i}raw [reply]": "Get the raw data of message.",
+    "{i}raw [reply]": "Get the raw data of message object.",
     "{i}json [reply]": "Raw data with json format.",
     "{i}sysinfo": "Shows System Info.",
     "{i}ls [path]/[reply]": "View all files and folders inside a directory.",
+    "{i}eval [code]/[reply]": "Evaluate Python code.",
+    "{i}exec [code]/[reply]": """Execute Python code.
+**Exec Shortcuts:**
+`fun = telethon.tl.functions`
+`typ = telethon.tl.types`
+`client = bot = event.client`
+`message = e = event`
+`p = print`
+`reply = await event.get_reply_message()`
+`chat = event.chat_id`
+""",
     "{i}shell|{i}sh [command]/[reply]": """Run the linux commands.
-
-**Command Snippets:**
+**Shell Command Snippets:**
 `echo Hello, World!`
 `python --version`
 `python -c 'import time;print(time.ctime())'`

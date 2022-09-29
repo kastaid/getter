@@ -43,7 +43,7 @@ async def _(kst):
     if kst.is_sudo:
         await asyncio.sleep(choice((4, 6, 8)))
     text = html.escape(choice(UWUS))
-    await kst.sod(f"<pre>{text}</pre>", parse_mode="html")
+    await kst.sod(f"<pre>{text}</pre>", parse_mode="html", silent=True)
 
 
 @kasta_cmd(
@@ -57,7 +57,7 @@ async def _(kst):
     if kst.is_sudo:
         await asyncio.sleep(choice((4, 6, 8)))
     text = html.escape(choice(SHRUGS))
-    await kst.sod(f"<pre>{text}</pre>", parse_mode="html")
+    await kst.sod(f"<pre>{text}</pre>", parse_mode="html", silent=True)
 
 
 @kasta_cmd(
@@ -79,13 +79,9 @@ async def _(kst):
         dice = "🎯"
     elif cmd == "slot":
         dice = "🎰"
-    chat = await kst.get_input_chat()
-    async with kst.client.action(chat, action="game"):
-        await kst.try_delete()
-        await kst.respond(
-            file=typ.InputMediaDice(dice),
-            reply_to=kst.reply_to_msg_id,
-        )
+    async with await kst.send_action(action="game"):
+        await kst.eor(file=typ.InputMediaDice(dice))
+        await asyncio.sleep(2)
 
 
 @kasta_cmd(

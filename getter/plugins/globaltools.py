@@ -21,6 +21,7 @@ from . import (
     choice,
     suppress,
     parse_pre,
+    format_exc,
     time_formatter,
     mentionuser,
     display_name,
@@ -232,7 +233,7 @@ async def _(kst):
         await kst.eor("`Please wait until previous •ungban• finished...`", time=5, silent=True)
         return
     async with _UNGBAN_LOCK:
-        ga = kst.client
+        ga, notgban = kst.client, None
         yy = await kst.eor("`UnGBanning...`", silent=True)
         user, _ = await ga.get_user(kst)
         if not user:
@@ -240,8 +241,8 @@ async def _(kst):
         if user.id == ga.uid:
             return await yy.eor("`Cannot ungban to myself.`", time=3)
         if not is_gban(user.id):
-            await yy.eor("`User is not GBanned.`")
-            yy = await yy.reply("`Force UnGBanning...`", silent=True)
+            notgban = await yy.eor("`User is not GBanned.`")
+            yy = await notgban.reply("`Force UnGBanning...`", silent=True)
         start_time, success, failed = time.time(), 0, 0
         if ga._dialogs:
             dialog = ga._dialogs
@@ -275,6 +276,8 @@ async def _(kst):
             taken,
         )
         await yy.eor(text, parse_mode="html")
+        if notgban:
+            await notgban.try_delete()
 
 
 @kasta_cmd(
@@ -568,7 +571,7 @@ async def _(kst):
             lists = gmute_list()
         else:
             lists = gdel_list()
-        await kst.eor(json.dumps(lists, indent=2, default=str), parse_mode=parse_pre)
+        await kst.eor(json.dumps(lists, indent=1, default=str), parse_mode=parse_pre)
         return
     if cmd == "gban":
         mode = "GBanned"
@@ -586,7 +589,7 @@ async def _(kst):
             text += f"User ID: {x.user_id}\n"
             text += "Date: {}\n".format(datetime.datetime.fromtimestamp(x.date).strftime("%Y-%m-%d"))
             text += "Reason: {}\n\n".format(x.reason or "No reason.")
-        return await kst.eor(text, parse_mode="html")
+        return await kst.eor(text, parts=True, parse_mode="html")
     text = f"`You got no {mode} users!`"
     await kst.eor(text, time=5)
 
@@ -959,6 +962,10 @@ async def _(kst):
 @kasta_cmd(
     pattern="gblack(?: |$)(.*)",
 )
+@kasta_cmd(
+    pattern="ggblack(?: |$)(.*)",
+    dev=True,
+)
 async def _(kst):
     await gblacklisted(kst, "add")
 
@@ -966,11 +973,17 @@ async def _(kst):
 @kasta_cmd(
     pattern="rmgblack(?: |$)(.*)",
 )
+@kasta_cmd(
+    pattern="grmgblack(?: |$)(.*)",
+    dev=True,
+)
 async def _(kst):
     await gblacklisted(kst, "remove")
 
 
 async def gblacklisted(kst, mode):
+    if kst.is_dev:
+        await asyncio.sleep(choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Processing...`")
     where = await ga.get_text(kst)
@@ -978,7 +991,7 @@ async def gblacklisted(kst, mode):
         try:
             chat_id = await ga.get_id(where)
         except Exception as err:
-            return await yy.eor(str(err), parse_mode=parse_pre)
+            return await yy.eor(format_exc(err), parse_mode="html")
     else:
         chat_id = kst.chat_id
     GCAST_BLACKLIST = await get_blacklisted(
@@ -1034,7 +1047,7 @@ async def _(kst):
             text += "Chat Title: {}\n".format(gblack[chat_id]["title"])
             text += f"Chat ID: {x}\n"
             text += "Date: {}\n\n".format(datetime.datetime.fromtimestamp(gblack[chat_id]["date"]).strftime("%Y-%m-%d"))
-        return await kst.eor(text, parse_mode="html")
+        return await kst.eor(text, parts=True, parse_mode="html")
     text = "`You got no gblacklist chats!`"
     await kst.eor(text, time=5)
 

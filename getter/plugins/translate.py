@@ -14,7 +14,7 @@ from . import (
     plugins_help,
     LANG_CODES,
     suppress,
-    parse_pre,
+    format_exc,
     strip_format,
     strip_emoji,
     strip_ascii,
@@ -57,9 +57,9 @@ async def _(kst):
             await translator.detect(translation.text),
             translation.text,
         )
-        await yy.eor(tr)
+        await yy.eor(tr, parts=True)
     except Exception as err:
-        await yy.eor(str(err), parse_mode=parse_pre)
+        await yy.eor(format_exc(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -89,9 +89,9 @@ async def _(kst):
     try:
         text = strip_format(strip_emoji(words))
         translation = await Translator()(text, targetlang=lang)
-        await kst.sod(translation.text)
+        await kst.sod(translation.text, parts=True)
     except Exception as err:
-        await kst.eor(str(err), parse_mode=parse_pre)
+        await kst.eor(format_exc(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -126,18 +126,14 @@ async def _(kst):
         file = Root / "downloads/voice.mp3"
         voice = await aioify(gTTS, text, lang=lang, slow=False)
         voice.save(file)
-        await kst.client.send_file(
-            kst.chat_id,
+        await yy.eor(
             file=file,
-            reply_to=kst.reply_to_msg_id,
             allow_cache=False,
             voice_note=True,
-            silent=True,
         )
         (file).unlink(missing_ok=True)
-        await yy.try_delete()
     except Exception as err:
-        await yy.eor(str(err), parse_mode=parse_pre)
+        await yy.eor(format_exc(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -147,7 +143,7 @@ async def _(kst):
     lang = f"**{len(LANG_CODES)} Language Code:**\n" + "\n".join(
         [f"- {y}: {x}" for x, y in sort_dict(LANG_CODES).items()]
     )
-    await kst.sod(lang)
+    await kst.sod(lang, parts=True)
 
 
 plugins_help["translate"] = {

@@ -32,6 +32,7 @@ from . import (
     humanbool,
     Runner,
     MAX_MESSAGE_LEN,
+    format_exc,
     hk,
 )
 
@@ -58,6 +59,7 @@ test_text = """
 ├  <b>Handler:</b> <code>{}</code>
 ├  <b>Sudo:</b> <code>{}</code>
 ├  <b>PM-Guard:</b> <code>{}</code>
+├  <b>PM-Logs:</b> <code>{}</code>
 ├  <b>PM-Block:</b> <code>{}</code>
 ├  <b>Anti-PM:</b> <code>{}</code>
 ├  <b>Heroku App:</b> <code>{}</code>
@@ -207,6 +209,7 @@ async def _(kst):
             hl,
             humanbool(gvar("_sudo", use_cache=True), toggle=True),
             humanbool(gvar("_pmguard", use_cache=True), toggle=True),
+            humanbool(gvar("_pmlog", use_cache=True), toggle=True),
             humanbool(gvar("_pmblock", use_cache=True), toggle=True),
             humanbool(gvar("_antipm", use_cache=True), toggle=True),
             hk.name or "none",
@@ -273,16 +276,14 @@ async def show_changelog(kst, changelog) -> None:
         async with aiofiles.open(file, mode="w") as f:
             await f.write(changelog)
         try:
-            chlog = await kst.respond(
+            chlog = await kst.eor(
                 r"\\**#Getter**// View this file to see changelog.",
                 file=file,
                 force_document=True,
                 allow_cache=False,
-                reply_to=kst.reply_to_msg_id,
-                silent=True,
             )
         except Exception as err:
-            chlog = await kst.eor(f"**ERROR:**\n`{err}`")
+            chlog = await kst.eor(format_exc(err), parse_mode="html")
         (file).unlink(missing_ok=True)
     else:
         chlog = await kst.eor(changelog, parse_mode="html")
@@ -298,7 +299,8 @@ async def Pulling(kst, state) -> None:
 Wait for a few seconds, then run `{hl}ping` command."""
     yy = await kst.eor(up)
     with suppress(BaseException):
-        sgvar("_restart", f"{kst.chat_id}|{yy.id}")
+        chat_id = yy.chat_id or yy.from_id
+        sgvar("_restart", f"{chat_id}|{yy.id}")
     with suppress(BaseException):
         import psutil
 
@@ -332,7 +334,8 @@ async def Pushing(kst, state, repo) -> None:
 Wait for a few minutes, then run `{hl}ping` command."""
     yy = await kst.eor(up)
     with suppress(BaseException):
-        sgvar("_restart", f"{kst.chat_id}|{yy.id}")
+        chat_id = yy.chat_id or yy.from_id
+        sgvar("_restart", f"{chat_id}|{yy.id}")
     """
     err = await force_push()
     if err:
