@@ -5,6 +5,62 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+MAX_MESSAGE_LEN = 4096
+
+DEFAULT_GCAST_BLACKLIST = (
+    -1001699144606,  # @kastaot
+    -1001700971911,  # @kastaup
+    -1001596433756,  # @MFIChat
+    -1001294181499,  # @userbotindo
+    -1001387666944,  # @PyrogramChat
+    -1001221450384,  # @pyrogramlounge
+    -1001109500936,  # @TelethonChat
+    -1001235155926,  # @RoseSupportChat
+    -1001421589523,  # @tdspya
+    -1001360494801,  # @OFIOpenChat
+    -1001275084637,  # @OFIChat
+    -1001435671639,  # @xfichat
+)
+
+DEFAULT_GUCAST_BLACKLIST = (
+    777000,  # Telegram
+    4247000,  # @notoscam
+    431415000,  # @BotSupport
+    454000,  # @dmcatelegram
+)
+
+DEFAULT_SHELL_BLACKLIST = (
+    "rm",
+    "-delete",
+    "unlink",
+    "shred",
+    "rsync",
+    "sleep",
+    "history",
+    "dd",
+    "chmod",
+    "chown",
+    "mkfs",
+    "mkswap",
+    "chroot",
+    "fdisk",
+    "poweroff",
+    "shutdown",
+    "reboot",
+    "halt",
+    "exec",
+    "kill",
+    "crontab",
+    "perl",
+    "while",
+    ":()",
+    "/dev",
+    "sudo",
+    "dpkg",
+    "apt",
+    "pkill",
+)
+
 USERAGENTS = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:11.0) Gecko/20100101 Firefox/11.0",
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "

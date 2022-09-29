@@ -17,7 +17,7 @@ from pytz import timezone
 dotenv.load_dotenv(dotenv.find_dotenv("config.env"))
 
 
-def tobool(val):
+def tobool(val: str) -> typing.Optional[int]:
     """
     Convert a string representation of truth to true (1) or false (0).
     https://github.com/python/cpython/blob/main/Lib/distutils/util.py
@@ -95,6 +95,4 @@ NOCHATS = {
     -1001699144606,
     -1001700971911,
 }
-MAX_MESSAGE_LEN = 4096
-
 del typing, b64decode, ThreadPoolExecutor, dataclass, cpu_count, dotenv, timezone

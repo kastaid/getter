@@ -59,6 +59,23 @@ _PMMSG_CACHE = TTLCache(maxsize=1, ttl=60, timer=time.perf_counter)  # 1 mins
 _PMTOTAL_CACHE = TTLCache(maxsize=1, ttl=60, timer=time.perf_counter)  # 1 mins
 
 
+async def PMLogs(kst):
+    user = await kst.get_sender()
+    if (
+        getattr(user, "bot", False)
+        or getattr(user, "is_self", False)
+        or getattr(user, "support", False)
+        or getattr(user, "verified", False)
+    ):
+        return
+    pmlog = gvar("_pmlog", use_cache=True)
+    if pmlog == "media":
+        if kst.message.media:
+            return await sendlog(kst.message, forward=True)
+        return
+    await sendlog(kst.message, forward=True)
+
+
 async def PMPermit(kst):
     user = await kst.get_sender()
     if (
@@ -94,9 +111,7 @@ async def PMPermit(kst):
         if antipm == "del":
             antipm_text += "blocked and deleted!"
             await sendlog(antipm_text)
-            await asyncio.sleep(1)
             await sendlog(kst.message, forward=True)
-            await asyncio.sleep(1)
             await ga.delete_chat(user.id, revoke=True)
         else:
             antipm_text += "blocked!"
@@ -148,8 +163,7 @@ async def PMPermit(kst):
             total=ratelimit,
             mode=mode,
         )
-        # pmcredit = "\n- Protected by getter"
-        # text += pmcredit
+        text += pmcredit
         with suppress(BaseException):
             await kst.respond(text)
         if is_block:
@@ -163,12 +177,10 @@ async def PMPermit(kst):
                     )
                 )
             await ga.block(user.id)
-            await asyncio.sleep(1)
             warnend_text += "blocked due to spamming in PM !!"
             await sendlog(r"\\**#Blocked**//" + warnend_text)
         else:
             await ga.archive(user.id)
-            await asyncio.sleep(1)
             warnend_text += "archived due to spamming in PM !!"
             await sendlog(r"\\**#Archived**//" + warnend_text)
         del PMWARN[towarn]
@@ -202,12 +214,12 @@ async def PMPermit(kst):
     NESLAST[towarn] = last.id
     add_col("pmwarns", PMWARN, NESLAST)
     # await ga.read(user.id, clear_mentions=True, clear_reactions=True)
-    await asyncio.sleep(1)
     newmsg_text = r"\\**#New_Message**//"
     newmsg_text += f"\nUser {mention} [`{user.id}`] has messaged you with **{warn}/{ratelimit}** warns!"
     await sendlog(newmsg_text)
-    await asyncio.sleep(1)
-    await sendlog(kst.message, forward=True)
+    if not gvar("_pmlog", use_cache=True):
+        await asyncio.sleep(1)
+        await sendlog(kst.message, forward=True)
 
 
 @kasta_cmd(
@@ -235,6 +247,43 @@ async def _(kst):
         return
     dgvar("_pmguard")
     text = "`Successfully to switch off PM-Guard!`"
+    text += "\n`Rebooting to apply...`"
+    msg = await yy.eor(text)
+    await ga.reboot(msg)
+
+
+@kasta_cmd(
+    pattern="pmlogs?(?: |$)(yes|on|true|1|no|off|false|0)?(?: |$)(.*)",
+)
+async def _(kst):
+    ga = kst.client
+    yy = await kst.eor("`Processing...`")
+    group = kst.pattern_match.group
+    toggle, opts = group(1), group(2).lower()
+    pmlog = gvar("_pmlog")
+    if not toggle:
+        text = f"**PM-Logs Status:** `{humanbool(pmlog, toggle=True)}`"
+        if pmlog and pmlog == "media":
+            text += "\n__Only media!__"
+        return await yy.eod(text)
+    if toggle in ("yes", "on", "true", "1"):
+        if pmlog:
+            await yy.eor("`PM-Logs is already on.`", time=4)
+            return
+        if opts and any(_ in opts for _ in ("-m", "media")):
+            sgvar("_pmlog", "media")
+            text = "`Successfully to switch on-media PM-Logs!`"
+        else:
+            sgvar("_pmlog", "true")
+            text = "`Successfully to switch on PM-Logs!`"
+        text += "\n`Rebooting to apply...`"
+        msg = await yy.eor(text)
+        return await ga.reboot(msg)
+    if not pmlog:
+        await yy.eor("`PM-Logs is already off.`", time=4)
+        return
+    dgvar("_pmlog")
+    text = "`Successfully to switch off PM-Logs!`"
     text += "\n`Rebooting to apply...`"
     msg = await yy.eor(text)
     await ga.reboot(msg)
@@ -310,7 +359,7 @@ async def _(kst):
             text += f"User ID: {x.user_id}\n"
             text += "Date: {}\n".format(datetime.datetime.fromtimestamp(x.date).strftime("%Y-%m-%d"))
             text += "Reason: {}\n\n".format(x.reason or "No reason.")
-        return await kst.eor(text, parse_mode="html")
+        return await kst.eor(text, parts=True, parse_mode="html")
     text = "`You got no allowed users!`"
     await kst.eor(text, time=5)
 
@@ -363,8 +412,8 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Processing...`")
-    toggle = kst.pattern_match.group(1)
-    opts = kst.pattern_match.group(2).lower()
+    group = kst.pattern_match.group
+    toggle, opts = group(1), group(2).lower()
     antipm = gvar("_antipm")
     if not toggle:
         text = f"**Anti-PM Status:** `{humanbool(antipm, toggle=True)}`"
@@ -375,7 +424,7 @@ async def _(kst):
         if antipm:
             await yy.eor("`Anti-PM is already on.`", time=4)
             return
-        if opts and [_ for _ in ("-d", "delete") if _ in opts]:
+        if opts and any(_ in opts for _ in ("-d", "delete")):
             sgvar("_antipm", "del")
             text = "`Successfully to switch on-delete Anti-PM!`"
         else:
@@ -649,14 +698,26 @@ async def _(kst):
     await ga.delete_chat(chat_id, revoke=True)
 
 
+if gvar("_pmlog", use_cache=True):
+    getter_app.add_handler(
+        PMLogs,
+        event=events.NewMessage(
+            incoming=True,
+            func=lambda e: e.is_private,
+        ),
+    )
 if gvar("_pmguard", use_cache=True):
     getter_app.add_handler(
         PMPermit,
-        event=events.NewMessage(incoming=True, func=lambda e: e.is_private),
+        event=events.NewMessage(
+            incoming=True,
+            func=lambda e: e.is_private,
+        ),
     )
 
 plugins_help["pmpermit"] = {
     "{i}pmguard [yes/no/on/off]": "Switch the pmpermit plugin on or off. Default: off",
+    "{i}pmlog [yes/no/on/off] [-m/media]": "When switch on all messages from user will forward to BOTLOGS! Add '-m' to forward media only! Default: off",
     "{i}a|{i}allow|{i}acc [reply]/[in_private]/[username/mention/id]": "Allow user to PM.",
     "{i}de|{i}deny [reply]/[in_private]/[username/mention/id]": "Delete user from allowed list.",
     "{i}listpm": "List all allowed users to PM.",

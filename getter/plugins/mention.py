@@ -43,8 +43,7 @@ async def _(kst):
             slots -= 1
             if slots == 0:
                 break
-    await kst.respond(text, reply_to=kst.reply_to_msg_id)
-    await kst.try_delete()
+    await kst.sod(text)
 
 
 @kasta_cmd(
@@ -78,9 +77,9 @@ async def _(kst):
         try:
             if chat_id not in ATAGS:
                 break
-            await kst.respond(
+            await kst.sod(
                 caption + "  {}  ".format(DEFAULT_SEP).join(map(str, men)),
-                reply_to=kst.reply_to_msg_id,
+                delete=False,
                 parse_mode="html",
             )
             limit += DEFAULT_PERUSER
@@ -123,9 +122,9 @@ async def _(kst):
         try:
             if chat_id not in ETAGS:
                 break
-            await kst.respond(
+            await kst.sod(
                 caption + " ".join(map(str, men)),
-                reply_to=kst.reply_to_msg_id,
+                delete=False,
                 parse_mode="html",
             )
             limit += DEFAULT_PERUSER
@@ -171,8 +170,7 @@ async def _(kst):
     async for x in ga.iter_participants(chat_id, filter=typ.ChannelParticipantsAdmins):
         if exclude_user(x):
             text += mentionuser(x.id, "\u2063")
-    await kst.respond(text, reply_to=kst.reply_to_msg_id)
-    await kst.try_delete()
+    await kst.sod(text)
 
 
 @kasta_cmd(

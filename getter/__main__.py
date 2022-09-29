@@ -19,8 +19,9 @@ from . import (
     __pyversion__,
 )
 from .config import Var, hl
-from .core.client import getter_app
+from .core.base_client import getter_app
 from .core.helper import plugins_help
+from .core.patched import apply
 from .core.property import do_not_remove_credit
 from .core.startup import (
     trap,
@@ -33,6 +34,8 @@ from .core.startup import (
 )
 from .core.utils import time_formatter
 from .logger import LOGS
+
+apply()
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -62,7 +65,7 @@ async def main() -> None:
         except Exception as err:
             LOGS.exception(f"[-] {plugin} : {err}")
     loaded_time = time_formatter((time.time() - load) * 1000)
-    [plugins.remove(_) for _ in no_print]
+    [plugins.remove(_) for _ in no_print]  # type: ignore
     loaded_msg = ">> Loaded Plugins: {} , Commands: {} (took {}) : {}".format(
         plugins_help.count,
         plugins_help.total,

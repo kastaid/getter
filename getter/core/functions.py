@@ -15,8 +15,8 @@ from telethon.tl import functions as fun, types as typ
 from telethon.utils import get_display_name
 
 TELEGRAM_LINK_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog)/)([\w-]+)$"
-USERNAME_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog)/)"
-MSG_ID_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog)/)(?:c\/|)(.*)\/(.*)"
+USERNAME_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog)?(?:/)?(.*?))"
+MSG_ID_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog)/)(?:c\/|)(.*)\/(.*)|(?:tg//openmessage\?)?(?:user_id=(.*))?(?:\&message_id=(.*))"
 
 
 def is_telegram_link(url: str) -> bool:
@@ -26,12 +26,12 @@ def is_telegram_link(url: str) -> bool:
 
 def get_username(url: str) -> str:
     # TODO: support for username.t.me
-    return re.sub(USERNAME_RE, "@", url, flags=re.I)
+    return "".join(re.sub(USERNAME_RE, "@", url, flags=re.I).split("/")[:1])
 
 
 def get_msg_id(link: str) -> typing.Tuple[typing.Union[str, None], typing.Union[int, None]]:
     # TODO: support for username.t.me
-    idx = re.findall(MSG_ID_RE, link, flags=re.I)
+    idx = [tuple(filter(None, _)) for _ in re.findall(MSG_ID_RE, link, flags=re.I)]
     ids = next((_ for _ in idx), None)
     if not ids:
         return None, None
@@ -56,7 +56,7 @@ def mentionuser(
 
 def display_name(entity: hints.Entity) -> str:
     name = get_display_name(entity)
-    return name if name else "{}".format(entity.first_name or "none")
+    return name if name else "{}".format(getattr(entity, "first_name", "unknown") or "unknown")
 
 
 def normalize_chat_id(chat_id: typing.Union[int, str]) -> typing.Union[int, str]:

@@ -24,17 +24,15 @@ from . import (
 async def _(kst):
     if kst.is_dev:
         await asyncio.sleep(choice((4, 6, 8)))
-    ga = kst.client
     action = kst.pattern_match.group(1)
     act = action
     if action in ("audio", "round", "video"):
         action = "record-" + action
-    sec = await ga.get_text(kst, group=2)
+    sec = await kst.client.get_text(kst, group=2)
     sec = int(60 if not sec.replace(".", "", 1).isdecimal() else sec)
     typefor = time_formatter(sec * 1000)
-    await kst.eor(f"`Starting fake {act} for {typefor}...`", time=3)
-    chat = await kst.get_input_chat()
-    async with ga.action(chat, action=action):
+    await kst.eor(f"`Starting fake {act} for {typefor}...`", time=3, silent=True)
+    async with await kst.send_action(action=action):
         await asyncio.sleep(sec)
 
 

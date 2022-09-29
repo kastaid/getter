@@ -30,7 +30,6 @@ from telethon.errors.rpcerrorlist import (
     MessageNotModifiedError,
 )
 from telethon.tl import types as typ
-from telethon.tl.custom.message import Message
 from .. import (
     __version__,
     __tlversion__,
@@ -43,23 +42,16 @@ from ..config import (
     DEV_CMDS,
     SUDO_CMDS,
     DEVS,
-    MAX_MESSAGE_LEN,
 )
 from ..logger import LOGS
-from .client import getter_app
+from .base_client import getter_app
+from .constants import MAX_MESSAGE_LEN
 from .db import gvar
 from .functions import display_name, admin_check, to_privilege
 from .helper import jdata, get_botlogs
 from .property import do_not_remove_credit, get_blacklisted
 from .tools import Runner
-from .utils import time_formatter
-from .wrappers import (
-    eor,
-    eod,
-    sod,
-    _try_delete,
-    _react,
-)
+from .utils import time_formatter, strip_format, normalize
 
 CommandChats = typing.Union[typing.List[int], typing.Set[int], typing.Tuple[int], None]
 CommandFunc = typing.Callable[[events.NewMessage.Event], typing.Optional[bool]]
@@ -136,17 +128,17 @@ def kasta_cmd(
             ):
                 return
             if private_only and not kst.is_private:
-                return await eod(kst, "`Use in private.`")
+                return await kst.eod("`Use in private.`")
             if owner_only:
                 if kst.is_private:
                     return
                 if not chat.creator:
-                    return await eod(kst, "`Not owner.`")
+                    return await kst.eod("`Not owner.`")
             if admins_only:
                 if kst.is_private:
                     return
                 if not (chat.admin_rights or chat.creator):
-                    return await eod(kst, "`Not an admin.`")
+                    return await kst.eod("`Not an admin.`")
             if require and not (
                 await admin_check(
                     kst,
@@ -155,19 +147,17 @@ def kasta_cmd(
                     require=require,
                 )
             ):
-                return await eod(kst, f"`Required {to_privilege(require)} privilege.`")
+                return await kst.eod(f"`Required {to_privilege(require)} privilege.`")
             if groups_only and kst.is_private:
-                return await eod(kst, "`Use in group/channel.`")
+                return await kst.eod("`Use in group/channel.`")
             try:
                 await fun(kst)
             except FloodWaitError as fw:
                 FLOOD_WAIT = fw.seconds
                 FLOOD_WAIT_HUMAN = time_formatter((FLOOD_WAIT + 10) * 1000)
                 LOGS.warning(f"A FloodWait Error of {FLOOD_WAIT}. Sleeping for {FLOOD_WAIT_HUMAN} and try again.")
-                await _try_delete(kst)
-                await getter_app.disconnect()
                 await asyncio.sleep(FLOOD_WAIT + 10)
-                return await getter_app.connect()
+                return  # safety first
             except (
                 MessageIdInvalidError,
                 MessageNotModifiedError,
@@ -195,44 +185,49 @@ def kasta_cmd(
                     chat_type = "group"
                 else:
                     chat_type = "channel"
-                ftext = r"\\**#Getter_Error**// Forward this to @kastaot"
-                ftext += "\n\n**Getter Version:** `" + str(__version__)
-                ftext += "`\n**Python Version:** `" + str(__pyversion__)
-                ftext += "`\n**Telethon Version:** `" + str(__tlversion__)
-                ftext += "`\n**Telegram Layer:** `" + str(__layer__) + "`\n\n"
-                ftext += "**--START GETTER ERROR LOG--**"
-                ftext += "\n\n**Date:** `" + date
-                ftext += "`\n**Chat Type:** `" + chat_type
-                ftext += "`\n**Chat ID:** `" + str(chat_id)
-                ftext += "`\n**Chat Title:** `" + display_name(chat)
-                ftext += "`\n**User ID:** `" + str(myself)
-                ftext += "`\n**Replied:** `" + str(kst.is_reply)
-                ftext += "`\n\n**Event Trigger:**`\n"
+                ftext = r"\\<b>#Getter_Error</b>// Forward this to @kastaot"
+                ftext += "\n\n<b>Getter Version:</b> <code>" + str(__version__)
+                ftext += "</code>\n<b>Python Version:</b> <code>" + str(__pyversion__)
+                ftext += "</code>\n<b>Telethon Version:</b> <code>" + str(__tlversion__)
+                ftext += "</code>\n<b>Telegram Layer:</b> <code>" + str(__layer__) + "</code>\n\n"
+                ftext += "<b><u>START GETTER ERROR LOG</u></b>"
+                ftext += "\n\n<b>Date:</b> <code>" + date
+                ftext += "</code>\n<b>Chat Type:</b> <code>" + chat_type
+                ftext += "</code>\n<b>Chat ID:</b> <code>" + str(chat_id)
+                ftext += "</code>\n<b>Chat Title:</b> <code>" + normalize(display_name(chat)).upper()
+                ftext += "</code>\n<b>User ID:</b> <code>" + str(myself)
+                ftext += "</code>\n<b>Is Dev:</b> <code>" + str(kst.is_dev)
+                ftext += "</code>\n<b>Is Sudo:</b> <code>" + str(kst.is_sudo)
+                ftext += "</code>\n<b>Replied:</b> <code>" + str(kst.is_reply)
+                ftext += "</code>\n<b>Message ID:</b> <code>" + str(kst.reply_to_msg_id or kst.id)
+                ftext += "</code>\n<b>Message Link:</b> " + str(kst.msg_link)
+                ftext += "\n\n<b>Event Trigger:</b>\n<code>"
                 ftext += str(kst.text)
-                ftext += "`\n\n**Traceback Info:**```\n"
-                ftext += str(format_exc())
-                ftext += "```\n\n**Error Text:**`\n"
-                ftext += str(sys.exc_info()[1])
-                ftext += "`\n\n**--END GETTER ERROR LOG--**"
+                ftext += "</code>\n\n<b>Traceback Info:</b>\n<pre>"
+                ftext += str(format_exc()).strip()
+                ftext += "</pre>\n\n<b>Error Text:</b>\n<code>"
+                ftext += str(sys.exc_info()[1]).strip()
+                ftext += "</code>\n\n<b><u>END GETTER ERROR LOG</u></b>"
                 if not Var.DEV_MODE:
-                    ftext += "\n\n\n**Last 5 Commits:**`\n"
+                    ftext += "\n\n<b>Last 5 Commits:</b>\n<pre>"
                     stdout, stderr, _, _ = await Runner('git log --pretty=format:"%an: %s" -5')
                     result = stdout + stderr
-                    ftext += result + "`"
+                    ftext += result + "</pre>"
                 error_log = None
                 BOTLOGS = get_botlogs()
                 send_to = BOTLOGS or chat_id
                 reply_to = None if BOTLOGS else kst.id
                 if len(ftext) > MAX_MESSAGE_LEN:
-                    with suppress(BaseException), BytesIO(ftext.encode()) as file:
+                    with suppress(BaseException), BytesIO(str.encode(strip_format(ftext))) as file:
                         file.name = "getter_error.txt"
                         error_log = await getter_app.send_file(
                             send_to,
                             file=file,
-                            caption=r"\\**#Getter_Error**// Forward this to @kastaot",
+                            caption=r"\\<b>#Getter_Error</b>// Forward this to @kastaot",
                             force_document=True,
                             allow_cache=False,
                             reply_to=reply_to,
+                            parse_mode="html",
                         )
                 else:
                     error_log = await getter_app.send_message(
@@ -240,14 +235,15 @@ def kasta_cmd(
                         ftext,
                         link_preview=False,
                         reply_to=reply_to,
+                        parse_mode="html",
                     )
                 if kst.out and BOTLOGS and error_log:
                     text = r"\\<b>#Getter_Error</b>//"
                     text += "\n<b>An error details:</b> {}"
                     if kst.is_private:
-                        text = text.format(error_log.message_link)
+                        text = text.format(error_log.msg_link)
                     else:
-                        text = text.format(f"<code>{error_log.message_link}</code>")
+                        text = text.format(f"<code>{error_log.msg_link}</code>")
                     with suppress(BaseException):
                         await kst.edit(
                             text,
@@ -301,9 +297,10 @@ def kasta_cmd(
             ),
         )
         if pattern and for_dev or dev or sudo:
-            file = Path(inspect.stack(0)[1].filename)
-            cmd_name = "".join(re.split(r"[$(?].*", pattern)) if not (for_dev or dev) else pattern
+            matches = re.split(r"[$(?].*", pattern)
+            cmd_name = "".join(matches) if not (for_dev or dev) else pattern
             cmds = DEV_CMDS if for_dev or dev else SUDO_CMDS
+            file = Path(inspect.stack(0)[1].filename)
             if cmds.get(file.stem):
                 cmds[file.stem].append(cmd_name)
             else:
@@ -322,7 +319,7 @@ async def sendlog(
     BOTLOGS = get_botlogs()
     if not BOTLOGS and fallback:
         BOTLOGS = getter_app.uid
-    if not BOTLOGS:
+    if not BOTLOGS and not fallback:
         return None
     try:
         if not forward:
@@ -347,10 +344,3 @@ async def sendlog(
     except Exception as err:
         LOGS.exception(err)
         return None
-
-
-Message.eor = eor
-Message.eod = eod
-Message.sod = sod
-Message.try_delete = _try_delete
-Message.react = _react

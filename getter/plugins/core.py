@@ -298,7 +298,7 @@ async def _(kst):
                             pass
         taken = time_formatter((time.time() - start_time) * 1000)
         await yy.eor("`Uploading CSV Files...`")
-        await kst.respond(
+        await yy.eor(
             getmembers_text.format(
                 "Members",
                 taken,
@@ -315,7 +315,7 @@ async def _(kst):
             force_document=True,
             allow_cache=False,
         )
-        await kst.respond(
+        await yy.eor(
             getmembers_text.format(
                 "Admins",
                 taken,
@@ -332,7 +332,7 @@ async def _(kst):
             force_document=True,
             allow_cache=False,
         )
-        await kst.respond(
+        await yy.eor(
             getmembers_text.format(
                 "Bots",
                 taken,
@@ -349,7 +349,6 @@ async def _(kst):
             force_document=True,
             allow_cache=False,
         )
-        await yy.try_delete()
 
 
 @kasta_cmd(
@@ -479,7 +478,7 @@ async def conv_limit(conv):
         yy = await conv.send_message("/start")
         resp = await resp
         await yy.try_delete()
-        await resp.mark_read(clear_mentions=True)
+        await conv.read(clear_mentions=True, clear_reactions=True)
         return resp
     except asyncio.exceptions.TimeoutError:
         return None

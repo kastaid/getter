@@ -32,7 +32,7 @@ async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Starting video chat...`")
     args = kst.pattern_match.group(1).split(" ")
-    is_silent = [_ for _ in ("-s", "silent") if _ in args[0].lower()]
+    is_silent = any(_ in args[0].lower() for _ in ("-s", "silent"))
     title = " ".join(args[1:] if is_silent else args).strip()
     chat_id = normalize_chat_id(kst.chat_id)
     try:
@@ -65,7 +65,7 @@ async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Stopping video chat...`")
     args = kst.pattern_match.group(1).split(" ")
-    is_silent = [_ for _ in ("-s", "silent") if _ in args[0].lower()]
+    is_silent = any(_ in args[0].lower() for _ in ("-s", "silent"))
     chat_id = normalize_chat_id(kst.chat_id)
     call = await get_call(chat_id)
     if not call:
@@ -197,8 +197,8 @@ async def _(kst):
         text += "<b><u>Participants</u></b>\n"
         for x in res.users:
             mention = mentionuser(x.id, display_name(x), html=True, width=15)
-            text += f"● <code>{x.id}</code> – {mention}\n"
-    await yy.eor(text, parse_mode="html")
+            text += f"• <code>{x.id}</code> – {mention}\n"
+    await yy.eor(text, parts=True, parse_mode="html")
 
 
 @kasta_cmd(
@@ -265,7 +265,7 @@ async def _(kst):
         text = f"<b><u>{len(CALLS)} Video Chats</u></b>\n"
         for x in CALLS:
             text += f"<code>-100{x}</code>\n"
-        return await kst.eor(text, parse_mode="html")
+        return await kst.eor(text, parts=True, parse_mode="html")
     text = "`You got no joined video chat!`"
     await kst.eor(text, time=5)
 

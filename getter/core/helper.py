@@ -5,12 +5,14 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+import html
 import typing
 from cachetools import cached, LRUCache
 from heroku3 import from_key
 from ..config import Var, BOTLOGS_CACHE
 from ..logger import LOGS
 from .db import gvar, get_col
+from .utils import get_full_class_name
 
 
 class PluginsHelp(dict):
@@ -90,6 +92,12 @@ def get_botlogs() -> int:
     nope = int(Var.BOTLOGS or gvar("BOTLOGS", use_cache=True) or 0)
     BOTLOGS_CACHE.add(nope)
     return nope
+
+
+def format_exc(err: Exception) -> str:
+    _ = r"\\<b>#Getter_Error</b>//"
+    _ += "\n<pre>{}: {}</pre>".format(get_full_class_name(err), html.escape(str(err)))
+    return _
 
 
 plugins_help = PluginsHelp()

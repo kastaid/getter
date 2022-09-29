@@ -13,7 +13,7 @@ cachetools==5.2.0
 asyncache==0.1.1
 aiofiles==22.1.0
 aiocsv==1.2.2
-aiohttp[speedups]==3.8.1
+aiohttp[speedups]==3.8.3
 async-timeout==4.0.2
 Markdown==3.4.1
 beautifulsoup4==4.11.1

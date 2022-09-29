@@ -5,7 +5,7 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from .client import getter_app
+from .base_client import getter_app
 from .constants import *
 from .db import *
 from .decorators import kasta_cmd, sendlog
@@ -35,7 +35,10 @@ from .helper import (
     hk,
     jdata,
     get_botlogs,
+    format_exc,
 )
+from .patched import *
+from .patcher import patch, patchable
 from .property import get_blacklisted, do_not_remove_credit
 from .tools import (
     is_termux,
@@ -70,8 +73,8 @@ from .utils import (
     snake,
     kebab,
     normalize,
+    get_full_class_name,
 )
-from .wrappers import eor, eod, sod
 
 if hk.stack == "container" or not hk.is_heroku:
     CHROME_BIN = "/usr/bin/google-chrome"

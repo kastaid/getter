@@ -1,0 +1,208 @@
+# getter < https://t.me/kastaid >
+# Copyright (C) 2022 kastaid
+#
+# This file is a part of < https://github.com/kastaid/getter/ >
+# PLease read the GNU Affero General Public License in
+# < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
+
+import asyncio
+import typing
+from contextlib import suppress
+from random import randrange
+from telethon import hints, utils
+from telethon.client.telegramclient import TelegramClient
+from telethon.tl import functions as fun, types as typ
+from ..constants import MAX_MESSAGE_LEN
+from ..functions import get_chat_id, get_text, get_user
+from ..patcher import patch, patchable
+
+delattr(fun.account, "DeleteAccountRequest")
+
+
+@patch(TelegramClient)
+class Client:
+    @patchable()
+    async def get_id(self, entity: hints.EntityLike) -> int:
+        with suppress(ValueError):
+            entity = int(entity)
+        return await self.get_peer_id(entity)
+
+    @patchable()
+    async def get_chat_id(self, *args, **kwargs) -> typing.Optional[int]:
+        return await get_chat_id(*args, **kwargs)
+
+    @patchable()
+    async def get_text(self, *args, **kwargs) -> str:
+        return await get_text(*args, **kwargs)
+
+    @patchable()
+    async def get_user(self, *args, **kwargs) -> typing.Optional[typing.Tuple[typ.User, str]]:
+        return await get_user(*args, **kwargs)
+
+    @patchable()
+    async def read_chat(self, *args, **kwargs) -> bool:
+        with suppress(BaseException):
+            return await self.send_read_acknowledge(*args, **kwargs)
+        return False
+
+    @patchable()
+    async def block(self, entity: hints.EntityLike) -> bool:
+        with suppress(BaseException):
+            entity = await self.get_input_entity(entity)
+            return await self(fun.contacts.BlockRequest(entity))
+        return False
+
+    @patchable()
+    async def unblock(self, entity: hints.EntityLike) -> bool:
+        with suppress(BaseException):
+            entity = await self.get_input_entity(entity)
+            return await self(fun.contacts.UnblockRequest(entity))
+        return False
+
+    @patchable()
+    async def archive(self, entity: hints.EntityLike) -> typing.Optional[typ.Updates]:
+        with suppress(BaseException):
+            return await self.edit_folder(entity, folder=1)
+        return None
+
+    @patchable()
+    async def unarchive(self, entity: hints.EntityLike) -> typing.Optional[typ.Updates]:
+        with suppress(BaseException):
+            return await self.edit_folder(entity, folder=0)
+        return None
+
+    @patchable()
+    async def delete_chat(
+        self,
+        entity: hints.EntityLike,
+        revoke: bool = False,
+    ) -> typing.Optional[typ.Updates]:
+        with suppress(BaseException):
+            return await self.delete_dialog(entity, revoke=revoke)
+        return None
+
+    @patchable()
+    async def report_spam(self, entity: hints.EntityLike) -> bool:
+        with suppress(BaseException):
+            entity = await self.get_input_entity(entity)
+            return await self(fun.messages.ReportSpamRequest(entity))
+        return False
+
+    @patchable()
+    async def send_reaction(
+        self,
+        entity: hints.EntityLike,
+        message: hints.MessageIDLike,
+        big: bool = False,
+        add_to_recent: bool = False,
+        reaction: typing.Optional[str] = None,
+    ) -> typing.Optional[typ.Updates]:
+        with suppress(BaseException):
+            message = utils.get_message_id(message) or 0
+            entity = await self.get_input_entity(entity)
+            return await self(
+                fun.messages.SendReactionRequest(
+                    big=big,
+                    add_to_recent=add_to_recent,
+                    peer=entity,
+                    msg_id=message,
+                    reaction=[typ.ReactionEmoji(emoticon=reaction)],
+                )
+            )
+        return None
+
+    @patchable()
+    async def join_to(self, entity: hints.EntityLike) -> typing.Optional[typ.Updates]:
+        with suppress(BaseException):
+            entity = await self.get_input_entity(entity)
+            return await self(fun.channels.JoinChannelRequest(entity))
+        return None
+
+    @patchable()
+    async def mute_chat(self, entity: hints.EntityLike) -> bool:
+        with suppress(BaseException):
+            entity = await self.get_input_entity(entity)
+            return await self(
+                fun.account.UpdateNotifySettingsRequest(
+                    entity,
+                    settings=typ.InputPeerNotifySettings(
+                        show_previews=False,
+                        silent=True,
+                        mute_until=2**31 - 1,
+                        sound=None,
+                    ),
+                )
+            )
+        return False
+
+    @patchable()
+    async def create_group(
+        self,
+        title: str = "Getter",
+        about: str = "",
+        users: typing.Optional[typing.List[typing.Union[str, int]]] = None,
+        photo: typing.Optional[str] = None,
+    ) -> typing.Tuple[typing.Optional[str], typing.Optional[int]]:
+        users = users or []
+        try:
+            created = await self(
+                fun.channels.CreateChannelRequest(
+                    title=title,
+                    about=about,
+                    megagroup=True,
+                )
+            )
+            chat_id = created.chats[0].id
+            await asyncio.sleep(6)
+            link = await self(fun.messages.ExportChatInviteRequest(chat_id))
+            if users:
+                await asyncio.sleep(6)
+                await self(
+                    fun.channels.InviteToChannelRequest(
+                        chat_id,
+                        users=users,
+                    )
+                )
+            if photo:
+                await asyncio.sleep(6)
+                await self(
+                    fun.channels.EditPhotoRequest(
+                        chat_id,
+                        photo=typ.InputChatUploadedPhoto(photo),
+                    ),
+                )
+        except Exception as err:
+            self.logger.critical(err)
+            return None, None
+        if not str(chat_id).startswith("-100"):
+            chat_id = int("-100" + str(chat_id))
+        return link, chat_id
+
+    @patchable()
+    async def send_message_parts(
+        self,
+        entity: hints.EntityLike,
+        text: str,
+        **kwargs,
+    ) -> typ.Message:
+        if len(text) > MAX_MESSAGE_LEN:
+            parts = []
+            while len(text):
+                splits = text[:MAX_MESSAGE_LEN].rfind("\n")
+                if splits != -1:
+                    parts.append(text[:splits])
+                    text = text[splits + 1 :]
+                else:
+                    splits = text[:MAX_MESSAGE_LEN].rfind(". ")
+                    if splits != -1:
+                        parts.append(text[: splits + 1])
+                        text = text[splits + 2 :]
+                    else:
+                        parts.append(text[:MAX_MESSAGE_LEN])
+                        text = text[MAX_MESSAGE_LEN:]
+            msg = None
+            for part in parts[:-1]:
+                msg = await self.send_message(entity, part, **kwargs)
+                await asyncio.sleep(randrange(1, 3))
+            return msg
+        return await self.send_message(entity, text, **kwargs)

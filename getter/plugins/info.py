@@ -21,6 +21,7 @@ from . import (
     humanbool,
     get_user_status,
     parse_pre,
+    format_exc,
     Fetch,
     is_gban,
     is_gmute,
@@ -81,10 +82,10 @@ async def _(kst):
             text.append(resp.message)
         if resp:
             await com.try_delete()
-            await resp.mark_read(clear_mentions=True)
+            await resp.read(clear_mentions=True, clear_reactions=True)
     if not text:
         return await yy.eod("`Bot did not respond.`")
-    if len(text) == 1 and [_ for _ in text if _.startswith("🔗")]:
+    if len(text) == 1 and any(_.startswith("🔗") for _ in text):
         return await yy.eod("`Cannot get any records.`")
     if "No records found" in text:
         return await yy.eod("`Got no records.`")
@@ -276,7 +277,7 @@ async def _(kst):
         allowed_users,
         f"{stop_time:.02f}",
     )
-    await yy.eor(graph, parse_mode="html")
+    await yy.sod(graph, parse_mode="html")
 
 
 @kasta_cmd(
@@ -337,9 +338,9 @@ async def _(kst):
             text = f"<b>{len(collect)} Groups in common with:</b> <code>{whois}</code>\n" + "".join(collect)
         else:
             text = f"<b>0 Groups in common with:</b> <code>{whois}</code>"
-        await yy.eor(text, parse_mode="html")
+        await yy.eor(text, parts=True, parse_mode="html")
     except Exception as err:
-        await yy.eor(str(err), parse_mode=parse_pre)
+        await yy.eor(format_exc(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -352,7 +353,7 @@ async def _(kst):
     if target:
         user_id = target.id
         opts = args.split(" ")
-        is_full = [_ for _ in ("-f", "full") if _ in opts[0].lower()]
+        is_full = any(_ in opts[0].lower() for _ in ("-f", "full"))
     else:
         user_id = ga.uid
         is_full = True
@@ -363,7 +364,7 @@ async def _(kst):
     except ValueError:
         return await yy.eod("`Cannot fetch user info.`")
     except Exception as err:
-        return await yy.eor(str(err), parse_mode=parse_pre)
+        return await yy.eor(format_exc(err), parse_mode="html")
     created = ""
     with suppress(BaseException):
         async with ga.conversation(CREATED_BOT) as conv:
@@ -417,7 +418,6 @@ async def _(kst):
             user_bio,
         )
     else:
-        emoji_status = user.emoji_status and "\n├  <b>Emoji Status:</b> <code>{}</code>".format(user.emoji_status) or ""
         is_rose_fban = await get_rose_fban(kst, user_id)
         is_spamwatch_banned = await get_spamwatch_banned(kst, user_id)
         is_cas_banned = await get_cas_banned(kst, user_id)
@@ -444,7 +444,8 @@ async def _(kst):
 ├  <b>Is Restricted:</b> <code>{}</code>
 ├  <b>Is Support:</b> <code>{}</code>
 ├  <b>Is Verified:</b> <code>{}</code>
-├  <b>Is Mutual Contact:</b> <code>{}</code>{}
+├  <b>Is Mutual Contact:</b> <code>{}</code>
+├  <b>Is Emoji Status:</b> <code>{}</code>
 ├  <b>Is Rose Fban:</b> <code>{}</code>
 ├  <b>Is SpamWatch Banned:</b> <code>{}</code>
 ├  <b>Is CAS Banned:</b> <code>{}</code>
@@ -477,7 +478,7 @@ async def _(kst):
             humanbool(user.support),
             humanbool(user.verified),
             humanbool(user.mutual_contact),
-            emoji_status,
+            humanbool(bool(user.emoji_status)),
             humanbool(is_rose_fban),
             humanbool(is_spamwatch_banned),
             humanbool(is_cas_banned),
@@ -489,16 +490,13 @@ async def _(kst):
             user_bio,
         )
     try:
-        await kst.respond(
+        await yy.eor(
             caption,
             file=full_user.profile_photo,
             force_document=False,
             allow_cache=True,
-            reply_to=kst.reply_to_msg_id,
             parse_mode="html",
-            silent=True,
         )
-        await yy.try_delete()
     except BaseException:
         await yy.eor(caption, parse_mode="html")
 
@@ -514,20 +512,20 @@ async def _(kst):
         try:
             chat_id = await ga.get_id(where)
         except Exception as err:
-            return await yy.eor(str(err), parse_mode=parse_pre)
+            return await yy.eor(format_exc(err), parse_mode="html")
     else:
         chat_id = kst.chat_id
-    total = str((await ga.get_messages(chat_id, limit=0)).total)
-    photo = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterPhotos())).total)
-    video = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterVideo())).total)
-    music = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterMusic())).total)
-    voice_note = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterVoice())).total)
-    video_note = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterRoundVideo())).total)
-    files = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterDocument())).total)
-    urls = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterUrl())).total)
-    gifs = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterGif())).total)
-    maps = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterGeo())).total)
-    contact = str((await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterContacts())).total)
+    total = (await ga.get_messages(chat_id, limit=0)).total
+    photo = (await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterPhotos())).total
+    video = (await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterVideo())).total
+    music = (await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterMusic())).total
+    voice_note = (await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterVoice())).total
+    video_note = (await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterRoundVideo())).total
+    files = (await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterDocument())).total
+    urls = (await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterUrl())).total
+    gifs = (await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterGif())).total
+    maps = (await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterGeo())).total
+    contact = (await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterContacts())).total
     text = """<b><u>{} TOTAL MESSAGES</u></b>
 ├  <b>Photo:</b> <code>{}</code>
 ├  <b>Video:</b> <code>{}</code>
@@ -565,27 +563,24 @@ async def _(kst):
         try:
             chat = await ga.get_id(where)
         except Exception as err:
-            return await yy.eor(str(err), parse_mode=parse_pre)
+            return await yy.eor(format_exc(err), parse_mode="html")
     else:
         chat = kst.chat_id
     try:
         entity = await ga.get_entity(chat)
     except Exception as err:
-        return await yy.eor(str(err), parse_mode=parse_pre)
+        return await yy.eor(format_exc(err), parse_mode="html")
     photo, caption = await get_chat_info(kst, entity)
     if not photo:
         return await yy.eor(caption, parse_mode="html")
     try:
-        await kst.respond(
+        await yy.eor(
             caption,
             file=photo,
             force_document=False,
             allow_cache=True,
-            reply_to=kst.reply_to_msg_id,
             parse_mode="html",
-            silent=True,
         )
-        await yy.try_delete()
     except BaseException:
         await yy.eor(caption, parse_mode="html")
 
@@ -658,7 +653,7 @@ async def get_chat_info(kst, chat):
     if chat_title:
         caption += f"├  <b>{chat_type} Name:</b> <code>{chat_title}</code>\n"
     if chat.username:
-        caption += f"├  <b>Link:</b> @{chat.username}\n"
+        caption += f"├  <b>Username:</b> @{chat.username}\n"
     else:
         caption += f"├  <b>{chat_type} Type:</b> Private\n"
     if creator_username:
@@ -721,7 +716,7 @@ async def conv_created(conv, user_id):
         yy = await conv.send_message(f"/id {user_id}")
         resp = await resp
         await yy.try_delete()
-        await resp.mark_read(clear_mentions=True)
+        await resp.read(clear_mentions=True, clear_reactions=True)
         created = getattr(resp.message, "message", None)
         _CREATED_CACHE[user_id] = created
         return created
@@ -738,7 +733,7 @@ async def conv_total_bot(conv, command):
         yy = await conv.send_message(command)
         resp = await resp
         await yy.try_delete()
-        await resp.mark_read(clear_mentions=True)
+        await resp.read(clear_mentions=True, clear_reactions=True)
         return resp
     except asyncio.exceptions.TimeoutError:
         return None
@@ -797,7 +792,7 @@ async def get_rose_fban(kst, user_id: int) -> bool:
             if not resp.message.lower().startswith("checking fbans"):
                 break
         if resp:
-            await resp.mark_read(clear_mentions=True)
+            await resp.read(clear_mentions=True, clear_reactions=True)
         _ROSE_LANG_CACHE["lang"] = True
     if (not resp) or ("hasn't been banned" in resp.message.lower()):
         _ROSE_STAT_CACHE[user_id] = False

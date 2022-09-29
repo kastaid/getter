@@ -16,7 +16,6 @@ from . import (
     kasta_cmd,
     plugins_help,
     events,
-    suppress,
     aioify,
     Runner,
     Screenshot,
@@ -36,12 +35,9 @@ async def _(kst):
     reply = await kst.get_reply_message()
     data = check_media(reply)
     if isinstance(data, bool):
-        await kst.eor("`I can't fry that!`", time=5)
+        await kst.eor("`Cannot frying that!`", time=5)
         return
-    if reply.sender.bot:
-        await kst.eor("`Reply to actual users message.`", time=5)
-        return
-    yy = await kst.eor("`Frying...`")
+    yy = await kst.eor("`...`")
     ext = None
     fry_img = Root / "downloads/fry.jpeg"
     if isinstance(reply.media, typ.MessageMediaPhoto):
@@ -74,21 +70,17 @@ async def _(kst):
         return await yy.eod("`Bot did not respond.`")
     if not getattr(resp.message.media, "photo", None):
         return await yy.eod(f"`{resp.message.message}`")
-    with suppress(BaseException):
-        await kst.respond(
-            file=resp.message.media,
-            force_document=False,
-            allow_cache=False,
-            reply_to=kst.reply_to_msg_id,
-            silent=True,
-        )
-    await yy.try_delete()
+    await yy.eor(
+        file=resp.message.media,
+        force_document=False,
+        allow_cache=False,
+    )
     (file).unlink(missing_ok=True)
     (fry_img).unlink(missing_ok=True)
 
 
 @kasta_cmd(
-    pattern="deepfry(?: |$)([1-9])?",
+    pattern="ugly(?: |$)([1-9])?",
     func=lambda e: e.is_reply,
 )
 async def _(kst):
@@ -97,52 +89,45 @@ async def _(kst):
     reply = await kst.get_reply_message()
     data = check_media(reply)
     if isinstance(data, bool):
-        await kst.eor("`I can't deepfry that!`", time=5)
+        await kst.eor("`Cannot uglying that!`", time=5)
         return
-    if reply.sender.bot:
-        await kst.eor("`Reply to actual users message.`", time=5)
-        return
-    yy = await kst.eor("`Deepfrying...`")
+    yy = await kst.eor("`...`")
     ext = None
-    fry_img = Root / "downloads/fry.jpeg"
+    ugly_img = Root / "downloads/ugly.jpeg"
     if isinstance(reply.media, typ.MessageMediaPhoto):
-        file = fry_img
+        file = ugly_img
     else:
         mim = reply.media.document.mime_type
         ext = mimetypes.guess_extension(mim)
-        file = Root / ("downloads/" + f"fry{ext}")
+        file = Root / ("downloads/" + f"ugly{ext}")
     await reply.download_media(file=file)
     if ext and ext in (".mp4", ".gif", ".webm"):
-        to_deepfry = fry_img
-        ss = await Screenshot(file, 0, fry_img)
+        to_ugly = ugly_img
+        ss = await Screenshot(file, 0, ugly_img)
         if not ss:
             (file).unlink(missing_ok=True)
             return await yy.try_delete()
     else:
         if ext and ext == ".tgs":
-            fry_img = Root / "downloads/fry.png"
-            await Runner(f"lottie_convert.py {file} {fry_img}")
+            ugly_img = Root / "downloads/ugly.png"
+            await Runner(f"lottie_convert.py {file} {ugly_img}")
             (file).unlink(missing_ok=True)
-            file = fry_img
-        to_deepfry = file
+            file = ugly_img
+        to_ugly = file
     try:
         for _ in range(level):
-            img = await aioify(deepfry, to_deepfry)
-        img.save(fry_img, format="JPEG")
+            img = await aioify(uglying, to_ugly)
+        img.save(ugly_img, format="JPEG")
     except BaseException:
-        (to_deepfry).unlink(missing_ok=True)
+        (to_ugly).unlink(missing_ok=True)
         return await yy.try_delete()
-    with suppress(BaseException):
-        await kst.respond(
-            file=fry_img,
-            force_document=False,
-            allow_cache=False,
-            reply_to=kst.reply_to_msg_id,
-            silent=True,
-        )
-    await yy.try_delete()
+    await yy.eor(
+        file=ugly_img,
+        force_document=False,
+        allow_cache=False,
+    )
     (file).unlink(missing_ok=True)
-    (fry_img).unlink(missing_ok=True)
+    (ugly_img).unlink(missing_ok=True)
 
 
 async def conv_fry(conv, image, level):
@@ -159,7 +144,7 @@ async def conv_fry(conv, image, level):
         resp = conv.wait_event(events.NewMessage(incoming=True, from_users=conv.chat_id))
         resp = await resp
         await yy.try_delete()
-        await resp.mark_read(clear_mentions=True)
+        await resp.read(clear_mentions=True, clear_reactions=True)
         return resp
     except asyncio.exceptions.TimeoutError:
         return None
@@ -168,7 +153,7 @@ async def conv_fry(conv, image, level):
         return await conv_fry(conv, image, level)
 
 
-def deepfry(img: Image) -> Image:
+def uglying(img: Image) -> Image:
     img = Image.open(img)
     colours = (
         (random.randint(50, 200), random.randint(40, 170), random.randint(40, 190)),
@@ -217,5 +202,5 @@ def check_media(reply):
 
 plugins_help["deepfry"] = {
     "{i}fry [1-8] [reply]": "Frying any image/sticker/animation/gif/video use image_deepfrybot (default level 3).",
-    "{i}deepfry [1-9] [reply]": "Deepfy any image/sticker/animation/gif/video and make it look ugly (default level 1).",
+    "{i}ugly [1-9] [reply]": "Uglying any image/sticker/animation/gif/video and make it look ugly (default level 1).",
 }

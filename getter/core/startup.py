@@ -15,7 +15,7 @@ from telethon.tl import functions as fun, types as typ
 from .. import __version__, Root
 from ..config import Var, EXECUTOR, DEVS
 from ..logger import LOGS
-from .client import getter_app
+from .base_client import getter_app
 from .db.globals_db import gvar, sgvar, dgvar
 from .helper import hk, get_botlogs
 from .property import (
@@ -52,6 +52,7 @@ _restart_text = r"""
 \\**#Getter**// **is back and alive!**
 ├  **Sudo:** `{}`
 ├  **PM-Guard:** `{}`
+├  **PM-Logs:** `{}`
 ├  **PM-Block:** `{}`
 ├  **Anti-PM:** `{}`
 └  **Version:** `{}`
@@ -60,6 +61,7 @@ _reboot_text = r"""
 \\**#Getter**// **is rebooted and applied!**
 ├  **Sudo:** `{}`
 ├  **PM-Guard:** `{}`
+├  **PM-Logs:** `{}`
 ├  **PM-Block:** `{}`
 ├  **Anti-PM:** `{}`
 └  **Version:** `{}`
@@ -86,7 +88,7 @@ def trap() -> None:
         loop.add_signal_handler(sig, lambda s=sig: asyncio.create_task(shutdown(s.name)))
 
 
-def migrations(app=None) -> None:
+def migrations(app: typing.Any = None) -> None:
     if Var.DEV_MODE or not hk.is_heroku:
         return
     LOGS.info(">> Migrations...")
@@ -197,10 +199,10 @@ async def finishing(launch_msg: str) -> None:
     is_restart, is_reboot = False, False
     with suppress(BaseException):
         _restart = gvar("_restart").split("|")
-        is_restart = bool(_restart)
+        is_restart = True
     with suppress(BaseException):
         _reboot = gvar("_reboot").split("|")
-        is_reboot = bool(_reboot)
+        is_reboot = True
     if is_restart:
         with suppress(BaseException):
             chat_id, msg_id = int(_restart[0]), int(_restart[1])
@@ -211,6 +213,7 @@ async def finishing(launch_msg: str) -> None:
                     text=_restart_text.format(
                         humanbool(gvar("_sudo"), toggle=True),
                         humanbool(gvar("_pmguard"), toggle=True),
+                        humanbool(gvar("_pmlog"), toggle=True),
                         humanbool(gvar("_pmblock"), toggle=True),
                         humanbool(gvar("_antipm"), toggle=True),
                         __version__,
@@ -221,18 +224,20 @@ async def finishing(launch_msg: str) -> None:
     if is_reboot:
         with suppress(BaseException):
             chat_id, msg_id = int(_reboot[0]), int(_reboot[1])
-            await getter_app.edit_message(
-                chat_id,
-                message=msg_id,
-                text=_reboot_text.format(
-                    humanbool(gvar("_sudo"), toggle=True),
-                    humanbool(gvar("_pmguard"), toggle=True),
-                    humanbool(gvar("_pmblock"), toggle=True),
-                    humanbool(gvar("_antipm"), toggle=True),
-                    __version__,
-                ),
-                link_preview=False,
-            )
+            async with WaitFor(5):
+                await getter_app.edit_message(
+                    chat_id,
+                    message=msg_id,
+                    text=_reboot_text.format(
+                        humanbool(gvar("_sudo"), toggle=True),
+                        humanbool(gvar("_pmguard"), toggle=True),
+                        humanbool(gvar("_pmlog"), toggle=True),
+                        humanbool(gvar("_pmblock"), toggle=True),
+                        humanbool(gvar("_antipm"), toggle=True),
+                        __version__,
+                    ),
+                    link_preview=False,
+                )
         dgvar("_reboot")
     if BOTLOGS:
         with suppress(BaseException):

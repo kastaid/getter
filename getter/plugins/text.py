@@ -15,6 +15,7 @@ from . import (
     parse_pre,
     strip_format,
     strip_emoji,
+    format_exc,
     camel,
     snake,
     kebab,
@@ -30,7 +31,7 @@ async def _(kst):
     text = await kst.client.get_text(kst, plain=False)
     if not text:
         return await kst.try_delete()
-    await kst.eor(text, parse_mode=parse_pre)
+    await kst.eor(text, parts=True, parse_mode=parse_pre)
 
 
 @kasta_cmd(
@@ -41,7 +42,7 @@ async def _(kst):
     if not text:
         return await kst.try_delete()
     text = strip_format(text)
-    await kst.eor(text)
+    await kst.eor(text, parts=True)
 
 
 @kasta_cmd(
@@ -52,7 +53,7 @@ async def _(kst):
     if not text:
         return await kst.try_delete()
     text = "".join(text.split())
-    await kst.eor(text)
+    await kst.eor(text, parts=True)
 
 
 @kasta_cmd(
@@ -63,7 +64,7 @@ async def _(kst):
     if not text:
         return await kst.try_delete()
     text = strip_emoji(text)
-    await kst.eor(text)
+    await kst.eor(text, parts=True)
 
 
 @kasta_cmd(
@@ -80,7 +81,7 @@ async def _(kst):
     text = orig + "\n"
     for _ in range(count - 1):
         text += orig + "\n"
-    await kst.eor(text)
+    await kst.eor(text, parts=True)
 
 
 @kasta_cmd(
@@ -117,7 +118,7 @@ async def _(kst):
         text = snake(text)
     elif cmd == "kebab":
         text = kebab(text)
-    await kst.eor(text)
+    await kst.eor(text, parts=True)
 
 
 @kasta_cmd(
@@ -143,7 +144,8 @@ async def _(kst):
     try:
         text = base64.b64decode(text).decode("utf-8", "replace")
     except Exception as err:
-        text = f"Invalid Base64 data: {err}"
+        await yy.eor(format_exc(err), parse_mode="html")
+        return
     await yy.sod(text, parse_mode=parse_pre)
 
 
@@ -222,14 +224,14 @@ async def _(kst):
     typing_symbol = "|"
     prev_text = ""
     await yy.eor(typing_symbol)
-    await asyncio.sleep(0.4)
+    await asyncio.sleep(0.3)
     for c in match:
         prev_text = prev_text + "" + c
         typing_text = prev_text + "" + typing_symbol
         await yy.eor(typing_text)
-        await asyncio.sleep(0.4)
+        await asyncio.sleep(0.3)
         await yy.eor(prev_text)
-        await asyncio.sleep(0.4)
+        await asyncio.sleep(0.3)
 
 
 @kasta_cmd(
@@ -246,7 +248,7 @@ async def _(kst):
         final_text += new_char
     if text != final_text:
         return await kst.eor(final_text)
-    await kst.eor(text)
+    await kst.eor(text, parts=True)
 
 
 @kasta_cmd(
@@ -258,7 +260,7 @@ async def _(kst):
         return await kst.try_delete()
     small_caps = "ᴀʙᴄᴅᴇғɢʜɪᴊᴋʟᴍɴᴏᴘϙʀsᴛᴜᴠᴡxʏᴢ"
     text = text.lower().translate(str.maketrans(string.ascii_lowercase, small_caps))
-    await kst.eor(text)
+    await kst.eor(text, parts=True)
 
 
 plugins_help["text"] = {

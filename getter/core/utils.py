@@ -177,10 +177,10 @@ def to_dict(
     elif hasattr(obj, "_ast"):
         return to_dict(obj._ast())
     elif hasattr(obj, "__iter__") and not isinstance(obj, str):
-        return [to_dict(v, classkey) for v in obj]
-    elif hasattr(object, "__dict__"):
+        return [to_dict(_, classkey) for _ in obj]
+    elif hasattr(obj, "__dict__"):
         data = dict(  # noqa
-            (k, to_dict(v, classkey)) for k, v in object.__dict__.items() if not callable(v) and not k.startswith("_")
+            [(k, to_dict(v, classkey)) for k, v in obj.__dict__.items() if not callable(v) and not k.startswith("_")]
         )
         if classkey and hasattr(obj, "__class__"):
             data[classkey] = obj.__class__.__name__
@@ -275,3 +275,10 @@ def normalize(text: str) -> str:
         normal = normal.replace(f28[count], lowercase[count])
         count += 1
     return " ".join(strip_ascii(strip_emoji(normal)).split())
+
+
+def get_full_class_name(obj: typing.Any) -> str:
+    module = obj.__class__.__module__
+    if module is None or module == str.__class__.__module__:
+        return obj.__class__.__name__
+    return module + "." + obj.__class__.__name__
