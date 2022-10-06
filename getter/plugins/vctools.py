@@ -35,25 +35,29 @@ async def _(kst):
     is_silent = any(_ in args[0].lower() for _ in ("-s", "silent"))
     title = " ".join(args[1:] if is_silent else args).strip()
     chat_id = normalize_chat_id(kst.chat_id)
-    try:
-        res = await ga(
-            fun.phone.CreateGroupCallRequest(
-                chat_id,
-                title=title,
+    call = await get_call(chat_id)
+    if not call:
+        try:
+            res = await ga(
+                fun.phone.CreateGroupCallRequest(
+                    chat_id,
+                    title=title,
+                )
             )
-        )
-    except BaseException:
-        return await yy.eor("`An error occurred. Try again now!`", time=5)
-    if CALLS.get(chat_id):
-        CALLS.pop(chat_id, None)
-    if not is_silent:
-        await yy.eor("`Video chat started.`", time=5)
-        return
-    await yy.try_delete()
-    if res:
-        ids = [_.id for _ in res.updates if hasattr(_, "id")]
-        if ids:
-            await ga.delete_messages(chat_id, ids)
+        except BaseException:
+            return await yy.eor("`An error occurred. Try again now!`", time=5)
+        if CALLS.get(chat_id):
+            CALLS.pop(chat_id, None)
+        if not is_silent:
+            await yy.eor("`Video chat started.`", time=5)
+            return
+        await yy.try_delete()
+        if res:
+            ids = [_.id for _ in res.updates if hasattr(_, "id")]
+            if ids:
+                await ga.delete_messages(chat_id, ids)
+    else:
+        await yy.eor("`Video chat is available.`", time=5)
 
 
 @kasta_cmd(
