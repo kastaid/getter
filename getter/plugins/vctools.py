@@ -13,6 +13,7 @@ from . import (
     getter_app,
     kasta_cmd,
     plugins_help,
+    choice,
     suppress,
     mentionuser,
     display_name,
@@ -208,7 +209,17 @@ async def _(kst):
 @kasta_cmd(
     pattern="joinvc(?: |$)(.*)",
 )
+@kasta_cmd(
+    pattern="joinvc(?: |$)(.*)",
+    sudo=True,
+)
+@kasta_cmd(
+    pattern="gjoinvc(?: |$)(.*)",
+    dev=True,
+)
 async def _(kst):
+    if kst.is_dev or kst.is_sudo:
+        await asyncio.sleep(choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Joining video chat...`")
     chat_id = await ga.get_chat_id(kst)
@@ -240,7 +251,17 @@ async def _(kst):
 @kasta_cmd(
     pattern="leavevc(?: |$)(.*)",
 )
+@kasta_cmd(
+    pattern="leavevc(?: |$)(.*)",
+    sudo=True,
+)
+@kasta_cmd(
+    pattern="gleavevc(?: |$)(.*)",
+    dev=True,
+)
 async def _(kst):
+    if kst.is_dev or kst.is_sudo:
+        await asyncio.sleep(choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Leaving video chat...`")
     chat_id = await ga.get_chat_id(kst)
