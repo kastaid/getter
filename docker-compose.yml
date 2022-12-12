@@ -8,4 +8,5 @@ services:
       STRING_SESSION: $STRING_SESSION
       HANDLER: $HANDLER
       TZ: $TZ
+      DATABASE_URL: $DATABASE_URL
     restart: on-failure
