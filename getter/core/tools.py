@@ -138,7 +138,7 @@ async def Carbon(
 ) -> typing.Any:
     kwargs["code"] = code
     if rayso:
-        url = "https://rayso.herokuapp.com/api"
+        url = "https://rayso-illvart.koyeb.app/api"
         kwargs["title"] = kwargs.get("title", "getter")
         kwargs["theme"] = kwargs.get("theme", "raindrop")
         kwargs["darkMode"] = kwargs.get("darkMode", True)
