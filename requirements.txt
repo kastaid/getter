@@ -6,7 +6,7 @@ pytz==2022.6
 psutil==5.9.4
 heroku3==5.1.5
 GitPython==3.1.29
-psycopg2-binary==3.1.6
+psycopg2-binary==2.9.3
 SQLAlchemy==1.4.45
 sqlalchemy-json==0.5.0
 cachetools==5.2.0
