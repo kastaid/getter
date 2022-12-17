@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  getter:
+    build: .
+    image: "getter:latest"
+    container_name: "getter"
+    env_file:
+      - config.env
+    restart: on-failure
+networks:
+  default:
+    name: getter
