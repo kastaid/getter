@@ -3,7 +3,7 @@
 > Get and put users (scraping) to the target **group/channel** efficiently, correctly and safety.
 
 <p align="center">
-    <a href="https://github.com/kastaid/getter/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/workflow/status/kastaid/getter/CI?logo=github&label=CI" /></a>
+    <a href="https://github.com/kastaid/getter/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/kastaid/getter/ci.yml?branch=main&logo=github&label=CI" /></a>
     <a href="https://www.codefactor.io/repository/github/kastaid/getter"><img alt="CodeFactor" src="https://www.codefactor.io/repository/github/kastaid/getter/badge" /></a>
     <a href="https://app.codacy.com/gh/kastaid/getter/dashboard"><img alt="Codacy grade" src="https://img.shields.io/codacy/grade/2f86ed8f8534424c8d4cdaa197dc5ce2?logo=codacy" /></a>
     <a href="https://github.com/kastaid/getter/blob/main/LICENSE"><img alt="LICENSE" src="https://img.shields.io/github/license/kastaid/getter" /></a>
