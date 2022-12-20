@@ -68,7 +68,7 @@ async def _(kst):
                     break
         if name:
             cmds = plugins_help[name]
-            text = f"**{len(cmds)} ==Help For {name.upper()}==**  <`{hl}help {name}`>\n\n"
+            text = f"**{len(cmds)} --Help For {name.upper()}--**  <`{hl}help {name}`>\n\n"
             for cmd, desc in cmds.items():
                 # cmd --> cmd.split(maxsplit=1)[0]
                 # args --> cmd.split(maxsplit=1)[1]
