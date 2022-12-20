@@ -31,7 +31,7 @@ _DS_TASKS = []
     edited=True,
 )
 async def _(kst):
-    await kst.try_delete()
+    await kst.delete()
     await kst.read(clear_mentions=True, clear_reactions=True)
 
 
@@ -41,9 +41,9 @@ async def _(kst):
     edited=True,
 )
 async def _(kst):
-    await kst.try_delete()
+    await kst.delete()
     if kst.is_reply:
-        await (await kst.get_reply_message()).try_delete()
+        await (await kst.get_reply_message()).delete()
 
 
 @kasta_cmd(
@@ -57,9 +57,9 @@ async def _(kst):
         chat,
         min_id=kst.reply_to_msg_id,
     ):
-        await msg.try_delete()
+        await msg.delete()
         total += 1
-    await (await kst.get_reply_message()).try_delete()
+    await (await kst.get_reply_message()).delete()
     await kst.sod(f"`Purged {total}`", time=3, silent=True)
 
 
@@ -103,7 +103,7 @@ async def _(kst):
             from_user="me",
             limit=int(num),
         ):
-            await msg.try_delete()
+            await msg.delete()
             total += 1
         if kst.is_dev or kst.is_sudo:
             return
@@ -126,7 +126,7 @@ async def _(kst):
         chat,
         from_user=from_user,
     ):
-        await msg.try_delete()
+        await msg.delete()
         total += 1
     await kst.sod(f"`Purged {total} messages from {whois}`", time=3, silent=True)
 
@@ -136,7 +136,7 @@ async def _(kst):
     func=lambda e: e.is_reply,
 )
 async def _(kst):
-    await kst.try_delete()
+    await kst.delete()
     with suppress(BaseException):
         copy = await kst.get_reply_message()
         await copy.reply(copy)
