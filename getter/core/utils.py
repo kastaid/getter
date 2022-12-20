@@ -37,7 +37,6 @@ def replace_all(
 def md_to_html(text: str) -> str:
     repls = {
         "<p>(.*)</p>": "\\1",
-        r"\=\=(.*)\=\=": "<u>\\1</u>",
         r"\~\~(.*)\~\~": "<del>\\1</del>",
         r"\-\-(.*)\-\-": "<u>\\1</u>",
         r"\_\_(.*)\_\_": "<em>\\1</em>",
@@ -49,7 +48,6 @@ def md_to_html(text: str) -> str:
 @cached(cache={})
 def strip_format(text: str) -> str:
     repls = {
-        "==": "",
         "~~": "",
         "--": "",
         "__": "",

@@ -6,7 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-from telethon.errors.rpcerrorlist import UserBotError
+from telethon.errors.rpcerrorlist import UserBotError, InputUserDeactivatedError
 from telethon.tl import functions as fun, types as typ
 from . import (
     DEVS,
@@ -150,8 +150,11 @@ async def _(kst):
     drafts = 0
     yy = await kst.eor("`Processing...`")
     async for x in ga.iter_drafts():
-        await x.delete()
-        drafts += 1
+        try:
+            await x.delete()
+            drafts += 1
+        except InputUserDeactivatedError:
+            pass
     if not drafts:
         return await yy.eor("`no drafts found`", time=3)
     await yy.eod(f"`cleared {drafts} drafts`")

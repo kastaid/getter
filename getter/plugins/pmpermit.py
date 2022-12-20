@@ -52,7 +52,6 @@ _TORM = {
     "_": "",
     "-": "",
     "~": "",
-    "=": "",
 }
 _PMBYE_CACHE = TTLCache(maxsize=1, ttl=60, timer=time.perf_counter)  # 1 mins
 _PMMSG_CACHE = TTLCache(maxsize=1, ttl=60, timer=time.perf_counter)  # 1 mins
