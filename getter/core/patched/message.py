@@ -58,7 +58,7 @@ class Message(typ.Message):
             if edit_time:
                 await asyncio.sleep(edit_time)
             if is_file or parts:
-                await self.try_delete()
+                await self.delete()
             try:
                 if is_file:
                     yy = await self._client.send_file(
@@ -103,7 +103,7 @@ class Message(typ.Message):
                 except BaseException:
                     return None
             except MessageTooLongError:
-                await self.try_delete()
+                await self.delete()
                 with suppress(BaseException), BytesIO(str.encode(text)) as file:
                     file.name = "message.txt"
                     return await self.respond(
@@ -182,7 +182,7 @@ class Message(typ.Message):
                 return None
         if yy and time:
             await asyncio.sleep(time)
-            return await yy.try_delete()
+            return await yy.delete()
         return yy
 
     @patchable()
@@ -224,7 +224,7 @@ class Message(typ.Message):
             if arg in args:
                 del args[arg]
         if self.out and delete:
-            await self.try_delete()
+            await self.delete()
         try:
             if is_file:
                 yy = await self._client.send_file(
@@ -270,7 +270,7 @@ class Message(typ.Message):
                 return None
         except MessageTooLongError:
             if self.out:
-                await self.try_delete()
+                await self.delete()
             with suppress(BaseException), BytesIO(str.encode(text)) as file:
                 file.name = "message.txt"
                 return await self.respond(
@@ -289,7 +289,7 @@ class Message(typ.Message):
             return None
         if yy and time:
             await asyncio.sleep(time)
-            return await yy.try_delete()
+            return await yy.delete()
         return yy
 
     @patchable()
