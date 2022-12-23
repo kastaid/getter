@@ -31,7 +31,6 @@ class Message(typ.Message):
         text: typing.Optional[str] = None,
         link_preview: bool = False,
         silent: bool = False,
-        noforwards: bool = False,
         time: typing.Optional[typing.Union[int, float]] = None,
         edit_time: typing.Optional[typing.Union[int, float]] = None,
         force_reply: bool = False,
@@ -50,7 +49,6 @@ class Message(typ.Message):
             "link_preview",
             "silent",
             "reply_to",
-            "noforwards",
         ):
             if arg in args:
                 del args[arg]
@@ -65,7 +63,6 @@ class Message(typ.Message):
                         self.chat_id,
                         caption=text,
                         silent=True,
-                        noforwards=noforwards,
                         reply_to=reply_to,
                         **args,
                     )
@@ -76,7 +73,6 @@ class Message(typ.Message):
                             text,
                             link_preview=link_preview,
                             silent=silent,
-                            noforwards=noforwards,
                             reply_to=reply_to,
                             **args,
                         )
@@ -96,7 +92,6 @@ class Message(typ.Message):
                         self.chat_id,
                         caption=None,
                         silent=True,
-                        noforwards=noforwards,
                         reply_to=reply_to,
                         **args,
                     )
@@ -127,7 +122,6 @@ class Message(typ.Message):
                         self.chat_id,
                         caption=text,
                         silent=True,
-                        noforwards=noforwards,
                         reply_to=reply_to,
                         **args,
                     )
@@ -138,7 +132,6 @@ class Message(typ.Message):
                             text,
                             link_preview=link_preview,
                             silent=silent,
-                            noforwards=noforwards,
                             reply_to=reply_to,
                             **args,
                         )
@@ -147,7 +140,6 @@ class Message(typ.Message):
                             text,
                             link_preview=link_preview,
                             silent=silent,
-                            noforwards=noforwards,
                             reply_to=reply_to,
                             **args,
                         )
@@ -157,7 +149,6 @@ class Message(typ.Message):
                         self.chat_id,
                         caption=None,
                         silent=True,
-                        noforwards=noforwards,
                         reply_to=reply_to,
                         **args,
                     )
@@ -189,7 +180,7 @@ class Message(typ.Message):
     async def eod(
         self, *args, **kwargs
     ) -> typing.Optional[typing.Union[typ.Message, typing.Sequence[typ.messages.AffectedMessages]]]:
-        kwargs["time"] = kwargs.get("time", 9)
+        kwargs["time"] = kwargs.get("time", 8)
         return await self.eor(*args, **kwargs)
 
     @patchable()
@@ -199,7 +190,6 @@ class Message(typ.Message):
         chat_id: typing.Optional[hints.EntityLike] = None,
         link_preview: bool = False,
         silent: bool = False,
-        noforwards: bool = False,
         time: typing.Optional[typing.Union[int, float]] = None,
         edit_time: typing.Optional[typing.Union[int, float]] = None,
         force_reply: bool = False,
@@ -219,7 +209,6 @@ class Message(typ.Message):
             "link_preview",
             "silent",
             "reply_to",
-            "noforwards",
         ):
             if arg in args:
                 del args[arg]
@@ -231,7 +220,6 @@ class Message(typ.Message):
                     chat_id,
                     caption=text,
                     silent=True,
-                    noforwards=noforwards,
                     reply_to=reply_to,
                     **args,
                 )
@@ -242,7 +230,6 @@ class Message(typ.Message):
                         text,
                         link_preview=link_preview,
                         silent=silent,
-                        noforwards=noforwards,
                         reply_to=reply_to,
                         **args,
                     )
@@ -252,7 +239,6 @@ class Message(typ.Message):
                         text,
                         link_preview=link_preview,
                         silent=silent,
-                        noforwards=noforwards,
                         reply_to=reply_to,
                         **args,
                     )
@@ -262,7 +248,6 @@ class Message(typ.Message):
                     chat_id,
                     caption=None,
                     silent=True,
-                    noforwards=noforwards,
                     reply_to=reply_to,
                     **args,
                 )

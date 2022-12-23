@@ -117,19 +117,19 @@ LSFILES_MAP = {
 }
 
 OUTS_AFK = (
-    "{} Is Alive !!",
-    "{} Is Here !!",
-    "{} Is Back !!",
-    "{} Is Awake !!",
-    "{} Is Awakening !!",
-    "{} Is Online !!",
-    "{} Is Active !!",
-    "{} Is Finally Here !!",
-    "{} Well Done !!",
-    "{} No Longer AFK !!",
-    "{} Is Coming !!",
-    "{} No Longer Offline !!",
-    "{} Back Again !!",
+    "Is Alive !!",
+    "Is Here !!",
+    "Is Back !!",
+    "Is Awake !!",
+    "Is Awakening !!",
+    "Is Online !!",
+    "Is Active !!",
+    "Is Finally Here !!",
+    "Well Done !!",
+    "No Longer AFK !!",
+    "Is Coming !!",
+    "No Longer Offline !!",
+    "Back Again !!",
 )
 
 FLIP_MAP = {

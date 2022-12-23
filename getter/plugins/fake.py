@@ -83,7 +83,7 @@ async def _(kst):
             datetime.datetime.fromtimestamp(date).strftime("%Y-%m-%d"),
             taken,
             humanbool(True),
-            f"<pre>{reason}</pre>" if reason else "No reason.",
+            f"<pre>{reason}</pre>" if reason else "None given.",
         )
         await yy.eor(text, parse_mode="html")
 

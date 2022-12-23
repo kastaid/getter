@@ -114,7 +114,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="vcinvite(?: |$)(.*)",
+    pattern="invitevc(?: |$)(.*)",
     groups_only=True,
 )
 async def _(kst):
@@ -337,7 +337,7 @@ plugins_help["vctools"] = {
     "{i}startvc [-s/silent] [title]": "Start or restart the video chat in current group/channel. Add '-s' to started silently.",
     "{i}stopvc [-s/silent]": "Stop the video chat in current group/channel. Add '-s' to stopped silently.",
     "{i}vctitle [title]/[reply]": "Change the video chat title or reset to default (without title) in current group/channel.",
-    "{i}vcinvite [reply]/[username/mention/id]": "Invite user to current video chat.",
+    "{i}invitevc [reply]/[username/mention/id]": "Invite user to current video chat.",
     # "{i}vcinviteall": "Invite all members to current video chat. **(YOU MUST BE JOINED)**",
     "{i}vcinfo": "Get information of current video chat.",
     "{i}joinvc [current/chat_id/username]/[reply]": "Join the video chat in group/channel.",

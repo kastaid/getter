@@ -313,7 +313,7 @@ async def _(kst):
     allow_user(user.id, date, reason)
     text = "<b><u>User {} allowed to PM!</u></b>\n".format(display_name(user))
     text += "<b>Date:</b> <code>{}</code>\n".format(datetime.datetime.fromtimestamp(date).strftime("%Y-%m-%d"))
-    text += "<b>Reason:</b> {}".format(f"<pre>{reason}</pre>" if reason else "No reason.")
+    text += "<b>Reason:</b> {}".format(f"<pre>{reason}</pre>" if reason else "None given.")
     done = await yy.eor(text, parse_mode="html")
     towarn, PMWARN = str(user.id), jdata.pmwarns()
     if towarn in PMWARN:
@@ -357,7 +357,7 @@ async def _(kst):
         for x in allowed_users:
             text += f"User ID: {x.user_id}\n"
             text += "Date: {}\n".format(datetime.datetime.fromtimestamp(x.date).strftime("%Y-%m-%d"))
-            text += "Reason: {}\n\n".format(x.reason or "No reason.")
+            text += "Reason: {}\n\n".format(x.reason or "None given.")
         return await kst.eor(text, parts=True, parse_mode="html")
     text = "`You got no allowed users!`"
     await kst.eor(text, time=5)
