@@ -237,7 +237,8 @@ async def _(kst):
             with suppress(BaseException):
                 await asyncio.sleep(3)
                 # https://tl.telethon.dev/methods/phone/edit_group_call_participant
-                await in_call.edit_group_call(muted=True)
+                await in_call.set_is_mute(is_muted=True)
+                # await in_call.edit_group_call(muted=True)
         except BaseException:
             if is_termux():
                 text = "`This command doesn't not supported Termux. Use proot-distro instantly!`"
