@@ -11,7 +11,14 @@ import datetime
 import time
 import aiofiles
 from aiocsv import AsyncDictReader, AsyncWriter
-from telethon.errors.rpcerrorlist import YouBlockedUserError
+from telethon.errors.rpcerrorlist import (
+    UserAlreadyParticipantError,
+    UserNotMutualContactError,
+    UserPrivacyRestrictedError,
+    UserKickedError,
+    UserChannelsTooMuchError,
+    YouBlockedUserError,
+)
 from telethon.tl import functions as fun, types as typ
 from . import (
     Root,
@@ -191,6 +198,14 @@ async def _(kst):
                             ),
                             parse_mode="html",
                         )
+                    except (
+                        UserAlreadyParticipantError,
+                        UserNotMutualContactError,
+                        UserPrivacyRestrictedError,
+                        UserKickedError,
+                        UserChannelsTooMuchError,
+                    ):
+                        pass
                     except Exception as err:
                         error = str(err)
                         failed += 1

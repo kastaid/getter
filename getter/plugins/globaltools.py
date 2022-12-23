@@ -95,7 +95,7 @@ ungdel_text = r"""
 reason_text = r"""
 \\<b>#{}</b>// Reason for {} updated!
 <b>Previous Reason:</b> <pre>{}</pre>
-<b>Latest Reason:</b> <pre>{}</pre>
+<b>New Reason:</b> <pre>{}</pre>
 """
 gkick_text = r"""
 \\<b>#GKicked</b>// User {} in {}-{}={} chats!
@@ -210,7 +210,7 @@ async def _(kst):
             datetime.datetime.fromtimestamp(date).strftime("%Y-%m-%d"),
             taken,
             humanbool(is_reported),
-            f"<pre>{reason}</pre>" if reason else "No reason.",
+            f"<pre>{reason}</pre>" if reason else "None given.",
         )
         await yy.eor(text, parse_mode="html")
 
@@ -341,7 +341,7 @@ async def _(kst):
             success,
             datetime.datetime.fromtimestamp(date).strftime("%Y-%m-%d"),
             taken,
-            f"<pre>{reason}</pre>" if reason else "No reason.",
+            f"<pre>{reason}</pre>" if reason else "None given.",
         )
         await yy.eor(text, parse_mode="html")
 
@@ -442,7 +442,7 @@ async def _(kst):
         text = gdel_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             datetime.datetime.fromtimestamp(date).strftime("%Y-%m-%d"),
-            f"<pre>{reason}</pre>" if reason else "No reason.",
+            f"<pre>{reason}</pre>" if reason else "None given.",
         )
         await yy.eor(text, parse_mode="html")
 
@@ -552,7 +552,7 @@ async def _(kst):
         text = f"<b><u>Is {mode} User</u></b>\n"
         text += f"User ID: {check.user_id}\n"
         text += "Date: {}\n".format(datetime.datetime.fromtimestamp(check.date).strftime("%Y-%m-%d"))
-        text += "Reason: {}".format(check.reason or "No reason.")
+        text += "Reason: {}".format(check.reason or "None given.")
         return await yy.eor(text, parse_mode="html")
     text = f"`User is not {mode}.`"
     await yy.eor(text, time=5)
@@ -588,7 +588,7 @@ async def _(kst):
         for x in users:
             text += f"User ID: {x.user_id}\n"
             text += "Date: {}\n".format(datetime.datetime.fromtimestamp(x.date).strftime("%Y-%m-%d"))
-            text += "Reason: {}\n\n".format(x.reason or "No reason.")
+            text += "Reason: {}\n\n".format(x.reason or "None given.")
         return await kst.eor(text, parts=True, parse_mode="html")
     text = f"`You got no {mode} users!`"
     await kst.eor(text, time=5)
@@ -650,7 +650,7 @@ async def _(kst):
             failed,
             success,
             taken,
-            f"<pre>{reason}</pre>" if reason else "No reason.",
+            f"<pre>{reason}</pre>" if reason else "None given.",
         )
         await yy.eor(text, parse_mode="html")
 

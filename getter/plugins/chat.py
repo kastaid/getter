@@ -31,7 +31,8 @@ _DS_TASKS = []
     edited=True,
 )
 async def _(kst):
-    await kst.delete()
+    with suppress(BaseException):
+        await kst.delete()
     await kst.read(clear_mentions=True, clear_reactions=True)
 
 
@@ -41,13 +42,15 @@ async def _(kst):
     edited=True,
 )
 async def _(kst):
-    await kst.delete()
+    with suppress(BaseException):
+        await kst.delete()
     if kst.is_reply:
-        await (await kst.get_reply_message()).delete()
+        with suppress(BaseException):
+            await (await kst.get_reply_message()).delete()
 
 
 @kasta_cmd(
-    pattern="purge$",
+    pattern="(purge|pg)$",
     func=lambda e: e.is_reply,
 )
 async def _(kst):
@@ -59,19 +62,20 @@ async def _(kst):
     ):
         await msg.delete()
         total += 1
-    await (await kst.get_reply_message()).delete()
+    with suppress(BaseException):
+        await (await kst.get_reply_message()).delete()
     await kst.sod(f"`Purged {total}`", time=3, silent=True)
 
 
 @kasta_cmd(
-    pattern="purgeme(?: |$)(.*)",
+    pattern="(purgeme|pgm)(?: |$)(.*)",
 )
 @kasta_cmd(
-    pattern="purgeme(?: |$)(.*)",
+    pattern="(purgeme|pgm)(?: |$)(.*)",
     sudo=True,
 )
 @kasta_cmd(
-    pattern="gpurgeme(?: |$)(.*)",
+    pattern="(gpurgeme|gpgm)(?: |$)(.*)",
     dev=True,
 )
 async def _(kst):
@@ -79,7 +83,7 @@ async def _(kst):
         await asyncio.sleep(choice((1, 2, 3)))
     ga = kst.client
     chat = await kst.get_input_chat()
-    num = kst.pattern_match.group(1)
+    num = kst.pattern_match.group(2)
     if kst.is_reply:
         msgs = []
         reply = await kst.get_reply_message()
@@ -136,7 +140,8 @@ async def _(kst):
     func=lambda e: e.is_reply,
 )
 async def _(kst):
-    await kst.delete()
+    with suppress(BaseException):
+        await kst.delete()
     with suppress(BaseException):
         copy = await kst.get_reply_message()
         await copy.reply(copy)
@@ -394,8 +399,8 @@ async def _(kst):
 plugins_help["chat"] = {
     "{i}read|{i}r": "Marks messages as read in current chat also clear mentions and reactions.",
     "{i}del|{i}d|d|D|del|Del": "Delete the replied message.",
-    "{i}purge [reply]": "Purge messages from the replied message. This action cannot be undone!",
-    "{i}purgeme [number]/[reply]": "Purge my messages from given number or from replied message.",
+    "{i}purge|{i}pg [reply]": "Purge messages from the replied message. This action cannot be undone!",
+    "{i}purgeme|{i}pgm [number]/[reply]": "Purge my messages from given number or from replied message.",
     "{i}purgeall [reply]": "Delete all messages from replied user. This cannot be undone!",
     "{i}copy [reply]": "Copy the replied message.",
     "{i}nodraft": "Clear all drafts.",

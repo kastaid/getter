@@ -1,4 +1,4 @@
-https://github.com/notudope/Telethon/archive/main.zip
+git+https://github.com/notudope/Telethon@main
 cryptg
 loguru==0.6.0
 python-dotenv==0.21.0

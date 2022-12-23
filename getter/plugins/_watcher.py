@@ -89,7 +89,7 @@ async def JoinedHandler(kst):
                 gbanned_text.format(
                     mention,
                     humanbool(is_reported),
-                    f"<pre>{gban.reason}</pre>" if gban.reason else "No reason.",
+                    f"<pre>{gban.reason}</pre>" if gban.reason else "None given.",
                 ),
                 parse_mode="html",
                 silent=True,
@@ -97,7 +97,7 @@ async def JoinedHandler(kst):
         with suppress(BaseException):
             await ga.edit_permissions(chat.id, user.id, view_messages=False)
         logs_text += "<b>Reported:</b> <code>{}</code>\n".format(humanbool(is_reported))
-        logs_text += "<b>Reason:</b> {}\n".format(f"<pre>{gban.reason}</pre>" if gban.reason else "No reason.")
+        logs_text += "<b>Reason:</b> {}\n".format(f"<pre>{gban.reason}</pre>" if gban.reason else "None given.")
         await sendlog(logs_text)
 
     gmute = is_gmute(user.id, use_cache=True)
@@ -108,12 +108,12 @@ async def JoinedHandler(kst):
         await kst.reply(
             gmuted_text.format(
                 mention,
-                f"<pre>{gmute.reason}</pre>" if gmute.reason else "No reason.",
+                f"<pre>{gmute.reason}</pre>" if gmute.reason else "None given.",
             ),
             parse_mode="html",
             silent=True,
         )
         with suppress(BaseException):
             await ga.edit_permissions(chat.id, user.id, send_messages=False)
-        logs_text += "<b>Reason:</b> {}\n".format(f"<pre>{gban.reason}</pre>" if gban.reason else "No reason.")
+        logs_text += "<b>Reason:</b> {}\n".format(f"<pre>{gban.reason}</pre>" if gban.reason else "None given.")
         await sendlog(logs_text)
