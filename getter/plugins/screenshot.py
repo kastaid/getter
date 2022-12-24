@@ -33,7 +33,7 @@ async def _(kst):
         if is_termux():
             await kst.eor("`This command doesn't not supported Termux. Use proot-distro instantly!`", time=5)
             return
-        selenium = import_lib("selenium==4.4.3")
+        selenium = import_lib("selenium==4.7.2")
     link = await kst.client.get_text(kst)
     if not link:
         await kst.eor("`Provide a valid link!`", time=5)
@@ -97,7 +97,7 @@ async def _(kst):
         if is_termux():
             await kst.eor("`This command doesn't not supported Termux. Use proot-distro instantly!`", time=5)
             return
-        tweetcapture = import_lib("tweet-capture==0.0.14")
+        tweetcapture = import_lib("tweet-capture==0.1.7")
     link = await kst.client.get_text(kst)
     if not link:
         await kst.eor("`Provide a valid tweet link!`", time=5)

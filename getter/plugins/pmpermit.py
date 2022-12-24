@@ -357,7 +357,7 @@ async def _(kst):
         for x in allowed_users:
             text += f"User ID: {x.user_id}\n"
             text += "Date: {}\n".format(datetime.datetime.fromtimestamp(x.date).strftime("%Y-%m-%d"))
-            text += "Reason: {}\n\n".format(x.reason or "None given.")
+            text += "Reason: {}\n".format(x.reason or "None given.")
         return await kst.eor(text, parts=True, parse_mode="html")
     text = "`You got no allowed users!`"
     await kst.eor(text, time=5)

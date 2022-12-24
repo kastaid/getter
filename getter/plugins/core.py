@@ -12,6 +12,8 @@ import time
 import aiofiles
 from aiocsv import AsyncDictReader, AsyncWriter
 from telethon.errors.rpcerrorlist import (
+    FloodWaitError,
+    InputUserDeactivatedError,
     UserAlreadyParticipantError,
     UserNotMutualContactError,
     UserPrivacyRestrictedError,
@@ -199,6 +201,7 @@ async def _(kst):
                             parse_mode="html",
                         )
                     except (
+                        InputUserDeactivatedError,
                         UserAlreadyParticipantError,
                         UserNotMutualContactError,
                         UserPrivacyRestrictedError,
@@ -412,8 +415,8 @@ async def _(kst):
         for user in users:
             if not INVITE_WORKER.get(chat_id):
                 break
-            if success == 30:
-                await yy.eor(f"`🔄 Reached 30 members, wait until {900/60} minutes...`")
+            if success == 50:
+                await yy.eor(f"`🔄 Reached 50 members, wait until {900/60} minutes...`")
                 await asyncio.sleep(900)
             try:
                 adding = typ.InputPeerUser(user["user_id"], user["hash"])
@@ -421,6 +424,16 @@ async def _(kst):
                 success += 1
                 INVITE_WORKER[chat_id].update({"success": success})
                 await yy.eor(f"`Adding {success} {mode}...`")
+            except FloodWaitError as fw:
+                await asyncio.sleep(fw.seconds + 10)
+                try:
+                    adding = typ.InputPeerUser(user["user_id"], user["hash"])
+                    await ga(fun.channels.InviteToChannelRequest(chat_id, users=[adding]))
+                    success += 1
+                    INVITE_WORKER[chat_id].update({"success": success})
+                    await yy.eor(f"`Adding {success} {mode}...`")
+                except BaseException:
+                    pass
             except BaseException:
                 pass
         if INVITE_WORKER.get(chat_id):

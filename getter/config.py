@@ -8,7 +8,6 @@
 import typing
 from base64 import b64decode
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
 from multiprocessing import cpu_count
 from os import getenv
 import dotenv
@@ -30,7 +29,6 @@ def tobool(val: str) -> typing.Optional[int]:
     raise ValueError("invalid truth value %r" % (val,))
 
 
-@dataclass
 class Var:
     DEV_MODE: bool = tobool(getenv("DEV_MODE", "false").strip())
     API_ID: int = int(getenv("API_ID", "0").strip())
@@ -95,4 +93,4 @@ NOCHATS = {
     -1001699144606,
     -1001700971911,
 }
-del typing, b64decode, ThreadPoolExecutor, dataclass, cpu_count, dotenv, timezone
+del typing, b64decode, ThreadPoolExecutor, cpu_count, dotenv, timezone
