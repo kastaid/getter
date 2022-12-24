@@ -5,7 +5,6 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from gpytranslate import Translator
 from telethon.tl.custom.inlineresult import InlineResult
 from . import (
     kasta_cmd,
@@ -14,6 +13,7 @@ from . import (
     choice,
     Fetch,
     LANG_CODES,
+    import_lib,
 )
 
 BOT_INLINE = "@gamee"
@@ -112,6 +112,13 @@ async def _(kst):
     res = await Fetch(url, re_json=True)
     if not res:
         return await yy.eod("`Try again now!`")
+    try:
+        from gpytranslate import Translator
+    except ImportError:
+        Translator = import_lib(
+            lib_name="gpytranslate",
+            pkg_name="gpytranslate==1.4.0",
+        ).Translator
     try:
         tod = str(res.get("question"))
         if lang_code:

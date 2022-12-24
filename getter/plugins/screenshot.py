@@ -40,17 +40,17 @@ async def _(kst):
         return await kst.eod("`Input is not supported link!`")
     yy = await kst.eor("`Processing...`")
     try:
-        import selenium
+        from selenium import webdriver
     except ImportError:
         if is_termux():
             await kst.eor("`This command doesn't not supported Termux. Use proot-distro instantly!`", time=5)
             return
-        selenium = import_lib(
-            lib_name="selenium",
+        webdriver = import_lib(
+            lib_name="selenium.webdriver",
             pkg_name="selenium==4.7.2",
         )
     start_time = time.time()
-    options = selenium.webdriver.chrome.options.Options()
+    options = webdriver.ChromeOptions()
     options.add_argument("--headless")
     options.add_argument("--test-type")
     options.add_argument("--disable-logging")
@@ -64,8 +64,10 @@ async def _(kst):
     options.add_experimental_option("prefs", prefs)
     options.binary_location = CHROME_BIN
     await yy.eor("`Taking Screenshot...`")
-    service = selenium.webdriver.chrome.service.Service(executable_path=CHROME_DRIVER)
-    driver = selenium.webdriver.chrome.webdriver.WebDriver(service=service, options=options)
+    driver = webdriver.Chrome(
+        service=webdriver.chrome.service.Service(executable_path=CHROME_DRIVER),
+        options=options,
+    )
     driver.get(toss)
     height = driver.execute_script(
         "return Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);"
