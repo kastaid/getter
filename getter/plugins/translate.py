@@ -5,8 +5,6 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from gpytranslate import Translator
-from gtts import gTTS
 from . import (
     Root,
     Var,
@@ -20,6 +18,7 @@ from . import (
     strip_ascii,
     sort_dict,
     aioify,
+    import_lib,
 )
 
 
@@ -48,6 +47,13 @@ async def _(kst):
         await kst.eor("`Reply to text message or provide a text!`", time=5)
         return
     yy = await kst.eor("`...`")
+    try:
+        from gpytranslate import Translator
+    except ImportError:
+        Translator = import_lib(
+            lib_name="gpytranslate",
+            pkg_name="gpytranslate==1.4.0",
+        ).Translator
     try:
         text = strip_format(strip_emoji(words))
         translator = Translator()
@@ -87,6 +93,13 @@ async def _(kst):
         await kst.eor("`Reply to text message or provide a text!`", time=5)
         return
     try:
+        from gpytranslate import Translator
+    except ImportError:
+        Translator = import_lib(
+            lib_name="gpytranslate",
+            pkg_name="gpytranslate==1.4.0",
+        ).Translator
+    try:
         text = strip_format(strip_emoji(words))
         translation = await Translator()(text, targetlang=lang)
         await kst.sod(translation.text, parts=True)
@@ -119,6 +132,20 @@ async def _(kst):
         await kst.eor("`Reply to text message or provide a text!`", time=5)
         return
     yy = await kst.eor("`...`")
+    try:
+        from gtts import gTTS
+    except ImportError:
+        gTTS = import_lib(
+            lib_name="gtts",
+            pkg_name="gTTS==2.3.0",
+        ).gTTS
+    try:
+        from gpytranslate import Translator
+    except ImportError:
+        Translator = import_lib(
+            lib_name="gpytranslate",
+            pkg_name="gpytranslate==1.4.0",
+        ).Translator
     try:
         text = strip_ascii(strip_format(strip_emoji(words)))
         if kst.pattern_match.group(1).strip() != "t":

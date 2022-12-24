@@ -16,7 +16,6 @@ from functools import partial
 from io import BytesIO
 import aiofiles
 import aiohttp
-import icmplib
 import telegraph
 from .. import __version__
 from ..config import EXECUTOR
@@ -197,6 +196,13 @@ async def MyIp() -> str:
 
 
 def Pinger(addr: str) -> str:
+    try:
+        import icmplib
+    except ImportError:
+        icmplib = import_lib(
+            lib_name="icmplib",
+            pkg_name="icmplib==3.0.3",
+        )
     try:
         res = icmplib.ping(
             addr,
