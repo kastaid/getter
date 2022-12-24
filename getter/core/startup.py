@@ -70,13 +70,13 @@ _reboot_text = r"""
 
 async def shutdown(signum: str) -> None:
     LOGS.warning(f"Stop signal received : {signum}")
-    loop = asyncio.get_event_loop()
     with suppress(BaseException):
         await getter_app.disconnect()
     tasks = [_ for _ in asyncio.all_tasks() if _ is not asyncio.current_task()]
     [task.cancel() for task in tasks]
     await asyncio.gather(*tasks, return_exceptions=True)
     EXECUTOR.shutdown(wait=False)
+    loop = asyncio.get_event_loop()
     await loop.shutdown_asyncgens()
     loop.stop()
 
@@ -84,8 +84,7 @@ async def shutdown(signum: str) -> None:
 def trap() -> None:
     for signame in ("SIGINT", "SIGTERM", "SIGABRT"):
         sig = getattr(signal, signame)
-        loop = asyncio.get_event_loop()
-        loop.add_signal_handler(sig, lambda s=sig: asyncio.create_task(shutdown(s.name)))
+        asyncio.get_event_loop().add_signal_handler(sig, lambda s=sig: asyncio.create_task(shutdown(s.name)))
 
 
 def migrations(app: typing.Any = None) -> None:
