@@ -7,7 +7,6 @@
 
 import time
 import urllib.parse
-import speedtest
 from validators.ip_address import ipv4
 from . import (
     kasta_cmd,
@@ -20,6 +19,7 @@ from . import (
     Fetch,
     MyIp,
     Pinger,
+    import_lib,
 )
 
 
@@ -155,6 +155,13 @@ async def _(kst):
 async def _(kst):
     start = time.perf_counter()
     yy = await kst.eor("`Processing...`")
+    try:
+        import speedtest
+    except ImportError:
+        speedtest = import_lib(
+            lib_name="speedtest",
+            pkg_name="speedtest-cli==2.1.3",
+        )
     try:
         st = speedtest.Speedtest()
         st.get_best_server()

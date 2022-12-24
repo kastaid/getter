@@ -12,11 +12,8 @@ import re
 import aiofiles
 import telegraph
 from bs4 import BeautifulSoup
-from geopy.geocoders import Nominatim
-from kbbi import KBBI
 from PIL import Image
 from telethon.tl import types as typ
-from textblob import TextBlob
 from . import (
     Root,
     kasta_cmd,
@@ -32,6 +29,7 @@ from . import (
     Runner,
     Fetch,
     Telegraph,
+    import_lib,
 )
 
 
@@ -45,6 +43,13 @@ async def _(kst):
         await kst.eor("`Provide a text/sentence!`", time=5)
         return
     yy = await kst.eor("`Processing...`")
+    try:
+        from textblob import TextBlob
+    except ImportError:
+        TextBlob = import_lib(
+            lib_name="textblob",
+            pkg_name="TextBlob==0.17.1",
+        ).TextBlob
     try:
         check = TextBlob(sentence)
         correct = check.correct()
@@ -121,6 +126,13 @@ async def _(kst):
         await kst.eor("`Provide a word!`", time=5)
         return
     yy = await kst.eor("`Processing...`")
+    try:
+        from kbbi import KBBI
+    except ImportError:
+        KBBI = import_lib(
+            lib_name="kbbi",
+            pkg_name="kbbi==0.4.3",
+        ).KBBI
     try:
         mean = KBBI(word)
     except BaseException:
@@ -396,6 +408,13 @@ async def _(kst):
         await kst.eor("`Provide a location or coordinates!`", time=5)
         return
     yy = await kst.eor("`Finding...`")
+    try:
+        from geopy.geocoders import Nominatim
+    except ImportError:
+        Nominatim = import_lib(
+            lib_name="geopy.geocoders",
+            pkg_name="geopy==2.3.0",
+        ).Nominatim
     geolocator = Nominatim(user_agent="getter")
     location = geolocator.geocode(locco)
     if location:
