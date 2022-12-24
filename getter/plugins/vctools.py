@@ -310,7 +310,10 @@ def group_call_instance(chat_id: int):
     except ImportError:
         if is_termux():
             return
-        pytgcalls = import_lib("pytgcalls==3.0.0.dev22")
+        pytgcalls = import_lib(
+            lib_name="pytgcalls",
+            pkg_name="pytgcalls==3.0.0.dev22",
+        )
     if chat_id not in CALLS:
         CALLS[chat_id] = pytgcalls.GroupCallFactory(
             getter_app,

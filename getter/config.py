@@ -78,7 +78,6 @@ else:
 
 EXECUTOR = ThreadPoolExecutor(max_workers=cpu_count() * 5, thread_name_prefix="Getter")
 BOTLOGS_CACHE: typing.Set[int] = set()
-REQUIREMENTS_LIST: typing.List[str] = []
 DEV_CMDS: typing.Dict[str, typing.List[str]] = {}
 SUDO_CMDS: typing.Dict[str, typing.List[str]] = {}
 INVITE_WORKER: typing.Dict[str, typing.Any] = {}

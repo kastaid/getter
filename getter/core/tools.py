@@ -19,7 +19,7 @@ import aiohttp
 import icmplib
 import telegraph
 from .. import __version__
-from ..config import EXECUTOR, REQUIREMENTS_LIST
+from ..config import EXECUTOR
 from ..logger import LOGS
 from .db import gvar, sgvar
 from .utils import get_random_hex
@@ -41,7 +41,6 @@ def import_lib(
 ) -> typing.Any:
     if pkg_name is None:
         pkg_name = lib_name
-    REQUIREMENTS_LIST.append(pkg_name)
     lib_name = re.sub(r"(=|>|<|~).*", "", lib_name)
     try:
         return importlib.import_module(lib_name)
