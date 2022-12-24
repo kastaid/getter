@@ -28,12 +28,15 @@ from . import (
 )
 async def _(kst):
     try:
-        import selenium
+        from selenium import webdriver
     except ImportError:
         if is_termux():
             await kst.eor("`This command doesn't not supported Termux. Use proot-distro instantly!`", time=5)
             return
-        selenium = import_lib("selenium==4.4.3")
+        webdriver = import_lib(
+            lib_name="selenium",
+            pkg_name="selenium==4.7.2",
+        ).webdriver
     link = await kst.client.get_text(kst)
     if not link:
         await kst.eor("`Provide a valid link!`", time=5)
@@ -47,7 +50,7 @@ async def _(kst):
         return await kst.eod("`Input is not supported link!`")
     yy = await kst.eor("`Processing...`")
     start_time = time.time()
-    options = selenium.webdriver.ChromeOptions()
+    options = webdriver.ChromeOptions()
     options.add_argument("--headless")
     options.add_argument("--test-type")
     options.add_argument("--disable-logging")
@@ -61,8 +64,8 @@ async def _(kst):
     options.add_experimental_option("prefs", prefs)
     options.binary_location = CHROME_BIN
     await yy.eor("`Taking Screenshot...`")
-    service = selenium.webdriver.chrome.service.Service(executable_path=CHROME_DRIVER)
-    driver = selenium.webdriver.Chrome(service=service, options=options)
+    service = webdriver.chrome.service.Service(executable_path=CHROME_DRIVER)
+    driver = webdriver.Chrome(service=service, options=options)
     driver.get(toss)
     height = driver.execute_script(
         "return Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);"
@@ -92,14 +95,16 @@ async def _(kst):
 )
 async def _(kst):
     try:
-        from tweetcapture import TweetCapture
-        from tweetcapture.utils import is_valid_tweet_url
+        import tweetcapture
     except ImportError:
         if is_termux():
             await kst.eor("`This command doesn't not supported Termux. Use proot-distro instantly!`", time=5)
             return
-        TweetCapture = import_lib("tweet-capture==0.1.7").TweetCapture
-        from tweetcapture.utils import is_valid_tweet_url
+        tweetcapture = import_lib(
+            lib_name="tweetcapture",
+            pkg_name="tweet-capture==0.1.7",
+        )
+
     link = await kst.client.get_text(kst)
     if not link:
         await kst.eor("`Provide a valid tweet link!`", time=5)
@@ -109,11 +114,11 @@ async def _(kst):
     if not (check_link is True):
         toss = f"http://{link}"
         check_link = is_url(toss)
-    if not (check_link is True) or not is_valid_tweet_url(link):
+    if not (check_link is True) or not tweetcapture.utils.utils.is_valid_tweet_url(link):
         return await kst.eod("`Input is not valid tweet link!`")
     yy = await kst.eor("`Processing...`")
     start_time = time.time()
-    tweet = TweetCapture()
+    tweet = tweetcapture.TweetCapture()
     tweet.set_chromedriver_path(CHROME_DRIVER)
     tweet.add_chrome_argument("--no-sandbox")
     try:
