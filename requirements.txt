@@ -5,7 +5,7 @@ python-dotenv==0.21.0
 pytz==2022.7
 psutil==5.9.4
 heroku3==5.1.5
-GitPython==3.1.29
+GitPython==3.1.30
 psycopg2-binary==2.9.3
 SQLAlchemy==1.4.45
 sqlalchemy-json==0.5.0
