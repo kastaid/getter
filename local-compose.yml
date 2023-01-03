@@ -2,11 +2,13 @@ version: "3.9"
 services:
   getter:
     build: .
-    image: "getter:latest"
-    container_name: "getter"
+    image: getter:latest
+    container_name: getter
+    volumes:
+      - ./:/home/app/getter
     env_file:
       - config.env
-    restart: on-failure
+    restart: always
 networks:
   default:
     name: getter

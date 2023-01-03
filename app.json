@@ -37,6 +37,11 @@
         }
     },
     "stack": "heroku-22",
+    "formation": {
+        "worker": {
+            "quantity": 1
+        }
+    },
     "addons": [
         {
             "plan": "heroku-postgresql",
@@ -62,10 +67,5 @@
             "url": "https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest"
         }
     ],
-    "formation": {
-        "worker": {
-            "quantity": 1
-        }
-    },
     "success_url": "https://t.me/kastaot"
 }

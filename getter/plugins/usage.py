@@ -10,7 +10,6 @@ import datetime
 import html
 import json
 import math
-import shutil
 from . import (
     getter_app,
     kasta_cmd,
@@ -59,6 +58,7 @@ usage_text = """
 <b>CPU:</b> <code>{}</code>
 <b>RAM:</b> <code>{}</code>
 <b>DISK:</b> <code>{}</code>
+<b>SWAP:</b> <code>{}</code>
 """
 
 
@@ -113,7 +113,23 @@ async def _(kst):
 def default_usage() -> str:
     import psutil
 
-    total, used, free = shutil.disk_usage(".")
+    try:
+        UPLOAD = humanbytes(psutil.net_io_counters().bytes_sent)
+    except BaseException:
+        UPLOAD = 0
+    try:
+        DOWN = humanbytes(psutil.net_io_counters().bytes_recv)
+    except BaseException:
+        DOWN = 0
+    try:
+        workdir = psutil.disk_usage(".")
+        TOTAL = humanbytes(workdir.total)
+        USED = humanbytes(workdir.used)
+        FREE = humanbytes(workdir.free)
+    except BaseException:
+        TOTAL = 0
+        USED = 0
+        FREE = 0
     try:
         cpu_freq = psutil.cpu_freq().current
         if cpu_freq >= 1000:
@@ -135,16 +151,10 @@ def default_usage() -> str:
     except BaseException:
         DISK = "0%"
     try:
-        UPLOAD = humanbytes(psutil.net_io_counters().bytes_sent)
+        swap = psutil.swap_memory()
+        SWAP = "{} | {}%".format(humanbytes(swap.total), swap.percent or 0)
     except BaseException:
-        UPLOAD = 0
-    try:
-        DOWN = humanbytes(psutil.net_io_counters().bytes_recv)
-    except BaseException:
-        DOWN = 0
-    TOTAL = humanbytes(total)
-    USED = humanbytes(used)
-    FREE = humanbytes(free)
+        SWAP = "0 | 0%"
     return usage_text.format(
         getter_app.uptime,
         datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S"),
@@ -156,6 +166,7 @@ def default_usage() -> str:
         CPU,
         RAM,
         DISK,
+        SWAP,
     )
 
 

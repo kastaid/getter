@@ -12,4 +12,4 @@ services:
       HANDLER: $HANDLER
       TZ: $TZ
       LANG_CODE: $LANG_CODE
-    restart: on-failure
+    restart: always
