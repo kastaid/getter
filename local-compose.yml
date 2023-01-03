@@ -9,6 +9,10 @@ services:
     env_file:
       - config.env
     restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
 networks:
   default:
     name: getter

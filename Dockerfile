@@ -7,13 +7,17 @@
 
 FROM python:3.10-slim-bullseye
 
-ENV PROJECT=getter \
-    TZ=Asia/Jakarta \
+ENV TZ=Asia/Jakarta \
     TERM=xterm-256color \
     DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1 \
     VIRTUAL_ENV=/venv \
-    CHROME_BIN=/usr/bin/google-chrome
+    PATH=/venv/bin:/app/bin:$PATH \
+    CHROME_BIN=/usr/bin/google-chrome \
+    DISPLAY=:99
+
+WORKDIR /app
+COPY . .
 
 RUN set -ex \
     && apt-get -qqy update \
@@ -39,12 +43,6 @@ RUN set -ex \
     && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8 \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && dpkg-reconfigure --force -f noninteractive tzdata \
-    && groupadd -g 1000 app \
-    && useradd -u 1000 -ms /bin/sh -g app app \
-    && echo "app ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/app \
-    && chmod 0440 /etc/sudoers.d/app \
-    && mkdir -p /home/app/$PROJECT \
-    && chmod 777 /home/app/$PROJECT \
     && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
     && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
     && apt-get -qqy update \
@@ -54,18 +52,15 @@ RUN set -ex \
     && rm -rf ~/chromedriver_linux64.zip \
     && mv -f ~/chromedriver /usr/bin/chromedriver \
     && chown root:root /usr/bin/chromedriver \
-    && chmod 0755 /usr/bin/chromedriver
-
-COPY --chown=app:app . /home/app/$PROJECT
-WORKDIR /home/app/$PROJECT
-USER app
-ENV PATH=$VIRTUAL_ENV/bin:/home/app/.local/bin:/home/app/$PROJECT/bin:$PATH \
-    DISPLAY=:99
-
-RUN set -ex \
+    && chmod 0755 /usr/bin/chromedriver \
     && python3 -m pip install -Uq pip \
     && python3 -m venv $VIRTUAL_ENV \
     && pip3 install --no-cache-dir -r requirements.txt \
-    && sudo -- sh -c "apt-get -qqy purge --auto-remove tzdata unzip build-essential; apt-get -qqy clean; rm -rf -- /home/app/.cache /root/.cache /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/* /usr/share/man/* /usr/share/doc/* /var/log/* /tmp/* /var/tmp/* /etc/sudoers.d/app"
+    && apt-get -qqy purge --auto-remove \
+        tzdata \
+        unzip \
+        build-essential \
+    && apt-get -qqy clean \
+    && rm -rf -- /app/.cache /root/.cache /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/* /usr/share/man/* /usr/share/doc/* /var/log/* /tmp/* /var/tmp/* /root/.npm
 
 CMD ["python3", "-m", "getter"]
