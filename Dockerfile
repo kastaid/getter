@@ -22,7 +22,6 @@ COPY . .
 RUN set -ex \
     && apt-get -qqy update \
     && apt-get -qqy install --no-install-recommends \
-        sudo \
         gnupg2 \
         git \
         curl \
