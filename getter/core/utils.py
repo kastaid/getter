@@ -1,5 +1,5 @@
 # getter < https://t.me/kastaid >
-# Copyright (C) 2022 kastaid
+# Copyright (C) 2022-present kastaid
 #
 # This file is a part of < https://github.com/kastaid/getter/ >
 # PLease read the GNU Affero General Public License in
@@ -56,7 +56,6 @@ def strip_format(text: str) -> str:
     return replace_all(BeautifulSoup(markdown(text), features="html.parser").get_text(), repls).strip()
 
 
-@cached(cache={})
 def strip_emoji(text: str) -> str:
     return replace_emoji(text, "").strip()
 

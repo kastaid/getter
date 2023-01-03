@@ -1,5 +1,5 @@
 # getter < https://t.me/kastaid >
-# Copyright (C) 2022 kastaid
+# Copyright (C) 2022-present kastaid
 #
 # This file is a part of < https://github.com/kastaid/getter/ >
 # PLease read the GNU Affero General Public License in
@@ -128,7 +128,7 @@ async def Fetch(
 
 async def Carbon(
     code: str,
-    url: str = "https://carbonara-42.herokuapp.com/api/cook",
+    url: str = "carbon/api/cook",
     file_name: str = "carbon",
     download: bool = False,
     rayso: bool = False,
@@ -136,7 +136,7 @@ async def Carbon(
 ) -> typing.Any:
     kwargs["code"] = code
     if rayso:
-        url = "https://rayso-illvart.koyeb.app/api"
+        url = "rayso/api"
         kwargs["title"] = kwargs.get("title", "getter")
         kwargs["theme"] = kwargs.get("theme", "raindrop")
         kwargs["darkMode"] = kwargs.get("darkMode", True)

@@ -1,5 +1,5 @@
 # getter < https://t.me/kastaid >
-# Copyright (C) 2022 kastaid
+# Copyright (C) 2022-present kastaid
 #
 # This file is a part of < https://github.com/kastaid/getter/ >
 # PLease read the GNU Affero General Public License in
@@ -16,7 +16,7 @@ from version import __version__
 
 StartTime = time()
 __license__ = "GNU Affero General Public License v3.0"
-__copyright__ = "Getter Copyright (C) 2022 kastaid"
+__copyright__ = "Getter Copyright (C) 2022-present kastaid"
 __pyversion__ = python_version()
 
 if not sys.platform.startswith("linux"):
@@ -29,7 +29,10 @@ if sys.version_info < (3, 9, 0):
     sys.exit(1)
 
 Root: Path = Path(__file__).parent.parent
-DIRS = ["logs/", "downloads/"]
+DIRS = (
+    "logs/",
+    "downloads/",
+)
 for d in DIRS:
     if not (Root / d).exists():
         (Root / d).mkdir(parents=True, exist_ok=True)
