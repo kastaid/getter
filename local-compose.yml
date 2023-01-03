@@ -3,7 +3,6 @@ services:
   getter:
     build: .
     image: getter:latest
-    container_name: getter
     volumes:
       - ./:/app
     env_file:
