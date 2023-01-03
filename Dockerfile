@@ -1,5 +1,5 @@
 # getter < https://t.me/kastaid >
-# Copyright (C) 2022 kastaid
+# Copyright (C) 2022-present kastaid
 #
 # This file is a part of < https://github.com/kastaid/getter/ >
 # PLease read the GNU Affero General Public License in
@@ -52,14 +52,17 @@ RUN set -ex \
     && mv -f ~/chromedriver /usr/bin/chromedriver \
     && chown root:root /usr/bin/chromedriver \
     && chmod 0755 /usr/bin/chromedriver \
+    && cp -rf .config ~/ \
     && python3 -m pip install -Uq pip \
     && python3 -m venv $VIRTUAL_ENV \
     && pip3 install --no-cache-dir -r requirements.txt \
     && apt-get -qqy purge --auto-remove \
+        curl \
+        wget \
         tzdata \
         unzip \
         build-essential \
     && apt-get -qqy clean \
-    && rm -rf -- /app/.cache /root/.cache /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/* /usr/share/man/* /usr/share/doc/* /var/log/* /tmp/* /var/tmp/* /root/.npm
+    && rm -rf -- ~/.cache /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/* /usr/share/man/* /usr/share/doc/* /var/log/* /tmp/* /var/tmp/* ~/.npm
 
 CMD ["python3", "-m", "getter"]

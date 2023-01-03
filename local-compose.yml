@@ -5,7 +5,7 @@ services:
     image: getter:latest
     container_name: getter
     volumes:
-      - ./:/home/app/getter
+      - ./:/app
     env_file:
       - config.env
     restart: always
