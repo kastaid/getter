@@ -12,7 +12,7 @@ ENV PROJECT=getter \
     TERM=xterm-256color \
     DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1 \
-    VIRTUAL_ENV=/home/app/venv \
+    VIRTUAL_ENV=/venv \
     CHROME_BIN=/usr/bin/google-chrome
 
 RUN set -ex \
@@ -48,7 +48,7 @@ RUN set -ex \
     && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
     && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
     && apt-get -qqy update \
-    && apt-get -qqy install google-chrome-stable \
+    && apt-get -qqy install --no-install-recommends google-chrome-stable \
     && wget -qN https://chromedriver.storage.googleapis.com/$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip -P ~/ \
     && unzip -qq ~/chromedriver_linux64.zip -d ~/ \
     && rm -rf ~/chromedriver_linux64.zip \
