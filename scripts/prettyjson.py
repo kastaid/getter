@@ -10,10 +10,15 @@ import sys
 import time
 from . import Root
 
+EXCLUDE = (
+    ".mypy_cache",
+    "db",
+)
+
 
 def main() -> None:
     try:
-        for file in filter(lambda p: ".mypy_cache" not in set(str(p.parent).split("/")), Root.rglob("*.json")):
+        for file in filter(lambda p: not str(p.parent).endswith(EXCLUDE), Root.rglob("*.json")):
             with open(file, "r", encoding="utf-8") as fp:
                 obj = json.load(fp)
             with open(file, "w", encoding="utf-8") as fp:
