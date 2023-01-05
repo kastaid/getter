@@ -12,6 +12,3 @@ services:
       resources:
         limits:
           memory: 1024M
-networks:
-  default:
-    name: getter
