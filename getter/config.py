@@ -7,9 +7,8 @@
 
 import typing
 from base64 import b64decode
-from concurrent.futures import ThreadPoolExecutor
-from multiprocessing import cpu_count
 from os import getenv
+from string import ascii_lowercase
 import dotenv
 from pytz import timezone
 
@@ -34,7 +33,7 @@ class Var:
     API_ID: int = int(getenv("API_ID", "0").strip())
     API_HASH: str = getenv("API_HASH", "").strip()
     STRING_SESSION: str = getenv("STRING_SESSION", "").strip()
-    DATABASE_URL: str = getenv("DATABASE_URL", "").strip()
+    DATABASE_URL: str = getenv("DATABASE_URL", "sqlite:///./getter.db").strip()
     BOTLOGS: int = int(getenv("BOTLOGS", "0").strip())
     HANDLER: str = getenv("HANDLER", ".").strip()
     TZ: str = getenv("TZ", "Asia/Jakarta").strip()
@@ -52,7 +51,7 @@ except BaseException:
     tz = timezone(_)
 
 if not (
-    Var.HANDLER.startswith(
+    Var.HANDLER.lower().startswith(
         (
             "/",
             ".",
@@ -67,6 +66,7 @@ if not (
             "&",
             ">",
             "<",
+            *tuple(ascii_lowercase),
         ),
     )
 ):
@@ -76,7 +76,6 @@ if not (
 else:
     hl = "".join(Var.HANDLER.split())
 
-EXECUTOR = ThreadPoolExecutor(max_workers=cpu_count() * 5, thread_name_prefix="Getter")
 BOTLOGS_CACHE: typing.Set[int] = set()
 DEV_CMDS: typing.Dict[str, typing.List[str]] = {}
 SUDO_CMDS: typing.Dict[str, typing.List[str]] = {}
@@ -92,4 +91,4 @@ NOCHATS = {
     -1001699144606,
     -1001700971911,
 }
-del typing, b64decode, ThreadPoolExecutor, cpu_count, dotenv, timezone
+del typing, b64decode, ascii_lowercase, dotenv, timezone

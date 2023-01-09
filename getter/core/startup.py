@@ -12,8 +12,13 @@ from contextlib import suppress
 from datetime import timedelta
 from async_timeout import timeout as WaitFor
 from telethon.tl import functions as fun, types as typ
-from .. import __version__, Root
-from ..config import Var, EXECUTOR, DEVS
+from .. import (
+    __version__,
+    Root,
+    LOOP,
+    EXECUTOR,
+)
+from ..config import Var, DEVS
 from ..logger import LOGS
 from .base_client import getter_app
 from .db.globals_db import gvar, sgvar, dgvar
@@ -76,15 +81,14 @@ async def shutdown(signum: str) -> None:
     [task.cancel() for task in tasks]
     await asyncio.gather(*tasks, return_exceptions=True)
     EXECUTOR.shutdown(wait=False)
-    loop = asyncio.get_event_loop()
-    await loop.shutdown_asyncgens()
-    loop.stop()
+    await LOOP.shutdown_asyncgens()
+    LOOP.stop()
 
 
 def trap() -> None:
     for signame in ("SIGINT", "SIGTERM", "SIGABRT"):
         sig = getattr(signal, signame)
-        asyncio.get_event_loop().add_signal_handler(sig, lambda s=sig: asyncio.create_task(shutdown(s.name)))
+        LOOP.add_signal_handler(sig, lambda s=sig: asyncio.create_task(shutdown(s.name)))
 
 
 def migrations(app: typing.Any = None) -> None:

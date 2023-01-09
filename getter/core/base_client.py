@@ -9,12 +9,11 @@ import asyncio
 import inspect
 import os
 import sys
-import time
 import typing
 from contextlib import suppress
 from logging import Logger
 from random import choice
-from telethon import utils
+from time import time
 from telethon.client.telegramclient import TelegramClient
 from telethon.errors.rpcerrorlist import (
     ApiIdInvalidError,
@@ -27,7 +26,7 @@ from telethon.network.connection.tcpfull import ConnectionTcpFull
 from telethon.sessions.abstract import Session
 from telethon.sessions.string import CURRENT_VERSION, StringSession
 from telethon.tl import functions as fun, types as typ
-from .. import StartTime, __version__
+from .. import StartTime, __version__, LOOP
 from ..config import Var, DEVS
 from ..logger import LOGS, TelethonLogger
 from .db import sgvar
@@ -157,10 +156,6 @@ class KastaClient(TelegramClient):
         os.execl(sys.executable, sys.executable, "-m", "getter")
 
     @property
-    def utils(self) -> typing.Any:
-        return utils
-
-    @property
     def full_name(self) -> str:
         return display_name(self.me)
 
@@ -174,7 +169,7 @@ class KastaClient(TelegramClient):
 
     @property
     def uptime(self) -> str:
-        return time_formatter((time.time() - StartTime) * 1000)
+        return time_formatter((time() - StartTime) * 1000)
 
     def to_dict(self) -> dict:
         return dict(inspect.getmembers(self))
@@ -192,6 +187,7 @@ else:
 
 getter_app = KastaClient(
     session,
+    loop=LOOP,
     app_version=__version__,
     device_model="Getter",
 )

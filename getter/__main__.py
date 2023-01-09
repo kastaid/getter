@@ -7,8 +7,8 @@
 
 import asyncio
 import sys
-import time
 from importlib import import_module
+from time import time
 from requests.packages import urllib3
 from . import (
     __license__,
@@ -54,7 +54,7 @@ async def main() -> None:
     await autopilot()
     await verify()
     LOGS.info(">> Load Plugins...")
-    load = time.time()
+    load = time()
     no_print = ("_watcher",)
     plugins, basepath = all_plugins()
     for plugin in plugins:
@@ -64,7 +64,7 @@ async def main() -> None:
                 LOGS.success("[+] " + plugin)
         except Exception as err:
             LOGS.exception(f"[-] {plugin} : {err}")
-    loaded_time = time_formatter((time.time() - load) * 1000)
+    loaded_time = time_formatter((time() - load) * 1000)
     [plugins.remove(_) for _ in no_print]  # type: ignore
     loaded_msg = ">> Loaded Plugins: {} , Commands: {} (took {}) : {}".format(
         plugins_help.count,

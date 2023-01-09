@@ -12,7 +12,7 @@ from . import (
     kasta_cmd,
     plugins_help,
     get_media_type,
-    format_exc,
+    formatx_send,
 )
 
 
@@ -27,7 +27,7 @@ async def _(kst):
         await ga(fun.account.UpdateProfileRequest(about=about))
         await yy.eod(f"`Successfully change my bio to “{about}”.`")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -51,7 +51,7 @@ async def _(kst):
         names = f"{first_name} {last_name}".strip()
         await yy.eod(f"`Successfully change my name to “{names}”.`")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -66,7 +66,7 @@ async def _(kst):
         await ga(fun.account.UpdateUsernameRequest(username))
         await yy.eod(f"`Successfully change my username to “{username}”.`")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -88,7 +88,7 @@ async def _(kst):
         await yy.eod("`Successfully change my profile picture.`")
     except Exception as err:
         (Root / pull).unlink(missing_ok=True)
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -109,7 +109,7 @@ async def _(kst):
         await ga(fun.photos.DeletePhotosRequest(pplist))
         await yy.eod(f"`Successfully deleted {len(pplist)} profile picture(s).`")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -130,7 +130,7 @@ async def _(kst):
         )
         await yy.eod(f"`Successfully {toggle} my profile picture.`")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -160,7 +160,7 @@ async def _(kst):
         total = total if is_all else 1
         await yy.sod(f"`Successfully to get {total} profile picture(s).`", time=8)
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 plugins_help["profile"] = {

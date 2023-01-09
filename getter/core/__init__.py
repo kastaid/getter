@@ -35,7 +35,7 @@ from .helper import (
     hk,
     jdata,
     get_botlogs,
-    format_exc,
+    formatx_send,
 )
 from .patched import *
 from .patcher import patch, patchable

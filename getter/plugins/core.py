@@ -7,11 +7,12 @@
 
 import asyncio
 import csv
-import datetime
-import time
+from datetime import datetime
+from time import time
 import aiofiles
 from aiocsv import AsyncDictReader, AsyncWriter
 from telethon.errors.rpcerrorlist import (
+    ChannelPrivateError,
     FloodWaitError,
     InputUserDeactivatedError,
     UserAlreadyParticipantError,
@@ -41,8 +42,26 @@ from . import (
     time_formatter,
 )
 
-with_error_text = """
-✅ <b>DONE INVITING WITH ERROR</b>
+invite_text = """
+🔄 <b>INVITING...</b>
+
+• <b>Invited:</b> <code>{}</code>
+• <b>Failed:</b> <code>{}</code>
+
+<b>Last Error:</b> <code>{}</code>
+"""
+done_text = """
+✅ <b>DONE INVITING</b>
+
+• <b>Invited:</b> <code>{}</code>
+• <b>Failed:</b> <code>{}</code>
+• <b>Taken:</b> <code>{}</code>
+
+<b>User:</b> <code>{}</code>
+<b>Time:</b> <code>{}</code>
+"""
+done_limit_text = """
+✅ <b>DONE INVITING GOT LIMIT</b>
 
 <b><u>Note</u></b>
 <pre>Got limit error and try again after {}</pre>
@@ -57,16 +76,11 @@ with_error_text = """
 <b>User:</b> <code>{}</code>
 <b>Time:</b> <code>{}</code>
 """
-invite_text = """
-🔄 <b>INVITING...</b>
+done_error_text = """
+⚠️ <b>DONE INVITING AN ERROR</b>
 
-• <b>Invited:</b> <code>{}</code>
-• <b>Failed:</b> <code>{}</code>
-
-<b>Last Error:</b> <code>{}</code>
-"""
-done_text = """
-✅ <b>DONE INVITING</b>
+<b><u>Error</u></b>
+<pre>{}</pre>
 
 • <b>Invited:</b> <code>{}</code>
 • <b>Failed:</b> <code>{}</code>
@@ -147,8 +161,8 @@ async def _(kst):
         if not target:
             return
         target_id = target.full_chat.id
-        start_time = time.time()
-        local_now = datetime.datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+        start_time = time()
+        local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
         max_success, success, failed, error = 300, 0, 0, "none"
         INVITE_WORKER[chat_id] = {
             "mode": "invite",
@@ -170,14 +184,14 @@ async def _(kst):
                         if error.lower().startswith(("too many", "a wait of")) or success > max_success:
                             if INVITE_WORKER.get(chat_id):
                                 INVITE_WORKER.pop(chat_id)
-                            taken = time_formatter((time.time() - start_time) * 1000)
+                            taken = time_formatter((time() - start_time) * 1000)
                             try:
                                 waitfor = int("".join(filter(str.isdigit, error.lower())))
                             except ValueError:
                                 waitfor = 0
                             flood = time_formatter(waitfor * 1000)
-                            await yy.eor(
-                                with_error_text.format(
+                            return await yy.eor(
+                                done_limit_text.format(
                                     flood,
                                     error,
                                     success,
@@ -188,7 +202,6 @@ async def _(kst):
                                 ),
                                 parse_mode="html",
                             )
-                            return
                         await ga(fun.channels.InviteToChannelRequest(chat_id, users=[x.id]))
                         success += 1
                         INVITE_WORKER[chat_id].update({"success": success})
@@ -206,9 +219,26 @@ async def _(kst):
                         UserNotMutualContactError,
                         UserPrivacyRestrictedError,
                         UserKickedError,
-                        UserChannelsTooMuchError,
                     ):
                         pass
+                    except (
+                        ChannelPrivateError,
+                        UserChannelsTooMuchError,
+                    ) as err:
+                        if INVITE_WORKER.get(chat_id):
+                            INVITE_WORKER.pop(chat_id)
+                        taken = time_formatter((time() - start_time) * 1000)
+                        return await yy.eor(
+                            done_error_text.format(
+                                str(err),
+                                success,
+                                failed,
+                                taken,
+                                f"{ga.full_name} ({ga.uid})",
+                                local_now,
+                            ),
+                            parse_mode="html",
+                        )
                     except Exception as err:
                         error = str(err)
                         failed += 1
@@ -216,7 +246,7 @@ async def _(kst):
             pass
         if INVITE_WORKER.get(chat_id):
             INVITE_WORKER.pop(chat_id)
-        taken = time_formatter((time.time() - start_time) * 1000)
+        taken = time_formatter((time() - start_time) * 1000)
         await yy.eor(
             done_text.format(
                 success,
@@ -248,8 +278,8 @@ async def _(kst):
             return await yy.try_delete()
         args = kst.pattern_match.group(1).split(" ")
         is_append = bool(len(args) > 1 and args[1].lower() in ("-a", "a", "append"))
-        start_time = time.time()
-        local_now = datetime.datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+        start_time = time()
+        local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
         members, admins, bots = 0, 0, 0
         members_file = "members_list.csv"
         admins_file = "admins_list.csv"
@@ -314,7 +344,7 @@ async def _(kst):
                             bots += 1
                         except BaseException:
                             pass
-        taken = time_formatter((time.time() - start_time) * 1000)
+        taken = time_formatter((time() - start_time) * 1000)
         await yy.eor("`Uploading CSV Files...`")
         await yy.eor(
             getmembers_text.format(
@@ -391,8 +421,8 @@ async def _(kst):
         elif args.startswith("bot"):
             mode = "bots"
         csv_file = mode + "_list.csv"
-        start_time = time.time()
-        local_now = datetime.datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+        start_time = time()
+        local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
         try:
             await yy.eor(f"`Reading {csv_file} file...`")
             async with aiofiles.open(csv_file, mode="r") as f:
@@ -432,13 +462,23 @@ async def _(kst):
                     success += 1
                     INVITE_WORKER[chat_id].update({"success": success})
                     await yy.eor(f"`Adding {success} {mode}...`")
+                except (
+                    ChannelPrivateError,
+                    UserChannelsTooMuchError,
+                ):
+                    break
                 except BaseException:
                     pass
+            except (
+                ChannelPrivateError,
+                UserChannelsTooMuchError,
+            ):
+                break
             except BaseException:
                 pass
         if INVITE_WORKER.get(chat_id):
             INVITE_WORKER.pop(chat_id)
-        taken = time_formatter((time.time() - start_time) * 1000)
+        taken = time_formatter((time() - start_time) * 1000)
         await yy.eor(f"`✅ Completed adding {success} {mode} in {taken}` at `{local_now}`")
 
 

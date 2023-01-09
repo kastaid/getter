@@ -6,11 +6,11 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-import datetime
 import json
-import time
+from datetime import datetime
 from io import BytesIO
 from random import randrange
+from time import time
 from telethon.errors.rpcerrorlist import FloodWaitError
 from telethon.tl import functions as fun, types as typ
 from . import (
@@ -21,7 +21,7 @@ from . import (
     choice,
     suppress,
     parse_pre,
-    format_exc,
+    formatx_send,
     time_formatter,
     mentionuser,
     display_name,
@@ -154,7 +154,7 @@ async def _(kst):
             return await yy.eor("`Forbidden to gban our awesome developers.`", time=3)
         if is_gban(user.id):
             return await yy.eor("`User is already GBanned.`", time=4)
-        start_time, date = time.time(), datetime.datetime.now().timestamp()
+        start_time, date = time(), datetime.now().timestamp()
         success, failed = 0, 0
         is_reported = False
         await ga.unblock(user.id)
@@ -201,13 +201,13 @@ async def _(kst):
         add_gban(user.id, date, reason)
         await ga.block(user.id)
         await ga.archive(user.id)
-        taken = time_formatter((time.time() - start_time) * 1000)
+        taken = time_formatter((time() - start_time) * 1000)
         text = gban_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
             failed,
             success,
-            datetime.datetime.fromtimestamp(date).strftime("%Y-%m-%d"),
+            datetime.fromtimestamp(date).strftime("%Y-%m-%d"),
             taken,
             humanbool(is_reported),
             f"<pre>{reason}</pre>" if reason else "None given.",
@@ -243,7 +243,7 @@ async def _(kst):
         if not is_gban(user.id):
             notgban = await yy.eor("`User is not GBanned.`")
             yy = await notgban.reply("`Force UnGBanning...`", silent=True)
-        start_time, success, failed = time.time(), 0, 0
+        start_time, success, failed = time(), 0, 0
         if ga._dialogs:
             dialog = ga._dialogs
         else:
@@ -267,7 +267,7 @@ async def _(kst):
                     failed += 1
         del_gban(user.id)
         await ga.unblock(user.id)
-        taken = time_formatter((time.time() - start_time) * 1000)
+        taken = time_formatter((time() - start_time) * 1000)
         text = ungban_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -309,7 +309,7 @@ async def _(kst):
             return await yy.eor("`Forbidden to gmute our awesome developers.`", time=3)
         if is_gmute(user.id):
             return await yy.eor("`User is already GMuted.`", time=4)
-        start_time, date = time.time(), datetime.datetime.now().timestamp()
+        start_time, date = time(), datetime.now().timestamp()
         success, failed = 0, 0
         if ga._dialogs:
             dialog = ga._dialogs
@@ -333,13 +333,13 @@ async def _(kst):
                 except BaseException:
                     failed += 1
         add_gmute(user.id, date, reason)
-        taken = time_formatter((time.time() - start_time) * 1000)
+        taken = time_formatter((time() - start_time) * 1000)
         text = gmute_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
             failed,
             success,
-            datetime.datetime.fromtimestamp(date).strftime("%Y-%m-%d"),
+            datetime.fromtimestamp(date).strftime("%Y-%m-%d"),
             taken,
             f"<pre>{reason}</pre>" if reason else "None given.",
         )
@@ -374,7 +374,7 @@ async def _(kst):
         if not is_gmute(user.id):
             await yy.eor("`User is not GMuted.`")
             yy = await yy.reply("`Force UnGmuting...`", silent=True)
-        start_time, success, failed = time.time(), 0, 0
+        start_time, success, failed = time(), 0, 0
         if ga._dialogs:
             dialog = ga._dialogs
         else:
@@ -397,7 +397,7 @@ async def _(kst):
                 except BaseException:
                     failed += 1
         del_gmute(user.id)
-        taken = time_formatter((time.time() - start_time) * 1000)
+        taken = time_formatter((time() - start_time) * 1000)
         text = ungmute_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -437,11 +437,11 @@ async def _(kst):
             return await yy.eor("`Forbidden to gdel our awesome developers.`", time=3)
         if is_gdel(user.id):
             return await yy.eor("`User is already GDeleted.`", time=4)
-        date = datetime.datetime.now().timestamp()
+        date = datetime.now().timestamp()
         add_gdel(user.id, date, reason)
         text = gdel_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
-            datetime.datetime.fromtimestamp(date).strftime("%Y-%m-%d"),
+            datetime.fromtimestamp(date).strftime("%Y-%m-%d"),
             f"<pre>{reason}</pre>" if reason else "None given.",
         )
         await yy.eor(text, parse_mode="html")
@@ -551,7 +551,7 @@ async def _(kst):
     if check:
         text = f"<b><u>Is {mode} User</u></b>\n"
         text += f"User ID: {check.user_id}\n"
-        text += "Date: {}\n".format(datetime.datetime.fromtimestamp(check.date).strftime("%Y-%m-%d"))
+        text += "Date: {}\n".format(datetime.fromtimestamp(check.date).strftime("%Y-%m-%d"))
         text += "Reason: {}".format(check.reason or "None given.")
         return await yy.eor(text, parse_mode="html")
     text = f"`User is not {mode}.`"
@@ -587,7 +587,7 @@ async def _(kst):
         text = f"<b><u>{total} {mode} Users</u></b>\n"
         for x in users:
             text += f"User ID: {x.user_id}\n"
-            text += "Date: {}\n".format(datetime.datetime.fromtimestamp(x.date).strftime("%Y-%m-%d"))
+            text += "Date: {}\n".format(datetime.fromtimestamp(x.date).strftime("%Y-%m-%d"))
             text += "Reason: {}\n".format(x.reason or "None given.")
         return await kst.eor(text, parts=True, parse_mode="html")
     text = f"`You got no {mode} users!`"
@@ -621,7 +621,7 @@ async def _(kst):
             return await yy.eor("`Cannot gkick to myself.`", time=3)
         if user.id in DEVS:
             return await yy.eor("`Forbidden to gkick our awesome developers.`", time=3)
-        start_time, success, failed = time.time(), 0, 0
+        start_time, success, failed = time(), 0, 0
         if ga._dialogs:
             dialog = ga._dialogs
         else:
@@ -643,7 +643,7 @@ async def _(kst):
                         failed += 1
                 except BaseException:
                     failed += 1
-        taken = time_formatter((time.time() - start_time) * 1000)
+        taken = time_formatter((time() - start_time) * 1000)
         text = gkick_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -681,7 +681,7 @@ async def _(kst):
         title = " ".join(strip_emoji(" ".join(opts[1:] if to else opts)).split()).strip()
         if len(title) > 16:
             title = title[:16]
-        start_time, success, failed = time.time(), 0, 0
+        start_time, success, failed = time(), 0, 0
         async for gg in ga.iter_dialogs():
             if (
                 "group" in to
@@ -713,7 +713,7 @@ async def _(kst):
                     success += 1
                 except BaseException:
                     failed += 1
-        taken = time_formatter((time.time() - start_time) * 1000)
+        taken = time_formatter((time() - start_time) * 1000)
         text = gpromote_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -749,7 +749,7 @@ async def _(kst):
             return await yy.eor("`Cannot gdemote to myself.`", time=3)
         opts = args.split(" ")
         to = opts[0].lower() if opts[0].lower() in ("group", "channel") else ""
-        start_time, success, failed = time.time(), 0, 0
+        start_time, success, failed = time(), 0, 0
         async for gg in ga.iter_dialogs():
             if (
                 "group" in to
@@ -780,7 +780,7 @@ async def _(kst):
                     success += 1
                 except BaseException:
                     failed += 1
-        taken = time_formatter((time.time() - start_time) * 1000)
+        taken = time_formatter((time() - start_time) * 1000)
         text = gdemote_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -822,7 +822,7 @@ async def _(kst):
             ),
             silent=True,
         )
-        start_time, success, failed, error = time.time(), 0, 0, ""
+        start_time, success, failed, error = time(), 0, 0, ""
         GCAST_BLACKLIST = await get_blacklisted(
             url="https://raw.githubusercontent.com/kastaid/resources/main/gcastblacklist.py",
             attempts=6,
@@ -864,7 +864,7 @@ async def _(kst):
                     except Exception as err1:
                         error += "• " + str(err1) + "\n"
                         failed += 1
-        taken = time_formatter((time.time() - start_time) * 1000)
+        taken = time_formatter((time() - start_time) * 1000)
         text = r"\\**#Gcast**// {} in {}-{}={} {}.".format(
             taken,
             success + failed,
@@ -911,7 +911,7 @@ async def _(kst):
             "⚡ __**Broadcasting to all pm users...**__",
             silent=True,
         )
-        start_time, success, failed = time.time(), 0, 0
+        start_time, success, failed = time(), 0, 0
         GUCAST_BLACKLIST = await get_blacklisted(
             url="https://raw.githubusercontent.com/kastaid/resources/main/gucastblacklist.py",
             attempts=6,
@@ -949,7 +949,7 @@ async def _(kst):
                             failed += 1
                     except BaseException:
                         failed += 1
-        taken = time_formatter((time.time() - start_time) * 1000)
+        taken = time_formatter((time() - start_time) * 1000)
         text = r"\\**#Gucast**// {} in {}-{}={} users.".format(
             taken,
             success + failed,
@@ -991,7 +991,7 @@ async def gblacklisted(kst, mode):
         try:
             chat_id = await ga.get_id(where)
         except Exception as err:
-            return await yy.eor(format_exc(err), parse_mode="html")
+            return await yy.eor(formatx_send(err), parse_mode="html")
     else:
         chat_id = kst.chat_id
     GCAST_BLACKLIST = await get_blacklisted(
@@ -1017,7 +1017,7 @@ async def gblacklisted(kst, mode):
             title = "None"
         chatdata = {
             "title": title,
-            "date": datetime.datetime.now().timestamp(),
+            "date": datetime.now().timestamp(),
         }
         gblack[str(chat_id)] = chatdata
         add_col("gblack", gblack)
@@ -1046,7 +1046,7 @@ async def _(kst):
             chat_id = str(x)
             text += "Chat Title: {}\n".format(gblack[chat_id]["title"])
             text += f"Chat ID: {x}\n"
-            text += "Date: {}\n\n".format(datetime.datetime.fromtimestamp(gblack[chat_id]["date"]).strftime("%Y-%m-%d"))
+            text += "Date: {}\n\n".format(datetime.fromtimestamp(gblack[chat_id]["date"]).strftime("%Y-%m-%d"))
         return await kst.eor(text, parts=True, parse_mode="html")
     text = "`You got no gblacklist chats!`"
     await kst.eor(text, time=5)

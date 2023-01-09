@@ -6,10 +6,10 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-import datetime
-import html
 import json
-import math
+from datetime import datetime
+from html import escape
+from math import floor
 from . import (
     getter_app,
     kasta_cmd,
@@ -17,7 +17,7 @@ from . import (
     choice,
     humanbytes,
     to_dict,
-    format_exc,
+    formatx_send,
     mask_email,
     USERAGENTS,
     Fetch,
@@ -89,24 +89,24 @@ async def _(kst):
         conn = hk.heroku()
         app = conn.app(hk.name)
     except Exception as err:
-        return await yy.eor(format_exc(err), parse_mode="html")
+        return await yy.eor(formatx_send(err), parse_mode="html")
     account = json.dumps(to_dict(conn.account()), indent=1, default=str)
     capp = json.dumps(to_dict(app.info), indent=1, default=str)
     dyno = json.dumps(to_dict(app.dynos()), indent=1, default=str)
     addons = json.dumps(to_dict(app.addons()), indent=1, default=str)
     buildpacks = json.dumps(to_dict(app.buildpacks()), indent=1, default=str)
     configs = json.dumps(app.config().to_dict(), indent=1, default=str)
-    await sendlog(f"<b>Account:</b>\n<pre>{html.escape(account)}</pre>", fallback=True, parse_mode="html")
+    await sendlog(f"<b>Account:</b>\n<pre>{escape(account)}</pre>", fallback=True, parse_mode="html")
     await asyncio.sleep(1)
-    await sendlog(f"<b>App:</b>\n<pre>{html.escape(capp)}</pre>", fallback=True, parse_mode="html")
+    await sendlog(f"<b>App:</b>\n<pre>{escape(capp)}</pre>", fallback=True, parse_mode="html")
     await asyncio.sleep(1)
-    await sendlog(f"<b>Dyno:</b>\n<pre>{html.escape(dyno)}</pre>", fallback=True, parse_mode="html")
+    await sendlog(f"<b>Dyno:</b>\n<pre>{escape(dyno)}</pre>", fallback=True, parse_mode="html")
     await asyncio.sleep(1)
-    await sendlog(f"<b>Addons:</b>\n<pre>{html.escape(addons)}</pre>", fallback=True, parse_mode="html")
+    await sendlog(f"<b>Addons:</b>\n<pre>{escape(addons)}</pre>", fallback=True, parse_mode="html")
     await asyncio.sleep(1)
-    await sendlog(f"<b>Buildpacks:</b>\n<pre>{html.escape(buildpacks)}</pre>", fallback=True, parse_mode="html")
+    await sendlog(f"<b>Buildpacks:</b>\n<pre>{escape(buildpacks)}</pre>", fallback=True, parse_mode="html")
     await asyncio.sleep(1)
-    await sendlog(f"<b>Configs:</b>\n<pre>{html.escape(configs)}</pre>", fallback=True, parse_mode="html")
+    await sendlog(f"<b>Configs:</b>\n<pre>{escape(configs)}</pre>", fallback=True, parse_mode="html")
     await yy.eor("`Heroku details sent at botlogs.`")
 
 
@@ -157,7 +157,7 @@ def default_usage() -> str:
         SWAP = "0 | 0%"
     return usage_text.format(
         getter_app.uptime,
-        datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S"),
+        datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S"),
         UPLOAD,
         DOWN,
         TOTAL,
@@ -189,10 +189,10 @@ async def heroku_usage() -> str:
     quota = res["account_quota"]
     quota_used = res["quota_used"]
     remaining_quota = quota - quota_used
-    percentage = math.floor(remaining_quota / quota * 100)
+    percentage = floor(remaining_quota / quota * 100)
     minutes_remaining = remaining_quota / 60
-    hours = math.floor(minutes_remaining / 60)
-    minutes = math.floor(minutes_remaining % 60)
+    hours = floor(minutes_remaining / 60)
+    minutes = floor(minutes_remaining % 60)
     Apps = res["apps"]
     try:
         Apps[0]["quota_used"]
@@ -201,9 +201,9 @@ async def heroku_usage() -> str:
         AppPercentage = 0
     else:
         AppQuotaUsed = Apps[0]["quota_used"] / 60
-        AppPercentage = math.floor(Apps[0]["quota_used"] * 100 / quota)
-    AppHours = math.floor(AppQuotaUsed / 60)
-    AppMinutes = math.floor(AppQuotaUsed % 60)
+        AppPercentage = floor(Apps[0]["quota_used"] * 100 / quota)
+    AppHours = floor(AppQuotaUsed / 60)
+    AppMinutes = floor(AppQuotaUsed % 60)
     return dyno_text.format(
         app.name,
         app.stack.name,

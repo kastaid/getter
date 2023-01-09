@@ -6,7 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-import datetime
+from datetime import datetime
 from . import (
     kasta_cmd,
     plugins_help,
@@ -90,7 +90,7 @@ async def _(kst):
     userdata = {
         "full_name": full_name,
         "username": "@" + user.username if user.username else "none",
-        "date": datetime.datetime.now().timestamp(),
+        "date": datetime.now().timestamp(),
     }
     sudos = jdata.sudos()
     sudos[str(user.id)] = userdata
@@ -140,7 +140,7 @@ async def _(kst):
             text += "User: {}\n".format(sudos[user_id]["full_name"])
             text += f"User ID: {x}\n"
             text += "Username: {}\n".format(sudos[user_id]["username"])
-            text += "Date: {}\n\n".format(datetime.datetime.fromtimestamp(sudos[user_id]["date"]).strftime("%Y-%m-%d"))
+            text += "Date: {}\n\n".format(datetime.fromtimestamp(sudos[user_id]["date"]).strftime("%Y-%m-%d"))
         return await kst.eor(text, parts=True, parse_mode="html")
     text = "`You got no sudo users!`"
     await kst.eor(text, time=5)

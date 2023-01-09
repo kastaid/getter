@@ -6,8 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-import importlib
-import os
+import os.path
 import re
 import subprocess
 import sys
@@ -17,8 +16,7 @@ from io import BytesIO
 import aiofiles
 import aiohttp
 import telegraph
-from .. import __version__
-from ..config import EXECUTOR
+from .. import __version__, LOOP, EXECUTOR
 from ..logger import LOGS
 from .db import gvar, sgvar
 from .utils import get_random_hex
@@ -31,23 +29,25 @@ def is_termux() -> bool:
 
 
 async def aioify(func, *args, **kwargs):
-    return await asyncio.get_event_loop().run_in_executor(executor=EXECUTOR, func=partial(func, *args, **kwargs))
+    return await LOOP.run_in_executor(executor=EXECUTOR, func=partial(func, *args, **kwargs))
 
 
 def import_lib(
     lib_name: str,
     pkg_name: typing.Optional[str] = None,
 ) -> typing.Any:
+    from importlib import import_module
+
     if pkg_name is None:
         pkg_name = lib_name
     lib_name = re.sub(r"(=|>|<|~).*", "", lib_name)
     try:
-        return importlib.import_module(lib_name)
+        return import_module(lib_name)
     except ImportError:
         done = subprocess.run(["python3", "-m", "pip", "install", "--no-cache-dir", "-U", pkg_name])
         if done.returncode != 0:
             raise AssertionError(f"Failed to install library {pkg_name} (pip exited with code {done.returncode})")
-        return importlib.import_module(lib_name)
+        return import_module(lib_name)
 
 
 async def Runner(cmd: str) -> typing.Tuple[str, str, int, int]:

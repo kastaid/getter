@@ -6,10 +6,14 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import sys
+from asyncio import set_event_loop
+from concurrent.futures import ThreadPoolExecutor
+from multiprocessing import cpu_count
 from pathlib import Path
 from platform import python_version
 from shutil import rmtree
 from time import time
+import uvloop
 from telethon.tl.alltlobjects import LAYER as __layer__
 from telethon.version import __version__ as __tlversion__
 from version import __version__
@@ -29,6 +33,11 @@ if sys.version_info < (3, 9, 0):
     sys.exit(1)
 
 Root: Path = Path(__file__).parent.parent
+LOOP = uvloop.new_event_loop()
+set_event_loop(LOOP)
+WORKERS = cpu_count() * 5
+EXECUTOR = ThreadPoolExecutor(max_workers=WORKERS, thread_name_prefix="Getter")
+
 DIRS = (
     "logs/",
     "downloads/",
@@ -44,4 +53,4 @@ for d in DIRS:
                 _.unlink(missing_ok=True)
 [_.unlink(missing_ok=True) for _ in Root.rglob("*s_list.csv")]
 
-del sys, Path, python_version, rmtree, time
+del sys, set_event_loop, Path, ThreadPoolExecutor, cpu_count, python_version, rmtree, time, uvloop

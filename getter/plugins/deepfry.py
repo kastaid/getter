@@ -6,8 +6,8 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-import mimetypes
-import random
+from mimetypes import guess_extension
+from random import randint, uniform
 from PIL import Image, ImageEnhance, ImageOps
 from telethon.errors.rpcerrorlist import YouBlockedUserError
 from telethon.tl import types as typ
@@ -44,7 +44,7 @@ async def _(kst):
         file = fry_img
     else:
         mim = reply.media.document.mime_type
-        ext = mimetypes.guess_extension(mim)
+        ext = guess_extension(mim)
         file = Root / ("downloads/" + f"fry{ext}")
     await reply.download_media(file=file)
     if ext and ext in (".mp4", ".gif", ".webm"):
@@ -98,7 +98,7 @@ async def _(kst):
         file = ugly_img
     else:
         mim = reply.media.document.mime_type
-        ext = mimetypes.guess_extension(mim)
+        ext = guess_extension(mim)
         file = Root / ("downloads/" + f"ugly{ext}")
     await reply.download_media(file=file)
     if ext and ext in (".mp4", ".gif", ".webm"):
@@ -156,32 +156,32 @@ async def conv_fry(conv, image, level):
 def uglying(img: Image) -> Image:
     img = Image.open(img)
     colours = (
-        (random.randint(50, 200), random.randint(40, 170), random.randint(40, 190)),
-        (random.randint(190, 255), random.randint(170, 240), random.randint(180, 250)),
+        (randint(50, 200), randint(40, 170), randint(40, 190)),
+        (randint(190, 255), randint(170, 240), randint(180, 250)),
     )
     img = img.copy().convert("RGB")
     img = img.convert("RGB")
     width, height = img.width, img.height
     img = img.resize(
-        (int(width ** random.uniform(0.8, 0.9)), int(height ** random.uniform(0.8, 0.9))),
+        (int(width ** uniform(0.8, 0.9)), int(height ** uniform(0.8, 0.9))),
         resample=Image.LANCZOS,
     )
     img = img.resize(
-        (int(width ** random.uniform(0.85, 0.95)), int(height ** random.uniform(0.85, 0.95))),
+        (int(width ** uniform(0.85, 0.95)), int(height ** uniform(0.85, 0.95))),
         resample=Image.BILINEAR,
     )
     img = img.resize(
-        (int(width ** random.uniform(0.89, 0.98)), int(height ** random.uniform(0.89, 0.98))),
+        (int(width ** uniform(0.89, 0.98)), int(height ** uniform(0.89, 0.98))),
         resample=Image.BICUBIC,
     )
     img = img.resize((width, height), resample=Image.BICUBIC)
-    img = ImageOps.posterize(img, random.randint(3, 7))
+    img = ImageOps.posterize(img, randint(3, 7))
     overlay = img.split()[0]
-    overlay = ImageEnhance.Contrast(overlay).enhance(random.uniform(1.0, 2.0))
-    overlay = ImageEnhance.Brightness(overlay).enhance(random.uniform(1.0, 2.0))
+    overlay = ImageEnhance.Contrast(overlay).enhance(uniform(1.0, 2.0))
+    overlay = ImageEnhance.Brightness(overlay).enhance(uniform(1.0, 2.0))
     overlay = ImageOps.colorize(overlay, colours[0], colours[1])
-    img = Image.blend(img, overlay, random.uniform(0.1, 0.4))
-    return ImageEnhance.Sharpness(img).enhance(random.randint(5, 300))
+    img = Image.blend(img, overlay, uniform(0.1, 0.4))
+    return ImageEnhance.Sharpness(img).enhance(randint(5, 300))
 
 
 def check_media(reply):

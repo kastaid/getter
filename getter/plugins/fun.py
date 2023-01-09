@@ -6,8 +6,8 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-import html
 from collections import deque
+from html import escape
 from telethon.tl import types as typ
 from . import (
     kasta_cmd,
@@ -42,7 +42,7 @@ async def _(kst):
 async def _(kst):
     if kst.is_sudo:
         await asyncio.sleep(choice((4, 6, 8)))
-    text = html.escape(choice(UWUS))
+    text = escape(choice(UWUS))
     await kst.sod(f"<pre>{text}</pre>", parse_mode="html", silent=True)
 
 
@@ -56,7 +56,7 @@ async def _(kst):
 async def _(kst):
     if kst.is_sudo:
         await asyncio.sleep(choice((4, 6, 8)))
-    text = html.escape(choice(SHRUGS))
+    text = escape(choice(SHRUGS))
     await kst.sod(f"<pre>{text}</pre>", parse_mode="html", silent=True)
 
 

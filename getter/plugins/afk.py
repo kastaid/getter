@@ -5,8 +5,8 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import datetime
-import html
+from datetime import datetime
+from html import escape
 from . import (
     DEVS,
     NOCHATS,
@@ -52,11 +52,11 @@ async def _(kst):
     if is_afk():
         return
     yy = await kst.eor("`Go To AFK...!!`")
-    start = datetime.datetime.now().timestamp()
+    start = datetime.now().timestamp()
     reason = await kst.client.get_text(kst, plain=False)
     text = "<b><u>I`m Going AFK ツ</u></b>"
     if reason:
-        reason = html.escape(reason)
+        reason = escape(reason)
         text += f"\n<b>Reason:</b> <pre>{reason}</pre>"
     add_afk(reason, start)
     getter_app.add_handler(
@@ -83,22 +83,18 @@ async def StopAFK(kst):
     if kst.chat_id in NOCHATS and kst.client.uid not in DEVS:
         return
     if is_afk():
-        start = datetime.datetime.fromtimestamp(is_afk().start)
-        end = datetime.datetime.now().replace(microsecond=0)
+        start = datetime.fromtimestamp(is_afk().start)
+        end = datetime.now().replace(microsecond=0)
         afk_time = time_formatter((end - start).seconds * 1000)
         with suppress(BaseException):
             for x, y in is_afk().last.items():
                 await kst.client.delete_messages(int(x), [y])
         del_afk()
-        myself = html.escape(kst.client.full_name)
+        myself = escape(kst.client.full_name)
         text = f"{myself}\n"
         text += f"{choice(OUTS_AFK)}\n"
         text += f"<i>Was away for</i> ~ {afk_time}"
-        await kst.respond(
-            text,
-            link_preview=False,
-            parse_mode="html",
-        )
+        await kst.eod(text, parse_mode="html")
 
 
 async def OnAFK(kst):
@@ -121,8 +117,8 @@ async def OnAFK(kst):
     if user.id in {*DEVS, *GUCAST_BLACKLIST}:
         return
     if is_afk():
-        start = datetime.datetime.fromtimestamp(is_afk().start)
-        end = datetime.datetime.now().replace(microsecond=0)
+        start = datetime.fromtimestamp(is_afk().start)
+        end = datetime.now().replace(microsecond=0)
         afk_time = time_formatter((end - start).seconds * 1000)
         text = "<b><u>I`m Now AFK ツ</u></b>\n"
         text += f"Last seen {afk_time} ago."

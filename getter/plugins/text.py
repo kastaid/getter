@@ -8,14 +8,14 @@
 import asyncio
 import base64
 import re
-import string
+from string import ascii_lowercase
 from . import (
     kasta_cmd,
     plugins_help,
     parse_pre,
     strip_format,
     strip_emoji,
-    format_exc,
+    formatx_send,
     camel,
     snake,
     kebab,
@@ -144,7 +144,7 @@ async def _(kst):
     try:
         text = base64.b64decode(text).decode("utf-8", "replace")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
         return
     await yy.sod(text, parse_mode=parse_pre)
 
@@ -259,7 +259,7 @@ async def _(kst):
     if not text:
         return await kst.try_delete()
     small_caps = "ᴀʙᴄᴅᴇғɢʜɪᴊᴋʟᴍɴᴏᴘϙʀsᴛᴜᴠᴡxʏᴢ"
-    text = text.lower().translate(str.maketrans(string.ascii_lowercase, small_caps))
+    text = text.lower().translate(str.maketrans(ascii_lowercase, small_caps))
     await kst.eor(text, parts=True)
 
 
