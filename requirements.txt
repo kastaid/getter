@@ -9,7 +9,7 @@ GitPython==3.1.30
 psycopg2-binary==2.9.3
 SQLAlchemy==1.4.45
 sqlalchemy-json==0.5.0
-cachetools==5.2.0
+cachetools==5.2.1
 asyncache==0.3.1
 aiofiles==22.1.0
 aiocsv==1.2.3
