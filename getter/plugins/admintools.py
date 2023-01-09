@@ -17,7 +17,7 @@ from . import (
     normalize_chat_id,
     mentionuser,
     display_name,
-    format_exc,
+    formatx_send,
     strip_emoji,
     time_formatter,
     until_time,
@@ -62,7 +62,7 @@ async def _(kst):
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -104,7 +104,7 @@ async def _(kst):
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -169,7 +169,7 @@ async def _(kst):
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -194,7 +194,7 @@ async def _(kst):
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -221,7 +221,7 @@ async def _(kst):
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -251,7 +251,7 @@ async def _(kst):
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -305,7 +305,7 @@ async def _(kst):
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -332,7 +332,7 @@ async def _(kst):
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -359,7 +359,7 @@ async def _(kst):
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -389,7 +389,7 @@ async def _(kst):
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -433,7 +433,7 @@ async def _(kst):
         )
         await kst.eor("`locked`", time=5)
     except Exception as err:
-        await kst.eor(format_exc(err), parse_mode="html")
+        await kst.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -468,13 +468,12 @@ async def _(kst):
             )
         await kst.eor("`unlocked{}`".format(" safety" if is_safety else ""), time=5)
     except Exception as err:
-        await kst.eor(format_exc(err), parse_mode="html")
+        await kst.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
     pattern="pin(?: |$)(.*)",
     require="pin_messages",
-    func=lambda e: e.is_reply,
 )
 async def _(kst):
     match = kst.pattern_match.group(1).lower()
@@ -488,13 +487,12 @@ async def _(kst):
         await kst.client.pin_message(kst.chat_id, kst.reply_to_msg_id, notify=is_notify)
         await kst.eor(text)
     except Exception as err:
-        await kst.eor(format_exc(err), parse_mode="html")
+        await kst.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
     pattern="tpin(?: |$)(.*)",
     require="pin_messages",
-    func=lambda e: e.is_reply,
 )
 async def _(kst):
     ga = kst.client
@@ -511,7 +509,7 @@ async def _(kst):
         await ga.pin_message(chat_id, msg_id, notify=is_notify)
         await kst.eor(f"Pinned for {pinfor}.")
     except Exception as err:
-        return await kst.eor(format_exc(err), parse_mode="html")
+        return await kst.eor(formatx_send(err), parse_mode="html")
     await asyncio.sleep(sec)
     with suppress(BaseException):
         await ga.unpin_message(chat_id, msg_id)
@@ -520,14 +518,13 @@ async def _(kst):
 @kasta_cmd(
     pattern="unpin$",
     require="pin_messages",
-    func=lambda e: e.is_reply,
 )
 async def _(kst):
     try:
         await kst.client.unpin_message(kst.chat_id, kst.reply_to_msg_id)
         await kst.eor("`unpinned`", time=5)
     except Exception as err:
-        await kst.eor(format_exc(err), parse_mode="html")
+        await kst.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -539,7 +536,7 @@ async def _(kst):
         await kst.client.unpin_message(kst.chat_id, None)
         await kst.eor("`unpinned all`", time=5)
     except Exception as err:
-        await kst.eor(format_exc(err), parse_mode="html")
+        await kst.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -637,7 +634,7 @@ async def _(kst):
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -674,7 +671,7 @@ async def _(kst):
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -787,7 +784,7 @@ async def _(kst):
         ]
         await yy.eor(f"`Successfully kicked {len(done)} deleted account(s) in {normalize(kst.chat.title).lower()}.`")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(

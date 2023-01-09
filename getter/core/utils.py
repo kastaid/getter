@@ -6,17 +6,17 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import re
-import string
-import time
 import typing
 from functools import reduce
 from math import ceil
 from random import choice
+from string import ascii_letters, ascii_uppercase, ascii_lowercase
+from time import time
 from uuid import uuid4
 from bs4 import BeautifulSoup
 from cachetools import cached
 from emoji import replace_emoji
-from markdown import markdown
+from markdown.core import markdown
 
 
 def humanbool(b: typing.Any, toggle: bool = False) -> str:
@@ -33,7 +33,6 @@ def replace_all(
     return reduce(lambda a, kv: a.replace(*kv), repls.items(), text)
 
 
-@cached(cache={})
 def md_to_html(text: str) -> str:
     repls = {
         "<p>(.*)</p>": "\\1",
@@ -45,7 +44,6 @@ def md_to_html(text: str) -> str:
     return replace_all(markdown(text), repls, regex=True)
 
 
-@cached(cache={})
 def strip_format(text: str) -> str:
     repls = {
         "~~": "",
@@ -116,19 +114,19 @@ def until_time(
     if not str(timing).isdecimal():
         raise TypeError("'timing' must be integers or str digits")
     if unit == "s":
-        until = int(time.time() + int(timing) * 1)
+        until = int(time() + int(timing) * 1)
         dur = "seconds"
     elif unit == "m":
-        until = int(time.time() + int(timing) * 60)
+        until = int(time() + int(timing) * 60)
         dur = "minutes"
     elif unit == "h":
-        until = int(time.time() + int(timing) * 60 * 60)
+        until = int(time() + int(timing) * 60 * 60)
         dur = "hours"
     elif unit == "d":
-        until = int(time.time() + int(timing) * 24 * 60 * 60)
+        until = int(time() + int(timing) * 24 * 60 * 60)
         dur = "days"
     else:
-        until = int(time.time() + int(timing) * 7 * 24 * 60 * 60)
+        until = int(time() + int(timing) * 7 * 24 * 60 * 60)
         dur = "weeks"
     return until, dur
 
@@ -138,7 +136,7 @@ def get_random_hex(length: int = 12) -> str:
 
 
 def get_random_alpha(length: int = 12) -> str:
-    return "".join(choice(string.ascii_letters) for _ in range(length))
+    return "".join(choice(ascii_letters) for _ in range(length))
 
 
 def mask_email(email: str) -> str:
@@ -211,8 +209,8 @@ def kebab(text: str) -> str:
 @cached(cache={})
 def normalize(text: str) -> str:
     normal = text
-    uppercase = tuple(string.ascii_uppercase)
-    lowercase = tuple(string.ascii_lowercase)
+    uppercase = tuple(ascii_uppercase)
+    lowercase = tuple(ascii_lowercase)
     f1 = tuple("𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔ℜ𝔖𝔗𝔘𝔙𝔚𝔛𝔜ℨ")
     f2 = tuple("𝕬𝕭𝕮𝕯𝕰𝕱𝕲𝕳𝕴𝕵𝕶𝕷𝕸𝕹𝕺𝕻𝕼𝕽𝕾𝕿𝖀𝖁𝖂𝖃𝖄𝖅")
     f3 = tuple("𝓐𝓑𝓒𝓓𝓔𝓕𝓖𝓗𝓘𝓙𝓚𝓛𝓜𝓝𝓞𝓟𝓠𝓡𝓢𝓣𝓤𝓥𝓦𝓧𝓨𝓩")
@@ -271,7 +269,7 @@ def normalize(text: str) -> str:
         normal = normal.replace(f27[count], uppercase[count])
         normal = normal.replace(f28[count], lowercase[count])
         count += 1
-    return " ".join(strip_ascii(strip_emoji(normal)).split())
+    return " ".join(strip_ascii(normal).split())
 
 
 def get_full_class_name(obj: typing.Any) -> str:

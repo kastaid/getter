@@ -6,9 +6,9 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-import html
-import math
-import time
+from html import escape
+from math import sqrt
+from time import time, perf_counter
 from cachetools import LRUCache, TTLCache
 from telethon.errors.rpcerrorlist import YouBlockedUserError, FloodWaitError
 from telethon.tl import functions as fun, types as typ, custom
@@ -21,7 +21,7 @@ from . import (
     humanbool,
     get_user_status,
     parse_pre,
-    format_exc,
+    formatx_send,
     Fetch,
     is_gban,
     is_gmute,
@@ -35,12 +35,12 @@ from . import (
 SG_BOT = "SangMataInfo_bot"
 CREATED_BOT = "creationdatebot"
 ROSE_BOT = "MissRose_bot"
-_TOTAL_BOT_CACHE = TTLCache(maxsize=512, ttl=120, timer=time.perf_counter)  # 2 mins
-_CREATED_CACHE = TTLCache(maxsize=512, ttl=120, timer=time.perf_counter)  # 2 mins
+_TOTAL_BOT_CACHE = TTLCache(maxsize=512, ttl=120, timer=perf_counter)  # 2 mins
+_CREATED_CACHE = TTLCache(maxsize=512, ttl=120, timer=perf_counter)  # 2 mins
 _ROSE_LANG_CACHE = LRUCache(maxsize=512)
-_ROSE_STAT_CACHE = TTLCache(maxsize=512, ttl=120, timer=time.perf_counter)  # 2 mins
-_SPAMWATCH_CACHE = TTLCache(maxsize=512, ttl=120, timer=time.perf_counter)  # 2 mins
-_CAS_CACHE = TTLCache(maxsize=512, ttl=120, timer=time.perf_counter)  # 2 mins
+_ROSE_STAT_CACHE = TTLCache(maxsize=512, ttl=120, timer=perf_counter)  # 2 mins
+_SPAMWATCH_CACHE = TTLCache(maxsize=512, ttl=120, timer=perf_counter)  # 2 mins
+_CAS_CACHE = TTLCache(maxsize=512, ttl=120, timer=perf_counter)  # 2 mins
 
 
 @kasta_cmd(
@@ -172,7 +172,7 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Collecting Stats...`")
-    start_time = time.time()
+    start_time = time()
     private_chats = 0
     bots = 0
     groups = 0
@@ -225,7 +225,7 @@ async def _(kst):
     gmuted_users = len(all_gmute())
     sudo_users = len(jdata.sudo_users)
     allowed_users = len(all_allow())
-    stop_time = time.time() - start_time
+    stop_time = time() - start_time
     graph = """<b>Stats for {}</b>
 ├  <b>Private:</b> <code>{}</code>
 ┊  ├  <b>Users:</b> <code>{}</code>
@@ -340,7 +340,7 @@ async def _(kst):
             text = f"<b>0 Groups in common with:</b> <code>{whois}</code>"
         await yy.eor(text, parts=True, parse_mode="html")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -364,7 +364,7 @@ async def _(kst):
     except ValueError:
         return await yy.eod("`Cannot fetch user info.`")
     except Exception as err:
-        return await yy.eor(format_exc(err), parse_mode="html")
+        return await yy.eor(formatx_send(err), parse_mode="html")
     created = ""
     with suppress(BaseException):
         async with ga.conversation(CREATED_BOT) as conv:
@@ -372,14 +372,14 @@ async def _(kst):
         created = f"\n├  <b>Created:</b> <code>{resp}</code>"
         await ga.delete_chat(CREATED_BOT, revoke=True)
     dc_id = user.photo and user.photo.dc_id or 0
-    first_name = html.escape(user.first_name).replace("\u2060", "")
+    first_name = escape(user.first_name).replace("\u2060", "")
     last_name = (
         user.last_name and "\n├  <b>Last Name:</b> <code>{}</code>".format(user.last_name.replace("\u2060", "")) or ""
     )
     username = user.username and "\n├  <b>Username:</b> @{}".format(user.username) or ""
     user_pictures = (await ga.get_profile_photos(user_id, limit=0)).total or 0
     user_status = get_user_status(user)
-    user_bio = html.escape(full_user.about or "")
+    user_bio = escape(full_user.about or "")
     if not is_full:
         caption = """<b><u>USER INFORMATION</u></b>
 ├  <b>ID:</b> <code>{}</code>{}
@@ -512,7 +512,7 @@ async def _(kst):
         try:
             chat_id = await ga.get_id(where)
         except Exception as err:
-            return await yy.eor(format_exc(err), parse_mode="html")
+            return await yy.eor(formatx_send(err), parse_mode="html")
     else:
         chat_id = kst.chat_id
     total = (await ga.get_messages(chat_id, limit=0)).total
@@ -563,13 +563,13 @@ async def _(kst):
         try:
             chat = await ga.get_id(where)
         except Exception as err:
-            return await yy.eor(format_exc(err), parse_mode="html")
+            return await yy.eor(formatx_send(err), parse_mode="html")
     else:
         chat = kst.chat_id
     try:
         entity = await ga.get_entity(chat)
     except Exception as err:
-        return await yy.eor(format_exc(err), parse_mode="html")
+        return await yy.eor(formatx_send(err), parse_mode="html")
     photo, caption = await get_chat_info(kst, entity)
     if not photo:
         return await yy.eor(caption, parse_mode="html")
@@ -666,7 +666,7 @@ async def get_chat_info(kst, chat):
         caption += f"├  <b>Created:</b> <code>{chat.date.date().strftime('%b %d, %Y')} - {chat.date.time()}</code>\n"
     caption += f"├  <b>DC ID:</b> <code>{dc_id}</code>\n"
     if exp_count:
-        chat_level = int((1 + math.sqrt(1 + 7 * exp_count / 14)) / 2)
+        chat_level = int((1 + sqrt(1 + 7 * exp_count / 14)) / 2)
         caption += f"├  <b>{chat_type} Level:</b> <code>{chat_level}</code>\n"
     if msgs_viewable:
         caption += f"├  <b>Viewable Messages:</b> <code>{msgs_viewable}</code>\n"
@@ -703,7 +703,7 @@ async def get_chat_info(kst, chat):
         caption += "├  <b>Scam:</b> <code>yes</code>\n"
     if getattr(chat, "verified", None):
         caption += "├  <b>Verified By Telegram:</b> <code>yes</code>\n"
-    about = html.escape(full.about or "")
+    about = escape(full.about or "")
     caption += f"└  <b>Description:</b>\n<pre>{about}</pre>"
     return chat_photo, caption
 

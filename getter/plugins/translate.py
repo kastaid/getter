@@ -12,7 +12,7 @@ from . import (
     plugins_help,
     LANG_CODES,
     suppress,
-    format_exc,
+    formatx_send,
     strip_format,
     strip_emoji,
     strip_ascii,
@@ -65,7 +65,7 @@ async def _(kst):
         )
         await yy.eor(tr, parts=True)
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -104,7 +104,7 @@ async def _(kst):
         translation = await Translator()(text, targetlang=lang)
         await kst.sod(translation.text, parts=True)
     except Exception as err:
-        await kst.eor(format_exc(err), parse_mode="html")
+        await kst.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -160,7 +160,7 @@ async def _(kst):
         )
         (file).unlink(missing_ok=True)
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(

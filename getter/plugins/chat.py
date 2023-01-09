@@ -15,7 +15,7 @@ from . import (
     plugins_help,
     choice,
     suppress,
-    format_exc,
+    formatx_send,
     display_name,
     mentionuser,
     normalize_chat_id,
@@ -191,7 +191,7 @@ async def _(kst):
     try:
         chat_id = await ga.get_id(chat)
     except Exception as err:
-        return await kst.eor(format_exc(err), parse_mode="html")
+        return await kst.eor(formatx_send(err), parse_mode="html")
     if len(kst.text.split()) > 2:
         message = kst.text.split(maxsplit=2)[2]
     elif kst.is_reply:
@@ -206,7 +206,7 @@ async def _(kst):
             delivered = f"[{delivered}]({sent.msg_link})"
         await kst.eor(delivered)
     except Exception as err:
-        await kst.eor(format_exc(err), parse_mode="html")
+        await kst.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -358,7 +358,7 @@ async def _(kst):
                 )
                 await yy.eor(f"Successfully invited `{x}` to `{chat_id}`")
             except Exception as err:
-                await yy.eor(format_exc(err), parse_mode="html")
+                await yy.eor(formatx_send(err), parse_mode="html")
     else:
         for x in users.split(" "):
             try:
@@ -372,7 +372,7 @@ async def _(kst):
             except UserBotError:
                 await yy.eod("`Bots can only be added as admins in channel.`")
             except Exception as err:
-                await yy.eor(format_exc(err), parse_mode="html")
+                await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -385,7 +385,7 @@ async def _(kst):
     chat_id = await ga.get_chat_id(kst)
     is_current = chat_id == normalize_chat_id(kst.chat_id)
     if is_current and kst.is_private:
-        return await kst.eod("`Use this in group/channel.`")
+        return await kst.eod("`Use this in for group/channel.`")
     if is_current:
         await kst.try_delete()
     try:
@@ -394,6 +394,56 @@ async def _(kst):
             await kst.eod(f"`Leave from {chat_id}.`")
     except BaseException:
         await kst.eod(f"`Cannot leave from {chat_id}, try leave manually :(`")
+
+
+@kasta_cmd(
+    pattern="(un|)archive(?: |$)(.*)",
+)
+async def _(kst):
+    ga = kst.client
+    is_unarchive = kst.pattern_match.group(1).strip() == "un"
+    chat_id = await ga.get_chat_id(kst, group=2)
+    is_current = chat_id == normalize_chat_id(kst.chat_id)
+    if is_current and kst.is_private:
+        return await kst.eod("`Use this in for group/channel.`")
+    if is_current:
+        await kst.try_delete()
+    if is_unarchive:
+        has_unarchive = await ga.unarchive(chat_id)
+        if not (has_unarchive is None):
+            text = "UnArchived!"
+        else:
+            text = "Cannot UnArchive!"
+    else:
+        has_archive = await ga.archive(chat_id)
+        if not (has_archive is None):
+            text = "Archived!"
+        else:
+            text = "Cannot Archive!"
+    await kst.eod(f"`{chat_id} {text}`")
+
+
+@kasta_cmd(
+    pattern="delchannel(?: |$)(.*)",
+)
+async def _(kst):
+    ga = kst.client
+    chat_id = await ga.get_chat_id(kst)
+    is_current = chat_id == normalize_chat_id(kst.chat_id)
+    if is_current and kst.is_private:
+        return await kst.eod("`Use this in for group/channel.`")
+    if is_current:
+        await kst.try_delete()
+    try:
+        await ga(
+            fun.channels.DeleteChannelRequest(
+                channel=chat_id,
+            ),
+        )
+        if not is_current:
+            await kst.eod(f"`Deleted channel {chat_id}.`")
+    except BaseException:
+        await kst.eod(f"`Cannot delete channel {chat_id}, try leave manually :(`")
 
 
 plugins_help["chat"] = {
@@ -415,4 +465,7 @@ plugins_help["chat"] = {
     "{i}report_spam [reply]/[in_private]/[username/mention/id]": "Report spam message from user.",
     "{i}invite [username/id]": "Add user to the current group/channel.",
     "{i}kickme [current/chat_id/username]/[reply]": "Leaves myself from group/channel.",
+    "{i}archive [current/chat_id/username]/[reply]": "Move the groups/channels to archive folder.",
+    "{i}unarchive [current/chat_id/username]/[reply]": "UnArchive the groups/channels from archive folder.",
+    "{i}delchannel [current/chat_id/username]/[reply]": "Delete your group/channel.",
 }

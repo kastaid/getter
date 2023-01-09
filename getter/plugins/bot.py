@@ -8,7 +8,7 @@
 import asyncio
 import os
 import sys
-import time
+from time import sleep, perf_counter
 import aiofiles
 from telethon.tl import functions as fun
 from . import (
@@ -20,7 +20,7 @@ from . import (
     suppress,
     sgvar,
     parse_pre,
-    format_exc,
+    formatx_send,
     Carbon,
     CARBON_PRESETS,
     hk,
@@ -47,9 +47,9 @@ async def _(kst):
     edited=True,
 )
 async def _(kst):
-    start_time = time.perf_counter()
+    start_time = perf_counter()
     await kst.client(fun.PingRequest(ping_id=0))
-    speedy = round(time.perf_counter() - start_time, 3)
+    speedy = round(perf_counter() - start_time, 3)
     uptime = kst.client.uptime
     await kst.eor(
         f"🏓 Pong !!\n├  <b>Speedy</b> – <code>{speedy}ms</code>\n├  <b>Uptime</b> – <code>{uptime}</code>\n└  <b>Version</b> – <code>{__version__}</code>",
@@ -145,7 +145,7 @@ async def _(kst):
         app = hk.heroku().app(hk.name)
         app.restart()
     except Exception as err:
-        reply = await yy.eor(format_exc(err), parse_mode="html")
+        reply = await yy.eor(formatx_send(err), parse_mode="html")
         await reply.reply(r"\\**#Getter**// `Restarting as locally...`", silent=True)
         await restart_app()
 
@@ -158,7 +158,7 @@ async def _(kst):
     timer = int(sec) if sec.replace(".", "", 1).isdecimal() else 3
     timer = 3 if timer > 30 else timer
     yy = await kst.eor(f"`sleep in {timer} seconds...`")
-    time.sleep(timer)
+    sleep(timer)
     await yy.eod(f"`wake-up from {timer} seconds`")
 
 
@@ -177,7 +177,7 @@ async def heroku_logs(kst) -> None:
         app = hk.heroku().app(hk.name)
         logs = app.get_log(lines=100)
     except Exception as err:
-        return await kst.eor(format_exc(err), parse_mode="html")
+        return await kst.eor(formatx_send(err), parse_mode="html")
     await kst.eor("`Downloading Logs...`")
     file = Root / "downloads/getter-heroku.log"
     async with aiofiles.open(file, mode="w") as f:

@@ -94,7 +94,7 @@ def get_botlogs() -> int:
     return nope
 
 
-def format_exc(err: Exception) -> str:
+def formatx_send(err: Exception) -> str:
     _ = r"\\<b>#Getter_Error</b>//"
     _ += "\n<pre>{}: {}</pre>".format(get_full_class_name(err), html.escape(str(err)))
     return _

@@ -6,8 +6,8 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-import datetime
-import time
+from datetime import datetime
+from time import time
 from . import (
     DEVS,
     kasta_cmd,
@@ -65,7 +65,7 @@ async def _(kst):
             return await yy.eor("`Cannot gban to myself.`", time=3)
         if user.id in DEVS:
             return await yy.eor("`Forbidden to gban our awesome developers.`", time=3)
-        start_time, date = time.time(), datetime.datetime.now().timestamp()
+        start_time, date = time(), datetime.now().timestamp()
         done = 0
         if ga._dialogs:
             dialog = ga._dialogs
@@ -76,11 +76,11 @@ async def _(kst):
             if gg.is_group or gg.is_channel:
                 await asyncio.sleep(0.2)
                 done += 1
-        taken = time_formatter((time.time() - start_time) * 1000)
+        taken = time_formatter((time() - start_time) * 1000)
         text = fgban_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             done,
-            datetime.datetime.fromtimestamp(date).strftime("%Y-%m-%d"),
+            datetime.fromtimestamp(date).strftime("%Y-%m-%d"),
             taken,
             humanbool(True),
             f"<pre>{reason}</pre>" if reason else "None given.",
@@ -114,7 +114,7 @@ async def _(kst):
         if user.id == ga.uid:
             return await yy.eor("`Cannot ungban to myself.`", time=3)
         yy = await yy.reply("`Force UnGBanning...`", silent=True)
-        start_time, done = time.time(), 0
+        start_time, done = time(), 0
         if ga._dialogs:
             dialog = ga._dialogs
         else:
@@ -124,7 +124,7 @@ async def _(kst):
             if gg.is_group or gg.is_channel:
                 await asyncio.sleep(0.2)
                 done += 1
-        taken = time_formatter((time.time() - start_time) * 1000)
+        taken = time_formatter((time() - start_time) * 1000)
         text = fungban_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             done,

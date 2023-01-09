@@ -5,15 +5,15 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import time
 import urllib.parse
+from time import perf_counter
 from validators.ip_address import ipv4
 from . import (
     kasta_cmd,
     plugins_help,
     is_url,
     parse_pre,
-    format_exc,
+    formatx_send,
     humanbytes,
     humanbool,
     Fetch,
@@ -153,7 +153,7 @@ async def _(kst):
     pattern="speedtest$",
 )
 async def _(kst):
-    start = time.perf_counter()
+    start = perf_counter()
     yy = await kst.eor("`Processing...`")
     try:
         import speedtest
@@ -178,7 +178,7 @@ async def _(kst):
 ┊  ├  <b>IP:</b> <code>{}</code>
 ┊  ├  <b>Country:</b> <code>{}</code>
 └  <b>Sponsor:</b> <code>{}</code>""".format(
-            round(time.perf_counter() - start, 3),
+            round(perf_counter() - start, 3),
             humanbytes(resp.get("download")),
             humanbytes(resp.get("upload")),
             resp.get("ping"),
@@ -190,7 +190,7 @@ async def _(kst):
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(

@@ -6,9 +6,9 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-import datetime
 import os
 import sys
+from datetime import datetime, timezone
 import aiofiles
 from git import Repo
 from git.exc import GitCommandError, InvalidGitRepositoryError, NoSuchPathError
@@ -32,7 +32,7 @@ from . import (
     humanbool,
     Runner,
     MAX_MESSAGE_LEN,
-    format_exc,
+    formatx_send,
     hk,
 )
 
@@ -195,8 +195,8 @@ async def _(kst):
     if kst.is_sudo:
         await asyncio.sleep(choice((4, 6, 8)))
     # http://www.timebie.com/std/utc
-    utc_now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-    local_now = datetime.datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+    utc_now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
     yy = await kst.eor("`Processing...`", silent=True, force_reply=True)
     await yy.eor(
         test_text.format(
@@ -283,7 +283,7 @@ async def show_changelog(kst, changelog) -> None:
                 allow_cache=False,
             )
         except Exception as err:
-            chlog = await kst.eor(format_exc(err), parse_mode="html")
+            chlog = await kst.eor(formatx_send(err), parse_mode="html")
         (file).unlink(missing_ok=True)
     else:
         chlog = await kst.eor(changelog, parse_mode="html")

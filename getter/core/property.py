@@ -8,9 +8,9 @@
 import asyncio
 import re
 import sys
-import time
 import typing
 from base64 import b64decode
+from time import perf_counter
 from asyncache import cached
 from cachetools import TTLCache
 from .. import __license__, __copyright__
@@ -33,7 +33,7 @@ def do_not_remove_credit() -> None:
         sys.exit(1)
 
 
-@cached(TTLCache(maxsize=1024, ttl=(120 * 30), timer=time.perf_counter))  # 1 hours
+@cached(TTLCache(maxsize=1024, ttl=(120 * 30), timer=perf_counter))  # 1 hours
 async def get_blacklisted(
     url: str,
     is_json: bool = False,

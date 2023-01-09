@@ -6,13 +6,13 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-import datetime
-import inspect
 import re
 import sys
 import typing
 from contextlib import suppress
+from datetime import datetime
 from functools import wraps
+from inspect import stack
 from io import BytesIO
 from pathlib import Path
 from traceback import format_exc
@@ -178,7 +178,7 @@ def kasta_cmd(
                 raise events.StopPropagation
             except Exception as err:
                 LOGS.exception(f"[KASTA_CMD] - {err}")
-                date = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+                date = datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
                 if kst.is_private:
                     chat_type = "private"
                 elif kst.is_group:
@@ -300,7 +300,7 @@ def kasta_cmd(
             matches = re.split(r"[$(?].*", pattern)
             cmd_name = "".join(matches) if not (for_dev or dev) else pattern
             cmds = DEV_CMDS if for_dev or dev else SUDO_CMDS
-            file = Path(inspect.stack(0)[1].filename)
+            file = Path(stack(0)[1].filename)
             if cmds.get(file.stem):
                 cmds[file.stem].append(cmd_name)
             else:

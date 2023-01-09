@@ -6,9 +6,9 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-import datetime
-import html
-import time
+from datetime import datetime
+from html import escape
+from time import perf_counter
 from cachetools import TTLCache
 from telethon.tl import functions as fun, types as typ
 from . import (
@@ -53,9 +53,9 @@ _TORM = {
     "-": "",
     "~": "",
 }
-_PMBYE_CACHE = TTLCache(maxsize=1, ttl=60, timer=time.perf_counter)  # 1 mins
-_PMMSG_CACHE = TTLCache(maxsize=1, ttl=60, timer=time.perf_counter)  # 1 mins
-_PMTOTAL_CACHE = TTLCache(maxsize=1, ttl=60, timer=time.perf_counter)  # 1 mins
+_PMBYE_CACHE = TTLCache(maxsize=1, ttl=60, timer=perf_counter)  # 1 mins
+_PMMSG_CACHE = TTLCache(maxsize=1, ttl=60, timer=perf_counter)  # 1 mins
+_PMTOTAL_CACHE = TTLCache(maxsize=1, ttl=60, timer=perf_counter)  # 1 mins
 
 
 async def PMLogs(kst):
@@ -309,10 +309,10 @@ async def _(kst):
         return await yy.eor("`Our devs auto allowed!`", time=3)
     if is_allow(user.id):
         return await yy.eor("`User is already Allowed.`", time=4)
-    date = datetime.datetime.now().timestamp()
+    date = datetime.now().timestamp()
     allow_user(user.id, date, reason)
     text = "<b><u>User {} allowed to PM!</u></b>\n".format(display_name(user))
-    text += "<b>Date:</b> <code>{}</code>\n".format(datetime.datetime.fromtimestamp(date).strftime("%Y-%m-%d"))
+    text += "<b>Date:</b> <code>{}</code>\n".format(datetime.fromtimestamp(date).strftime("%Y-%m-%d"))
     text += "<b>Reason:</b> {}".format(f"<pre>{reason}</pre>" if reason else "None given.")
     done = await yy.eor(text, parse_mode="html")
     towarn, PMWARN = str(user.id), jdata.pmwarns()
@@ -356,7 +356,7 @@ async def _(kst):
         text = f"<b><u>{total} Allowed Users PM</u></b>\n"
         for x in allowed_users:
             text += f"User ID: {x.user_id}\n"
-            text += "Date: {}\n".format(datetime.datetime.fromtimestamp(x.date).strftime("%Y-%m-%d"))
+            text += "Date: {}\n".format(datetime.fromtimestamp(x.date).strftime("%Y-%m-%d"))
             text += "Reason: {}\n".format(x.reason or "None given.")
         return await kst.eor(text, parts=True, parse_mode="html")
     text = "`You got no allowed users!`"
@@ -460,7 +460,7 @@ async def _(kst):
         pmbye = gvar("_pmbye")
         if not custom:
             text = "<b>PM-Bye:</b>\n"
-            text += "<pre>{}</pre>".format(html.escape(pmbye or pmbye_default))
+            text += "<pre>{}</pre>".format(escape(pmbye or pmbye_default))
             await yy.eor(text, parse_mode="html")
             return
         if pmbye == custom:
@@ -471,7 +471,7 @@ async def _(kst):
         pmmsg = gvar("_pmmsg")
         if not custom:
             text = "<b>PM-Message:</b>\n"
-            text += "<pre>{}</pre>".format(html.escape(pmmsg or pmmsg_default))
+            text += "<pre>{}</pre>".format(escape(pmmsg or pmmsg_default))
             await yy.eor(text, parse_mode="html")
             return
         if pmmsg == custom:

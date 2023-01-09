@@ -5,10 +5,10 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import datetime
-import html
-import mimetypes
 import re
+from datetime import datetime
+from html import escape
+from mimetypes import guess_extension
 import aiofiles
 import telegraph
 from bs4 import BeautifulSoup
@@ -24,7 +24,7 @@ from . import (
     normalize_chat_id,
     get_msg_id,
     get_media_type,
-    format_exc,
+    formatx_send,
     replace_all,
     Runner,
     Fetch,
@@ -54,7 +54,7 @@ async def _(kst):
         check = TextBlob(sentence)
         correct = check.correct()
     except Exception as err:
-        return await yy.eor(format_exc(err), parse_mode="html")
+        return await yy.eor(formatx_send(err), parse_mode="html")
     text = "• **Given Phrase:** `{}`\n• **Corrected Phrase:** `{}`".format(
         sentence,
         correct.strip(),
@@ -146,7 +146,7 @@ async def _(kst):
 )
 async def _(kst):
     yy = await kst.eor("`Processing...`")
-    now = datetime.datetime.now()
+    now = datetime.now()
     month = now.strftime("%b")
     url = "https://daysoftheyear.com"
     url += f"/days/{month}/" + now.strftime("%F").split("-")[2]
@@ -192,7 +192,7 @@ async def _(kst):
     if not res:
         return await yy.eod("`Try again now!`")
     if mode != "p":
-        res = html.escape(res)
+        res = escape(res)
         await yy.eor(f"<pre>{res}</pre>", parse_mode="html")
     else:
         await yy.eor(
@@ -348,7 +348,7 @@ async def _(kst):
             voice_note=True,
         )
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
     (Root / voice).unlink(missing_ok=True)
 
 
@@ -451,7 +451,7 @@ async def _(kst):
     try:
         from_msg = await ga.get_messages(chat, ids=msg_id)
     except Exception as err:
-        return await yy.eor(format_exc(err), parse_mode="html")
+        return await yy.eor(formatx_send(err), parse_mode="html")
     if not from_msg.media:
         await yy.try_delete()
     else:
@@ -460,7 +460,7 @@ async def _(kst):
             file = "getmsg_" + str(msg_id) + ".jpg"
         else:
             mimetype = from_msg.media.document.mime_type
-            file = "getmsg_" + str(msg_id) + mimetypes.guess_extension(mimetype)
+            file = "getmsg_" + str(msg_id) + guess_extension(mimetype)
         await ga.download_file(from_msg.media, file=file)
         msg = await yy.eor(
             f"**Source:** `{link}`",

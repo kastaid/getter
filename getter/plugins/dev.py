@@ -7,9 +7,9 @@
 
 import json
 import sys
-import traceback
 from io import BytesIO, StringIO
 from pathlib import Path
+from traceback import format_exc
 import aiofiles
 from telethon.tl import functions, types
 from . import (
@@ -29,7 +29,7 @@ from . import (
     humanbytes,
     to_dict,
     parse_pre,
-    format_exc,
+    formatx_send,
     Runner,
     Carbon,
     get_blacklisted,
@@ -186,7 +186,7 @@ async def _(kst):
         result += f"<b>Result</b>:\n<pre>{out}</pre>"
         await yy.sod(result, parse_mode="html")
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 @kasta_cmd(
@@ -206,7 +206,7 @@ async def _(kst):
         value = await aexec(code, kst)
     except BaseException:
         value = None
-        exc = traceback.format_exc()
+        exc = format_exc()
     stdout = redirected_output.getvalue()
     stderr = redirected_error.getvalue()
     sys.stdout = old_stdout
@@ -341,8 +341,8 @@ plugins_help["dev"] = {
     "{i}shell|{i}sh [command]/[reply]": """Run the linux commands.
 **Shell Command Snippets:**
 `echo Hello, World!`
-`python --version`
-`python -c 'import time;print(time.ctime())'`
+`python3 --version`
+`python3 -c 'import time;print(time.ctime())'`
 `cat /etc/os-release`
 `uname -a`
 `pwd`

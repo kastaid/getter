@@ -8,7 +8,7 @@
 from . import (
     kasta_cmd,
     plugins_help,
-    format_exc,
+    formatx_send,
     deep_get,
     Fetch,
     FUN_APIS,
@@ -42,7 +42,7 @@ async def _(kst):
                 allow_cache=False,
             )
     except Exception as err:
-        await yy.eor(format_exc(err), parse_mode="html")
+        await yy.eor(formatx_send(err), parse_mode="html")
 
 
 plugins_help["random"] = {
