@@ -478,9 +478,8 @@ async def _(kst):
 async def _(kst):
     match = kst.pattern_match.group(1).lower()
     is_notify = any(_ in match for _ in ("-n", "notify"))
-    if kst.is_private:
-        text = "Pinned!"
-    else:
+    text = "Pinned!"
+    if not kst.is_private and kst.is_reply:
         link = (await kst.get_reply_message()).msg_link
         text = f"Pinned [This Message]({link}) !"
     try:

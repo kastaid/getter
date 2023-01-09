@@ -443,7 +443,7 @@ async def _(kst):
         if not is_current:
             await kst.eod(f"`Deleted channel {chat_id}.`")
     except BaseException:
-        await kst.eod(f"`Cannot delete channel {chat_id}, try leave manually :(`")
+        await kst.eod(f"`Cannot delete channel {chat_id}, try delete manually :(`")
 
 
 plugins_help["chat"] = {
