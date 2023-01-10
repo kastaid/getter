@@ -310,24 +310,21 @@ def group_call_instance(chat_id: int):
             lib_name="pytgcalls",
             pkg_name="pytgcalls==3.0.0.dev24",
         )
-    if chat_id not in CALLS:
-        CALLS[chat_id] = pytgcalls.GroupCallFactory(
-            getter_app,
-            pytgcalls.GroupCallFactory.MTPROTO_CLIENT_TYPE.TELETHON,
-            enable_logs_to_console=False,
-            path_to_log_file="",
-        ).get_group_call()
-    call = CALLS.get(chat_id)
-
-    @call.on_audio_playout_ended
-    async def __(gc, _):
-        if not gc.is_connected:
-            CALLS.pop(chat_id, None)
+    call = None
+    with suppress(BaseException):
+        if chat_id not in CALLS:
+            CALLS[chat_id] = pytgcalls.GroupCallFactory(
+                getter_app,
+                pytgcalls.GroupCallFactory.MTPROTO_CLIENT_TYPE.TELETHON,
+                enable_logs_to_console=False,
+                path_to_log_file="",
+            ).get_group_call()
+            call = CALLS.get(chat_id)
+    return call
 
 
 def group_call(chat_id: int):
-    group_call_instance(chat_id)
-    return CALLS.get(chat_id)
+    return group_call_instance(chat_id)
 
 
 plugins_help["vctools"] = {
