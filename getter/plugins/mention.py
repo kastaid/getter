@@ -59,12 +59,13 @@ async def _(kst):
     caption = kst.pattern_match.group(1)
     users, limit = [], 0
     ATAGS.append(chat_id)
+    chat = await kst.get_input_chat()
     yy = await kst.sod(
-        f"`Running atag process in {normalize(kst.chat.title).lower()}...`",
+        f"`Running atag process in {normalize(chat.title).lower()}...`",
         delete=False,
         force_reply=True,
     )
-    async for x in ga.iter_participants(chat_id):
+    async for x in ga.iter_participants(chat):
         if exclude_user(x):
             if not hasattr(x.participant, "admin_rights"):
                 users.append(mentionuser(x.id, display_name(x), html=True))
@@ -104,12 +105,13 @@ async def _(kst):
     caption = kst.pattern_match.group(1)
     users, limit = [], 0
     ETAGS.append(chat_id)
+    chat = await kst.get_input_chat()
     yy = await kst.sod(
-        f"`Running etag process in {normalize(kst.chat.title).lower()}...`",
+        f"`Running etag process in {normalize(chat.title).lower()}...`",
         delete=False,
         force_reply=True,
     )
-    async for x in ga.iter_participants(chat_id):
+    async for x in ga.iter_participants(chat):
         if exclude_user(x):
             if not hasattr(x.participant, "admin_rights"):
                 users.append(mentionuser(x.id, choice(EMOJIS), html=True))

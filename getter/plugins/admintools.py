@@ -474,12 +474,13 @@ async def _(kst):
 @kasta_cmd(
     pattern="pin(?: |$)(.*)",
     require="pin_messages",
+    func=lambda e: e.is_reply,
 )
 async def _(kst):
     match = kst.pattern_match.group(1).lower()
     is_notify = any(_ in match for _ in ("-n", "notify"))
     text = "Pinned!"
-    if not kst.is_private and kst.is_reply:
+    if not kst.is_private:
         link = (await kst.get_reply_message()).msg_link
         text = f"Pinned [This Message]({link}) !"
     try:
@@ -492,6 +493,7 @@ async def _(kst):
 @kasta_cmd(
     pattern="tpin(?: |$)(.*)",
     require="pin_messages",
+    func=lambda e: e.is_reply,
 )
 async def _(kst):
     ga = kst.client
@@ -517,6 +519,7 @@ async def _(kst):
 @kasta_cmd(
     pattern="unpin$",
     require="pin_messages",
+    func=lambda e: e.is_reply,
 )
 async def _(kst):
     try:
@@ -627,7 +630,7 @@ async def _(kst):
                 anonymous=False,
                 title=title,
             )
-        text = "{} is now admin with title {}".format(
+        text = "<code>{} promoted as {}</code>".format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             title,
         )
@@ -665,7 +668,7 @@ async def _(kst):
             manage_call=False,
             anonymous=False,
         )
-        text = "{} is no longer admin.".format(
+        text = "<code>{} demoted!</code>".format(
             mentionuser(user.id, display_name(user), width=15, html=True),
         )
         await yy.eor(text, parse_mode="html")
@@ -774,14 +777,15 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
+    chat = await kst.get_input_chat()
     yy = await kst.eor("`Kicking deleted accounts...`")
     try:
         done = [
             await ga.kick_participant(chat_id, x.id)
-            for x in await ga.get_participants(chat_id)
+            for x in await ga.get_participants(chat)
             if not hasattr(x.participant, "admin_rights") and x.deleted
         ]
-        await yy.eor(f"`Successfully kicked {len(done)} deleted account(s) in {normalize(kst.chat.title).lower()}.`")
+        await yy.eor(f"`Successfully kicked {len(done)} deleted account(s) in {normalize(chat.title).lower()}.`")
     except Exception as err:
         await yy.eor(formatx_send(err), parse_mode="html")
 
@@ -794,10 +798,11 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
+    chat = await kst.get_input_chat()
     yy = await kst.eor("`Unbanning all banned users...`")
     done = 0
     async for x in ga.iter_participants(
-        chat_id,
+        chat,
         filter=typ.ChannelParticipantsKicked,
     ):
         try:
@@ -814,7 +819,7 @@ async def _(kst):
                 pass
         except BaseException:
             pass
-    await yy.eor(f"`Successfully unbanned {done} users in {normalize(kst.chat.title).lower()}.`")
+    await yy.eor(f"`Successfully unbanned {done} users in {normalize(chat.title).lower()}.`")
 
 
 @kasta_cmd(
@@ -823,11 +828,11 @@ async def _(kst):
 )
 async def _(kst):
     ga = kst.client
-    chat_id = kst.chat_id
+    chat = await kst.get_input_chat()
     yy = await kst.eor("`Processing...`")
     total = 0
-    text = f"<b>Admins in {normalize(kst.chat.title).lower()}:</b>\n"
-    async for x in ga.iter_participants(chat_id, filter=typ.ChannelParticipantsAdmins):
+    text = f"<b>Admins in {normalize(chat.title).lower()}:</b>\n"
+    async for x in ga.iter_participants(chat, filter=typ.ChannelParticipantsAdmins):
         if not (x.deleted or x.participant.admin_rights.anonymous):
             if isinstance(x.participant, typ.ChannelParticipantCreator):
                 text += "- {} Owner\n".format(mentionuser(x.id, display_name(x), html=True))
