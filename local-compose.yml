@@ -7,7 +7,7 @@ services:
       - ./:/app
     env_file:
       - config.env
-    restart: always
+    restart: unless-stopped
     deploy:
       resources:
         limits:
