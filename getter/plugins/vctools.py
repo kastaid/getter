@@ -232,9 +232,11 @@ async def _(kst):
     in_call = group_call(chat_id)
     if not (in_call and in_call.is_connected):
         try:
-            await in_call.join(chat_id)
-            await in_call.start_audio()
+            await in_call.start(chat_id, enable_action=False)
             text = "`Joined video chat.`"
+            with suppress(BaseException):
+                await asyncio.sleep(3)
+                await in_call.set_is_mute(is_muted=True)
         except BaseException:
             if is_termux():
                 text = "`This command doesn't not supported Termux. Use proot-distro instantly!`"
@@ -271,7 +273,7 @@ async def _(kst):
     in_call = group_call(chat_id)
     if in_call and in_call.is_connected:
         with suppress(BaseException):
-            await in_call.stop_audio()
+            await in_call.stop()
         text = "`Leaved video chat.`"
     else:
         text = "`Not joined video chat!`"
@@ -317,7 +319,16 @@ def group_call_instance(chat_id: int) -> None:
                 pytgcalls.GroupCallFactory.MTPROTO_CLIENT_TYPE.TELETHON,
                 enable_logs_to_console=False,
                 path_to_log_file="",
-            ).get_group_call()
+            ).get_file_group_call(
+                input_filename="",
+                play_on_repeat=False,
+            )
+        call = CALLS.get(chat_id)
+
+        @call.on_network_status_changed
+        async def __(context, is_connected):
+            if not is_connected:
+                CALLS.pop(chat_id, None)
 
 
 def group_call(chat_id: int):
