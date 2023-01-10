@@ -272,10 +272,10 @@ async def _(kst):
     if in_call and in_call.is_connected:
         with suppress(BaseException):
             await in_call.stop_audio()
-        CALLS.pop(chat_id, None)
         text = "`Leaved video chat.`"
     else:
         text = "`Not joined video chat!`"
+    CALLS.pop(chat_id, None)
     await yy.eor(text, time=5)
 
 
@@ -300,7 +300,7 @@ async def get_call(chat_id: int):
         return None
 
 
-def group_call_instance(chat_id: int):
+def group_call_instance(chat_id: int) -> None:
     try:
         import pytgcalls
     except ImportError:
@@ -310,7 +310,6 @@ def group_call_instance(chat_id: int):
             lib_name="pytgcalls",
             pkg_name="pytgcalls==3.0.0.dev24",
         )
-    call = None
     with suppress(BaseException):
         if chat_id not in CALLS:
             CALLS[chat_id] = pytgcalls.GroupCallFactory(
@@ -319,12 +318,11 @@ def group_call_instance(chat_id: int):
                 enable_logs_to_console=False,
                 path_to_log_file="",
             ).get_group_call()
-            call = CALLS.get(chat_id)
-    return call
 
 
 def group_call(chat_id: int):
-    return group_call_instance(chat_id)
+    group_call_instance(chat_id)
+    return CALLS.get(chat_id)
 
 
 plugins_help["vctools"] = {
