@@ -235,9 +235,6 @@ async def _(kst):
             await in_call.join(chat_id)
             await in_call.start_audio()
             text = "`Joined video chat.`"
-            with suppress(BaseException):
-                await asyncio.sleep(3)
-                await in_call.set_audio_pause(True)
         except BaseException:
             if is_termux():
                 text = "`This command doesn't not supported Termux. Use proot-distro instantly!`"
@@ -323,7 +320,6 @@ def group_call_instance(chat_id: int):
     call = CALLS.get(chat_id)
 
     @call.on_audio_playout_ended
-    @call.on_participant_list_updated
     async def __(gc, _):
         if not gc.is_connected:
             CALLS.pop(chat_id, None)
