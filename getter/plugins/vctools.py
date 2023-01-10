@@ -230,7 +230,7 @@ async def _(kst):
         await yy.eor("`No video chat!`", time=5)
         return
     in_call = group_call(chat_id)
-    if not in_call:
+    if not (in_call and in_call.is_connected):
         try:
             await in_call.join(chat_id)
             await in_call.start_audio()
@@ -272,7 +272,7 @@ async def _(kst):
         await yy.eor("`No video chat!`", time=5)
         return
     in_call = group_call(chat_id)
-    if in_call:
+    if in_call and in_call.is_connected:
         with suppress(BaseException):
             await in_call.stop_audio()
         CALLS.pop(chat_id, None)
@@ -323,8 +323,10 @@ def group_call_instance(chat_id: int):
     call = CALLS.get(chat_id)
 
     @call.on_audio_playout_ended
+    @call.on_participant_list_updated
     async def __(gc, _):
-        CALLS.pop(chat_id, None)
+        if not gc.is_connected:
+            CALLS.pop(chat_id, None)
 
 
 def group_call(chat_id: int):
