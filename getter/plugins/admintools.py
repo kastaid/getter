@@ -777,7 +777,7 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
-    chat = await kst.get_input_chat()
+    chat = await kst.get_chat()
     yy = await kst.eor("`Kicking deleted accounts...`")
     try:
         done = [
@@ -798,7 +798,7 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     chat_id = kst.chat_id
-    chat = await kst.get_input_chat()
+    chat = await kst.get_chat()
     yy = await kst.eor("`Unbanning all banned users...`")
     done = 0
     async for x in ga.iter_participants(
@@ -828,7 +828,7 @@ async def _(kst):
 )
 async def _(kst):
     ga = kst.client
-    chat = await kst.get_input_chat()
+    chat = await kst.get_chat()
     yy = await kst.eor("`Processing...`")
     total = 0
     text = f"<b>Admins in {normalize(chat.title).lower()}:</b>\n"

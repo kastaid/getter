@@ -59,7 +59,7 @@ async def _(kst):
     caption = kst.pattern_match.group(1)
     users, limit = [], 0
     ATAGS.append(chat_id)
-    chat = await kst.get_input_chat()
+    chat = await kst.get_chat()
     yy = await kst.sod(
         f"`Running atag process in {normalize(chat.title).lower()}...`",
         delete=False,
@@ -105,7 +105,7 @@ async def _(kst):
     caption = kst.pattern_match.group(1)
     users, limit = [], 0
     ETAGS.append(chat_id)
-    chat = await kst.get_input_chat()
+    chat = await kst.get_chat()
     yy = await kst.sod(
         f"`Running etag process in {normalize(chat.title).lower()}...`",
         delete=False,

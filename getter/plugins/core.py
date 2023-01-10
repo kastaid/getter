@@ -164,7 +164,7 @@ async def _(kst):
         start_time = time()
         local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
         max_success, success, failed, error = 300, 0, 0, "none"
-        chat = await kst.get_input_chat()
+        chat = await kst.get_chat()
         INVITE_WORKER[chat_id] = {
             "mode": "invite",
             "msg_id": yy.id,
@@ -436,7 +436,7 @@ async def _(kst):
             )
             return
         success = 0
-        chat = await kst.get_input_chat()
+        chat = await kst.get_chat()
         INVITE_WORKER[chat_id] = {
             "mode": "add",
             "msg_id": yy.id,
