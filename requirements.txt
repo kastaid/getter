@@ -23,5 +23,5 @@ telegraph==2.2.0
 requests==2.28.1
 lottie==0.7.0
 Pillow==9.4.0
-CairoSVG==2.5.2
+CairoSVG==2.6.0
 uvloop==0.17.0
