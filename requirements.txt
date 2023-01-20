@@ -4,7 +4,7 @@ loguru==0.6.0
 python-dotenv==0.21.0
 pytz==2022.7
 psutil==5.9.4
-heroku3==5.1.5
+heroku3==5.2.0
 GitPython==3.1.30
 psycopg2-binary==2.9.5
 SQLAlchemy==1.4.46
