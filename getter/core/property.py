@@ -53,7 +53,7 @@ async def get_blacklisted(
             if count != attempts:
                 await asyncio.sleep(1)
                 continue
-            ids: typing.Optional[typing.Tuple[typing.Union[int, str]]] = fallbacks or []
+            ids = fallbacks or []
             break
         if is_content:
             reg = r"[^\s#,\[\]\{\}]+"
