@@ -36,15 +36,7 @@
             "required": true
         }
     },
-    "stack": "heroku-22",
-    "addons": [
-        {
-            "plan": "heroku-postgresql",
-            "options": {
-                "version": "14"
-            }
-        }
-    ],
+    "success_url": "https://t.me/kastaot",
     "buildpacks": [
         {
             "url": "heroku/python"
@@ -62,5 +54,19 @@
             "url": "https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest"
         }
     ],
-    "success_url": "https://t.me/kastaot"
+    "stack": "heroku-22",
+    "addons": [
+        {
+            "plan": "heroku-postgresql",
+            "options": {
+                "version": "14"
+            }
+        }
+    ],
+    "formation": {
+        "worker": {
+            "quantity": 1,
+            "size": ""
+        }
+    }
 }
