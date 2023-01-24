@@ -37,11 +37,6 @@
         }
     },
     "stack": "heroku-22",
-    "formation": {
-        "worker": {
-            "quantity": 1
-        }
-    },
     "addons": [
         {
             "plan": "heroku-postgresql",
