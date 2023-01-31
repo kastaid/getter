@@ -21,7 +21,7 @@ _c, _u, _g, _v = (
     b64decode("a2FzdGFpZA==").decode("utf-8"),
     b64decode("a2FzdGF1cA==").decode("utf-8"),
     b64decode("a2FzdGFvdA==").decode("utf-8"),
-    b64decode("dmlydHVhbGNoYXRncnVw").decode("utf-8"),
+    b64decode("dGVtYW5fcmFuZG9t").decode("utf-8"),
 )
 
 
