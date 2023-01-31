@@ -37,7 +37,7 @@ class Collections(BASE):
         }
 
 
-Collections.__table__.create(checkfirst=True, bind=SESSION)
+Collections.__table__.create(checkfirst=True)
 
 
 def get_col(keyword):

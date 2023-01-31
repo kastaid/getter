@@ -38,7 +38,7 @@ class PMPermit(BASE):
         }
 
 
-PMPermit.__table__.create(checkfirst=True, bind=SESSION)
+PMPermit.__table__.create(checkfirst=True)
 
 
 def is_allow(user_id, use_cache: bool = False):
