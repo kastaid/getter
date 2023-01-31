@@ -20,6 +20,7 @@ from . import (
     snake,
     kebab,
     FLIP_MAP,
+    normalize,
     Fetch,
 )
 
@@ -263,6 +264,17 @@ async def _(kst):
     await kst.eor(text, parts=True)
 
 
+@kasta_cmd(
+    pattern="normal(?: |$)((?s).*)",
+)
+async def _(kst):
+    text = await kst.client.get_text(kst)
+    if not text:
+        return await kst.try_delete()
+    text = normalize(text).upper()
+    await kst.eor(text, parts=True)
+
+
 plugins_help["text"] = {
     "{i}getformat [text]/[reply]": "Get a replied message format.",
     "{i}noformat [text]/[reply]": "Clean format in replied message.",
@@ -289,4 +301,5 @@ plugins_help["text"] = {
     "{i}type [text]/[reply]": "Edits the message and shows like someone is typing.",
     "{i}flip [text]/[reply]": "Flip text upside down.",
     "{i}small [text]/[reply]": "Make caps text smaller.",
+    "{i}normal [text]/[reply]": "Convert stylish font to normal.",
 }

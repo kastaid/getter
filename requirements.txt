@@ -7,7 +7,7 @@ psutil==5.9.4
 heroku3==5.2.0
 GitPython==3.1.30
 psycopg2-binary==2.9.5
-SQLAlchemy==1.4.46
+SQLAlchemy==2.0.0
 sqlalchemy-json==0.5.0
 cachetools==5.3.0
 asyncache==0.3.1
