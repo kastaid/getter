@@ -38,7 +38,7 @@ class GBan(BASE):
         }
 
 
-GBan.__table__.create(checkfirst=True, bind=SESSION)
+GBan.__table__.create(checkfirst=True)
 
 
 def is_gban(user_id, use_cache: bool = False):

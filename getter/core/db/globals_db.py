@@ -34,7 +34,7 @@ class Globals(BASE):
         }
 
 
-Globals.__table__.create(checkfirst=True, bind=SESSION)
+Globals.__table__.create(checkfirst=True)
 
 
 def gvar(var, use_cache: bool = False):
