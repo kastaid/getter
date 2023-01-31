@@ -41,7 +41,7 @@ class GoAFK(BASE):
         }
 
 
-GoAFK.__table__.create(checkfirst=True)
+GoAFK.__table__.create(checkfirst=True, bind=SESSION)
 
 
 def is_afk():

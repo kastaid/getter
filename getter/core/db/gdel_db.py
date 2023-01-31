@@ -38,7 +38,7 @@ class GDel(BASE):
         }
 
 
-GDel.__table__.create(checkfirst=True)
+GDel.__table__.create(checkfirst=True, bind=SESSION)
 
 
 def is_gdel(user_id, use_cache: bool = False):
