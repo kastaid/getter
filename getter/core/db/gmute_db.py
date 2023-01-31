@@ -38,7 +38,7 @@ class GMute(BASE):
         }
 
 
-GMute.__table__.create(checkfirst=True)
+GMute.__table__.create(checkfirst=True, bind=SESSION)
 
 
 def is_gmute(user_id, use_cache: bool = False):
