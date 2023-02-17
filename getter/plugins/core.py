@@ -40,6 +40,7 @@ from . import (
     get_user_status,
     normalize_chat_id,
     time_formatter,
+    sendlog,
 )
 
 invite_text = """
@@ -177,9 +178,12 @@ async def _(kst):
             async for x in ga.iter_participants(target_id):
                 if not INVITE_WORKER.get(chat_id):
                     break
-                if (
-                    not (x.deleted or x.bot or x.is_self or hasattr(x.participant, "admin_rights"))
-                    and get_user_status(x) != "long_time_ago"
+                if not (x.deleted or x.bot or x.is_self or hasattr(x.participant, "admin_rights")) and get_user_status(
+                    x
+                ) not in (
+                    "long_time_ago",
+                    "within_month",
+                    "within_week",
                 ):
                     try:
                         if error.lower().startswith(("too many", "a wait of")) or success > max_success:
@@ -191,18 +195,17 @@ async def _(kst):
                             except ValueError:
                                 waitfor = 0
                             flood = time_formatter(waitfor * 1000)
-                            return await yy.eor(
-                                done_limit_text.format(
-                                    flood,
-                                    error,
-                                    success,
-                                    failed,
-                                    taken,
-                                    f"{ga.full_name} ({ga.uid})",
-                                    local_now,
-                                ),
-                                parse_mode="html",
+                            done_limit = done_limit_text.format(
+                                flood,
+                                error,
+                                success,
+                                failed,
+                                taken,
+                                f"{ga.full_name} ({ga.uid})",
+                                local_now,
                             )
+                            await yy.eor(done_limit, parse_mode="html")
+                            return await sendlog(done_limit, parse_mode="html")
                         await ga(fun.channels.InviteToChannelRequest(chat_id, users=[x.id]))
                         success += 1
                         INVITE_WORKER[chat_id].update({"success": success})
@@ -229,17 +232,16 @@ async def _(kst):
                         if INVITE_WORKER.get(chat_id):
                             INVITE_WORKER.pop(chat_id)
                         taken = time_formatter((time() - start_time) * 1000)
-                        return await yy.eor(
-                            done_error_text.format(
-                                str(err),
-                                success,
-                                failed,
-                                taken,
-                                f"{ga.full_name} ({ga.uid})",
-                                local_now,
-                            ),
-                            parse_mode="html",
+                        done_error = done_error_text.format(
+                            str(err),
+                            success,
+                            failed,
+                            taken,
+                            f"{ga.full_name} ({ga.uid})",
+                            local_now,
                         )
+                        await yy.eor(done_error, parse_mode="html")
+                        return await sendlog(done_error, parse_mode="html")
                     except Exception as err:
                         error = str(err)
                         failed += 1
@@ -248,16 +250,15 @@ async def _(kst):
         if INVITE_WORKER.get(chat_id):
             INVITE_WORKER.pop(chat_id)
         taken = time_formatter((time() - start_time) * 1000)
-        await yy.eor(
-            done_text.format(
-                success,
-                failed,
-                taken,
-                f"{ga.full_name} ({ga.uid})",
-                local_now,
-            ),
-            parse_mode="html",
+        done = done_text.format(
+            success,
+            failed,
+            taken,
+            f"{ga.full_name} ({ga.uid})",
+            local_now,
         )
+        await yy.eor(done, parse_mode="html")
+        await sendlog(done, parse_mode="html")
 
 
 @kasta_cmd(
