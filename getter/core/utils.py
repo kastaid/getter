@@ -166,7 +166,7 @@ def to_dict(
 ) -> typing.Any:
     if isinstance(obj, dict):
         data = {}
-        for (k, v) in obj.items():
+        for k, v in obj.items():
             data[k] = to_dict(v, classkey)
         return data
     elif hasattr(obj, "_ast"):
