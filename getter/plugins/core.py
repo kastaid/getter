@@ -19,7 +19,6 @@ from telethon.errors.rpcerrorlist import (
     UserNotMutualContactError,
     UserPrivacyRestrictedError,
     UserKickedError,
-    UserChannelsTooMuchError,
     YouBlockedUserError,
 )
 from telethon.tl import functions as fun, types as typ
@@ -45,10 +44,8 @@ from . import (
 
 invite_text = """
 🔄 <b>INVITING...</b>
-
 • <b>Invited:</b> <code>{}</code>
 • <b>Failed:</b> <code>{}</code>
-
 <b>Last Error:</b> <code>{}</code>
 """
 done_text = """
@@ -180,11 +177,7 @@ async def _(kst):
                     break
                 if not (x.deleted or x.bot or x.is_self or hasattr(x.participant, "admin_rights")) and get_user_status(
                     x
-                ) not in (
-                    "long_time_ago",
-                    "within_month",
-                    "within_week",
-                ):
+                ) not in ("long_time_ago",):
                     try:
                         if error.lower().startswith(("too many", "a wait of")) or success > max_success:
                             if INVITE_WORKER.get(chat_id):
@@ -225,10 +218,7 @@ async def _(kst):
                         UserKickedError,
                     ):
                         pass
-                    except (
-                        ChannelPrivateError,
-                        UserChannelsTooMuchError,
-                    ) as err:
+                    except ChannelPrivateError as err:
                         if INVITE_WORKER.get(chat_id):
                             INVITE_WORKER.pop(chat_id)
                         taken = time_formatter((time() - start_time) * 1000)
@@ -465,17 +455,11 @@ async def _(kst):
                     success += 1
                     INVITE_WORKER[chat_id].update({"success": success})
                     await yy.eor(f"`Adding {success} {mode}...`")
-                except (
-                    ChannelPrivateError,
-                    UserChannelsTooMuchError,
-                ):
+                except ChannelPrivateError:
                     break
                 except BaseException:
                     pass
-            except (
-                ChannelPrivateError,
-                UserChannelsTooMuchError,
-            ):
+            except ChannelPrivateError:
                 break
             except BaseException:
                 pass

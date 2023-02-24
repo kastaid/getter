@@ -52,7 +52,7 @@ async def _(kst):
     except ImportError:
         Translator = import_lib(
             lib_name="gpytranslate",
-            pkg_name="gpytranslate==1.4.0",
+            pkg_name="gpytranslate==1.5.1",
         ).Translator
     try:
         text = strip_format(strip_emoji(words))
@@ -97,7 +97,7 @@ async def _(kst):
     except ImportError:
         Translator = import_lib(
             lib_name="gpytranslate",
-            pkg_name="gpytranslate==1.4.0",
+            pkg_name="gpytranslate==1.5.1",
         ).Translator
     try:
         text = strip_format(strip_emoji(words))
@@ -137,14 +137,14 @@ async def _(kst):
     except ImportError:
         gTTS = import_lib(
             lib_name="gtts",
-            pkg_name="gTTS==2.3.0",
+            pkg_name="gTTS==2.3.1",
         ).gTTS
     try:
         from gpytranslate import Translator
     except ImportError:
         Translator = import_lib(
             lib_name="gpytranslate",
-            pkg_name="gpytranslate==1.4.0",
+            pkg_name="gpytranslate==1.5.1",
         ).Translator
     try:
         text = strip_ascii(strip_format(strip_emoji(words)))

@@ -47,7 +47,7 @@ async def _(kst):
             return
         webdriver = import_lib(
             lib_name="selenium.webdriver",
-            pkg_name="selenium==4.7.2",
+            pkg_name="selenium==4.8.2",
         )
     start_time = time()
     options = webdriver.ChromeOptions()
