@@ -117,7 +117,7 @@ async def _(kst):
     except ImportError:
         Translator = import_lib(
             lib_name="gpytranslate",
-            pkg_name="gpytranslate==1.4.0",
+            pkg_name="gpytranslate==1.5.1",
         ).Translator
     try:
         tod = str(res.get("question"))
