@@ -22,11 +22,8 @@ RUN set -ex \
     && apt-get -qqy install --no-install-recommends \
         gnupg2 \
         git \
-        tree \
-        neofetch \
         locales \
         tzdata \
-        ffmpeg \
         cairosvg \
         libjpeg-dev \
         libpng-dev \
@@ -34,7 +31,6 @@ RUN set -ex \
     && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8 \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && dpkg-reconfigure --force -f noninteractive tzdata \
-    && python3 -m pip install -Uq pip \
     && python3 -m venv $VIRTUAL_ENV \
     && pip3 install --no-cache-dir -r requirements.txt \
     && apt-get -qqy purge --auto-remove \
