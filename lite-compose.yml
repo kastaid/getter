@@ -1,7 +1,8 @@
 version: "3.9"
 services:
   getter:
-    build: ./Dockerfile_lite
+    build: .
+    dockerfile: lite.Dockerfile
     image: getter:latest
     volumes:
       - ./:/app
