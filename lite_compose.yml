@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  getter:
+    build: ./Dockerfile_lite
+    image: getter:latest
+    volumes:
+      - ./:/app
+    env_file:
+      - config.env
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
