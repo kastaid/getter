@@ -38,4 +38,4 @@ RUN set -ex \
     && apt-get -qqy clean \
     && rm -rf -- ~/.cache /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/* /usr/share/man/* /usr/share/doc/* /var/log/* /tmp/* /var/tmp/*
 
-CMD ["/bin/bash", "start.sh"]
+CMD ["python3", "-m", "getter"]
