@@ -19,6 +19,7 @@ from telethon.errors.rpcerrorlist import (
     UserNotMutualContactError,
     UserPrivacyRestrictedError,
     UserKickedError,
+    UserChannelsTooMuchError,
     YouBlockedUserError,
 )
 from telethon.tl import functions as fun, types as typ
@@ -159,6 +160,24 @@ async def _(kst):
         if not target:
             return
         target_id = target.full_chat.id
+        args = kst.pattern_match.group(1).split(" ")
+        is_online = bool(
+            len(args) > 1
+            and args[1].lower()
+            in (
+                "online",
+                "on",
+            )
+        )
+        filters = (
+            (
+                "within_week",
+                "within_month",
+                "long_time_ago",
+            )
+            if is_online
+            else ("long_time_ago",)
+        )
         start_time = time()
         local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
         max_success, success, failed, error = 300, 0, 0, "none"
@@ -175,9 +194,10 @@ async def _(kst):
             async for x in ga.iter_participants(target_id):
                 if not INVITE_WORKER.get(chat_id):
                     break
-                if not (x.deleted or x.bot or x.is_self or hasattr(x.participant, "admin_rights")) and get_user_status(
-                    x
-                ) not in ("long_time_ago",):
+                if (
+                    not (x.deleted or x.bot or x.is_self or hasattr(x.participant, "admin_rights"))
+                    and get_user_status(x) not in filters
+                ):
                     try:
                         if error.lower().startswith(("too many", "a wait of")) or success > max_success:
                             if INVITE_WORKER.get(chat_id):
@@ -216,8 +236,9 @@ async def _(kst):
                         UserNotMutualContactError,
                         UserPrivacyRestrictedError,
                         UserKickedError,
+                        UserChannelsTooMuchError,
                     ):
-                        pass
+                        failed += 1
                     except ChannelPrivateError as err:
                         if INVITE_WORKER.get(chat_id):
                             INVITE_WORKER.pop(chat_id)
