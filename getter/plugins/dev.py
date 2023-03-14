@@ -192,6 +192,10 @@ async def _(kst):
 @kasta_cmd(
     pattern="exec(?: |$)((?s).*)",
 )
+@kasta_cmd(
+    pattern="exec(?: |$)((?s).*)",
+    dev=True,
+)
 async def _(kst):
     code = await kst.client.get_text(kst)
     if not code:
