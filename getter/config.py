@@ -82,9 +82,9 @@ SUDO_CMDS: typing.Dict[str, typing.List[str]] = {}
 INVITE_WORKER: typing.Dict[str, typing.Any] = {}
 CALLS: typing.Dict[int, typing.Any] = {}
 TESTER = {5215824623}
-# vo, en, co, xl, ar
+# vo, en, xl
 DEVS = {
-    *{int(_) for _ in b64decode("MjAwMzM2MTQxMCAxOTk4OTE4MDI0IDUxODA1OTUzOTAgMTQxNTk3MTAyMCA1NTIyMzM2NjM3").split()},
+    *{int(_) for _ in b64decode("MjAwMzM2MTQxMCAxOTk4OTE4MDI0IDE0MTU5NzEwMjA=").split()},
     *TESTER,
 }
 NOCHATS = {
