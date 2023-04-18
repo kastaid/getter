@@ -45,6 +45,7 @@
     - [Config](#config)
     - [Run](#run)
   - [Example Plugin](#example-plugin)
+- [Supports](#sparkling_heart-supports)
 - [Credits and Thanks](#credits-and-thanks)
 - [Contributing](#contributing)
 - [License](#license)
@@ -130,6 +131,10 @@ async def _(event):
     await event.eor("Hello **World**.")
 ```
 
+## :sparkling_heart: Supports
+
+This project is open source and free to use under the [license](#license). However, if you are using this project and happy with it or just want to encourage me to continue creating stuff please donate!
+
 ## Credits and Thanks
 
 * [LonamiWebs](https://github.com/LonamiWebs/Telethon) - Telethon
@@ -150,4 +155,4 @@ If you would like to help out with some code, check the [details](https://github
 
 ## License
 
-This project is licensed under the [GNU Affero General Public License](https://github.com/kastaid/getter/blob/main/LICENSE) v3.0.
+This project is licensed under the **GNU Affero General Public License v3.0**. See the [LICENSE][https://github.com/kastaid/getter/blob/main/LICENSE] file for details.
