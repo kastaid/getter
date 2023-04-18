@@ -155,4 +155,4 @@ If you would like to help out with some code, check the [details](https://github
 
 ## License
 
-This project is licensed under the **GNU Affero General Public License v3.0**. See the [LICENSE][https://github.com/kastaid/getter/blob/main/LICENSE] file for details.
+This project is licensed under the **GNU Affero General Public License v3.0**. See the [LICENSE](https://github.com/kastaid/getter/blob/main/LICENSE) file for details.
