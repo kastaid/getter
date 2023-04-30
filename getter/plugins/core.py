@@ -140,6 +140,10 @@ async def _(kst):
     groups_only=True,
 )
 @kasta_cmd(
+    pattern="ia(?: |$)(.*)",
+    groups_only=True,
+)
+@kasta_cmd(
     pattern="ginvite(?: |$)(.*)",
     groups_only=True,
     dev=True,
