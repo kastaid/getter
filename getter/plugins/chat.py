@@ -23,8 +23,11 @@ from . import (
     BOTLOGS,
 )
 
+_DS_TASKS = []
 _DS1_TASKS = []
 _DS2_TASKS = []
+_DS3_TASKS = []
+_DS4_TASKS = []
 
 
 @kasta_cmd(
@@ -240,20 +243,39 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="(delayspam|ds)(?: |$)((?s).*)",
+    pattern="ds(1|2|3|4|)(?: |$)((?s).*)",
 )
 async def _(kst):
     chat_id = normalize_chat_id(kst.chat_id)
-    if chat_id in _DS1_TASKS:
-        await kst.eor("`Please wait until previous •delayspam• finished...`", time=5, silent=True)
-        return
+    match = kst.pattern_match.group(1).strip()
+    if match == "1":
+        if chat_id in _DS1_TASKS:
+            await kst.eor("`Please wait until previous •ds1• finished...`", time=5, silent=True)
+            return
+    elif match == "2":
+        if chat_id in _DS2_TASKS:
+            await kst.eor("`Please wait until previous •ds2• finished...`", time=5, silent=True)
+            return
+    elif match == "3":
+        if chat_id in _DS3_TASKS:
+            await kst.eor("`Please wait until previous •ds3• finished...`", time=5, silent=True)
+            return
+    elif match == "4":
+        if chat_id in _DS4_TASKS:
+            await kst.eor("`Please wait until previous •ds4• finished...`", time=5, silent=True)
+            return
+    else:
+        if chat_id in _DS_TASKS:
+            await kst.eor("`Please wait until previous •ds• finished...`", time=5, silent=True)
+            return
+
     if kst.is_reply:
         try:
             args = kst.text.split(" ", 2)
             delay = float(args[1])
             count = int(args[2])
         except BaseException:
-            await kst.eor(f"`{hl}delayspam [seconds] [count] [reply]`", time=10)
+            await kst.eor(f"`{hl}ds{match} [seconds] [count] [reply]`", time=10)
             return
         message = await kst.get_reply_message()
     else:
@@ -263,95 +285,129 @@ async def _(kst):
             count = int(args[2])
             message = str(args[3])
         except BaseException:
-            await kst.eor(f"`{hl}delayspam [seconds] [count] [text]`", time=10)
+            await kst.eor(f"`{hl}ds{match} [seconds] [count] [text]`", time=10)
             return
     await kst.try_delete()
-    try:
-        _DS1_TASKS.append(chat_id)
-        delay = 2 if delay and int(delay) < 2 else delay
-        for _ in range(count):
-            if chat_id not in _DS1_TASKS:
-                break
-            await kst.client.send_message(
-                chat_id,
-                message=message,
-                link_preview=False,
-            )
-            await asyncio.sleep(delay)
-    except BaseException:
-        pass
-    if chat_id in _DS1_TASKS:
+
+    if match == "1":
+        try:
+            _DS1_TASKS.append(chat_id)
+            delay = 2 if delay and int(delay) < 2 else delay
+            for _ in range(count):
+                if chat_id not in _DS1_TASKS:
+                    break
+                await kst.client.send_message(
+                    chat_id,
+                    message=message,
+                    link_preview=False,
+                )
+                await asyncio.sleep(delay)
+        except BaseException:
+            pass
+        if chat_id in _DS1_TASKS:
+            _DS1_TASKS.remove(chat_id)
+    elif match == "2":
+        try:
+            _DS2_TASKS.append(chat_id)
+            delay = 2 if delay and int(delay) < 2 else delay
+            for _ in range(count):
+                if chat_id not in _DS2_TASKS:
+                    break
+                await kst.client.send_message(
+                    chat_id,
+                    message=message,
+                    link_preview=False,
+                )
+                await asyncio.sleep(delay)
+        except BaseException:
+            pass
+        if chat_id in _DS2_TASKS:
+            _DS2_TASKS.remove(chat_id)
+    elif match == "3":
+        try:
+            _DS3_TASKS.append(chat_id)
+            delay = 2 if delay and int(delay) < 2 else delay
+            for _ in range(count):
+                if chat_id not in _DS3_TASKS:
+                    break
+                await kst.client.send_message(
+                    chat_id,
+                    message=message,
+                    link_preview=False,
+                )
+                await asyncio.sleep(delay)
+        except BaseException:
+            pass
+        if chat_id in _DS3_TASKS:
+            _DS3_TASKS.remove(chat_id)
+    elif match == "4":
+        try:
+            _DS4_TASKS.append(chat_id)
+            delay = 2 if delay and int(delay) < 2 else delay
+            for _ in range(count):
+                if chat_id not in _DS4_TASKS:
+                    break
+                await kst.client.send_message(
+                    chat_id,
+                    message=message,
+                    link_preview=False,
+                )
+                await asyncio.sleep(delay)
+        except BaseException:
+            pass
+        if chat_id in _DS4_TASKS:
+            _DS4_TASKS.remove(chat_id)
+    else:
+        try:
+            _DS_TASKS.append(chat_id)
+            delay = 2 if delay and int(delay) < 2 else delay
+            for _ in range(count):
+                if chat_id not in _DS_TASKS:
+                    break
+                await kst.client.send_message(
+                    chat_id,
+                    message=message,
+                    link_preview=False,
+                )
+                await asyncio.sleep(delay)
+        except BaseException:
+            pass
+        if chat_id in _DS_TASKS:
+            _DS_TASKS.remove(chat_id)
+
+
+@kasta_cmd(
+    pattern="ds(1|2|3|4|)cancel$",
+)
+async def _(kst):
+    chat_id = normalize_chat_id(kst.chat_id)
+    match = kst.pattern_match.group(1).strip()
+    yy = await kst.eor("`Processing...`")
+    if match == "1":
+        if chat_id not in _DS1_TASKS:
+            await yy.eod("__No current delayspam 1 are running.__")
+            return
         _DS1_TASKS.remove(chat_id)
-
-
-@kasta_cmd(
-    pattern="dcancel$",
-)
-async def _(kst):
-    chat_id = normalize_chat_id(kst.chat_id)
-    yy = await kst.eor("`Processing...`")
-    if chat_id not in _DS1_TASKS:
-        await yy.eod("__No current delayspam are running.__")
-        return
-    _DS1_TASKS.remove(chat_id)
-    await yy.eor("`cancelled`", time=5)
-
-
-@kasta_cmd(
-    pattern="(delayspam2|ds2)(?: |$)((?s).*)",
-)
-async def _(kst):
-    chat_id = normalize_chat_id(kst.chat_id)
-    if chat_id in _DS2_TASKS:
-        await kst.eor("`Please wait until previous •delayspam• finished...`", time=5, silent=True)
-        return
-    if kst.is_reply:
-        try:
-            args = kst.text.split(" ", 2)
-            delay = float(args[1])
-            count = int(args[2])
-        except BaseException:
-            await kst.eor(f"`{hl}delayspam2 [seconds] [count] [reply]`", time=10)
+    elif match == "2":
+        if chat_id not in _DS2_TASKS:
+            await yy.eod("__No current delayspam 2 are running.__")
             return
-        message = await kst.get_reply_message()
-    else:
-        try:
-            args = kst.text.split(" ", 3)
-            delay = float(args[1])
-            count = int(args[2])
-            message = str(args[3])
-        except BaseException:
-            await kst.eor(f"`{hl}delayspam2 [seconds] [count] [text]`", time=10)
-            return
-    await kst.try_delete()
-    try:
-        _DS2_TASKS.append(chat_id)
-        delay = 2 if delay and int(delay) < 2 else delay
-        for _ in range(count):
-            if chat_id not in _DS2_TASKS:
-                break
-            await kst.client.send_message(
-                chat_id,
-                message=message,
-                link_preview=False,
-            )
-            await asyncio.sleep(delay)
-    except BaseException:
-        pass
-    if chat_id in _DS2_TASKS:
         _DS2_TASKS.remove(chat_id)
-
-
-@kasta_cmd(
-    pattern="d2cancel$",
-)
-async def _(kst):
-    chat_id = normalize_chat_id(kst.chat_id)
-    yy = await kst.eor("`Processing...`")
-    if chat_id not in _DS2_TASKS:
-        await yy.eod("__No current delayspam2 are running.__")
-        return
-    _DS2_TASKS.remove(chat_id)
+    elif match == "3":
+        if chat_id not in _DS3_TASKS:
+            await yy.eod("__No current delayspam 3 are running.__")
+            return
+        _DS3_TASKS.remove(chat_id)
+    elif match == "4":
+        if chat_id not in _DS3_TASKS:
+            await yy.eod("__No current delayspam 4 are running.__")
+            return
+        _DS4_TASKS.remove(chat_id)
+    else:
+        if chat_id not in _DS_TASKS:
+            await yy.eod("__No current delayspam are running.__")
+            return
+        _DS_TASKS.remove(chat_id)
     await yy.eor("`cancelled`", time=5)
 
 
@@ -533,10 +589,8 @@ plugins_help["chat"] = {
     "{i}saved [reply]": "Save that replied message to Saved Messages or BOTLOGS for savedl.",
     "{i}fsaved [reply]": "Forward that replied message to Saved Messages or BOTLOGS for fsavedl.",
     "{i}react [reply]": "Give a random react to replied message.",
-    "{i}delayspam|{i}ds [seconds] [count] [reply]/[text]": "Spam current chat with delays in seconds (min 2 seconds).",
-    "{i}dcancel": "Stop the current process of {i}delayspam|{i}ds.",
-    "{i}delayspam2|{i}ds2 [seconds] [count] [reply]/[text]": "Spam current chat with delays in seconds (min 2 seconds).",
-    "{i}d2cancel": "Stop the current process of {i}delayspam2|{i}ds2.",
+    "{i}ds|{i}ds1|{i}ds2|{i}ds3|{i}ds4 [seconds] [count] [reply]/[text]": "Spam current chat with delays in seconds (min 2 seconds) aka delayspam.",
+    "{i}dscancel|{i}ds1cancel|{i}ds2cancel|{i}ds3cancel|{i}ds4cancel": "Stop the current delayspam.",
     "{i}report_spam [reply]/[in_private]/[username/mention/id]": "Report spam message from user.",
     "{i}invite [username/id]": "Add user to the current group/channel.",
     "{i}kickme [current/chat_id/username]/[reply]": "Leaves myself from group/channel.",
