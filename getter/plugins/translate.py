@@ -137,7 +137,7 @@ async def _(kst):
     except ImportError:
         gTTS = import_lib(
             lib_name="gtts",
-            pkg_name="gTTS==2.3.1",
+            pkg_name="gTTS==2.3.2",
         ).gTTS
     try:
         from gpytranslate import Translator

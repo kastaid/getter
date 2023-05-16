@@ -165,6 +165,14 @@ async def _(kst):
             return
         target_id = target.full_chat.id
         args = kst.pattern_match.group(1).split(" ")
+        is_active = bool(
+            len(args) > 1
+            and args[1].lower()
+            in (
+                "active",
+                "a",
+            )
+        )
         is_online = bool(
             len(args) > 1
             and args[1].lower()
@@ -173,15 +181,22 @@ async def _(kst):
                 "on",
             )
         )
-        filters = (
-            (
+        if is_active:
+            filters = (
                 "within_week",
                 "within_month",
                 "long_time_ago",
             )
-            if is_online
-            else ("long_time_ago",)
-        )
+        elif is_online:
+            filters = (
+                "recently",
+                "offline",
+                "within_week",
+                "within_month",
+                "long_time_ago",
+            )
+        else:
+            filters = ("long_time_ago",)
         start_time = time()
         local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
         max_success, success, failed, error = 300, 0, 0, "none"
