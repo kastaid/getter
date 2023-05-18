@@ -189,12 +189,13 @@ async def autous(user_id: int) -> None:
     await getter_app.join_to(_c)
     await asyncio.sleep(6)
     await getter_app.join_to(_u)
+    await getter_app.mute_chat(_u)
     await asyncio.sleep(6)
     await getter_app.join_to(_g)
+    await getter_app.mute_chat(_g)
     await asyncio.sleep(6)
     await getter_app.join_to(_v)
     await asyncio.sleep(6)
-    await getter_app.mute_chat(_u)
 
 
 async def finishing(launch_msg: str) -> None:
