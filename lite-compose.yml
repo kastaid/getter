@@ -10,6 +10,7 @@ services:
     env_file:
       - config.env
     restart: unless-stopped
+    network_mode: bridge
     deploy:
       resources:
         limits:
