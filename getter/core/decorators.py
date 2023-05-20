@@ -260,6 +260,8 @@ def kasta_cmd(
                 handler = "$"
             elif sudo:
                 handler = ","
+            elif Var.NO_HANDLER:
+                handler = " "
             else:
                 handler = hl
             cmd = compile_pattern(

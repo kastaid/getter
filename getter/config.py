@@ -36,6 +36,7 @@ class Var:
     DATABASE_URL: str = getenv("DATABASE_URL", "sqlite:///./getter.db").strip()
     BOTLOGS: int = int(getenv("BOTLOGS", "0").strip())
     HANDLER: str = getenv("HANDLER", ".").strip()
+    NO_HANDLER: bool = tobool(getenv("NO_HANDLER", "false").strip())
     TZ: str = getenv("TZ", "Asia/Jakarta").strip()
     LANG_CODE: str = getenv("LANG_CODE", "id").lower().strip()
     HEROKU_APP_NAME: str = getenv("HEROKU_APP_NAME", "").strip()
