@@ -22,6 +22,11 @@
             "required": false,
             "value": "."
         },
+        "NO_HANDLER": {
+            "description": "Initial command without handler (prefix)",
+            "required": false,
+            "value": "False"
+        },
         "TZ": {
             "description": "Set local timezone: Continent/Country. Get list from \"gist.github.com/notudope/9c3b8a5389293d9fe34c6c1f2484eeb3#file-timezones-txt\". Default: Asia/Jakarta",
             "required": false,
