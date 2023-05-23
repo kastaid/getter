@@ -75,6 +75,7 @@ class KastaClient(TelegramClient):
             do_not_remove_credit()
             await asyncio.sleep(choice((4, 6, 8)))
             await self.start(**kwargs)
+            self._bot = await self.is_bot()
             if not self._bot:
                 cfg = await self(fun.help.GetConfigRequest())
                 for opt in cfg.dc_options:
@@ -162,10 +163,6 @@ class KastaClient(TelegramClient):
     @property
     def uid(self) -> int:
         return self.me.id
-
-    @property
-    def is_bot(self) -> bool:
-        return bool(self.me.bot)
 
     @property
     def uptime(self) -> str:
