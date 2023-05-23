@@ -37,10 +37,7 @@ async def _(kst):
     tag = "\U000e0020all"
     text = f"@{tag}"
     slots = 4096 - len(text)
-    async for x in ga.iter_participants(
-        entity=chat_id,
-        limit=None,
-    ):
+    async for x in ga.iter_participants(chat_id):
         if exclude_user(x):
             text += mentionuser(x.id, "\u2063")
             slots -= 1
@@ -68,10 +65,7 @@ async def _(kst):
         delete=False,
         force_reply=True,
     )
-    async for x in ga.iter_participants(
-        entity=chat,
-        limit=None,
-    ):
+    async for x in ga.iter_participants(chat):
         if exclude_user(x):
             if not hasattr(x.participant, "admin_rights"):
                 users.append(mentionuser(x.id, display_name(x), html=True))
@@ -117,10 +111,7 @@ async def _(kst):
         delete=False,
         force_reply=True,
     )
-    async for x in ga.iter_participants(
-        entity=chat,
-        limit=None,
-    ):
+    async for x in ga.iter_participants(chat):
         if exclude_user(x):
             if not hasattr(x.participant, "admin_rights"):
                 users.append(mentionuser(x.id, choice(EMOJIS), html=True))
@@ -179,8 +170,7 @@ async def _(kst):
     tag = "\U000e0020admin"
     text = f"@{tag}"
     async for x in ga.iter_participants(
-        entity=chat_id,
-        limit=None,
+        chat_id,
         filter=typ.ChannelParticipantsAdmins,
     ):
         if exclude_user(x):
