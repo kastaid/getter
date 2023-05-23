@@ -69,7 +69,6 @@ async def _(kst):
         file=carbon,
         parse_mode="html",
         force_document=False,
-        allow_cache=False,
     )
     (Root / carbon).unlink(missing_ok=True)
 
@@ -121,7 +120,6 @@ async def _(kst):
         file=rayso,
         parse_mode="html",
         force_document=False,
-        allow_cache=False,
     )
     (Root / rayso).unlink(missing_ok=True)
 

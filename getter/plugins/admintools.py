@@ -688,7 +688,10 @@ async def _(kst):
     user = (await ga.get_text(kst)).lower()
     total, kicked = 0, 0
     empty, month, week, offline, online, recently, bot, deleted, none = 0, 0, 0, 0, 0, 0, 0, 0, 0
-    async for x in ga.iter_participants(chat_id):
+    async for x in ga.iter_participants(
+        entity=chat_id,
+        limit=None,
+    ):
         total += 1
         if isinstance(x.status, typ.UserStatusEmpty):
             if "empty" in user:
@@ -802,7 +805,8 @@ async def _(kst):
     yy = await kst.eor("`Unbanning all banned users...`")
     done = 0
     async for x in ga.iter_participants(
-        chat,
+        entity=chat,
+        limit=None,
         filter=typ.ChannelParticipantsKicked,
     ):
         try:
@@ -832,7 +836,11 @@ async def _(kst):
     yy = await kst.eor("`Processing...`")
     total = 0
     text = f"<b>Admins in {normalize(chat.title).lower()}:</b>\n"
-    async for x in ga.iter_participants(chat, filter=typ.ChannelParticipantsAdmins):
+    async for x in ga.iter_participants(
+        entity=chat,
+        limit=None,
+        filter=typ.ChannelParticipantsAdmins,
+    ):
         if not (x.deleted or x.participant.admin_rights.anonymous):
             if isinstance(x.participant, typ.ChannelParticipantCreator):
                 text += "- {} Owner\n".format(mentionuser(x.id, display_name(x), html=True))

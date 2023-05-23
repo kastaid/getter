@@ -73,7 +73,6 @@ async def _(kst):
     await yy.eor(
         file=resp.message.media,
         force_document=False,
-        allow_cache=False,
     )
     (file).unlink(missing_ok=True)
     (fry_img).unlink(missing_ok=True)
@@ -124,7 +123,6 @@ async def _(kst):
     await yy.eor(
         file=ugly_img,
         force_document=False,
-        allow_cache=False,
     )
     (file).unlink(missing_ok=True)
     (ugly_img).unlink(missing_ok=True)
@@ -136,7 +134,6 @@ async def conv_fry(conv, image, level):
         media = await conv.send_file(
             image,
             force_document=False,
-            allow_cache=False,
         )
         resp = await resp
         await resp.try_delete()

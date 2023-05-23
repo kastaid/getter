@@ -152,7 +152,6 @@ async def _(kst):
             await yy.eor(
                 file=photo,
                 force_document=False,
-                allow_cache=False,
             )
             if not is_all:
                 break

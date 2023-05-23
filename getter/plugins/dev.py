@@ -84,7 +84,6 @@ async def _(kst):
     await yy.eor(
         file=neofetch,
         force_document=False,
-        allow_cache=False,
     )
     (Root / file).unlink(missing_ok=True)
 
@@ -165,7 +164,6 @@ async def _(kst):
             rf"\\**#Getter**// Directory {cat}",
             file=file,
             force_document=True,
-            allow_cache=False,
         )
         (file).unlink(missing_ok=True)
     else:
@@ -225,7 +223,6 @@ async def _(kst):
                 f"<pre>{code}</pre>",
                 file=file,
                 force_document=True,
-                allow_cache=False,
                 parse_mode="html",
             )
         return
@@ -266,7 +263,6 @@ async def _(kst):
                 f"<pre>{cmd}</pre>",
                 file=file,
                 force_document=True,
-                allow_cache=False,
                 parse_mode="html",
             )
         return

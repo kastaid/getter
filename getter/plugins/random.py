@@ -39,7 +39,6 @@ async def _(kst):
             await yy.eor(
                 file=out,
                 force_document=False,
-                allow_cache=False,
             )
     except Exception as err:
         await yy.eor(formatx_send(err), parse_mode="html")

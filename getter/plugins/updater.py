@@ -280,7 +280,6 @@ async def show_changelog(kst, changelog) -> None:
                 r"\\**#Getter**// View this file to see changelog.",
                 file=file,
                 force_document=True,
-                allow_cache=False,
             )
         except Exception as err:
             chlog = await kst.eor(formatx_send(err), parse_mode="html")

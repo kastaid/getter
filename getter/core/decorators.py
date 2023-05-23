@@ -225,7 +225,6 @@ def kasta_cmd(
                             file=file,
                             caption=r"\\<b>#Getter_Error</b>// Forward this to @kastaot",
                             force_document=True,
-                            allow_cache=False,
                             reply_to=reply_to,
                             parse_mode="html",
                         )

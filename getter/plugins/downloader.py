@@ -34,7 +34,6 @@ async def _(kst):
         f"**Link:** `{link}`",
         file=file,
         force_document=False,
-        allow_cache=False,
     )
     await ga.delete_chat(TW_BOT, revoke=True)
 
@@ -60,7 +59,6 @@ async def _(kst):
         f"**Link:** `{link}`",
         file=file,
         force_document=False,
-        allow_cache=False,
     )
     await ga.delete_chat(TT_BOT, revoke=True)
 
