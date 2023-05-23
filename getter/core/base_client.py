@@ -26,7 +26,7 @@ from telethon.network.connection.tcpfull import ConnectionTcpFull
 from telethon.sessions.abstract import Session
 from telethon.sessions.string import CURRENT_VERSION, StringSession
 from telethon.tl import functions as fun, types as typ
-from .. import StartTime, __version__, LOOP
+from .. import StartTime, __version__
 from ..config import Var, DEVS
 from ..logger import LOGS, TelethonLogger
 from .db import sgvar
@@ -184,7 +184,6 @@ else:
 
 getter_app = KastaClient(
     session,
-    loop=LOOP,
     app_version=__version__,
     device_model="Getter",
 )
