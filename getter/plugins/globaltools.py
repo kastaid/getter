@@ -879,7 +879,6 @@ async def _(kst):
                     r"\\**#Gcast**// Error Logs",
                     file=file,
                     force_document=True,
-                    allow_cache=False,
                     silent=True,
                 )
         await yy.eor(text)

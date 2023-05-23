@@ -494,7 +494,6 @@ async def _(kst):
             caption,
             file=full_user.profile_photo,
             force_document=False,
-            allow_cache=True,
             parse_mode="html",
         )
     except BaseException:
@@ -578,7 +577,6 @@ async def _(kst):
             caption,
             file=photo,
             force_document=False,
-            allow_cache=True,
             parse_mode="html",
         )
     except BaseException:

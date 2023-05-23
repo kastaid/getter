@@ -198,7 +198,6 @@ async def _(kst):
         await yy.eor(
             file=res,
             force_document=False,
-            allow_cache=False,
         )
 
 
@@ -313,7 +312,6 @@ async def _(kst):
             text,
             file=gavatar,
             force_document=False,
-            allow_cache=True,
             parse_mode="html",
         )
         if file:
@@ -343,7 +341,6 @@ async def _(kst):
     try:
         await yy.eor(
             file=voice,
-            allow_cache=False,
             force_document=False,
             voice_note=True,
         )
@@ -466,7 +463,6 @@ async def _(kst):
             f"**Source:** `{link}`",
             file=file,
             force_document=True,
-            allow_cache=False,
         )
         await sendlog(msg, forward=True)
         (Root / file).unlink(missing_ok=True)

@@ -20,7 +20,7 @@ beautifulsoup4==4.12.2
 emoji==2.2.0
 validators==0.20.0
 telegraph==2.2.0
-requests==2.30.0
+requests==2.31.0
 lottie==0.7.0
 Pillow==9.5.0
 CairoSVG==2.7.0

@@ -88,7 +88,6 @@ async def _(kst):
             f"**URL:** `{link}`\n**Taken:** `{taken}`",
             file=file,
             force_document=True,
-            allow_cache=False,
         )
 
 
@@ -139,7 +138,6 @@ async def _(kst):
         f"**URL:** `{link}`\n**Taken:** `{taken}`",
         file=file,
         force_document=False,
-        allow_cache=False,
     )
     (Root / file).unlink(missing_ok=True)
 

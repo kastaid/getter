@@ -210,7 +210,10 @@ async def _(kst):
         }
         try:
             await yy.eor("`Checking Permissions...`")
-            async for x in ga.iter_participants(target_id):
+            async for x in ga.iter_participants(
+                entity=target_id,
+                limit=None,
+            ):
                 if not INVITE_WORKER.get(chat_id):
                     break
                 if (
@@ -326,7 +329,10 @@ async def _(kst):
                 writer = AsyncWriter(f, delimiter=",")
                 # aggressive=True : telethon.errors.common.MultiError: ([None, None, None, FloodWaitError('A wait of 11 seconds is required (caused by GetParticipantsRequest)'),
                 with suppress(BaseException):
-                    async for x in ga.iter_participants(target_id):
+                    async for x in ga.iter_participants(
+                        entity=target_id,
+                        limit=None,
+                    ):
                         if (
                             not (x.deleted or x.bot or x.is_self or hasattr(x.participant, "admin_rights"))
                             and get_user_status(x) != "long_time_ago"
@@ -342,7 +348,10 @@ async def _(kst):
                 writer = AsyncWriter(f, delimiter=",")
                 await writer.writerow(["user_id", "hash", "username"])
                 with suppress(BaseException):
-                    async for x in ga.iter_participants(target_id):
+                    async for x in ga.iter_participants(
+                        entity=target_id,
+                        limit=None,
+                    ):
                         if (
                             not (x.deleted or x.bot or x.is_self or hasattr(x.participant, "admin_rights"))
                             and get_user_status(x) != "long_time_ago"
@@ -357,7 +366,11 @@ async def _(kst):
             writer = AsyncWriter(f, delimiter=",")
             await writer.writerow(["user_id", "hash", "username"])
             with suppress(BaseException):
-                async for x in ga.iter_participants(target_id, filter=typ.ChannelParticipantsAdmins):
+                async for x in ga.iter_participants(
+                    entity=target_id,
+                    limit=None,
+                    filter=typ.ChannelParticipantsAdmins,
+                ):
                     if not (x.deleted or x.bot or x.is_self):
                         try:
                             await writer.writerow([x.id, x.access_hash, x.username])
@@ -369,7 +382,11 @@ async def _(kst):
             writer = AsyncWriter(f, delimiter=",")
             await writer.writerow(["user_id", "hash", "username"])
             with suppress(BaseException):
-                async for x in ga.iter_participants(target_id, filter=typ.ChannelParticipantsBots):
+                async for x in ga.iter_participants(
+                    entity=target_id,
+                    limit=None,
+                    filter=typ.ChannelParticipantsBots,
+                ):
                     if not x.deleted:
                         try:
                             await writer.writerow([x.id, x.access_hash, x.username])
@@ -393,7 +410,6 @@ async def _(kst):
             file=members_file,
             parse_mode="html",
             force_document=True,
-            allow_cache=False,
         )
         await yy.eor(
             getmembers_text.format(
@@ -410,7 +426,6 @@ async def _(kst):
             file=admins_file,
             parse_mode="html",
             force_document=True,
-            allow_cache=False,
         )
         await yy.eor(
             getmembers_text.format(
@@ -427,7 +442,6 @@ async def _(kst):
             file=bots_file,
             parse_mode="html",
             force_document=True,
-            allow_cache=False,
         )
 
 

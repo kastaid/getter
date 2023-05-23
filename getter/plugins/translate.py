@@ -155,7 +155,6 @@ async def _(kst):
         voice.save(file)
         await yy.eor(
             file=file,
-            allow_cache=False,
             voice_note=True,
         )
         (file).unlink(missing_ok=True)

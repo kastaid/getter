@@ -153,7 +153,7 @@ async def _(kst):
         await yy.eor("`No video chat!`", time=5)
         return
     users, done = [], 0
-    async for x in ga.iter_participants(kst.chat_id):
+    async for x in ga.iter_participants(entity=kst.chat_id, limit=None):
         if not (
             x.deleted
             or x.bot

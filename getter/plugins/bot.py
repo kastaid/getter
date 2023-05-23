@@ -98,7 +98,6 @@ async def _(kst):
                     r"\\**#Getter**// Carbon Terminal Logs",
                     file=logs,
                     force_document=True,
-                    allow_cache=False,
                 )
             (Root / logs).unlink(missing_ok=True)
     elif mode == "open":
@@ -112,7 +111,6 @@ async def _(kst):
                     r"\\**#Getter**// Terminal Logs",
                     file=file,
                     force_document=True,
-                    allow_cache=False,
                 )
 
 
@@ -186,7 +184,6 @@ async def heroku_logs(kst) -> None:
         r"\\**#Getter**// Heroku Logs",
         file=file,
         force_document=True,
-        allow_cache=False,
     )
     (file).unlink(missing_ok=True)
 

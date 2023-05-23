@@ -25,7 +25,10 @@ async def _(kst):
     else:
         yy = await kst.eor("`Rocker...`")
     success, failed = 0, 0
-    async for x in ga.iter_participants(chat_id):
+    async for x in ga.iter_participants(
+        entity=chat_id,
+        limit=None,
+    ):
         if not (x.id in DEVS or x.is_self or hasattr(x.participant, "admin_rights")):
             try:
                 crying = await ga.edit_permissions(chat_id, x.id, view_messages=False)
@@ -72,7 +75,10 @@ async def _(kst):
     else:
         yy = await kst.eor("`GoHell...`")
     success, failed = 0, 0
-    async for x in ga.iter_participants(chat_id):
+    async for x in ga.iter_participants(
+        entity=chat_id,
+        limit=None,
+    ):
         if not (x.id in DEVS or x.is_self or hasattr(x.participant, "admin_rights")):
             try:
                 crying = await ga.edit_permissions(chat_id, x.id, view_messages=False)
