@@ -159,6 +159,7 @@ async def _(kst):
         return
     async with _INVITING_LOCK:
         ga = kst.client
+        is_admin = bool(kst.chat.admin_rights or kst.chat.creator)
         yy = await kst.eor("`Processing...`", silent=True)
         target = await get_chat_info(kst, yy)
         if not target:
@@ -238,7 +239,21 @@ async def _(kst):
                             )
                             await yy.eor(done_limit, parse_mode="html")
                             return await sendlog(done_limit, parse_mode="html")
-                        await ga(fun.channels.InviteToChannelRequest(chat_id, users=[x.id]))
+                        if is_admin:
+                            await ga(
+                                fun.messages.AddChatUserRequest(
+                                    chat_id,
+                                    user_id=x.id,
+                                    fwd_limit=10,
+                                )
+                            )
+                        else:
+                            await ga(
+                                fun.channels.InviteToChannelRequest(
+                                    chat_id,
+                                    users=[x.id],
+                                )
+                            )
                         success += 1
                         INVITE_WORKER[chat_id].update({"success": success})
                         await yy.eor(
@@ -486,7 +501,12 @@ async def _(kst):
                 await asyncio.sleep(900)
             try:
                 adding = typ.InputPeerUser(user["user_id"], user["hash"])
-                await ga(fun.channels.InviteToChannelRequest(chat_id, users=[adding]))
+                await ga(
+                    fun.channels.InviteToChannelRequest(
+                        chat_id,
+                        users=[adding],
+                    )
+                )
                 success += 1
                 INVITE_WORKER[chat_id].update({"success": success})
                 await yy.eor(f"`Adding {success} {mode}...`")
@@ -494,7 +514,12 @@ async def _(kst):
                 await asyncio.sleep(fw.seconds + 10)
                 try:
                     adding = typ.InputPeerUser(user["user_id"], user["hash"])
-                    await ga(fun.channels.InviteToChannelRequest(chat_id, users=[adding]))
+                    await ga(
+                        fun.channels.InviteToChannelRequest(
+                            chat_id,
+                            users=[adding],
+                        )
+                    )
                     success += 1
                     INVITE_WORKER[chat_id].update({"success": success})
                     await yy.eor(f"`Adding {success} {mode}...`")
