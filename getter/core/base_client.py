@@ -22,10 +22,11 @@ from telethon.errors.rpcerrorlist import (
     AccessTokenExpiredError,
     AccessTokenInvalidError,
 )
+from telethon.network.connection.tcpfull import ConnectionTcpFull
 from telethon.sessions.abstract import Session
 from telethon.sessions.string import CURRENT_VERSION, StringSession
 from telethon.tl import functions as fun, types as typ
-from .. import StartTime, __version__
+from .. import StartTime, __version__, LOOP
 from ..config import Var, DEVS
 from ..logger import LOGS, TelethonLogger
 from .db import sgvar
@@ -47,9 +48,12 @@ class KastaClient(TelegramClient):
     ):
         self._dialogs = []
         self.logger = logger
-        kwargs["api_id"] = api_id or Var.API_ID
-        kwargs["api_hash"] = api_hash or Var.API_HASH
+        kwargs["api_id"] = api_id
+        kwargs["api_hash"] = api_hash
         kwargs["base_logger"] = TelethonLogger
+        kwargs["connection"] = ConnectionTcpFull
+        kwargs["connection_retries"] = None
+        kwargs["auto_reconnect"] = True
         super().__init__(session, **kwargs)
         self.run_in_loop(self.start_client(bot_token=bot_token))
         self.dc_id = self.session.dc_id
@@ -67,9 +71,10 @@ class KastaClient(TelegramClient):
             return self.me.to_dict()
 
     async def start_client(self, **kwargs) -> None:
+        self.logger.info("Trying to login.")
+        do_not_remove_credit()
+        await asyncio.sleep(choice((4, 6, 8)))
         try:
-            do_not_remove_credit()
-            await asyncio.sleep(choice((4, 6, 8)))
             await self.start(**kwargs)
             self._bot = await self.is_bot()
             if not self._bot:
@@ -179,7 +184,10 @@ else:
     sys.exit(1)
 
 getter_app = KastaClient(
-    session,
+    session=session,
+    api_id=Var.API_ID,
+    api_hash=Var.API_HASH,
+    loop=LOOP,
     app_version=__version__,
     device_model="Getter",
 )
