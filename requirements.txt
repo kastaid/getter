@@ -9,7 +9,7 @@ GitPython==3.1.31
 psycopg2-binary==2.9.5
 SQLAlchemy==1.4.46
 sqlalchemy-json==0.5.0
-cachetools==5.3.0
+cachetools==5.3.1
 asyncache==0.3.1
 aiofiles==23.1.0
 aiocsv==1.2.4
@@ -17,7 +17,7 @@ async-timeout==4.0.2
 aiohttp[speedups]==3.8.4
 Markdown==3.4.3
 beautifulsoup4==4.12.2
-emoji==2.2.0
+emoji==2.4.0
 validators==0.20.0
 telegraph==2.2.0
 requests==2.31.0
