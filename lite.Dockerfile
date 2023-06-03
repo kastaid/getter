@@ -26,9 +26,9 @@ RUN set -ex \
         tzdata \
     && localedef --quiet -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8 \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
-    && dpkg-reconfigure --force -f noninteractive tzdata \
+    && dpkg-reconfigure --force -f noninteractive tzdata >/dev/null 2>&1 \
     && python3 -m venv $VIRTUAL_ENV \
-    && pip3 install --no-cache-dir -r requirements.txt \
+    && pip3 install --disable-pip-version-check --default-timeout=100 --no-cache-dir -r requirements.txt \
     && apt-get -qqy clean \
     && rm -rf -- ~/.cache /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/* /usr/share/man/* /usr/share/doc/* /var/log/* /tmp/* /var/tmp/*
 

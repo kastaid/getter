@@ -17,11 +17,10 @@ from .. import __license__, __copyright__
 from ..logger import LOGS
 from .tools import Fetch
 
-_c, _u, _g, _v = (
+_c, _u, _g = (
     b64decode("a2FzdGFpZA==").decode("utf-8"),
     b64decode("a2FzdGF1cA==").decode("utf-8"),
     b64decode("a2FzdGFvdA==").decode("utf-8"),
-    b64decode("dGVtYW5fcmFuZG9t").decode("utf-8"),
 )
 
 
