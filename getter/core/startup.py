@@ -23,12 +23,7 @@ from ..logger import LOGS
 from .base_client import getter_app
 from .db.globals_db import gvar, sgvar, dgvar
 from .helper import hk, get_botlogs
-from .property import (
-    _c,
-    _u,
-    _g,
-    _v,
-)
+from .property import _c, _u, _g
 from .utils import humanbool
 
 _about = """GETTER BOTLOGS
@@ -189,13 +184,12 @@ async def autous(user_id: int) -> None:
     await getter_app.join_to(_c)
     await asyncio.sleep(6)
     await getter_app.join_to(_u)
+    await asyncio.sleep(3)
     await getter_app.mute_chat(_u)
     await asyncio.sleep(6)
     await getter_app.join_to(_g)
+    await asyncio.sleep(3)
     await getter_app.mute_chat(_g)
-    await asyncio.sleep(6)
-    await getter_app.join_to(_v)
-    await asyncio.sleep(6)
 
 
 async def finishing(launch_msg: str) -> None:
