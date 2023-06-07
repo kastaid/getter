@@ -237,7 +237,7 @@ async def ignores() -> None:
 
 async def update_packages() -> None:
     reqs = Root / "requirements.txt"
-    await Runner(f"{sys.executable} -m pip install --no-cache-dir -U -r {reqs}")
+    await Runner(f"{sys.executable} -m pip install --disable-pip-version-check --default-timeout=100 --no-cache-dir -U -r {reqs}")
 
 
 async def force_pull() -> None:
