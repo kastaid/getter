@@ -5,7 +5,7 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-FROM python:3.10-slim-bullseye
+FROM python:3.11-slim-bullseye
 
 ENV TZ=Asia/Jakarta \
     TERM=xterm-256color \
@@ -20,6 +20,7 @@ COPY . .
 RUN set -ex \
     && apt-get -qqy update \
     && apt-get -qqy install --no-install-recommends \
+        tini \
         gnupg2 \
         git \
         locales \
@@ -32,4 +33,5 @@ RUN set -ex \
     && apt-get -qqy clean \
     && rm -rf -- ~/.cache /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/* /usr/share/man/* /usr/share/doc/* /var/log/* /tmp/* /var/tmp/*
 
+ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["python3", "-m", "getter"]
