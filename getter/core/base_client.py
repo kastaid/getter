@@ -73,7 +73,7 @@ class KastaClient(TelegramClient):
     async def start_client(self, **kwargs) -> None:
         self.logger.info("Trying to login.")
         do_not_remove_credit()
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((2, 4, 6)))
         try:
             await self.start(**kwargs)
             self._bot = await self.is_bot()
@@ -86,14 +86,14 @@ class KastaClient(TelegramClient):
                         self.session.set_dc(opt.id, opt.ip_address, opt.port)
                         self.session.save()
                         break
-            await asyncio.sleep(5)
+            await asyncio.sleep(3)
             self.me = await self.get_me()
             if self.me.bot:
                 me = f"@{self.me.username}"
             else:
                 self.me.phone = None
                 me = self.full_name
-            await asyncio.sleep(5)
+            await asyncio.sleep(3)
             if self.uid not in DEVS:
                 KASTA_BLACKLIST = await get_blacklisted(
                     url="https://raw.githubusercontent.com/kastaid/resources/main/kastablacklist.py",

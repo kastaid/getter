@@ -250,23 +250,23 @@ async def _(kst):
     match = kst.pattern_match.group(1).strip()
     if match == "1":
         if chat_id in _DS1_TASKS:
-            await kst.eor("`Please wait until previous •ds1• finished...`", time=5, silent=True)
+            await kst.eor("Please wait until previous •ds1• finished...", time=5, silent=True)
             return
     elif match == "2":
         if chat_id in _DS2_TASKS:
-            await kst.eor("`Please wait until previous •ds2• finished...`", time=5, silent=True)
+            await kst.eor("Please wait until previous •ds2• finished...", time=5, silent=True)
             return
     elif match == "3":
         if chat_id in _DS3_TASKS:
-            await kst.eor("`Please wait until previous •ds3• finished...`", time=5, silent=True)
+            await kst.eor("Please wait until previous •ds3• finished...", time=5, silent=True)
             return
     elif match == "4":
         if chat_id in _DS4_TASKS:
-            await kst.eor("`Please wait until previous •ds4• finished...`", time=5, silent=True)
+            await kst.eor("Please wait until previous •ds4• finished...", time=5, silent=True)
             return
     else:
         if chat_id in _DS_TASKS:
-            await kst.eor("`Please wait until previous •ds• finished...`", time=5, silent=True)
+            await kst.eor("Please wait until previous •ds• finished...", time=5, silent=True)
             return
 
     if kst.is_reply:
@@ -385,27 +385,27 @@ async def _(kst):
     yy = await kst.eor("`Processing...`")
     if match == "1":
         if chat_id not in _DS1_TASKS:
-            await yy.eod("__No current delayspam 1 are running.__")
+            await yy.eod("__No current •ds1• are running.__")
             return
         _DS1_TASKS.remove(chat_id)
     elif match == "2":
         if chat_id not in _DS2_TASKS:
-            await yy.eod("__No current delayspam 2 are running.__")
+            await yy.eod("__No current •ds2• are running.__")
             return
         _DS2_TASKS.remove(chat_id)
     elif match == "3":
         if chat_id not in _DS3_TASKS:
-            await yy.eod("__No current delayspam 3 are running.__")
+            await yy.eod("__No current •ds3• are running.__")
             return
         _DS3_TASKS.remove(chat_id)
     elif match == "4":
         if chat_id not in _DS3_TASKS:
-            await yy.eod("__No current delayspam 4 are running.__")
+            await yy.eod("__No current •ds4• are running.__")
             return
         _DS4_TASKS.remove(chat_id)
     else:
         if chat_id not in _DS_TASKS:
-            await yy.eod("__No current delayspam are running.__")
+            await yy.eod("__No current •ds• are running.__")
             return
         _DS_TASKS.remove(chat_id)
     await yy.eor("`cancelled`", time=5)
@@ -508,6 +508,10 @@ async def _(kst):
     pattern="kickme(?: |$)(.*)",
     no_chats=True,
     chats=NOCHATS,
+)
+@kasta_cmd(
+    pattern="gkickme(?: |$)(.*)",
+    dev=True,
 )
 async def _(kst):
     ga = kst.client
