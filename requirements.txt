@@ -17,7 +17,7 @@ async-timeout==4.0.2
 aiohttp[speedups]==3.8.4
 Markdown==3.4.3
 beautifulsoup4==4.12.2
-emoji==2.4.0
+emoji==2.5.0
 validators==0.20.0
 telegraph==2.2.0
 requests==2.31.0
