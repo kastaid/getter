@@ -429,30 +429,37 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="getmsg(?: |$)(.*)",
+    pattern="getmsg( -s|silent|)(?: |$)(.*)",
 )
 async def _(kst):
     ga = kst.client
-    link = await ga.get_text(kst)
+    link = await ga.get_text(kst, group=2)
     if not link and not kst.is_reply:
         await kst.eor("`Provide a message link or reply media!`", time=5)
         return
-    yy = await kst.eor("`Processing...`")
+    is_silent = any(_ in kst.pattern_match.group(1) for _ in ("-s", "silent"))
+    if is_silent:
+        await kst.try_delete()
+    else:
+        yy = await kst.eor("`Processing...`")
     reply = await kst.get_reply_message()
     if kst.is_reply and not reply.message or reply.media:
         link = reply.msg_link
     chat, msg_id = get_msg_id(link)
-    if not (chat and msg_id):
+    if not is_silent and not (chat and msg_id):
         await yy.eor("Provide a valid message link!\n**E.g:** `https://t.me/tldevs/11` or `https://t.me/tldevs/19`")
         return
     try:
         from_msg = await ga.get_messages(chat, ids=msg_id)
     except Exception as err:
-        return await yy.eor(formatx_send(err), parse_mode="html")
-    if not from_msg.media:
+        if not is_silent:
+            await yy.eor(formatx_send(err), parse_mode="html")
+        return
+    if not is_silent and not from_msg.media:
         await yy.try_delete()
     else:
-        await yy.eor("`Downloading...`")
+        if not is_silent:
+            await yy.eor("`Downloading...`")
         if isinstance(from_msg.media, typ.MessageMediaPhoto):
             file = "getmsg_" + str(msg_id) + ".jpg"
         else:
@@ -465,6 +472,8 @@ async def _(kst):
             force_document=True,
         )
         await sendlog(msg, forward=True)
+        if is_silent:
+            await msg.try_delete()
         (Root / file).unlink(missing_ok=True)
 
 
@@ -516,6 +525,6 @@ plugins_help["utility"] = {
     "{i}tovn [reply]": "Convert replied audio/video file to voice note.",
     "{i}tgh [text]/[reply]": "Upload text or media to Telegraph.",
     "{i}gps [location/coordinates]/[reply]": "Send the map a given location.",
-    "{i}getmsg [link]/[reply]": "Get any media from messages forward/copy restrictions or replied message.",
+    "{i}getmsg [-s/silent] [link]/[reply]": "Get any media from messages forward/copy restrictions or replied message.",
     "{i}search [-r/revert] [text]/[reply] : [number]": "Search messages in current chat. Add '-r' to reverse order. Limit number of result is 99.",
 }
