@@ -179,6 +179,8 @@ async def PMPermit(kst):
             warnend_text += "blocked due to spamming in PM !!"
             await sendlog(r"\\**#Blocked**//" + warnend_text)
         else:
+            await ga.mute_chat(user.id)
+            await asyncio.sleep(0.4)
             await ga.archive(user.id)
             warnend_text += "archived due to spamming in PM !!"
             await sendlog(r"\\**#Archived**//" + warnend_text)
@@ -634,6 +636,8 @@ async def _(kst):
         return await yy.eor("`Cannot archive to myself.`", time=3)
     if user.id in DEVS:
         return await yy.eor("`Forbidden to archive our awesome developers.`", time=3)
+    await ga.mute_chat(user.id)
+    await asyncio.sleep(0.4)
     is_archive = await ga.archive(user.id)
     if not (is_archive is None):
         text = "`Archived!`"
@@ -731,8 +735,8 @@ plugins_help["pmpermit"] = {
     "{i}resetpmtotal": "Reset the pmtotal to default.",
     "{i}block [reply]/[in_private]/[username/mention/id]": "Block user and report them as spam.",
     "{i}unblock [reply]/[in_private]/[username/mention/id]": "Unblock user.",
-    "{i}move [reply]/[in_private]/[username/mention/id]": "Move user to archive folder.",
-    "{i}unmove [reply]/[in_private]/[username/mention/id]": "Unarchive user.",
+    "{i}move [reply]/[in_private]/[username/mention/id]": "Mute user then move to archive folder.",
+    "{i}unmove [reply]/[in_private]/[username/mention/id]": "Unarchive user but still muted.",
     "{i}delete": """Delete and revoke current PM also for bots but exclude myself. This action cannot be undone!
 
 **Note:**
