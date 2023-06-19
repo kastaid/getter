@@ -213,10 +213,10 @@ async def PMPermit(kst):
     NESLAST[towarn] = last.id
     add_col("pmwarns", PMWARN, NESLAST)
     # await ga.read(user.id, clear_mentions=True, clear_reactions=True)
-    newmsg_text = r"\\**#New_Message**//"
-    newmsg_text += f"\nUser {mention} [`{user.id}`] has messaged you with **{warn}/{ratelimit}** warns!"
-    await sendlog(newmsg_text)
-    if not gvar("_pmlog", use_cache=True):
+    if gvar("_pmlog", use_cache=True):
+        newmsg_text = r"\\**#New_Message**//"
+        newmsg_text += f"\nUser {mention} [`{user.id}`] has messaged you with **{warn}/{ratelimit}** warns!"
+        await sendlog(newmsg_text)
         await asyncio.sleep(1)
         await sendlog(kst.message, forward=True)
 
