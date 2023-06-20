@@ -29,7 +29,6 @@ def main() -> None:
                     sort_keys=False,
                     ensure_ascii=False,
                 )
-                # outfile.write("\n")
                 print(f"Pretty print : {file.name}")
             time.sleep(0.3)
     except BaseException:

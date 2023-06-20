@@ -21,7 +21,6 @@ from . import (
     get_blacklisted,
     events,
     choice,
-    suppress,
     dgvar,
     sgvar,
     gvar,
@@ -140,8 +139,10 @@ async def PMPermit(kst):
     mode = "blocked" if is_block else "archived"
     if PMWARN[towarn] > ratelimit:
         warnend_text = f"\nUser {mention} [`{user.id}`] has been "
-        with suppress(BaseException):
+        try:
             await ga.delete_messages(user.id, [NESLAST[towarn]])
+        except BaseException:
+            pass
         if "_pmbye" in _PMBYE_CACHE:
             pmbye = _PMBYE_CACHE.get("_pmbye")
         else:
@@ -163,11 +164,13 @@ async def PMPermit(kst):
             mode=mode,
         )
         text += pmcredit
-        with suppress(BaseException):
+        try:
             await kst.respond(text)
+        except BaseException:
+            pass
         if is_block:
             await ga.read(user.id, clear_mentions=True, clear_reactions=True)
-            with suppress(BaseException):
+            try:
                 await ga(
                     fun.account.ReportPeerRequest(
                         user.id,
@@ -175,6 +178,8 @@ async def PMPermit(kst):
                         message="Sends spam messages to my account. I ask Telegram to ban such user.",
                     )
                 )
+            except BaseException:
+                pass
             await ga.block(user.id)
             warnend_text += "blocked due to spamming in PM !!"
             await sendlog(r"\\**#Blocked**//" + warnend_text)
@@ -208,8 +213,10 @@ async def PMPermit(kst):
         mode=mode,
     )
     text += pmcredit
-    with suppress(BaseException):
+    try:
         await ga.delete_messages(user.id, [NESLAST[towarn]])
+    except BaseException:
+        pass
     await asyncio.sleep(1)
     last = await kst.reply(text)
     NESLAST[towarn] = last.id
@@ -549,7 +556,7 @@ async def _(kst):
         return await yy.eor("`Forbidden to block our awesome developers.`", time=3)
     is_reported = False
     await ga.unblock(user.id)
-    with suppress(BaseException):
+    try:
         if kst.is_private:
             is_reported = await ga(
                 fun.account.ReportPeerRequest(
@@ -568,6 +575,8 @@ async def _(kst):
             )
         else:
             is_reported = await ga.report_spam(user.id)
+    except BaseException:
+        pass
     is_block = await ga.block(user.id)
     if is_block:
         text = "`User blocked and {} reported!`".format("was" if is_reported else "not")

@@ -24,7 +24,6 @@ from . import (
     kasta_cmd,
     plugins_help,
     choice,
-    suppress,
     sgvar,
     gvar,
     strip_format,
@@ -299,15 +298,19 @@ async def Pulling(kst, state) -> None:
     up = rf"""\\**#Getter**// `{state}Updated Successfully...`
 Wait for a few seconds, then run `{hl}ping` command."""
     yy = await kst.eor(up)
-    with suppress(BaseException):
+    try:
         chat_id = yy.chat_id or yy.from_id
         sgvar("_restart", f"{chat_id}|{yy.id}")
-    with suppress(BaseException):
+    except BaseException:
+        pass
+    try:
         import psutil
 
         proc = psutil.Process(os.getpid())
         for _ in proc.open_files() + proc.connections():
             os.close(_.fd)
+    except BaseException:
+        pass
     os.execl(sys.executable, sys.executable, "-m", "getter")
 
 
@@ -334,31 +337,21 @@ async def Pushing(kst, state, repo) -> None:
     up = rf"""\\**#Getter**// `{state}Updated Successfully...`
 Wait for a few minutes, then run `{hl}ping` command."""
     yy = await kst.eor(up)
-    with suppress(BaseException):
+    try:
         chat_id = yy.chat_id or yy.from_id
         sgvar("_restart", f"{chat_id}|{yy.id}")
-    """
-    err = await force_push()
-    if err:
-        msg = ""
-        err = err.lower()
-        if "account has reached" in err:
-            msg = rf"\\**#Getter**// `{state}Update Failed: Your account has reached its concurrent builds limit, try again later.`"
-        elif "everything up-to-date" in err:
-            msg = rf"\\**#Getter**// `v{__version__} up-to-date as {UPSTREAM_BRANCH}`"
-        elif "verifying deploy" not in err:
-            msg = rf"\\**#Getter**// `{state}Update Failed: {err.strip()}`\nTry again later or view logs for more info."
-        if msg:
-            await kst.eor(msg)
-    """
+    except BaseException:
+        pass
     url = app.git_url.replace("https://", f"https://api:{hk.api}@")
     if "heroku" in repo.remotes:
         remote = repo.remote("heroku")
         remote.set_url(url)
     else:
         remote = repo.create_remote("heroku", url)
-    with suppress(BaseException):
+    try:
         remote.push(refspec="HEAD:refs/heads/main", force=True)
+    except BaseException:
+        pass
     build = app.builds(order_by="created_at", sort="desc")[0]
     if build.status != "succeeded":
         up = rf"""\\**#Getter**// `{state}Update Failed...`

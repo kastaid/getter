@@ -33,7 +33,6 @@ from . import (
     kasta_cmd,
     plugins_help,
     events,
-    suppress,
     choice,
     is_telegram_link,
     get_username,
@@ -330,7 +329,7 @@ async def _(kst):
             async with aiofiles.open(members_file, mode="a") as f:
                 writer = AsyncWriter(f, delimiter=",")
                 # aggressive=True : telethon.errors.common.MultiError: ([None, None, None, FloodWaitError('A wait of 11 seconds is required (caused by GetParticipantsRequest)'),
-                with suppress(BaseException):
+                try:
                     async for x in ga.iter_participants(target_id):
                         if (
                             not (x.deleted or x.bot or x.is_self or hasattr(x.participant, "admin_rights"))
@@ -342,11 +341,13 @@ async def _(kst):
                                 members += 1
                             except BaseException:
                                 pass
+                except BaseException:
+                    pass
         else:
             async with aiofiles.open(members_file, mode="w") as f:
                 writer = AsyncWriter(f, delimiter=",")
                 await writer.writerow(["user_id", "hash", "username"])
-                with suppress(BaseException):
+                try:
                     async for x in ga.iter_participants(target_id):
                         if (
                             not (x.deleted or x.bot or x.is_self or hasattr(x.participant, "admin_rights"))
@@ -357,11 +358,13 @@ async def _(kst):
                                 members += 1
                             except BaseException:
                                 pass
+                except BaseException:
+                    pass
         await yy.eor("`Scraping Admins...`")
         async with aiofiles.open(admins_file, mode="w") as f:
             writer = AsyncWriter(f, delimiter=",")
             await writer.writerow(["user_id", "hash", "username"])
-            with suppress(BaseException):
+            try:
                 async for x in ga.iter_participants(
                     target_id,
                     filter=typ.ChannelParticipantsAdmins,
@@ -372,11 +375,13 @@ async def _(kst):
                             admins += 1
                         except BaseException:
                             pass
+            except BaseException:
+                pass
         await yy.eor("`Scraping Bots...`")
         async with aiofiles.open(bots_file, mode="w") as f:
             writer = AsyncWriter(f, delimiter=",")
             await writer.writerow(["user_id", "hash", "username"])
-            with suppress(BaseException):
+            try:
                 async for x in ga.iter_participants(
                     target_id,
                     filter=typ.ChannelParticipantsBots,
@@ -387,6 +392,8 @@ async def _(kst):
                             bots += 1
                         except BaseException:
                             pass
+            except BaseException:
+                pass
         taken = time_formatter((time() - start_time) * 1000)
         await yy.eor("`Uploading CSV Files...`")
         await yy.eor(

@@ -6,7 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-from telethon.errors.rpcerrorlist import UserBotError, InputUserDeactivatedError
+from telethon.errors.rpcerrorlist import UserBotError, FloodWaitError
 from telethon.tl import functions as fun, types as typ
 from . import (
     DEVS,
@@ -14,20 +14,18 @@ from . import (
     kasta_cmd,
     plugins_help,
     choice,
-    suppress,
     formatx_send,
     display_name,
     mentionuser,
     normalize_chat_id,
     NOCHATS,
     BOTLOGS,
+    DS_TASK,
+    DS1_TASK,
+    DS2_TASK,
+    DS3_TASK,
+    DS4_TASK,
 )
-
-_DS_TASKS = []
-_DS1_TASKS = []
-_DS2_TASKS = []
-_DS3_TASKS = []
-_DS4_TASKS = []
 
 
 @kasta_cmd(
@@ -35,8 +33,10 @@ _DS4_TASKS = []
     edited=True,
 )
 async def _(kst):
-    with suppress(BaseException):
+    try:
         await kst.delete()
+    except BaseException:
+        pass
     await kst.read(clear_mentions=True, clear_reactions=True)
 
 
@@ -46,11 +46,15 @@ async def _(kst):
     edited=True,
 )
 async def _(kst):
-    with suppress(BaseException):
+    try:
         await kst.delete()
+    except BaseException:
+        pass
     if kst.is_reply:
-        with suppress(BaseException):
+        try:
             await (await kst.get_reply_message()).delete()
+        except BaseException:
+            pass
 
 
 @kasta_cmd(
@@ -66,8 +70,10 @@ async def _(kst):
     ):
         await msg.delete()
         total += 1
-    with suppress(BaseException):
+    try:
         await (await kst.get_reply_message()).delete()
+    except BaseException:
+        pass
     await kst.sod(f"`Purged {total}`", time=3, silent=True)
 
 
@@ -144,11 +150,15 @@ async def _(kst):
     func=lambda e: e.is_reply,
 )
 async def _(kst):
-    with suppress(BaseException):
+    try:
         await kst.delete()
-    with suppress(BaseException):
+    except BaseException:
+        pass
+    try:
         copy = await kst.get_reply_message()
         await copy.reply(copy)
+    except BaseException:
+        pass
 
 
 @kasta_cmd(
@@ -162,7 +172,7 @@ async def _(kst):
         try:
             await x.delete()
             drafts += 1
-        except InputUserDeactivatedError:
+        except BaseException:
             pass
     if not drafts:
         return await yy.eor("`no drafts found`", time=3)
@@ -236,9 +246,11 @@ async def _(kst):
 async def _(kst):
     yy = await kst.eor("`Reaction...`")
     reaction = choice(("👍", "👎", "❤", "🔥", "🥰", "👏", "😁", "🤔", "🤯", "😱", "🤬", "😢", "🎉", "🤩", "🤮", "💩", "🙏"))  # fmt: skip
-    with suppress(BaseException):
+    try:
         await (await kst.get_reply_message()).send_react(big=True, reaction=reaction)
         return await yy.eor(f"`reacted {reaction}`", time=3)
+    except BaseException:
+        pass
     await yy.eor("`no react`", time=3)
 
 
@@ -246,134 +258,165 @@ async def _(kst):
     pattern="ds(1|2|3|4|)(?: |$)((?s).*)",
 )
 async def _(kst):
+    ga = kst.client
     chat_id = normalize_chat_id(kst.chat_id)
-    match = kst.pattern_match.group(1).strip()
-    if match == "1":
-        if chat_id in _DS1_TASKS:
-            await kst.eor("Please wait until previous •ds1• finished...", time=5, silent=True)
-            return
-    elif match == "2":
-        if chat_id in _DS2_TASKS:
-            await kst.eor("Please wait until previous •ds2• finished...", time=5, silent=True)
-            return
-    elif match == "3":
-        if chat_id in _DS3_TASKS:
-            await kst.eor("Please wait until previous •ds3• finished...", time=5, silent=True)
-            return
-    elif match == "4":
-        if chat_id in _DS4_TASKS:
-            await kst.eor("Please wait until previous •ds4• finished...", time=5, silent=True)
-            return
+    ds = kst.pattern_match.group(1).strip()
+    text = "Please wait until previous •ds{}• finished..."
+    if (
+        (ds == "1" and chat_id in DS1_TASK)
+        or (ds == "2" and chat_id in DS2_TASK)
+        or (ds == "3" and chat_id in DS3_TASK)
+        or (ds == "4" and chat_id in DS4_TASK)
+    ):
+        return await kst.eor(text.format(ds), time=3)
     else:
-        if chat_id in _DS_TASKS:
-            await kst.eor("Please wait until previous •ds• finished...", time=5, silent=True)
-            return
-
+        if chat_id in DS_TASK:
+            return await kst.eor(text.format(ds), time=3)
     if kst.is_reply:
         try:
             args = kst.text.split(" ", 2)
-            delay = float(args[1])
+            dly = float(args[1])
             count = int(args[2])
+            message = await kst.get_reply_message()
         except BaseException:
-            await kst.eor(f"`{hl}ds{match} [seconds] [count] [reply]`", time=10)
-            return
-        message = await kst.get_reply_message()
+            return await kst.eor(f"`{hl}ds{ds} [seconds] [count] [reply]`", time=5)
     else:
         try:
             args = kst.text.split(" ", 3)
-            delay = float(args[1])
+            dly = float(args[1])
             count = int(args[2])
             message = str(args[3])
         except BaseException:
-            await kst.eor(f"`{hl}ds{match} [seconds] [count] [text]`", time=10)
-            return
+            return await kst.eor(f"`{hl}ds{ds} [seconds] [count] [text]`", time=5)
+    dly = 2 if dly and int(dly) < 2 else dly
+    ga.parse_mode = None
+    await ga.mute_chat(chat_id)
     await kst.try_delete()
-
-    if match == "1":
-        try:
-            _DS1_TASKS.append(chat_id)
-            delay = 2 if delay and int(delay) < 2 else delay
-            for _ in range(count):
-                if chat_id not in _DS1_TASKS:
-                    break
-                await kst.client.send_message(
+    if ds == "1":
+        DS1_TASK.add(chat_id)
+        for _ in range(count):
+            if chat_id not in DS1_TASK:
+                break
+            try:
+                await ga.send_message(
                     chat_id,
                     message=message,
                     link_preview=False,
+                    silent=True,
                 )
-                await asyncio.sleep(delay)
-        except BaseException:
-            pass
-        if chat_id in _DS1_TASKS:
-            _DS1_TASKS.remove(chat_id)
-    elif match == "2":
-        try:
-            _DS2_TASKS.append(chat_id)
-            delay = 2 if delay and int(delay) < 2 else delay
-            for _ in range(count):
-                if chat_id not in _DS2_TASKS:
-                    break
-                await kst.client.send_message(
+                await asyncio.sleep(dly)
+            except FloodWaitError as fw:
+                await asyncio.sleep(fw.seconds or 0 + 10)
+                await ga.send_message(
                     chat_id,
                     message=message,
                     link_preview=False,
+                    silent=True,
                 )
-                await asyncio.sleep(delay)
-        except BaseException:
-            pass
-        if chat_id in _DS2_TASKS:
-            _DS2_TASKS.remove(chat_id)
-    elif match == "3":
-        try:
-            _DS3_TASKS.append(chat_id)
-            delay = 2 if delay and int(delay) < 2 else delay
-            for _ in range(count):
-                if chat_id not in _DS3_TASKS:
-                    break
-                await kst.client.send_message(
+                await asyncio.sleep(dly)
+            except BaseException:
+                break
+        DS1_TASK.discard(chat_id)
+    elif ds == "2":
+        DS2_TASK.add(chat_id)
+        for _ in range(count):
+            if chat_id not in DS2_TASK:
+                break
+            try:
+                await ga.send_message(
                     chat_id,
                     message=message,
                     link_preview=False,
+                    silent=True,
                 )
-                await asyncio.sleep(delay)
-        except BaseException:
-            pass
-        if chat_id in _DS3_TASKS:
-            _DS3_TASKS.remove(chat_id)
-    elif match == "4":
-        try:
-            _DS4_TASKS.append(chat_id)
-            delay = 2 if delay and int(delay) < 2 else delay
-            for _ in range(count):
-                if chat_id not in _DS4_TASKS:
-                    break
-                await kst.client.send_message(
+                await asyncio.sleep(dly)
+            except FloodWaitError as fw:
+                await asyncio.sleep(fw.seconds or 0 + 10)
+                await ga.send_message(
                     chat_id,
                     message=message,
                     link_preview=False,
+                    silent=True,
                 )
-                await asyncio.sleep(delay)
-        except BaseException:
-            pass
-        if chat_id in _DS4_TASKS:
-            _DS4_TASKS.remove(chat_id)
+                await asyncio.sleep(dly)
+            except BaseException:
+                break
+        DS2_TASK.discard(chat_id)
+    elif ds == "3":
+        DS3_TASK.add(chat_id)
+        for _ in range(count):
+            if chat_id not in DS3_TASK:
+                break
+            try:
+                await ga.send_message(
+                    chat_id,
+                    message=message,
+                    link_preview=False,
+                    silent=True,
+                )
+                await asyncio.sleep(dly)
+            except FloodWaitError as fw:
+                await asyncio.sleep(fw.seconds or 0 + 10)
+                await ga.send_message(
+                    chat_id,
+                    message=message,
+                    link_preview=False,
+                    silent=True,
+                )
+                await asyncio.sleep(dly)
+            except BaseException:
+                break
+        DS3_TASK.discard(chat_id)
+    elif ds == "4":
+        DS4_TASK.add(chat_id)
+        for _ in range(count):
+            if chat_id not in DS4_TASK:
+                break
+            try:
+                await ga.send_message(
+                    chat_id,
+                    message=message,
+                    link_preview=False,
+                    silent=True,
+                )
+                await asyncio.sleep(dly)
+            except FloodWaitError as fw:
+                await asyncio.sleep(fw.seconds or 0 + 10)
+                await ga.send_message(
+                    chat_id,
+                    message=message,
+                    link_preview=False,
+                    silent=True,
+                )
+                await asyncio.sleep(dly)
+            except BaseException:
+                break
+        DS4_TASK.discard(chat_id)
     else:
-        try:
-            _DS_TASKS.append(chat_id)
-            delay = 2 if delay and int(delay) < 2 else delay
-            for _ in range(count):
-                if chat_id not in _DS_TASKS:
-                    break
-                await kst.client.send_message(
+        DS_TASK.add(chat_id)
+        for _ in range(count):
+            if chat_id not in DS_TASK:
+                break
+            try:
+                await ga.send_message(
                     chat_id,
                     message=message,
                     link_preview=False,
+                    silent=True,
                 )
-                await asyncio.sleep(delay)
-        except BaseException:
-            pass
-        if chat_id in _DS_TASKS:
-            _DS_TASKS.remove(chat_id)
+                await asyncio.sleep(dly)
+            except FloodWaitError as fw:
+                await asyncio.sleep(fw.seconds or 0 + 10)
+                await ga.send_message(
+                    chat_id,
+                    message=message,
+                    link_preview=False,
+                    silent=True,
+                )
+                await asyncio.sleep(dly)
+            except BaseException:
+                break
+        DS_TASK.discard(chat_id)
 
 
 @kasta_cmd(
@@ -381,34 +424,30 @@ async def _(kst):
 )
 async def _(kst):
     chat_id = normalize_chat_id(kst.chat_id)
-    match = kst.pattern_match.group(1).strip()
+    ds = kst.pattern_match.group(1).strip()
     yy = await kst.eor("`Processing...`")
-    if match == "1":
-        if chat_id not in _DS1_TASKS:
-            await yy.eod("__No current •ds1• are running.__")
-            return
-        _DS1_TASKS.remove(chat_id)
-    elif match == "2":
-        if chat_id not in _DS2_TASKS:
-            await yy.eod("__No current •ds2• are running.__")
-            return
-        _DS2_TASKS.remove(chat_id)
-    elif match == "3":
-        if chat_id not in _DS3_TASKS:
-            await yy.eod("__No current •ds3• are running.__")
-            return
-        _DS3_TASKS.remove(chat_id)
-    elif match == "4":
-        if chat_id not in _DS3_TASKS:
-            await yy.eod("__No current •ds4• are running.__")
-            return
-        _DS4_TASKS.remove(chat_id)
+    text = "__No current •ds{}• are running.__"
+    if ds == "1":
+        if chat_id not in DS1_TASK:
+            return await yy.eod(text.format(ds))
+        DS1_TASK.discard(chat_id)
+    elif ds == "2":
+        if chat_id not in DS2_TASK:
+            return await yy.eod(text.format(ds))
+        DS2_TASK.discard(chat_id)
+    elif ds == "3":
+        if chat_id not in DS3_TASK:
+            return await yy.eod(text.format(ds))
+        DS3_TASK.discard(chat_id)
+    elif ds == "4":
+        if chat_id not in DS3_TASK:
+            return await yy.eod(text.format(ds))
+        DS4_TASK.discard(chat_id)
     else:
-        if chat_id not in _DS_TASKS:
-            await yy.eod("__No current •ds• are running.__")
-            return
-        _DS_TASKS.remove(chat_id)
-    await yy.eor("`cancelled`", time=5)
+        if chat_id not in DS_TASK:
+            return await yy.eod(text.format(ds))
+        DS_TASK.discard(chat_id)
+    await yy.eor("`cancelled`", time=3)
 
 
 @kasta_cmd(
@@ -436,7 +475,7 @@ async def _(kst):
     if user.id in DEVS:
         return await yy.eor("`Forbidden to report our awesome developers.`", time=3)
     is_reported = False
-    with suppress(BaseException):
+    try:
         if kst.is_private:
             # https://stackoverflow.com/a/57327383
             is_reported = await ga(
@@ -457,6 +496,8 @@ async def _(kst):
             )
         else:
             is_reported = await ga.report_spam(user.id)
+    except BaseException:
+        pass
     await yy.eor(
         "User {} {} reported!".format(
             mentionuser(user.id, display_name(user), width=15, html=True),

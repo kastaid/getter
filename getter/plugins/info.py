@@ -16,7 +16,6 @@ from . import (
     kasta_cmd,
     plugins_help,
     events,
-    suppress,
     display_name,
     humanbool,
     get_user_status,
@@ -288,8 +287,10 @@ async def _(kst):
     user_id = None
     match = kst.pattern_match.group(1)
     if match:
-        with suppress(BaseException):
+        try:
             user_id = await ga.get_id(match)
+        except BaseException:
+            pass
     chat_id = kst.chat_id or kst.from_id
     if kst.is_reply:
         user_id, msg_id = (await kst.get_reply_message()).sender_id, kst.reply_to_msg_id
@@ -366,11 +367,13 @@ async def _(kst):
     except Exception as err:
         return await yy.eor(formatx_send(err), parse_mode="html")
     created = ""
-    with suppress(BaseException):
+    try:
         async with ga.conversation(CREATED_BOT) as conv:
             resp = await conv_created(conv, user_id)
         created = f"\n├  <b>Created:</b> <code>{resp}</code>"
         await ga.delete_chat(CREATED_BOT, revoke=True)
+    except BaseException:
+        pass
     dc_id = user.photo and user.photo.dc_id or 0
     first_name = escape(user.first_name).replace("\u2060", "")
     last_name = (

@@ -24,7 +24,6 @@ from . import (
     kasta_cmd,
     plugins_help,
     choice,
-    suppress,
     strip_format,
     humanbytes,
     to_dict,
@@ -133,7 +132,7 @@ async def _(kst):
     directory = ""
     sfile, sfolder, cfile, cfolder = 0, 0, 0, 0
     for emoji, path in lists:
-        with suppress(BaseException):
+        try:
             if path.is_dir():
                 size = 0
                 for p in path.rglob("*"):
@@ -145,6 +144,8 @@ async def _(kst):
                 directory += emoji + f" <code>{path.name}</code>  <code>{humanbytes(path.stat().st_size)}</code>\n"
                 sfile += path.stat().st_size
                 cfile += 1
+        except BaseException:
+            pass
     hfolder, hfile, htotal = (
         humanbytes(sfolder),
         humanbytes(sfile),
@@ -294,11 +295,15 @@ def _parse_eval(value=None):
     if not value:
         return value
     if hasattr(value, "stringify"):
-        with suppress(TypeError):
+        try:
             return value.stringify()
+        except TypeError:
+            pass
     elif isinstance(value, dict):
-        with suppress(BaseException):
+        try:
             return json.dumps(value, indent=1, ensure_ascii=False)
+        except BaseException:
+            pass
     return str(value)
 
 

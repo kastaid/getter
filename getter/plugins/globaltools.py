@@ -158,7 +158,7 @@ async def _(kst):
         success, failed = 0, 0
         is_reported = False
         await ga.unblock(user.id)
-        with suppress(BaseException):
+        try:
             if kst.is_private:
                 is_reported = await ga(
                     fun.account.ReportPeerRequest(
@@ -177,6 +177,8 @@ async def _(kst):
                 )
             else:
                 is_reported = await ga.report_spam(user.id)
+        except BaseException:
+            pass
         if ga._dialogs:
             dialog = ga._dialogs
         else:

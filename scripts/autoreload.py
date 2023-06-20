@@ -9,7 +9,6 @@ import os
 import signal
 import sys
 import time
-from contextlib import suppress
 from subprocess import CalledProcessError, Popen, check_call
 from typing import Generator
 from . import (
@@ -32,9 +31,8 @@ finally:
 
 
 def file_times() -> Generator[int, None, None]:
-    with suppress(BaseException):
-        for _ in filter(lambda p: p.suffix in EXTS, Root.rglob("*")):
-            yield _.stat().st_mtime
+    for _ in filter(lambda p: p.suffix in EXTS, Root.rglob("*")):
+        yield _.stat().st_mtime
 
 
 def print_stdout(procs) -> None:
@@ -44,12 +42,14 @@ def print_stdout(procs) -> None:
 
 
 def kill_process_tree(procs) -> None:
-    with suppress(psutil.NoSuchProcess):
+    try:
         parent = psutil.Process(procs.pid)
         child = parent.children(recursive=True)
         child.append(parent)
         for _ in child:
             _.send_signal(signal.SIGTERM)
+    except psutil.NoSuchProcess:
+        pass
     procs.terminate()
 
 

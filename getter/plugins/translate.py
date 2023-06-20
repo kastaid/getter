@@ -11,7 +11,6 @@ from . import (
     kasta_cmd,
     plugins_help,
     LANG_CODES,
-    suppress,
     formatx_send,
     strip_format,
     strip_emoji,
@@ -36,13 +35,17 @@ async def _(kst):
     if kst.is_reply:
         words = (await kst.get_reply_message()).message
         if is_lang:
-            with suppress(BaseException):
+            try:
                 words = match.split(maxsplit=1)[1]
+            except BaseException:
+                pass
     else:
         words = match
         if is_lang:
-            with suppress(BaseException):
+            try:
                 words = match.split(maxsplit=1)[1]
+            except BaseException:
+                pass
     if not words:
         await kst.eor("`Reply to text message or provide a text!`", time=5)
         return
@@ -82,13 +85,17 @@ async def _(kst):
     if kst.is_reply:
         words = (await kst.get_reply_message()).message
         if is_lang:
-            with suppress(BaseException):
+            try:
                 words = match.split(maxsplit=1)[1]
+            except BaseException:
+                pass
     else:
         words = match
         if is_lang:
-            with suppress(BaseException):
+            try:
                 words = match.split(maxsplit=1)[1]
+            except BaseException:
+                pass
     if not words:
         await kst.eor("`Reply to text message or provide a text!`", time=5)
         return
@@ -121,13 +128,17 @@ async def _(kst):
     if kst.is_reply:
         words = (await kst.get_reply_message()).message
         if is_lang:
-            with suppress(BaseException):
+            try:
                 words = match.split(maxsplit=1)[1]
+            except BaseException:
+                pass
     else:
         words = match
         if is_lang:
-            with suppress(BaseException):
+            try:
                 words = match.split(maxsplit=1)[1]
+            except BaseException:
+                pass
     if not words:
         await kst.eor("`Reply to text message or provide a text!`", time=5)
         return

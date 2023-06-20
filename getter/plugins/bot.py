@@ -17,7 +17,6 @@ from . import (
     kasta_cmd,
     plugins_help,
     choice,
-    suppress,
     sgvar,
     parse_pre,
     formatx_send,
@@ -69,8 +68,10 @@ async def _(kst):
     if kst.is_dev:
         opt = kst.pattern_match.group(2)
         user_id = None
-        with suppress(ValueError):
+        try:
             user_id = int(opt)
+        except ValueError:
+            pass
         if user_id and user_id != kst.client.uid:
             return
         await asyncio.sleep(choice((4, 6, 8)))
@@ -93,25 +94,29 @@ async def _(kst):
             )
             if not logs:
                 continue
-            with suppress(BaseException):
+            try:
                 await yy.eor(
                     r"\\**#Getter**// Carbon Terminal Logs",
                     file=logs,
                     force_document=True,
                 )
+            except BaseException:
+                pass
             (Root / logs).unlink(missing_ok=True)
     elif mode == "open":
         for file in get_terminal_logs():
             logs = (Root / file).read_text()
             await yy.sod(logs, parts=True, parse_mode=parse_pre)
     else:
-        with suppress(BaseException):
+        try:
             for file in get_terminal_logs():
                 await yy.eor(
                     r"\\**#Getter**// Terminal Logs",
                     file=file,
                     force_document=True,
                 )
+        except BaseException:
+            pass
 
 
 @kasta_cmd(
@@ -125,15 +130,19 @@ async def _(kst):
     if kst.is_dev:
         opt = kst.pattern_match.group(1)
         user_id = None
-        with suppress(ValueError):
+        try:
             user_id = int(opt)
+        except ValueError:
+            pass
         if user_id and user_id != kst.client.uid:
             return
         await asyncio.sleep(choice((4, 6, 8)))
     yy = await kst.eor("`Restarting...`", silent=True)
-    with suppress(BaseException):
+    try:
         chat_id = yy.chat_id or yy.from_id
         sgvar("_restart", f"{chat_id}|{yy.id}")
+    except BaseException:
+        pass
     if not hk.is_heroku:
         await yy.eor(r"\\**#Getter**// `Restarting as locally...`")
         await restart_app()
@@ -189,12 +198,14 @@ async def heroku_logs(kst) -> None:
 
 
 async def restart_app() -> None:
-    with suppress(BaseException):
+    try:
         import psutil
 
         proc = psutil.Process(os.getpid())
         for _ in proc.open_files() + proc.connections():
             os.close(_.fd)
+    except BaseException:
+        pass
     os.execl(sys.executable, sys.executable, "-m", "getter")
 
 

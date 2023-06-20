@@ -276,9 +276,10 @@ class Message(typ.Message):
 
     @patchable()
     async def try_delete(self) -> typing.Optional[typing.Sequence[typ.messages.AffectedMessages]]:
-        with suppress(BaseException):
+        try:
             return await self.delete()
-        return None
+        except BaseException:
+            return None
 
     @patchable()
     async def read(self, *args, **kwargs) -> bool:

@@ -17,7 +17,6 @@ from . import (
     get_blacklisted,
     events,
     choice,
-    suppress,
     time_formatter,
     OUTS_AFK,
     is_afk,
@@ -86,9 +85,11 @@ async def StopAFK(kst):
         start = datetime.fromtimestamp(is_afk().start)
         end = datetime.now().replace(microsecond=0)
         afk_time = time_formatter((end - start).seconds * 1000)
-        with suppress(BaseException):
+        try:
             for x, y in is_afk().last.items():
                 await kst.client.delete_messages(int(x), [y])
+        except BaseException:
+            pass
         del_afk()
         myself = escape(kst.client.full_name)
         text = f"{myself}\n"
@@ -126,8 +127,10 @@ async def OnAFK(kst):
         text += f"\n<b>Reason:</b> {reason}"
         chat_id = str(kst.chat_id)
         if chat_id in is_afk().last:
-            with suppress(BaseException):
+            try:
                 await kst.client.delete_messages(int(chat_id), [is_afk().last[chat_id]])
+            except BaseException:
+                pass
         last = await kst.reply(
             text,
             link_preview=False,

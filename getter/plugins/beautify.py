@@ -10,7 +10,6 @@ from . import (
     kasta_cmd,
     plugins_help,
     choice,
-    suppress,
     mentionuser,
     get_media_type,
     Carbon,
@@ -39,13 +38,17 @@ async def _(kst):
         else:
             code = reply.message
         if is_theme:
-            with suppress(BaseException):
+            try:
                 code = match.split(maxsplit=1)[1]
+            except BaseException:
+                pass
     else:
         code = match
         if is_theme:
-            with suppress(BaseException):
+            try:
                 code = match.split(maxsplit=1)[1]
+            except BaseException:
+                pass
     if not code:
         return await kst.eod("`Reply to text message or readable file.`")
     yy = await kst.eor("`Processing...`")
@@ -93,13 +96,17 @@ async def _(kst):
         else:
             code = reply.message
         if is_theme:
-            with suppress(BaseException):
+            try:
                 code = match.split(maxsplit=1)[1]
+            except BaseException:
+                pass
     else:
         code = match
         if is_theme:
-            with suppress(BaseException):
+            try:
                 code = match.split(maxsplit=1)[1]
+            except BaseException:
+                pass
     if not code:
         return await kst.eod("`Reply to text message or readable file.`")
     yy = await kst.eor("`Processing...`")

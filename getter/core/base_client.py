@@ -10,7 +10,6 @@ import inspect
 import os
 import sys
 import typing
-from contextlib import suppress
 from logging import Logger
 from random import choice
 from time import time
@@ -146,15 +145,19 @@ class KastaClient(TelegramClient):
         self.add_event_handler(func, *args, **kwargs)
 
     def reboot(self, message: typ.Message) -> typing.NoReturn:
-        with suppress(BaseException):
+        try:
             chat_id = message.chat_id or message.from_id
             sgvar("_reboot", f"{chat_id}|{message.id}")
-        with suppress(BaseException):
+        except BaseException:
+            pass
+        try:
             import psutil
 
             proc = psutil.Process(os.getpid())
             for _ in proc.open_files() + proc.connections():
                 os.close(_.fd)
+        except BaseException:
+            pass
         os.execl(sys.executable, sys.executable, "-m", "getter")
 
     @property

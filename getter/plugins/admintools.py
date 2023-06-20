@@ -13,7 +13,6 @@ from . import (
     kasta_cmd,
     plugins_help,
     hl,
-    suppress,
     normalize_chat_id,
     mentionuser,
     display_name,
@@ -42,7 +41,7 @@ async def _(kst):
     if user.id in DEVS:
         return await yy.eor("`Forbidden to ban our awesome developers.`", time=3)
     is_reported = False
-    with suppress(BaseException):
+    try:
         if kst.is_group and kst.is_reply:
             is_reported = await ga(
                 fun.channels.ReportSpamRequest(
@@ -53,6 +52,8 @@ async def _(kst):
             )
         else:
             is_reported = await ga.report_spam(user.id)
+    except BaseException:
+        pass
     try:
         await ga.edit_permissions(chat_id, user.id, view_messages=False)
         text = "{} banned and {} reported!{}".format(
@@ -83,7 +84,7 @@ async def _(kst):
     if user.id in DEVS:
         return await yy.eor("`Forbidden to dban our awesome developers.`", time=3)
     is_reported = False
-    with suppress(BaseException):
+    try:
         if kst.is_group:
             is_reported = await ga(
                 fun.channels.ReportSpamRequest(
@@ -94,6 +95,8 @@ async def _(kst):
             )
         else:
             is_reported = await ga.report_spam(user.id)
+    except BaseException:
+        pass
     try:
         await ga.edit_permissions(chat_id, user.id, view_messages=False)
         await (await kst.get_reply_message()).try_delete()
@@ -123,7 +126,7 @@ async def _(kst):
         return
     if user.id in DEVS:
         return
-    with suppress(BaseException):
+    try:
         if kst.is_group and kst.is_reply:
             await ga(
                 fun.channels.ReportSpamRequest(
@@ -134,8 +137,12 @@ async def _(kst):
             )
         else:
             await ga.report_spam(user.id)
-    with suppress(BaseException):
+    except BaseException:
+        pass
+    try:
         await ga.edit_permissions(chat_id, user.id, view_messages=False)
+    except BaseException:
+        pass
 
 
 @kasta_cmd(
@@ -270,8 +277,10 @@ async def _(kst):
         return
     if user.id in DEVS:
         return
-    with suppress(BaseException):
+    try:
         await ga.edit_permissions(chat_id, user.id, send_messages=False)
+    except BaseException:
+        pass
 
 
 @kasta_cmd(
@@ -407,8 +416,10 @@ async def _(kst):
         return
     if user.id in DEVS:
         return
-    with suppress(BaseException):
+    try:
         await ga.kick_participant(kst.chat_id, user.id)
+    except BaseException:
+        pass
 
 
 @kasta_cmd(
@@ -511,9 +522,11 @@ async def _(kst):
         await kst.eor(f"Pinned for {pinfor}.")
     except Exception as err:
         return await kst.eor(formatx_send(err), parse_mode="html")
-    await asyncio.sleep(sec)
-    with suppress(BaseException):
+    try:
+        await asyncio.sleep(sec)
         await ga.unpin_message(chat_id, msg_id)
+    except BaseException:
+        pass
 
 
 @kasta_cmd(
@@ -692,65 +705,83 @@ async def _(kst):
         total += 1
         if isinstance(x.status, typ.UserStatusEmpty):
             if "empty" in user:
-                with suppress(BaseException):
+                try:
                     await ga.kick_participant(chat_id, x.id)
                     kicked += 1
+                except BaseException:
+                    pass
             else:
                 empty += 1
         if isinstance(x.status, typ.UserStatusLastMonth):
             if "month" in user:
-                with suppress(BaseException):
+                try:
                     await ga.kick_participant(chat_id, x.id)
                     kicked += 1
+                except BaseException:
+                    pass
             else:
                 month += 1
         if isinstance(x.status, typ.UserStatusLastWeek):
             if "week" in user:
-                with suppress(BaseException):
+                try:
                     await ga.kick_participant(chat_id, x.id)
                     kicked += 1
+                except BaseException:
+                    pass
             else:
                 week += 1
         if isinstance(x.status, typ.UserStatusOffline):
             if "offline" in user:
-                with suppress(BaseException):
+                try:
                     await ga.kick_participant(chat_id, x.id)
                     kicked += 1
+                except BaseException:
+                    pass
             else:
                 offline += 1
         if isinstance(x.status, typ.UserStatusOnline):
             if "online" in user:
-                with suppress(BaseException):
+                try:
                     await ga.kick_participant(chat_id, x.id)
                     kicked += 1
+                except BaseException:
+                    pass
             else:
                 online += 1
         if isinstance(x.status, typ.UserStatusRecently):
             if "recently" in user:
-                with suppress(BaseException):
+                try:
                     await ga.kick_participant(chat_id, x.id)
                     kicked += 1
+                except BaseException:
+                    pass
             else:
                 recently += 1
         if x.bot:
             if "bot" in user:
-                with suppress(BaseException):
+                try:
                     await ga.kick_participant(chat_id, x.id)
                     kicked += 1
+                except BaseException:
+                    pass
             else:
                 bot += 1
         elif x.deleted:
             if "deleted" in user:
-                with suppress(BaseException):
+                try:
                     await ga.kick_participant(chat_id, x.id)
                     kicked += 1
+                except BaseException:
+                    pass
             else:
                 deleted += 1
         elif x.status is None:
             if "none" in user:
-                with suppress(BaseException):
+                try:
                     await ga.kick_participant(chat_id, x.id)
                     kicked += 1
+                except BaseException:
+                    pass
             else:
                 none += 1
     if user:

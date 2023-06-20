@@ -11,7 +11,6 @@ from . import (
     getter_app,
     sendlog,
     events,
-    suppress,
     mentionuser,
     display_name,
     humanbool,
@@ -68,8 +67,10 @@ async def DeletedUserHandler(kst):
     if kst.is_private and is_allow(user.id, use_cache=True):
         return
     if is_gdel(user.id, use_cache=True):
-        with suppress(BaseException):
+        try:
             await kst.delete()
+        except BaseException:
+            pass
 
 
 async def JoinedHandler(kst):
@@ -94,8 +95,10 @@ async def JoinedHandler(kst):
                 parse_mode="html",
                 silent=True,
             )
-        with suppress(BaseException):
+        try:
             await ga.edit_permissions(chat.id, user.id, view_messages=False)
+        except BaseException:
+            pass
         logs_text += "<b>Reported:</b> <code>{}</code>\n".format(humanbool(is_reported))
         logs_text += "<b>Reason:</b> {}\n".format(f"<pre>{gban.reason}</pre>" if gban.reason else "None given.")
         await sendlog(logs_text)
@@ -113,7 +116,9 @@ async def JoinedHandler(kst):
             parse_mode="html",
             silent=True,
         )
-        with suppress(BaseException):
+        try:
             await ga.edit_permissions(chat.id, user.id, send_messages=False)
+        except BaseException:
+            pass
         logs_text += "<b>Reason:</b> {}\n".format(f"<pre>{gban.reason}</pre>" if gban.reason else "None given.")
         await sendlog(logs_text)
