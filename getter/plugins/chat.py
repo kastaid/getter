@@ -306,7 +306,7 @@ async def _(kst):
                 )
                 await asyncio.sleep(dly)
             except FloodWaitError as fw:
-                await asyncio.sleep(fw.seconds or 0 + 10)
+                await asyncio.sleep(fw.seconds + 10)
                 await ga.send_message(
                     chat_id,
                     message=message,
@@ -331,7 +331,7 @@ async def _(kst):
                 )
                 await asyncio.sleep(dly)
             except FloodWaitError as fw:
-                await asyncio.sleep(fw.seconds or 0 + 10)
+                await asyncio.sleep(fw.seconds + 10)
                 await ga.send_message(
                     chat_id,
                     message=message,
@@ -356,7 +356,7 @@ async def _(kst):
                 )
                 await asyncio.sleep(dly)
             except FloodWaitError as fw:
-                await asyncio.sleep(fw.seconds or 0 + 10)
+                await asyncio.sleep(fw.seconds + 10)
                 await ga.send_message(
                     chat_id,
                     message=message,
@@ -381,7 +381,7 @@ async def _(kst):
                 )
                 await asyncio.sleep(dly)
             except FloodWaitError as fw:
-                await asyncio.sleep(fw.seconds or 0 + 10)
+                await asyncio.sleep(fw.seconds + 10)
                 await ga.send_message(
                     chat_id,
                     message=message,
@@ -406,7 +406,7 @@ async def _(kst):
                 )
                 await asyncio.sleep(dly)
             except FloodWaitError as fw:
-                await asyncio.sleep(fw.seconds or 0 + 10)
+                await asyncio.sleep(fw.seconds + 10)
                 await ga.send_message(
                     chat_id,
                     message=message,
