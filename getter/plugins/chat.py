@@ -300,13 +300,6 @@ async def _(kst):
             if chat_id not in DS1_TASK:
                 break
             try:
-                await kst.read(
-                    clear_mentions=True,
-                    clear_reactions=True,
-                )
-            except BaseException:
-                pass
-            try:
                 await ga.send_message(
                     chat_id,
                     message=message,
@@ -327,6 +320,13 @@ async def _(kst):
                 await asyncio.sleep(dly)
             except BaseException:
                 break
+            try:
+                await kst.read(
+                    clear_mentions=True,
+                    clear_reactions=True,
+                )
+            except BaseException:
+                pass
         DS1_TASK.discard(chat_id)
     elif ds == "2":
         DS2_TASK.add(chat_id)
@@ -334,13 +334,6 @@ async def _(kst):
             if chat_id not in DS2_TASK:
                 break
             try:
-                await kst.read(
-                    clear_mentions=True,
-                    clear_reactions=True,
-                )
-            except BaseException:
-                pass
-            try:
                 await ga.send_message(
                     chat_id,
                     message=message,
@@ -361,6 +354,13 @@ async def _(kst):
                 await asyncio.sleep(dly)
             except BaseException:
                 break
+            try:
+                await kst.read(
+                    clear_mentions=True,
+                    clear_reactions=True,
+                )
+            except BaseException:
+                pass
         DS2_TASK.discard(chat_id)
     elif ds == "3":
         DS3_TASK.add(chat_id)
@@ -368,13 +368,6 @@ async def _(kst):
             if chat_id not in DS3_TASK:
                 break
             try:
-                await kst.read(
-                    clear_mentions=True,
-                    clear_reactions=True,
-                )
-            except BaseException:
-                pass
-            try:
                 await ga.send_message(
                     chat_id,
                     message=message,
@@ -395,6 +388,13 @@ async def _(kst):
                 await asyncio.sleep(dly)
             except BaseException:
                 break
+            try:
+                await kst.read(
+                    clear_mentions=True,
+                    clear_reactions=True,
+                )
+            except BaseException:
+                pass
         DS3_TASK.discard(chat_id)
     elif ds == "4":
         DS4_TASK.add(chat_id)
@@ -402,13 +402,6 @@ async def _(kst):
             if chat_id not in DS4_TASK:
                 break
             try:
-                await kst.read(
-                    clear_mentions=True,
-                    clear_reactions=True,
-                )
-            except BaseException:
-                pass
-            try:
                 await ga.send_message(
                     chat_id,
                     message=message,
@@ -429,6 +422,13 @@ async def _(kst):
                 await asyncio.sleep(dly)
             except BaseException:
                 break
+            try:
+                await kst.read(
+                    clear_mentions=True,
+                    clear_reactions=True,
+                )
+            except BaseException:
+                pass
         DS4_TASK.discard(chat_id)
     else:
         DS_TASK.add(chat_id)
@@ -436,13 +436,6 @@ async def _(kst):
             if chat_id not in DS_TASK:
                 break
             try:
-                await kst.read(
-                    clear_mentions=True,
-                    clear_reactions=True,
-                )
-            except BaseException:
-                pass
-            try:
                 await ga.send_message(
                     chat_id,
                     message=message,
@@ -463,6 +456,13 @@ async def _(kst):
                 await asyncio.sleep(dly)
             except BaseException:
                 break
+            try:
+                await kst.read(
+                    clear_mentions=True,
+                    clear_reactions=True,
+                )
+            except BaseException:
+                pass
         DS_TASK.discard(chat_id)
 
 
