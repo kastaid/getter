@@ -243,12 +243,14 @@ def kasta_cmd(
                         text = text.format(error_log.msg_link)
                     else:
                         text = text.format(f"<code>{error_log.msg_link}</code>")
-                    with suppress(BaseException):
+                    try:
                         await kst.edit(
                             text,
                             link_preview=False,
                             parse_mode="html",
                         )
+                    except BaseException:
+                        pass
 
         superuser = dev or sudo
         cmd = None

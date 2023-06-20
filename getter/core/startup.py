@@ -8,7 +8,6 @@
 import asyncio
 import signal
 import typing
-from contextlib import suppress
 from datetime import timedelta
 from async_timeout import timeout as WaitFor
 from telethon.tl import functions as fun, types as typ
@@ -70,8 +69,10 @@ _reboot_text = r"""
 
 async def shutdown(signum: str) -> None:
     LOGS.warning(f"Stop signal received : {signum}")
-    with suppress(BaseException):
+    try:
         await getter_app.disconnect()
+    except BaseException:
+        pass
     tasks = [_ for _ in asyncio.all_tasks() if _ is not asyncio.current_task()]
     [task.cancel() for task in tasks]
     await asyncio.gather(*tasks, return_exceptions=True)
@@ -130,9 +131,11 @@ async def autopilot() -> None:
         return
     LOGS.info(">> Auto-Pilot...")
     photo = None
-    with suppress(BaseException):
+    try:
         photo = await getter_app.upload_file("assets/getter_botlogs.png")
         await asyncio.sleep(2)
+    except BaseException:
+        pass
     LOGS.info("Creating a group for BOTLOGS...")
     _, chat_id = await getter_app.create_group(
         title="GETTER BOTLOGS",
@@ -144,7 +147,7 @@ async def autopilot() -> None:
         LOGS.warning("Something happened while creating a group for BOTLOGS, please report this one to our developers!")
         return
     sgvar("BOTLOGS", chat_id)
-    with suppress(BaseException):
+    try:
         await asyncio.sleep(2)
         await getter_app(
             fun.messages.EditChatAboutRequest(
@@ -152,10 +155,14 @@ async def autopilot() -> None:
                 about=_about.format(chat_id, getter_app.uid),
             )
         )
-    with suppress(BaseException):
+    except BaseException:
+        pass
+    try:
         msg = await getter_app.send_message(chat_id, _warn.format(chat_id, getter_app.uid), parse_mode="html")
         await asyncio.sleep(2)
         await msg.pin(notify=True)
+    except BaseException:
+        pass
     LOGS.success("Successfully to created a group for BOTLOGS.")
     await asyncio.sleep(1)
     print(f"\nBOTLOGS = {chat_id}\n")
@@ -168,8 +175,10 @@ async def verify() -> None:
     if not BOTLOGS:
         return
     ls = None
-    with suppress(BaseException):
+    try:
         ls = await getter_app.get_entity(BOTLOGS)
+    except BaseException:
+        pass
     if not ls:
         return
     if not (isinstance(ls, typ.User) and ls.creator) and ls.default_banned_rights.send_messages:
@@ -195,14 +204,18 @@ async def autous(user_id: int) -> None:
 async def finishing(launch_msg: str) -> None:
     BOTLOGS = get_botlogs()
     is_restart, is_reboot = False, False
-    with suppress(BaseException):
+    try:
         _restart = gvar("_restart").split("|")
         is_restart = True
-    with suppress(BaseException):
+    except BaseException:
+        pass
+    try:
         _reboot = gvar("_reboot").split("|")
         is_reboot = True
+    except BaseException:
+        pass
     if is_restart:
-        with suppress(BaseException):
+        try:
             chat_id, msg_id = int(_restart[0]), int(_restart[1])
             async with WaitFor(5):
                 await getter_app.edit_message(
@@ -218,9 +231,11 @@ async def finishing(launch_msg: str) -> None:
                     ),
                     link_preview=False,
                 )
+        except BaseException:
+            pass
         dgvar("_restart")
     if is_reboot:
-        with suppress(BaseException):
+        try:
             chat_id, msg_id = int(_reboot[0]), int(_reboot[1])
             async with WaitFor(5):
                 await getter_app.edit_message(
@@ -236,17 +251,21 @@ async def finishing(launch_msg: str) -> None:
                     ),
                     link_preview=False,
                 )
+        except BaseException:
+            pass
         dgvar("_reboot")
     if BOTLOGS:
-        with suppress(BaseException):
+        try:
             text = f"<pre>{launch_msg}</pre>"
             text += "\n(c) @kastaid #getter #launch"
             await getter_app.send_message(
                 BOTLOGS,
                 text,
                 parse_mode="html",
-                schedule=timedelta(seconds=3),
+                schedule=timedelta(seconds=1),
             )
+        except BaseException:
+            pass
 
 
 def all_plugins() -> typing.Tuple[typing.List[str], str]:

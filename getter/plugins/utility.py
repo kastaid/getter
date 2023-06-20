@@ -19,7 +19,6 @@ from . import (
     kasta_cmd,
     sendlog,
     plugins_help,
-    suppress,
     parse_pre,
     normalize_chat_id,
     get_msg_id,
@@ -490,8 +489,10 @@ async def _(kst):
     limit = 5
     if ":" in args:
         args, limit = args.split(":", 1)
-    with suppress(BaseException):
+    try:
         limit = int(limit)
+    except BaseException:
+        pass
     limit = 99 if limit > 99 else limit
     current, result, total = normalize_chat_id(kst.chat_id), "", 0
     async for msg in ga.iter_messages(

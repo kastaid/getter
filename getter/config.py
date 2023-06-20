@@ -82,6 +82,11 @@ DEV_CMDS: typing.Dict[str, typing.List[str]] = {}
 SUDO_CMDS: typing.Dict[str, typing.List[str]] = {}
 INVITE_WORKER: typing.Dict[str, typing.Any] = {}
 CALLS: typing.Dict[int, typing.Any] = {}
+DS_TASK: typing.Set[int] = set()
+DS1_TASK: typing.Set[int] = set()
+DS2_TASK: typing.Set[int] = set()
+DS3_TASK: typing.Set[int] = set()
+DS4_TASK: typing.Set[int] = set()
 TESTER = {5215824623}
 # vo, en, xl
 DEVS = {

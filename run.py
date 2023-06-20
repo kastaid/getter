@@ -8,7 +8,6 @@
 import argparse
 import shlex
 import sys
-from contextlib import suppress
 from pathlib import Path
 from subprocess import run
 from version import __version__
@@ -43,11 +42,10 @@ def run_cmd(cmd) -> None:
 
 
 def clean() -> None:
-    with suppress(BaseException):
-        for _ in Path(".").rglob("*.py[co]"):
-            _.unlink(missing_ok=True)
-        for _ in Path(".").rglob("__pycache__"):
-            _.rmdir()
+    for _ in Path(".").rglob("*.py[co]"):
+        _.unlink(missing_ok=True)
+    for _ in Path(".").rglob("__pycache__"):
+        _.rmdir()
 
 
 def lint() -> None:

@@ -7,7 +7,6 @@
 
 import asyncio
 import typing
-from contextlib import suppress
 from random import randrange
 from telethon import hints, utils
 from telethon.client.telegramclient import TelegramClient
@@ -23,8 +22,10 @@ delattr(fun.account, "DeleteAccountRequest")
 class Client:
     @patchable()
     async def get_id(self, entity: hints.EntityLike) -> int:
-        with suppress(ValueError):
+        try:
             entity = int(entity)
+        except ValueError:
+            pass
         return await self.get_peer_id(entity)
 
     @patchable()
@@ -41,35 +42,40 @@ class Client:
 
     @patchable()
     async def read_chat(self, *args, **kwargs) -> bool:
-        with suppress(BaseException):
+        try:
             return await self.send_read_acknowledge(*args, **kwargs)
-        return False
+        except BaseException:
+            return False
 
     @patchable()
     async def block(self, entity: hints.EntityLike) -> bool:
-        with suppress(BaseException):
+        try:
             entity = await self.get_input_entity(entity)
             return await self(fun.contacts.BlockRequest(entity))
-        return False
+        except BaseException:
+            return False
 
     @patchable()
     async def unblock(self, entity: hints.EntityLike) -> bool:
-        with suppress(BaseException):
+        try:
             entity = await self.get_input_entity(entity)
             return await self(fun.contacts.UnblockRequest(entity))
-        return False
+        except BaseException:
+            return False
 
     @patchable()
     async def archive(self, entity: hints.EntityLike) -> typing.Optional[typ.Updates]:
-        with suppress(BaseException):
+        try:
             return await self.edit_folder(entity, folder=1)
-        return None
+        except BaseException:
+            return None
 
     @patchable()
     async def unarchive(self, entity: hints.EntityLike) -> typing.Optional[typ.Updates]:
-        with suppress(BaseException):
+        try:
             return await self.edit_folder(entity, folder=0)
-        return None
+        except BaseException:
+            return None
 
     @patchable()
     async def delete_chat(
@@ -77,16 +83,18 @@ class Client:
         entity: hints.EntityLike,
         revoke: bool = False,
     ) -> typing.Optional[typ.Updates]:
-        with suppress(BaseException):
+        try:
             return await self.delete_dialog(entity, revoke=revoke)
-        return None
+        except BaseException:
+            return None
 
     @patchable()
     async def report_spam(self, entity: hints.EntityLike) -> bool:
-        with suppress(BaseException):
+        try:
             entity = await self.get_input_entity(entity)
             return await self(fun.messages.ReportSpamRequest(entity))
-        return False
+        except BaseException:
+            return False
 
     @patchable()
     async def send_reaction(
@@ -97,7 +105,7 @@ class Client:
         add_to_recent: bool = False,
         reaction: typing.Optional[str] = None,
     ) -> typing.Optional[typ.Updates]:
-        with suppress(BaseException):
+        try:
             message = utils.get_message_id(message) or 0
             entity = await self.get_input_entity(entity)
             return await self(
@@ -109,18 +117,20 @@ class Client:
                     reaction=[typ.ReactionEmoji(emoticon=reaction)],
                 )
             )
-        return None
+        except BaseException:
+            return None
 
     @patchable()
     async def join_to(self, entity: hints.EntityLike) -> typing.Optional[typ.Updates]:
-        with suppress(BaseException):
+        try:
             entity = await self.get_input_entity(entity)
             return await self(fun.channels.JoinChannelRequest(entity))
-        return None
+        except BaseException:
+            return None
 
     @patchable()
     async def mute_chat(self, entity: hints.EntityLike) -> bool:
-        with suppress(BaseException):
+        try:
             entity = await self.get_input_entity(entity)
             return await self(
                 fun.account.UpdateNotifySettingsRequest(
@@ -133,7 +143,8 @@ class Client:
                     ),
                 )
             )
-        return False
+        except BaseException:
+            return False
 
     @patchable()
     async def create_group(

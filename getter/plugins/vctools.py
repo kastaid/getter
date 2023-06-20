@@ -14,7 +14,6 @@ from . import (
     kasta_cmd,
     plugins_help,
     choice,
-    suppress,
     mentionuser,
     display_name,
     normalize_chat_id,
@@ -234,9 +233,11 @@ async def _(kst):
         try:
             await in_call.start(chat_id, enable_action=False)
             text = "`Joined video chat.`"
-            with suppress(BaseException):
+            try:
                 await asyncio.sleep(3)
                 await in_call.set_is_mute(is_muted=True)
+            except BaseException:
+                pass
         except BaseException:
             if is_termux():
                 text = "`This command doesn't not supported Termux. Use proot-distro instantly!`"
@@ -272,8 +273,10 @@ async def _(kst):
         return
     in_call = group_call(chat_id)
     if in_call and in_call.is_connected:
-        with suppress(BaseException):
+        try:
             await in_call.stop()
+        except BaseException:
+            pass
         text = "`Leaved video chat.`"
     else:
         text = "`Not joined video chat!`"
@@ -312,7 +315,7 @@ def group_call_instance(chat_id: int) -> None:
             lib_name="pytgcalls",
             pkg_name="pytgcalls==3.0.0.dev24",
         )
-    with suppress(BaseException):
+    try:
         if chat_id not in CALLS:
             CALLS[chat_id] = pytgcalls.GroupCallFactory(
                 getter_app,
@@ -329,6 +332,9 @@ def group_call_instance(chat_id: int) -> None:
         async def __(context, is_connected):
             if not is_connected:
                 CALLS.pop(chat_id, None)
+
+    except BaseException:
+        pass
 
 
 def group_call(chat_id: int):
