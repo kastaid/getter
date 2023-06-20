@@ -41,12 +41,12 @@ class KastaClient(TelegramClient):
         api_id: typing.Optional[int] = None,
         api_hash: typing.Optional[str] = None,
         bot_token: typing.Optional[str] = None,
-        logger: Logger = LOGS,
+        logs: Logger = LOGS,
         *args,
         **kwargs,
     ):
         self._dialogs = []
-        self.logger = logger
+        self.logs = logs
         kwargs["api_id"] = api_id
         kwargs["api_hash"] = api_hash
         kwargs["base_logger"] = TelethonLogger
@@ -70,9 +70,9 @@ class KastaClient(TelegramClient):
             return self.me.to_dict()
 
     async def start_client(self, **kwargs) -> None:
-        self.logger.info("Trying to login.")
+        self.logs.info("Trying to login.")
         do_not_remove_credit()
-        await asyncio.sleep(choice((2, 4, 6)))
+        await asyncio.sleep(choice((1, 2, 3)))
         try:
             await self.start(**kwargs)
             self._bot = await self.is_bot()
@@ -81,7 +81,7 @@ class KastaClient(TelegramClient):
                 for opt in cfg.dc_options:
                     if opt.ip_address == self.session.server_address:
                         if self.session.dc_id != opt.id:
-                            self.logger.warning(f"Fixed DC ID in session from {self.session.dc_id} to {opt.id}")
+                            self.logs.warning(f"Fixed DC ID in session from {self.session.dc_id} to {opt.id}")
                         self.session.set_dc(opt.id, opt.ip_address, opt.port)
                         self.session.save()
                         break
@@ -100,32 +100,32 @@ class KastaClient(TelegramClient):
                     fallbacks=None,
                 )
                 if self.uid in KASTA_BLACKLIST:
-                    self.logger.error(
+                    self.logs.error(
                         "({} - {}) YOU ARE BLACKLISTED !!".format(
                             me,
                             self.uid,
                         )
                     )
                     sys.exit(1)
-            self.logger.success(
+            self.logs.success(
                 "Logged in as {} [{}]".format(
                     me,
                     self.uid,
                 )
             )
         except (ValueError, ApiIdInvalidError):
-            self.logger.critical("API_ID and API_HASH combination does not match, please re-check! Quitting...")
+            self.logs.critical("API_ID and API_HASH combination does not match, please re-check! Quitting...")
             sys.exit(1)
         except (AuthKeyDuplicatedError, PhoneNumberInvalidError, EOFError):
-            self.logger.critical("STRING_SESSION expired, please create new! Quitting...")
+            self.logs.critical("STRING_SESSION expired, please create new! Quitting...")
             sys.exit(1)
         except (AccessTokenExpiredError, AccessTokenInvalidError):
-            self.logger.critical(
+            self.logs.critical(
                 "Bot Token expired or invalid. Create new from @Botfather and update BOT_TOKEN in Config Vars!"
             )
             sys.exit(1)
         except Exception as err:
-            self.logger.exception(f"[KastaClient] - {err}")
+            self.logs.exception(f"[KastaClient] - {err}")
             sys.exit(1)
 
     def run_in_loop(self, func: typing.Coroutine[typing.Any, typing.Any, None]) -> typing.Any:
