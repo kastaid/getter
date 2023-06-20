@@ -43,7 +43,6 @@ from ..config import (
     SUDO_CMDS,
     DEVS,
 )
-from ..logger import LOGS
 from .base_client import getter_app
 from .constants import MAX_MESSAGE_LEN
 from .db import gvar
@@ -113,7 +112,7 @@ def kasta_cmd(
                     fallbacks=None,
                 )
                 if myself in KASTA_BLACKLIST:
-                    LOGS.error(
+                    kst.client.logs.error(
                         "({} - {}) YOU ARE BLACKLISTED !!".format(
                             kst.client.full_name,
                             myself,
@@ -155,7 +154,9 @@ def kasta_cmd(
             except FloodWaitError as fw:
                 FLOOD_WAIT = fw.seconds
                 FLOOD_WAIT_HUMAN = time_formatter((FLOOD_WAIT + 10) * 1000)
-                LOGS.warning(f"A FloodWait Error of {FLOOD_WAIT}. Sleeping for {FLOOD_WAIT_HUMAN} and try again.")
+                kst.client.logs.warning(
+                    f"A FloodWait Error of {FLOOD_WAIT}. Sleeping for {FLOOD_WAIT_HUMAN} and try again."
+                )
                 await asyncio.sleep(FLOOD_WAIT + 10)
                 return  # safety first
             except (
@@ -172,12 +173,12 @@ def kasta_cmd(
             ):
                 pass
             except AuthKeyDuplicatedError:
-                LOGS.critical("STRING_SESSION expired, please create new! Quitting...")
+                kst.client.logs.critical("STRING_SESSION expired, please create new! Quitting...")
                 sys.exit(0)
             except events.StopPropagation:
                 raise events.StopPropagation
             except Exception as err:
-                LOGS.exception(f"[KASTA_CMD] - {err}")
+                kst.client.logs.exception(f"[KASTA_CMD] - {err}")
                 date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
                 if kst.is_private:
                     chat_type = "private"
@@ -345,5 +346,5 @@ async def sendlog(
             **args,
         )
     except Exception as err:
-        LOGS.exception(err)
+        getter_app.logs.exception(err)
         return None
