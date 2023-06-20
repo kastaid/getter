@@ -37,7 +37,10 @@ async def _(kst):
         await kst.delete()
     except BaseException:
         pass
-    await kst.read(clear_mentions=True, clear_reactions=True)
+    await kst.read(
+        clear_mentions=True,
+        clear_reactions=True,
+    )
 
 
 @kasta_cmd(
@@ -289,7 +292,6 @@ async def _(kst):
         except BaseException:
             return await kst.eor(f"`{hl}ds{ds} [seconds] [count] [text]`", time=5)
     dly = 2 if dly and int(dly) < 2 else dly
-    ga.parse_mode = None
     await ga.mute_chat(chat_id)
     await kst.try_delete()
     if ds == "1":
@@ -301,21 +303,30 @@ async def _(kst):
                 await ga.send_message(
                     chat_id,
                     message=message,
+                    parse_mode=None,
                     link_preview=False,
                     silent=True,
                 )
                 await asyncio.sleep(dly)
             except FloodWaitError as fw:
-                await asyncio.sleep(fw.seconds or 0 + 10)
+                await asyncio.sleep(fw.seconds + 10)
                 await ga.send_message(
                     chat_id,
                     message=message,
+                    parse_mode=None,
                     link_preview=False,
                     silent=True,
                 )
                 await asyncio.sleep(dly)
             except BaseException:
                 break
+            try:
+                await kst.read(
+                    clear_mentions=True,
+                    clear_reactions=True,
+                )
+            except BaseException:
+                pass
         DS1_TASK.discard(chat_id)
     elif ds == "2":
         DS2_TASK.add(chat_id)
@@ -326,21 +337,30 @@ async def _(kst):
                 await ga.send_message(
                     chat_id,
                     message=message,
+                    parse_mode=None,
                     link_preview=False,
                     silent=True,
                 )
                 await asyncio.sleep(dly)
             except FloodWaitError as fw:
-                await asyncio.sleep(fw.seconds or 0 + 10)
+                await asyncio.sleep(fw.seconds + 10)
                 await ga.send_message(
                     chat_id,
                     message=message,
+                    parse_mode=None,
                     link_preview=False,
                     silent=True,
                 )
                 await asyncio.sleep(dly)
             except BaseException:
                 break
+            try:
+                await kst.read(
+                    clear_mentions=True,
+                    clear_reactions=True,
+                )
+            except BaseException:
+                pass
         DS2_TASK.discard(chat_id)
     elif ds == "3":
         DS3_TASK.add(chat_id)
@@ -351,21 +371,30 @@ async def _(kst):
                 await ga.send_message(
                     chat_id,
                     message=message,
+                    parse_mode=None,
                     link_preview=False,
                     silent=True,
                 )
                 await asyncio.sleep(dly)
             except FloodWaitError as fw:
-                await asyncio.sleep(fw.seconds or 0 + 10)
+                await asyncio.sleep(fw.seconds + 10)
                 await ga.send_message(
                     chat_id,
                     message=message,
+                    parse_mode=None,
                     link_preview=False,
                     silent=True,
                 )
                 await asyncio.sleep(dly)
             except BaseException:
                 break
+            try:
+                await kst.read(
+                    clear_mentions=True,
+                    clear_reactions=True,
+                )
+            except BaseException:
+                pass
         DS3_TASK.discard(chat_id)
     elif ds == "4":
         DS4_TASK.add(chat_id)
@@ -376,21 +405,30 @@ async def _(kst):
                 await ga.send_message(
                     chat_id,
                     message=message,
+                    parse_mode=None,
                     link_preview=False,
                     silent=True,
                 )
                 await asyncio.sleep(dly)
             except FloodWaitError as fw:
-                await asyncio.sleep(fw.seconds or 0 + 10)
+                await asyncio.sleep(fw.seconds + 10)
                 await ga.send_message(
                     chat_id,
                     message=message,
+                    parse_mode=None,
                     link_preview=False,
                     silent=True,
                 )
                 await asyncio.sleep(dly)
             except BaseException:
                 break
+            try:
+                await kst.read(
+                    clear_mentions=True,
+                    clear_reactions=True,
+                )
+            except BaseException:
+                pass
         DS4_TASK.discard(chat_id)
     else:
         DS_TASK.add(chat_id)
@@ -401,21 +439,30 @@ async def _(kst):
                 await ga.send_message(
                     chat_id,
                     message=message,
+                    parse_mode=None,
                     link_preview=False,
                     silent=True,
                 )
                 await asyncio.sleep(dly)
             except FloodWaitError as fw:
-                await asyncio.sleep(fw.seconds or 0 + 10)
+                await asyncio.sleep(fw.seconds + 10)
                 await ga.send_message(
                     chat_id,
                     message=message,
+                    parse_mode=None,
                     link_preview=False,
                     silent=True,
                 )
                 await asyncio.sleep(dly)
             except BaseException:
                 break
+            try:
+                await kst.read(
+                    clear_mentions=True,
+                    clear_reactions=True,
+                )
+            except BaseException:
+                pass
         DS_TASK.discard(chat_id)
 
 
