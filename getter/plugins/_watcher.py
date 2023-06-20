@@ -7,7 +7,6 @@
 
 from telethon.tl import types as typ
 from . import (
-    LOGS,
     getter_app,
     sendlog,
     events,
@@ -43,7 +42,7 @@ async def OnNewMessageFunc(kst):
     except ConnectionError:
         pass
     except Exception as err:
-        LOGS.exception(err)
+        kst.client.logs.exception(err)
 
 
 @getter_app.on(
@@ -57,7 +56,7 @@ async def OnChatActionFunc(kst):
     except ConnectionError:
         pass
     except Exception as err:
-        LOGS.exception(err)
+        kst.client.logs.exception(err)
 
 
 async def DeletedUserHandler(kst):

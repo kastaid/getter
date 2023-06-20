@@ -183,7 +183,7 @@ class Client:
                     ),
                 )
         except Exception as err:
-            self.logger.critical(err)
+            self.logs.critical(err)
             return None, None
         if not str(chat_id).startswith("-100"):
             chat_id = int("-100" + str(chat_id))
