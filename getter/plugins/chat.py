@@ -265,13 +265,18 @@ async def _(kst):
     chat_id = normalize_chat_id(kst.chat_id)
     ds = kst.pattern_match.group(1).strip()
     text = "Please wait until previous •ds{}• finished..."
-    if (
-        (ds == "1" and chat_id in DS1_TASK)
-        or (ds == "2" and chat_id in DS2_TASK)
-        or (ds == "3" and chat_id in DS3_TASK)
-        or (ds == "4" and chat_id in DS4_TASK)
-    ):
-        return await kst.eor(text.format(ds), time=3)
+    if ds == "1":
+        if chat_id in DS1_TASK:
+            return await kst.eor(text.format(ds), time=3)
+    elif ds == "2":
+        if chat_id in DS2_TASK:
+            return await kst.eor(text.format(ds), time=3)
+    elif ds == "3":
+        if chat_id in DS3_TASK:
+            return await kst.eor(text.format(ds), time=3)
+    elif ds == "4":
+        if chat_id in DS4_TASK:
+            return await kst.eor(text.format(ds), time=3)
     else:
         if chat_id in DS_TASK:
             return await kst.eor(text.format(ds), time=3)
