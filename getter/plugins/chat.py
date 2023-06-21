@@ -186,7 +186,7 @@ async def _(kst):
     ghosts = 0
     yy = await kst.eor("`Processing...`")
     async for x in ga.iter_dialogs():
-        if x.is_user and x.deleted:
+        if x.is_user and x.entity.deleted:
             try:
                 await ga.delete_chat(x.id, revoke=True)
                 ghosts += 1
@@ -206,7 +206,7 @@ async def _(kst):
     users = 0
     yy = await kst.eor("`Processing...`")
     async for x in ga.iter_dialogs(archived=False):
-        if x.is_user and not x.deleted:
+        if x.is_user and not x.entity.deleted:
             try:
                 await ga.mute_chat(x.id)
                 await asyncio.sleep(0.3)
