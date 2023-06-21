@@ -37,7 +37,6 @@ from . import (
     deny_all,
 )
 
-pmcredit = "\n- Protected by getter"
 pmtotal_default = 3
 pmbye_default = "~ You are automatically {mode}!"
 pmmsg_default = """Hello {fullname} this is an automated message,
@@ -97,23 +96,27 @@ async def PMPermit(kst):
     towarn = str(user.id)
     PMWARN, NESLAST = jdata.pmwarns(), jdata.pmlasts()
     antipm = gvar("_antipm", use_cache=True)
+    is_pmlog = gvar("_pmlog", use_cache=True)
     if antipm:
         if towarn in PMWARN:
             del PMWARN[towarn]
             add_col("pmwarns", PMWARN, NESLAST)
-        mention = mentionuser(user.id, display_name(user), width=70)
-        antipm_text = r"\\**#Anti_PM**//"
-        antipm_text += f"\nUser {mention} [`{user.id}`] has messaged you and got "
+        if is_pmlog:
+            mention = mentionuser(user.id, display_name(user), width=70)
+            antipmt = r"\\**#Anti_PM**//"
+            antipmt += f"\nUser {mention} [`{user.id}`] has messaged you and got "
         await ga.report_spam(user.id)
         await ga.block(user.id)
         if antipm == "del":
-            antipm_text += "blocked and deleted!"
-            await sendlog(antipm_text)
-            await sendlog(kst.message, forward=True)
+            if is_pmlog:
+                antipmt += "blocked and deleted!"
+                await sendlog(antipmt)
+                await sendlog(kst.message, forward=True)
             await ga.delete_chat(user.id, revoke=True)
         else:
-            antipm_text += "blocked!"
-            await sendlog(antipm_text)
+            if is_pmlog:
+                antipmt += "blocked!"
+                await sendlog(antipmt)
         return
     if towarn not in PMWARN:
         PMWARN[towarn] = 0
@@ -138,7 +141,8 @@ async def PMPermit(kst):
     is_block = bool(gvar("_pmblock", use_cache=True))
     mode = "blocked" if is_block else "archived"
     if PMWARN[towarn] > ratelimit:
-        warnend_text = f"\nUser {mention} [`{user.id}`] has been "
+        if is_pmlog:
+            warnt = f"\nUser {mention} [`{user.id}`] has been "
         try:
             await ga.delete_messages(user.id, [NESLAST[towarn]])
         except BaseException:
@@ -163,13 +167,16 @@ async def PMPermit(kst):
             total=ratelimit,
             mode=mode,
         )
-        text += pmcredit
         try:
             await kst.respond(text)
         except BaseException:
             pass
         if is_block:
-            await ga.read(user.id, clear_mentions=True, clear_reactions=True)
+            await ga.read(
+                user.id,
+                clear_mentions=True,
+                clear_reactions=True,
+            )
             try:
                 await ga(
                     fun.account.ReportPeerRequest(
@@ -181,14 +188,16 @@ async def PMPermit(kst):
             except BaseException:
                 pass
             await ga.block(user.id)
-            warnend_text += "blocked due to spamming in PM !!"
-            await sendlog(r"\\**#Blocked**//" + warnend_text)
+            if is_pmlog:
+                warnt += "blocked due to spamming in PM !!"
+                await sendlog(r"\\**#Blocked**//" + warnt)
         else:
             await ga.mute_chat(user.id)
             await asyncio.sleep(0.4)
             await ga.archive(user.id)
-            warnend_text += "archived due to spamming in PM !!"
-            await sendlog(r"\\**#Archived**//" + warnend_text)
+            if is_pmlog:
+                warnt += "archived due to spamming in PM !!"
+                await sendlog(r"\\**#Archived**//" + warnt)
         del PMWARN[towarn]
         add_col("pmwarns", PMWARN, NESLAST)
         return
@@ -212,7 +221,6 @@ async def PMPermit(kst):
         total=ratelimit,
         mode=mode,
     )
-    text += pmcredit
     try:
         await ga.delete_messages(user.id, [NESLAST[towarn]])
     except BaseException:
@@ -222,10 +230,10 @@ async def PMPermit(kst):
     NESLAST[towarn] = last.id
     add_col("pmwarns", PMWARN, NESLAST)
     # await ga.read(user.id, clear_mentions=True, clear_reactions=True)
-    if gvar("_pmlog", use_cache=True):
-        newmsg_text = r"\\**#New_Message**//"
-        newmsg_text += f"\nUser {mention} [`{user.id}`] has messaged you with **{warn}/{ratelimit}** warns!"
-        await sendlog(newmsg_text)
+    if is_pmlog:
+        newmsgt = r"\\**#New_Message**//"
+        newmsgt += f"\nUser {mention} [`{user.id}`] has messaged you with **{warn}/{ratelimit}** warns!"
+        await sendlog(newmsgt)
         await asyncio.sleep(1)
         await sendlog(kst.message, forward=True)
 
