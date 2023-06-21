@@ -31,7 +31,7 @@ from . import (
     jdata,
 )
 
-SG_BOT = "SangMataInfo_bot"
+SG_BOT = "SangMata_BOT"
 CREATED_BOT = "creationdatebot"
 ROSE_BOT = "MissRose_bot"
 _TOTAL_BOT_CACHE = TTLCache(maxsize=512, ttl=120, timer=perf_counter)  # 2 mins
@@ -64,53 +64,38 @@ async def _(kst):
     user, _ = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
-    text = []
+    texts = []
     resp = None
-    user_id = f"/search_id {user.id}"
     async with ga.conversation(SG_BOT) as conv:
         try:
-            com = await conv.send_message(user_id)
+            com = await conv.send_message(str(user.id))
         except YouBlockedUserError:
             await conv._client.unblock(conv.chat_id)
-            com = await conv.send_message(user_id)
+            com = await conv.send_message(str(user.id))
         while True:
             try:
                 resp = await conv.get_response(timeout=2)
             except asyncio.exceptions.TimeoutError:
                 break
-            text.append(resp.message)
+            texts.append(resp.message)
         if resp:
             await com.try_delete()
-            await resp.read(clear_mentions=True, clear_reactions=True)
-    if not text:
-        return await yy.eod("`Bot did not respond.`")
-    if len(text) == 1 and any(_.startswith("🔗") for _ in text):
+            await resp.read(
+                clear_mentions=True,
+                clear_reactions=True,
+            )
+    if not texts:
         return await yy.eod("`Cannot get any records.`")
-    if "No records found" in text:
+    if any(_ for _ in texts if _.lower().startswith("no data")):
         return await yy.eod("`Got no records.`")
-    names, usernames = sglist(text)
-    if names:
-        for x in names:
-            if x.startswith("⚠️"):
-                break
-            await yy.sod(
-                x,
-                force_reply=True,
-                silent=True,
-                parse_mode=parse_pre,
-            )
-            await asyncio.sleep(0.3)
-    if usernames:
-        for x in usernames:
-            if x.startswith("⚠️"):
-                break
-            await yy.sod(
-                x,
-                force_reply=True,
-                silent=True,
-                parse_mode=parse_pre,
-            )
-            await asyncio.sleep(0.3)
+    for txt in texts:
+        await yy.sod(
+            txt,
+            force_reply=True,
+            silent=True,
+            parse_mode=parse_pre,
+        )
+        await asyncio.sleep(0.5)
 
 
 @kasta_cmd(
@@ -830,19 +815,6 @@ async def get_cas_banned(kst, user_id: int) -> bool:
         return False
     _CAS_CACHE[user_id] = res.get("ok")
     return res.get("ok")
-
-
-def sglist(text: str) -> tuple:
-    for x in text:
-        if x.startswith("🔗"):
-            text.remove(x)
-    for part, x in enumerate(text):
-        if x.lower().startswith("username history"):
-            break
-        part += 1
-    usernames = text[part:]
-    names = text[:part]
-    return names, usernames
 
 
 plugins_help["info"] = {
