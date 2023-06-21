@@ -170,12 +170,12 @@ async def _(kst):
         try:
             await x.delete()
             drafts += 1
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.3)
         except BaseException:
             pass
     if not drafts:
         return await yy.eor("`no drafts found`", time=3)
-    await yy.eod(f"`cleared {drafts} drafts`")
+    await yy.eod(f"`cleared {drafts} drafts`", time=None)
 
 
 @kasta_cmd(
@@ -190,12 +190,12 @@ async def _(kst):
             try:
                 await ga.delete_chat(x.id, revoke=True)
                 ghosts += 1
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.3)
             except BaseException:
                 pass
     if not ghosts:
         return await yy.eor("`no ghosts found`", time=3)
-    await yy.eod(f"`deleted {ghosts} ghost chats`")
+    await yy.eod(f"`deleted {ghosts} ghost chats`", time=None)
 
 
 @kasta_cmd(
@@ -206,18 +206,18 @@ async def _(kst):
     users = 0
     yy = await kst.eor("`Processing...`")
     async for x in ga.iter_dialogs(archived=False):
-        if x.is_user and not x.entity.deleted:
+        if x.is_user and not x.entity.bot and not x.entity.deleted:
             try:
                 await ga.mute_chat(x.id)
-                await asyncio.sleep(0.3)
+                await asyncio.sleep(0.4)
                 await ga.archive(x.id)
                 users += 1
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.3)
             except BaseException:
                 pass
     if not users:
         return await yy.eor("`no users found`", time=3)
-    await yy.eod(f"`archived and muted {users} users`")
+    await yy.eod(f"`archived and muted {users} users`", time=None)
 
 
 @kasta_cmd(
