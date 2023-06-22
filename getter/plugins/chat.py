@@ -164,18 +164,18 @@ async def _(kst):
 )
 async def _(kst):
     ga = kst.client
-    drafts = 0
+    count = 0
     yy = await kst.eor("`Processing...`")
     async for x in ga.iter_drafts():
         try:
             await x.delete()
-            drafts += 1
+            count += 1
             await asyncio.sleep(0.3)
         except BaseException:
             pass
-    if not drafts:
+    if not count:
         return await yy.eor("`no drafts found`", time=3)
-    await yy.eod(f"`cleared {drafts} drafts`", time=None)
+    await yy.eod(f"`cleared {count} drafts`", time=None)
 
 
 @kasta_cmd(
@@ -183,41 +183,51 @@ async def _(kst):
 )
 async def _(kst):
     ga = kst.client
-    ghosts = 0
+    count = 0
     yy = await kst.eor("`Processing...`")
     async for x in ga.iter_dialogs():
         if x.is_user and x.entity.deleted:
             try:
                 await ga.delete_chat(x.id, revoke=True)
-                ghosts += 1
+                count += 1
                 await asyncio.sleep(0.3)
             except BaseException:
                 pass
-    if not ghosts:
+    if not count:
         return await yy.eor("`no ghosts found`", time=3)
-    await yy.eod(f"`deleted {ghosts} ghost chats`", time=None)
+    await yy.eod(f"`deleted {count} ghost chats`", time=None)
 
 
 @kasta_cmd(
-    pattern="nousers?$",
+    pattern="no(user|bot|channel|group)s?$",
 )
 async def _(kst):
     ga = kst.client
-    users = 0
+    count = 0
+    mode = kst.pattern_match.group(1).strip()
     yy = await kst.eor("`Processing...`")
     async for x in ga.iter_dialogs(archived=False):
-        if x.is_user and not x.entity.bot and not x.entity.deleted:
+        if (
+            (mode == "user" and x.is_user and not x.entity.bot and not x.entity.deleted)
+            or (mode == "bot" and x.is_user and x.entity.bot and not x.entity.deleted)
+            or (mode == "channel" and isinstance(x.entity, typ.Channel) and x.entity.broadcast)
+            or (
+                mode == "group"
+                and (isinstance(x.entity, typ.Channel) and x.entity.megagroup)
+                or isinstance(x.entity, typ.Chat)
+            )
+        ):
             try:
                 await ga.mute_chat(x.id)
                 await asyncio.sleep(0.4)
                 await ga.archive(x.id)
-                users += 1
+                count += 1
                 await asyncio.sleep(0.3)
             except BaseException:
                 pass
-    if not users:
-        return await yy.eor("`no users found`", time=3)
-    await yy.eod(f"`archived and muted {users} users`", time=None)
+    if not count:
+        return await yy.eor(f"`no {mode}s found`", time=3)
+    await yy.eod(f"`archived and muted {count} {mode}s`", time=None)
 
 
 @kasta_cmd(
@@ -474,7 +484,10 @@ plugins_help["chat"] = {
     "{i}copy [reply]": "Copy the replied message.",
     "{i}nodraft": "Clear all drafts.",
     "{i}noghost": "Delete all chats with deleted account users/bots.",
-    "{i}nouser": "Archive all chats with users/bots.",
+    "{i}nouser": "Archive all chats with users.",
+    "{i}nobot": "Archive all chats with bots.",
+    "{i}nochannel": "Archive all channels.",
+    "{i}nogroup": "Archive all groups.",
     "{i}sd [seconds] [text]/[reply]": "Make self-destructible messages after particular time.",
     "{i}sdm [seconds] [text]/[reply]": "Same as sd command above but showing a note “self-destruct message in ? seconds”.",
     "{i}send|{i}dm [username/id] [text]/[reply]": "Send message to user or chat.",
