@@ -139,3 +139,6 @@ config.env
 logs
 backup
 *s_list.csv
+
+*/plugins/custom/*
+!*/plugins/custom/__init__.py

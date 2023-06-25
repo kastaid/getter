@@ -55,22 +55,19 @@ async def main() -> None:
     await verify()
     LOGS.info(">> Load Plugins...")
     load = time()
-    no_print = ("_watcher",)
-    plugins, basepath = all_plugins()
+    plugins = all_plugins()
     for plugin in plugins:
         try:
-            import_module(basepath + plugin)
-            if plugin not in no_print:
-                LOGS.success("[+] " + plugin)
+            import_module(plugin["path"])
+            LOGS.success("[+] " + plugin["name"])
         except Exception as err:
-            LOGS.exception(f"[-] {plugin} : {err}")
+            LOGS.exception(f"[-] {plugin['name']} : {err}")
     loaded_time = time_formatter((time() - load) * 1000)
-    [plugins.remove(_) for _ in no_print]  # type: ignore
     loaded_msg = ">> Loaded Plugins: {} , Commands: {} (took {}) : {}".format(
         plugins_help.count,
         plugins_help.total,
         loaded_time,
-        tuple(plugins),
+        tuple(_["name"] for _ in plugins),
     )
     LOGS.info(loaded_msg)
     do_not_remove_credit()
