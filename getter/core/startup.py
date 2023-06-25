@@ -266,13 +266,15 @@ async def finishing(launch_msg: str) -> None:
                 BOTLOGS,
                 text,
                 parse_mode="html",
-                schedule=timedelta(seconds=1),
+                schedule=timedelta(seconds=5),
             )
         except BaseException:
             pass
 
 
-def all_plugins() -> typing.Tuple[typing.List[str], str]:
-    basepath = "getter/plugins/"
-    plugins = [_.stem for _ in (Root / basepath).rglob("*.py") if not str(_).endswith(("__.py", "_draft.py"))]
-    return sorted(plugins), basepath.replace("/", ".")
+def all_plugins() -> typing.List[typing.Dict[str, str]]:
+    return [
+        {"path": str(_.resolve()).replace("/root/getter/", "").replace("/", ".").replace(".py", ""), "name": _.stem}
+        for _ in (Root / "getter/plugins/").rglob("*.py")
+        if not str(_).endswith(("__.py", "_draft.py"))
+    ]
