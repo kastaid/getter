@@ -56,12 +56,16 @@ async def main() -> None:
     LOGS.info(">> Load Plugins...")
     load = time()
     plugins = all_plugins()
-    for plugin in plugins:
+    for p in plugins:
         try:
-            import_module(plugin["path"])
-            LOGS.success("[+] " + plugin["name"])
+            if p["path"].startswith("custom"):
+                plugin = "getter.plugins." + p["path"]
+            else:
+                plugin = "getter." + p["path"]
+            import_module(plugin)
+            LOGS.success("[+] " + p["name"])
         except Exception as err:
-            LOGS.exception(f"[-] {plugin['name']} : {err}")
+            LOGS.exception(f"[-] {p['name']} : {err}")
     loaded_time = time_formatter((time() - load) * 1000)
     loaded_msg = ">> Loaded Plugins: {} , Commands: {} (took {}) : {}".format(
         plugins_help.count,
