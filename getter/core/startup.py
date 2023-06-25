@@ -275,7 +275,7 @@ async def finishing(launch_msg: str) -> None:
 def all_plugins() -> typing.List[typing.Dict[str, str]]:
     return [
         {
-            "path": ".".join(str(_.resolve()).replace(".py", "").split("/")[3:]),
+            "path": ".".join(str(_.resolve()).replace(".py", "").split("/")[-2:]),
             "name": _.stem,
         }
         for _ in (Root / "getter/plugins/").rglob("*.py")
