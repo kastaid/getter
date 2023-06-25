@@ -24,3 +24,4 @@ requests==2.31.0
 lottie==0.7.0
 Pillow==9.5.0
 CairoSVG==2.7.0
+uvloop==0.17.0
