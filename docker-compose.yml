@@ -13,4 +13,4 @@ services:
       NO_HANDLER: $NO_HANDLER
       TZ: $TZ
       LANG_CODE: $LANG_CODE
-    restart: unless-stopped
+    restart: on-failure
