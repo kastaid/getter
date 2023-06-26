@@ -9,9 +9,9 @@ services:
       - ./:/app
     env_file:
       - config.env
-    restart: unless-stopped
+    restart: on-failure
     network_mode: bridge
     deploy:
       resources:
         limits:
-          memory: 128M
+          memory: 32M
