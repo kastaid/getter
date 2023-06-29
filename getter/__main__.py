@@ -30,7 +30,6 @@ from .core.startup import (
     verify,
     autous,
     finishing,
-    all_plugins,
 )
 from .core.utils import time_formatter
 from .logger import LOGS
@@ -55,7 +54,7 @@ async def main() -> None:
     await verify()
     LOGS.info(">> Load Plugins...")
     load = time()
-    plugins = all_plugins()
+    plugins = getter_app.all_plugins
     for p in plugins:
         try:
             if p["path"].startswith("custom"):
