@@ -66,12 +66,9 @@ async def _(kst):
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     texts = []
     resp = None
+    await ga.unblock(SG_BOT)
     async with ga.conversation(SG_BOT) as conv:
-        try:
-            com = await conv.send_message(str(user.id))
-        except YouBlockedUserError:
-            await conv._client.unblock(conv.chat_id)
-            com = await conv.send_message(str(user.id))
+        await conv.send_message(str(user.id))
         while True:
             try:
                 resp = await conv.get_response(timeout=2)
@@ -79,11 +76,7 @@ async def _(kst):
                 break
             texts.append(resp.message)
         if resp:
-            await com.try_delete()
-            await resp.read(
-                clear_mentions=True,
-                clear_reactions=True,
-            )
+            await resp.read()
     if not texts:
         return await yy.eod("`Cannot get any records.`")
     if any(_ for _ in texts if _.lower().startswith("no data")):
@@ -698,11 +691,19 @@ async def conv_created(conv, user_id):
     if user_id in _CREATED_CACHE:
         return _CREATED_CACHE.get(user_id)
     try:
-        resp = conv.wait_event(events.NewMessage(incoming=True, from_users=conv.chat_id))
+        resp = conv.wait_event(
+            events.NewMessage(
+                incoming=True,
+                from_users=conv.chat_id,
+            ),
+        )
         yy = await conv.send_message(f"/id {user_id}")
         resp = await resp
         await yy.try_delete()
-        await resp.read(clear_mentions=True, clear_reactions=True)
+        await resp.read(
+            clear_mentions=True,
+            clear_reactions=True,
+        )
         created = getattr(resp.message, "message", None)
         _CREATED_CACHE[user_id] = created
         return created
@@ -715,11 +716,19 @@ async def conv_created(conv, user_id):
 
 async def conv_total_bot(conv, command):
     try:
-        resp = conv.wait_event(events.NewMessage(incoming=True, from_users=conv.chat_id))
+        resp = conv.wait_event(
+            events.NewMessage(
+                incoming=True,
+                from_users=conv.chat_id,
+            ),
+        )
         yy = await conv.send_message(command)
         resp = await resp
         await yy.try_delete()
-        await resp.read(clear_mentions=True, clear_reactions=True)
+        await resp.read(
+            clear_mentions=True,
+            clear_reactions=True,
+        )
         return resp
     except asyncio.exceptions.TimeoutError:
         return None

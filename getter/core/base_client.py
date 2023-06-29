@@ -6,6 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
+import importlib.util
 import inspect
 import os
 import sys
@@ -25,13 +26,23 @@ from telethon.network.connection.tcpfull import ConnectionTcpFull
 from telethon.sessions.abstract import Session
 from telethon.sessions.string import CURRENT_VERSION, StringSession
 from telethon.tl import functions as fun, types as typ
-from .. import StartTime, __version__, LOOP
+from .. import (
+    Root,
+    StartTime,
+    __version__,
+    LOOP,
+)
 from ..config import Var, DEVS
 from ..logger import LOGS, TelethonLogger
 from .db import sgvar
 from .functions import display_name
 from .property import do_not_remove_credit, get_blacklisted
 from .utils import time_formatter
+
+
+class ReverseList(list):
+    def __iter__(self):
+        return reversed(self)
 
 
 class KastaClient(TelegramClient):
@@ -46,6 +57,7 @@ class KastaClient(TelegramClient):
         **kwargs,
     ):
         self._dialogs = []
+        self._plugins = {}
         self.logs = logs
         kwargs["api_id"] = api_id
         kwargs["api_hash"] = api_hash
@@ -54,6 +66,7 @@ class KastaClient(TelegramClient):
         kwargs["connection_retries"] = None
         kwargs["auto_reconnect"] = True
         super().__init__(session, **kwargs)
+        self._event_builders = ReverseList()
         self.run_in_loop(self.start_client(bot_token=bot_token))
         self.dc_id = self.session.dc_id
 
@@ -70,7 +83,7 @@ class KastaClient(TelegramClient):
             return self.me.to_dict()
 
     async def start_client(self, **kwargs) -> None:
-        self.logs.info("Trying to login.")
+        self.logs.info("Trying to login...")
         do_not_remove_credit()
         await asyncio.sleep(choice((4, 6, 8)))
         try:
@@ -159,6 +172,48 @@ class KastaClient(TelegramClient):
         except BaseException:
             pass
         os.execl(sys.executable, sys.executable, "-m", "getter")
+
+    def load_plugin(
+        self,
+        plugin: str,
+    ) -> bool:
+        try:
+            path = Root / ("getter/plugins/custom/" + plugin)
+            plug = path.stem
+            name = f"getter.plugins.custom.{plug}"
+            spec = importlib.util.spec_from_file_location(name, path)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            self._plugins[plug] = mod
+            self.logs.success(f"Successfully loaded custom plugin {plug}!")
+            return True
+        except Exception as err:
+            self.logs.warning(f"Failed to load custom plugin {plug}!")
+            self.logs.exception(err)
+            return False
+
+    def unload_plugin(
+        self,
+        plugin: str,
+    ) -> None:
+        name = self._plugins[plugin].__name__
+        for x in reversed(range(len(self._event_builders))):
+            ev, cb = self._event_builders[x]
+            if cb.__module__ == name:
+                del self._event_builders[x]
+        del self._plugins[plugin]
+        self.logs.success(f"Removed custom plugin {plugin}!")
+
+    @property
+    def all_plugins(self) -> typing.List[typing.Dict[str, str]]:
+        return [
+            {
+                "path": ".".join(str(_.resolve()).replace(".py", "").split("/")[-2:]),
+                "name": _.stem,
+            }
+            for _ in (Root / "getter/plugins/").rglob("*.py")
+            if not str(_).endswith(("__.py", "_draft.py"))
+        ]
 
     @property
     def full_name(self) -> str:
