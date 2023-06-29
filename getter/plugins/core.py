@@ -20,7 +20,6 @@ from telethon.errors.rpcerrorlist import (
     UserPrivacyRestrictedError,
     UserKickedError,
     UserChannelsTooMuchError,
-    YouBlockedUserError,
 )
 from telethon.tl import functions as fun, types as typ
 from . import (
@@ -122,16 +121,30 @@ _ADDING_LOCK = asyncio.Lock()
     dev=True,
 )
 async def _(kst):
+    ga = kst.client
     if kst.is_dev:
         await asyncio.sleep(choice((4, 6, 8)))
     yy = await kst.eor("`Checking...`", silent=True)
     resp = None
-    async with kst.client.conversation("SpamBot") as conv:
-        resp = await conv_limit(conv)
+    bot = "SpamBot"
+    await ga.unblock(bot)
+    async with ga.conversation(bot) as conv:
+        try:
+            resp = conv.wait_event(
+                events.NewMessage(
+                    incoming=True,
+                    from_users=conv.chat_id,
+                ),
+                timeout=None,
+            )
+            await conv.send_message("/start")
+            resp = await resp
+            await conv.read()
+        except asyncio.exceptions.TimeoutError:
+            pass
     if not resp:
         return yy.try_delete()
     await yy.eor(f"~ {resp.text}")
-    await resp.try_delete()
 
 
 @kasta_cmd(
@@ -586,21 +599,6 @@ async def get_chat_info(kst, yy, group=1):
             await yy.eod("`Invalid username/link/id as target, please re-check.`")
             return None
     return info
-
-
-async def conv_limit(conv):
-    try:
-        resp = conv.wait_event(events.NewMessage(incoming=True, from_users=conv.chat_id))
-        yy = await conv.send_message("/start")
-        resp = await resp
-        await yy.try_delete()
-        await conv.read(clear_mentions=True, clear_reactions=True)
-        return resp
-    except asyncio.exceptions.TimeoutError:
-        return None
-    except YouBlockedUserError:
-        await conv._client.unblock(conv.chat_id)
-        return await conv_limit(conv)
 
 
 plugins_help["core"] = {

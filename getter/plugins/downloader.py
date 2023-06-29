@@ -65,10 +65,18 @@ async def _(kst):
 
 async def conv_tt(conv, link):
     try:
-        resp = conv.wait_event(events.NewMessage(incoming=True, from_users=conv.chat_id))
+        resp = conv.wait_event(
+            events.NewMessage(
+                incoming=True,
+                from_users=conv.chat_id,
+            ),
+        )
         await conv.send_message(link)
         resp = await resp
-        await resp.read(clear_mentions=True, clear_reactions=True)
+        await resp.read(
+            clear_mentions=True,
+            clear_reactions=True,
+        )
         return resp
     except asyncio.exceptions.TimeoutError:
         return None
@@ -79,10 +87,18 @@ async def conv_tt(conv, link):
 
 async def conv_tw(conv, link):
     try:
-        resp = conv.wait_event(events.NewMessage(incoming=True, from_users=conv.chat_id))
+        resp = conv.wait_event(
+            events.NewMessage(
+                incoming=True,
+                from_users=conv.chat_id,
+            ),
+        )
         await conv.send_message(link)
         resp = await resp
-        await resp.read(clear_mentions=True, clear_reactions=True)
+        await resp.read(
+            clear_mentions=True,
+            clear_reactions=True,
+        )
         return resp
     except asyncio.exceptions.TimeoutError:
         return None

@@ -5,32 +5,40 @@
 # PLease read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import os.path
 from os import remove
+from os.path import dirname, realpath, exists
 from telethon.utils import get_extension
 from . import kasta_cmd, plugins_help, get_media_type
 
-base = os.path.dirname(os.path.realpath(__file__))
+base = dirname(realpath(__file__))
 
 
 @kasta_cmd(
     pattern="load$",
 )
 async def _(kst):
+    ga = kst.client
     reply = await kst.get_reply_message()
     if not reply or reply and not reply.media:
         return await kst.eor("`Please reply a message contains file with plugin_name.py`")
     mt = get_media_type(reply.media)
     yy = await kst.eor("`Processing...`")
     if mt == "text" and get_extension(reply.media) == ".py":
-        plugin = "".join([_.file_name for _ in reply.media.document.attributes]).replace(".py", "")
-        if os.path.exists(f"{base}/custom/{plugin}.py"):
-            remove(f"{base}/custom/{plugin}.py")
+        plugin_file = "".join([_.file_name for _ in reply.media.document.attributes])
+        plugin = plugin_file.replace(".py", "")
+        if exists(f"{base}/custom/{plugin_file}"):
+            if plugin in ga._plugins:
+                ga.unload_plugin(plugin)
+            try:
+                remove(f"{base}/custom/{plugin_file}")
+            except BaseException:
+                pass
         file = await reply.download_media(file=f"{base}/custom")
         if file:
-            done = await yy.eor(f"`The plugin {plugin} is loaded!`")
-            msg = await done.reply("`Rebooting to apply...`", silent=True)
-            await kst.client.reboot(msg)
+            if ga.load_plugin(plugin_file):
+                await yy.eor(f"`The plugin {plugin} is loaded!`")
+            else:
+                await yy.eor(f"`The plugin {plugin} is not loaded!`")
         else:
             await yy.eor(f"`Failed to download the plugin {plugin}.`")
     else:
@@ -41,17 +49,23 @@ async def _(kst):
     pattern="unload(?: |$)(.*)",
 )
 async def _(kst):
-    plugin = await kst.client.get_text(kst, plain=True)
+    ga = kst.client
+    plugin = await ga.get_text(kst, plain=True)
     if not plugin:
         return await kst.eor("`Please input plugin name.`")
     plugin = plugin.replace(".py", "")
     yy = await kst.eor("`Processing...`")
-    if os.path.exists(f"{base}/custom/{plugin}.py") and plugin != "__init__":
-        remove(f"{base}/custom/{plugin}.py")
-        done = await yy.eor(f"`The plugin {plugin} removed!`")
-        msg = await done.reply("`Rebooting to apply...`", silent=True)
-        await kst.client.reboot(msg)
-    elif os.path.exists(f"{base}/{plugin}.py"):
+    if exists(f"{base}/custom/{plugin}.py") and plugin != "__init__.py":
+        try:
+            if plugin in ga._plugins:
+                ga.unload_plugin(plugin)
+            remove(f"{base}/custom/{plugin}.py")
+            ga.logs.success(f"Successfully to remove custom plugin {plugin}!")
+            await yy.eor(f"`The plugin {plugin} removed!`")
+        except BaseException:
+            ga.logs.error(f"Failed to remove custom plugin {plugin}!")
+            await yy.eor(f"`The plugin {plugin} can't remove, please try again!`")
+    elif exists(f"{base}/{plugin}.py"):
         await yy.eor("`It is forbidden to remove built-in plugins, it will disrupt the updater!`")
     else:
         await yy.eor(f"`Plugin {plugin} not found.`")

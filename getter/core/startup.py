@@ -11,12 +11,7 @@ import typing
 from datetime import timedelta
 from async_timeout import timeout as WaitFor
 from telethon.tl import functions as fun, types as typ
-from .. import (
-    __version__,
-    Root,
-    LOOP,
-    EXECUTOR,
-)
+from .. import __version__, LOOP, EXECUTOR
 from ..config import Var, DEVS
 from ..logger import LOGS
 from .base_client import getter_app
@@ -266,18 +261,9 @@ async def finishing(launch_msg: str) -> None:
                 BOTLOGS,
                 text,
                 parse_mode="html",
+                link_preview=False,
+                silent=True,
                 schedule=timedelta(seconds=5),
             )
         except BaseException:
             pass
-
-
-def all_plugins() -> typing.List[typing.Dict[str, str]]:
-    return [
-        {
-            "path": ".".join(str(_.resolve()).replace(".py", "").split("/")[-2:]),
-            "name": _.stem,
-        }
-        for _ in (Root / "getter/plugins/").rglob("*.py")
-        if not str(_).endswith(("__.py", "_draft.py"))
-    ]
