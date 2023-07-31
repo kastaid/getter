@@ -49,7 +49,7 @@ RUN set -ex \
     && chmod a+r /etc/apt/keyrings/google-chrome.gpg \
     && echo "deb [signed-by=/etc/apt/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list > /dev/null \
     && apt-get -qqy update \
-    && apt-get -qqy install --no-install-recommends google-chrome-stable \
+    && apt-get -qqy install --no-install-recommends google-chrome \
     && wget -qN https://chromedriver.storage.googleapis.com/$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip -P ~/ \
     && unzip -qq ~/chromedriver_linux64.zip -d ~/ \
     && rm -rf ~/chromedriver_linux64.zip \
