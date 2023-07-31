@@ -23,6 +23,7 @@ RUN set -ex \
     && apt-get -qqy update \
     && apt-get -qqy install --no-install-recommends \
         tini \
+        ca-certificates \
         gnupg \
         gnupg2 \
         git \
