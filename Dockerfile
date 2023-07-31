@@ -23,9 +23,7 @@ RUN set -ex \
     && apt-get -qqy update \
     && apt-get -qqy install --no-install-recommends \
         tini \
-        ca-certificates \
         gnupg \
-        gnupg2 \
         git \
         curl \
         wget \
@@ -47,7 +45,7 @@ RUN set -ex \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && dpkg-reconfigure --force -f noninteractive tzdata >/dev/null 2>&1 \
     && install -m 0755 -d /etc/apt/keyrings \
-    && curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub | sgpg --dearmor -o /etc/apt/keyrings/google-chrome.gpg \
+    && curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /etc/apt/keyrings/google-chrome.gpg \
     && chmod a+r /etc/apt/keyrings/google-chrome.gpg \
     && echo "deb [signed-by=/etc/apt/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list > /dev/null \
     && apt-get -qqy update \
