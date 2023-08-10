@@ -61,15 +61,13 @@ def is_gmute(user_id, use_cache: bool = False):
 
 def add_gmute(user_id, date, reason=None):
     with _GMUTE_LOCK:
-        user_id = str(user_id)
-        SESSION.add(GMute(user_id, date, reason or ""))
+        SESSION.add(GMute(str(user_id), date, reason or ""))
         SESSION.commit()
 
 
 def del_gmute(user_id):
     with _GMUTE_LOCK:
-        user_id = str(user_id)
-        user = SESSION.query(GMute).get(user_id)
+        user = SESSION.query(GMute).get(str(user_id))
         if user:
             SESSION.delete(user)
             SESSION.commit()
@@ -77,8 +75,7 @@ def del_gmute(user_id):
 
 def set_gmute_reason(user_id, reason):
     with _GMUTE_LOCK:
-        user_id = str(user_id)
-        user = SESSION.query(GMute).get(user_id)
+        user = SESSION.query(GMute).get(str(user_id))
         if not user:
             return ""
         prev_reason = user.reason

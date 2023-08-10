@@ -186,18 +186,12 @@ async def autous(user_id: int) -> None:
     if Var.DEV_MODE and user_id in DEVS:
         return
     await getter_app.join_to(_c)
-    await asyncio.sleep(6)
+    await asyncio.sleep(5)
     await getter_app.join_to(_u)
-    await asyncio.sleep(6)
+    await asyncio.sleep(5)
     await getter_app.mute_chat(_u)
-    await asyncio.sleep(6)
+    await asyncio.sleep(5)
     await getter_app.join_to(_g)
-    await asyncio.sleep(6)
-    await getter_app.mute_chat(_g)
-    await asyncio.sleep(6)
-    BOTLOGS = get_botlogs()
-    if BOTLOGS:
-        await getter_app.mute_chat(BOTLOGS)
 
 
 async def finishing(launch_msg: str) -> None:
