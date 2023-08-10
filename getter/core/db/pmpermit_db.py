@@ -61,15 +61,13 @@ def is_allow(user_id, use_cache: bool = False):
 
 def allow_user(user_id, date, reason=None):
     with _PMPERMIT_LOCK:
-        user_id = str(user_id)
-        SESSION.add(PMPermit(user_id, date, reason or ""))
+        SESSION.add(PMPermit(str(user_id), date, reason or ""))
         SESSION.commit()
 
 
 def deny_user(user_id):
     with _PMPERMIT_LOCK:
-        user_id = str(user_id)
-        user = SESSION.query(PMPermit).get(user_id)
+        user = SESSION.query(PMPermit).get(str(user_id))
         if user:
             SESSION.delete(user)
             SESSION.commit()
