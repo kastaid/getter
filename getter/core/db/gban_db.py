@@ -61,8 +61,7 @@ def is_gban(user_id, use_cache: bool = False):
 
 def add_gban(user_id, date, reason=None):
     with _GBAN_LOCK:
-        user_id = str(user_id)
-        SESSION.add(GBan(user_id, date, reason or ""))
+        SESSION.add(GBan(str(user_id), date, reason or ""))
         SESSION.commit()
 
 
@@ -77,8 +76,7 @@ def del_gban(user_id):
 
 def set_gban_reason(user_id, reason):
     with _GBAN_LOCK:
-        user_id = str(user_id)
-        user = SESSION.query(GBan).get(user_id)
+        user = SESSION.query(GBan).get(str(user_id))
         if not user:
             return ""
         prev_reason = user.reason

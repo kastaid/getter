@@ -61,15 +61,13 @@ def is_gdel(user_id, use_cache: bool = False):
 
 def add_gdel(user_id, date, reason=None):
     with _GDEL_LOCK:
-        user_id = str(user_id)
-        SESSION.add(GDel(user_id, date, reason or ""))
+        SESSION.add(GDel(str(user_id), date, reason or ""))
         SESSION.commit()
 
 
 def del_gdel(user_id):
     with _GDEL_LOCK:
-        user_id = str(user_id)
-        user = SESSION.query(GDel).get(user_id)
+        user = SESSION.query(GDel).get(str(user_id))
         if user:
             SESSION.delete(user)
             SESSION.commit()
@@ -77,8 +75,7 @@ def del_gdel(user_id):
 
 def set_gdel_reason(user_id, reason):
     with _GDEL_LOCK:
-        user_id = str(user_id)
-        user = SESSION.query(GDel).get(user_id)
+        user = SESSION.query(GDel).get(str(user_id))
         if not user:
             return ""
         prev_reason = user.reason
