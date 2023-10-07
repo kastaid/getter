@@ -82,6 +82,8 @@ class Message(typ.Message):
                             link_preview=link_preview,
                             **args,
                         )
+                        if self.fwd_from or not self.out or not self._client:
+                            return None
             except MessageIdInvalidError:  # keep functions running
                 return None
             except MessageNotModifiedError:
