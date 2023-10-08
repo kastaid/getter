@@ -1,6 +1,6 @@
 loguru==0.7.2
 python-dotenv==1.0.0
-git+https://github.com/kastaid/Telethon@main
+https://github.com/kastaid/Telethon/archive/main.tar.gz
 cryptg==0.4.0
 pytz==2022.7
 psutil==5.9.5
