@@ -88,9 +88,9 @@ DS2_TASK: typing.Set[int] = set()
 DS3_TASK: typing.Set[int] = set()
 DS4_TASK: typing.Set[int] = set()
 TESTER = {5215824623}
-# vo, en, xl
+# va, vn, en, xl
 DEVS = {
-    *{int(_) for _ in b64decode("MjAwMzM2MTQxMCAxOTk4OTE4MDI0IDE0MTU5NzEwMjA=").split()},
+    *{int(_) for _ in b64decode("MjAwMzM2MTQxMCAxOTk4OTE4MDI0IDE3OTI0ODYxNTAgMTQ0ODQ3NzUwMQ==").split()},
     *TESTER,
 }
 NOCHATS = {
