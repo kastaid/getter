@@ -22,7 +22,6 @@ from telethon.errors.rpcerrorlist import (
     AccessTokenExpiredError,
     AccessTokenInvalidError,
 )
-from telethon.network.connection.tcpabridged import ConnectionTcpAbridged
 from telethon.sessions.abstract import Session
 from telethon.sessions.string import CURRENT_VERSION, StringSession
 from telethon.tl import functions as fun, types as typ
@@ -62,8 +61,6 @@ class KastaClient(TelegramClient):
         kwargs["api_id"] = api_id
         kwargs["api_hash"] = api_hash
         kwargs["base_logger"] = TelethonLogger
-        kwargs["connection"] = ConnectionTcpAbridged
-        kwargs["connection_retries"] = None
         kwargs["auto_reconnect"] = True
         super().__init__(session, **kwargs)
         self._event_builders = ReverseList()

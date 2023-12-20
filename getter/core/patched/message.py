@@ -39,7 +39,7 @@ class Message(typ.Message):
     ) -> typing.Optional[typing.Union[typ.Message, typing.Sequence[typ.messages.AffectedMessages]]]:
         if self is None:
             return
-        _ = args.get("reply_to", None)
+        _ = args.get("reply_to")
         reply_to = _ if _ else (self.reply_to_msg_id or (self if force_reply else None))
         is_file = "file" in args and args.get("file", "") and not self.media
         for arg in (
@@ -198,7 +198,7 @@ class Message(typ.Message):
         if self is None:
             return
         chat_id = chat_id or self.chat_id
-        _ = args.get("reply_to", None)
+        _ = args.get("reply_to")
         reply_to = _ if _ else (self.reply_to_msg_id or (self if force_reply else None))
         is_file = "file" in args and args.get("file", "") and not self.media
         for arg in (
