@@ -15,12 +15,13 @@ from logging import Logger
 from random import choice
 from time import time
 from telethon.client.telegramclient import TelegramClient
-from telethon.errors.rpcerrorlist import (
+from telethon.errors import (
     ApiIdInvalidError,
     AuthKeyDuplicatedError,
     PhoneNumberInvalidError,
     AccessTokenExpiredError,
     AccessTokenInvalidError,
+    InvalidBufferError,
 )
 from telethon.sessions.abstract import Session
 from telethon.sessions.string import CURRENT_VERSION, StringSession
@@ -142,7 +143,20 @@ class KastaClient(TelegramClient):
         return self.loop.run_until_complete(func)
 
     def run(self) -> typing.NoReturn:
-        self.run_until_disconnected()
+        try:
+            self.run_until_disconnected()
+        except InvalidBufferError as err:
+            self.logs.exception(err)
+            self.logs.error("Client was stopped, restarting...")
+            try:
+                import psutil
+
+                proc = psutil.Process(os.getpid())
+                for _ in proc.open_files() + proc.connections():
+                    os.close(_.fd)
+            except BaseException:
+                pass
+            os.execl(sys.executable, sys.executable, "-m", "getter")
 
     def add_handler(
         self,
