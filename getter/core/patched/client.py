@@ -5,8 +5,8 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
 import typing
+from asyncio import sleep
 from random import randrange
 from telethon import hints, utils
 from telethon.client.telegramclient import TelegramClient
@@ -164,10 +164,10 @@ class Client:
                 )
             )
             chat_id = created.chats[0].id
-            await asyncio.sleep(6)
+            await sleep(6)
             link = await self(fun.messages.ExportChatInviteRequest(chat_id))
             if users:
-                await asyncio.sleep(6)
+                await sleep(6)
                 await self(
                     fun.channels.InviteToChannelRequest(
                         chat_id,
@@ -175,7 +175,7 @@ class Client:
                     )
                 )
             if photo:
-                await asyncio.sleep(6)
+                await sleep(6)
                 await self(
                     fun.channels.EditPhotoRequest(
                         chat_id,
@@ -183,7 +183,7 @@ class Client:
                     ),
                 )
         except Exception as err:
-            self.logs.critical(err)
+            self.log.critical(err)
             return None, None
         if not str(chat_id).startswith("-100"):
             chat_id = int("-100" + str(chat_id))
@@ -214,6 +214,6 @@ class Client:
             msg = None
             for part in parts[:-1]:
                 msg = await self.send_message(entity, part, **kwargs)
-                await asyncio.sleep(randrange(1, 3))
+                await sleep(randrange(1, 3))
             return msg
         return await self.send_message(entity, text, **kwargs)

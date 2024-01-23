@@ -5,9 +5,9 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
+from asyncio import sleep, Lock
 from datetime import datetime
-from time import time
+from time import monotonic
 from . import (
     DEVS,
     kasta_cmd,
@@ -34,8 +34,7 @@ fungban_text = r"""
 
 <i>Wait for 1 minutes before released.</i>
 """
-_FGBAN_LOCK = asyncio.Lock()
-_FUNGBAN_LOCK = asyncio.Lock()
+_FGBAN_LOCK, _FUNGBAN_LOCK = Lock(), Lock()
 
 
 @kasta_cmd(
@@ -51,7 +50,7 @@ _FUNGBAN_LOCK = asyncio.Lock()
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await sleep(choice((4, 6, 8)))
     if not kst.is_dev and _FGBAN_LOCK.locked():
         await kst.eor("`Please wait until previous •gban• finished...`", time=5, silent=True)
         return
@@ -65,7 +64,7 @@ async def _(kst):
             return await yy.eor("`Cannot gban to myself.`", time=3)
         if user.id in DEVS:
             return await yy.eor("`Forbidden to gban our awesome developers.`", time=3)
-        start_time, date = time(), datetime.now().timestamp()
+        start_time, date = monotonic(), datetime.now().timestamp()
         done = 0
         if ga._dialogs:
             dialog = ga._dialogs
@@ -74,9 +73,9 @@ async def _(kst):
             ga._dialogs.extend(dialog)
         for gg in dialog:
             if gg.is_group or gg.is_channel:
-                await asyncio.sleep(0.2)
+                await sleep(0.2)
                 done += 1
-        taken = time_formatter((time() - start_time) * 1000)
+        taken = time_formatter((monotonic() - start_time) * 1000)
         text = fgban_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             done,
@@ -101,7 +100,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await sleep(choice((4, 6, 8)))
     if not kst.is_dev and _FUNGBAN_LOCK.locked():
         await kst.eor("`Please wait until previous •ungban• finished...`", time=5, silent=True)
         return
@@ -114,7 +113,7 @@ async def _(kst):
         if user.id == ga.uid:
             return await yy.eor("`Cannot ungban to myself.`", time=3)
         yy = await yy.reply("`Force UnGBanning...`", silent=True)
-        start_time, done = time(), 0
+        start_time, done = monotonic(), 0
         if ga._dialogs:
             dialog = ga._dialogs
         else:
@@ -122,9 +121,9 @@ async def _(kst):
             ga._dialogs.extend(dialog)
         for gg in dialog:
             if gg.is_group or gg.is_channel:
-                await asyncio.sleep(0.2)
+                await sleep(0.2)
                 done += 1
-        taken = time_formatter((time() - start_time) * 1000)
+        taken = time_formatter((monotonic() - start_time) * 1000)
         text = fungban_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             done,

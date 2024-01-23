@@ -9,5 +9,5 @@ services:
       - ./:/app
     env_file:
       - config.env
-    restart: no
+    restart: on-failure
     network_mode: bridge

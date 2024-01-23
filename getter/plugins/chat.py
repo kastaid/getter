@@ -5,8 +5,8 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
-from telethon.errors.rpcerrorlist import UserBotError
+from asyncio import sleep
+from telethon.errors import UserBotError
 from telethon.tl import functions as fun, types as typ
 from . import (
     DEVS,
@@ -88,7 +88,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((1, 2, 3)))
+        await sleep(choice((1, 2, 3)))
     ga = kst.client
     chat = await kst.get_input_chat()
     num = kst.pattern_match.group(2)
@@ -170,7 +170,7 @@ async def _(kst):
         try:
             await x.delete()
             count += 1
-            await asyncio.sleep(0.3)
+            await sleep(0.3)
         except BaseException:
             pass
     if not count:
@@ -190,7 +190,7 @@ async def _(kst):
             try:
                 await ga.delete_chat(x.id, revoke=True)
                 count += 1
-                await asyncio.sleep(0.3)
+                await sleep(0.3)
             except BaseException:
                 pass
     if not count:
@@ -219,10 +219,10 @@ async def _(kst):
         ):
             try:
                 await ga.mute_chat(x.id)
-                await asyncio.sleep(0.4)
+                await sleep(0.4)
                 await ga.archive(x.id)
                 count += 1
-                await asyncio.sleep(0.3)
+                await sleep(0.3)
             except BaseException:
                 pass
     if not count:
@@ -318,7 +318,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await sleep(choice((4, 6, 8)))
     ga = kst.client
     chat_id = kst.chat_id
     yy = await kst.eor("`Reporting...`", silent=True)

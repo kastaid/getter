@@ -5,10 +5,10 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
 import re
 import sys
 import typing
+from asyncio import sleep
 from contextlib import suppress
 from datetime import datetime, timezone
 from functools import wraps
@@ -17,7 +17,7 @@ from io import BytesIO
 from pathlib import Path
 from traceback import format_exc
 from telethon import hints, events
-from telethon.errors.rpcerrorlist import (
+from telethon.errors import (
     AuthKeyDuplicatedError,
     ChatSendGifsForbiddenError,
     ChatSendInlineForbiddenError,
@@ -112,7 +112,7 @@ def kasta_cmd(
                     fallbacks=None,
                 )
                 if myself in KASTA_BLACKLIST:
-                    kst.client.logs.error(
+                    kst.client.log.error(
                         "({} - {}) YOU ARE BLACKLISTED !!".format(
                             kst.client.full_name,
                             myself,
@@ -154,10 +154,10 @@ def kasta_cmd(
             except FloodWaitError as fw:
                 FLOOD_WAIT = fw.seconds
                 FLOOD_WAIT_HUMAN = time_formatter((FLOOD_WAIT + 10) * 1000)
-                kst.client.logs.warning(
+                kst.client.log.warning(
                     f"A FloodWait Error of {FLOOD_WAIT}. Sleeping for {FLOOD_WAIT_HUMAN} and try again."
                 )
-                await asyncio.sleep(FLOOD_WAIT + 10)
+                await sleep(FLOOD_WAIT + 10)
                 return  # safety first
             except (
                 MessageIdInvalidError,
@@ -173,12 +173,12 @@ def kasta_cmd(
             ):
                 pass
             except AuthKeyDuplicatedError:
-                kst.client.logs.critical("STRING_SESSION expired, please create new! Quitting...")
+                kst.client.log.critical("STRING_SESSION expired, please create new! Quitting...")
                 sys.exit(0)
             except events.StopPropagation:
                 raise events.StopPropagation
             except Exception as err:
-                kst.client.logs.exception(f"[KASTA_CMD] - {err}")
+                kst.client.log.exception(f"[KASTA_CMD] - {err}")
                 date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
                 if kst.is_private:
                     chat_type = "private"
@@ -338,7 +338,7 @@ async def sendlog(
             **args,
         )
     except FloodWaitError as fw:
-        await asyncio.sleep(fw.seconds + 10)
+        await sleep(fw.seconds + 10)
         return await sendlog(
             message=message,
             forward=forward,
@@ -346,5 +346,5 @@ async def sendlog(
             **args,
         )
     except Exception as err:
-        getter_app.logs.exception(err)
+        getter_app.log.exception(err)
         return None

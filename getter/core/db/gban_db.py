@@ -8,7 +8,7 @@
 
 from .engine import *
 
-_GBAN_CACHE = TTLCache(maxsize=1024, ttl=60, timer=perf_counter)  # 1 mins
+_GBAN_CACHE = TTLCache(maxsize=1024, ttl=60)  # 1 mins
 _GBAN_LOCK = RLock()
 
 

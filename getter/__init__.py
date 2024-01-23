@@ -28,27 +28,26 @@ if not sys.platform.startswith("linux"):
     sys.exit(1)
 if "/com.termux" in sys.executable:
     print("You are detected using Termux, maybe the functionality will not work normally.")
-if sys.version_info < (3, 9, 0):
-    print(f"You must use at least Python version 3.9.0, currently {__pyversion__}. Quitting...")
+if sys.version_info < (3, 10, 0):
+    print(f"You must use at least Python version 3.10.0, currently {__pyversion__}. Quitting...")
     sys.exit(1)
 
 Root: Path = Path(__file__).parent.parent
 LOOP = uvloop.new_event_loop()
 set_event_loop(LOOP)
-WORKERS = cpu_count() * 5
-EXECUTOR = ThreadPoolExecutor(max_workers=WORKERS, thread_name_prefix="Getter")
+WORKERS = min(32, (cpu_count() or 1) + 4)
+EXECUTOR = ThreadPoolExecutor(max_workers=WORKERS)
 
-DIRS = (
+for d in (
     "logs/",
     "downloads/",
-)
-for d in DIRS:
+):
     if not (Root / d).exists():
         (Root / d).mkdir(parents=True, exist_ok=True)
     else:
         for _ in (Root / d).rglob("*"):
             if _.is_dir():
-                rmtree(_)
+                rmtree(_, ignore_errors=True)
             else:
                 _.unlink(missing_ok=True)
 [_.unlink(missing_ok=True) for _ in Root.rglob("*s_list.csv")]

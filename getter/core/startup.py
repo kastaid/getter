@@ -13,7 +13,7 @@ from async_timeout import timeout as WaitFor
 from telethon.tl import functions as fun, types as typ
 from .. import __version__, LOOP, EXECUTOR
 from ..config import Var, DEVS
-from ..logger import LOGS
+from ..logger import LOG
 from .base_client import getter_app
 from .db.globals_db import gvar, sgvar, dgvar
 from .helper import hk, get_botlogs
@@ -63,7 +63,7 @@ _reboot_text = r"""
 
 
 async def shutdown(signum: str) -> None:
-    LOGS.warning(f"Stop signal received : {signum}")
+    LOG.warning(f"Stop signal received : {signum}")
     try:
         await getter_app.disconnect()
     except BaseException:
@@ -85,14 +85,14 @@ def trap() -> None:
 def migrations(app: typing.Any = None) -> None:
     if Var.DEV_MODE or not hk.is_heroku:
         return
-    LOGS.info(">> Migrations...")
+    LOG.info(">> Migrations...")
     try:
         if not app:
             app = hk.heroku().app(hk.name)
     except Exception as err:
-        LOGS.exception(err)
+        LOG.exception(err)
         return
-    LOGS.warning(
+    LOG.warning(
         "Heroku free tier discountinued as of 11/28/2022, read more details at https://blog.heroku.com/next-chapter"
     )
     """
@@ -124,14 +124,14 @@ def migrations(app: typing.Any = None) -> None:
 async def autopilot() -> None:
     if Var.BOTLOGS or gvar("BOTLOGS"):
         return
-    LOGS.info(">> Auto-Pilot...")
+    LOG.info(">> Auto-Pilot...")
     photo = None
     try:
         photo = await getter_app.upload_file("assets/getter_botlogs.png")
         await asyncio.sleep(2)
     except BaseException:
         pass
-    LOGS.info("Creating a group for BOTLOGS...")
+    LOG.info("Creating a group for BOTLOGS...")
     _, chat_id = await getter_app.create_group(
         title="GETTER BOTLOGS",
         about="",
@@ -139,7 +139,7 @@ async def autopilot() -> None:
         photo=photo,
     )
     if not chat_id:
-        LOGS.warning("Something happened while creating a group for BOTLOGS, please report this one to our developers!")
+        LOG.warning("Something happened while creating a group for BOTLOGS, please report this one to our developers!")
         return
     sgvar("BOTLOGS", chat_id)
     try:
@@ -158,11 +158,11 @@ async def autopilot() -> None:
         await msg.pin(notify=True)
     except BaseException:
         pass
-    LOGS.success("Successfully to created a group for BOTLOGS.")
+    LOG.success("Successfully to created a group for BOTLOGS.")
     await asyncio.sleep(1)
     print(f"\nBOTLOGS = {chat_id}\n")
     await asyncio.sleep(1)
-    LOGS.info("Save the BOTLOGS ID above, might be useful for the future :)")
+    LOG.info("Save the BOTLOGS ID above, might be useful for the future :)")
 
 
 async def verify() -> None:
@@ -177,7 +177,7 @@ async def verify() -> None:
     if not ls:
         return
     if not (isinstance(ls, typ.User) and ls.creator) and ls.default_banned_rights.send_messages:
-        LOGS.critical(
+        LOG.critical(
             "Your account doesn't have permission to send messages in the BOTLOGS group. Please re-check that ID is correct or change the group permissions to send messages and send media!"
         )
 

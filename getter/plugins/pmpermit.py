@@ -5,10 +5,9 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
+from asyncio import sleep
 from datetime import datetime
 from html import escape
-from time import perf_counter
 from cachetools import TTLCache
 from telethon.tl import functions as fun, types as typ
 from . import (
@@ -51,9 +50,9 @@ _TORM = {
     "-": "",
     "~": "",
 }
-_PMBYE_CACHE = TTLCache(maxsize=1, ttl=60, timer=perf_counter)  # 1 mins
-_PMMSG_CACHE = TTLCache(maxsize=1, ttl=60, timer=perf_counter)  # 1 mins
-_PMTOTAL_CACHE = TTLCache(maxsize=1, ttl=60, timer=perf_counter)  # 1 mins
+_PMBYE_CACHE = TTLCache(maxsize=1, ttl=60)  # 1 mins
+_PMMSG_CACHE = TTLCache(maxsize=1, ttl=60)  # 1 mins
+_PMTOTAL_CACHE = TTLCache(maxsize=1, ttl=60)  # 1 mins
 
 
 async def PMLogs(kst):
@@ -193,7 +192,7 @@ async def PMPermit(kst):
                 await sendlog(r"\\**#Blocked**//" + warnt)
         else:
             await ga.mute_chat(user.id)
-            await asyncio.sleep(0.4)
+            await sleep(0.4)
             await ga.archive(user.id)
             if is_pmlog:
                 warnt += "archived due to spamming in PM !!"
@@ -225,7 +224,7 @@ async def PMPermit(kst):
         await ga.delete_messages(user.id, [NESLAST[towarn]])
     except BaseException:
         pass
-    await asyncio.sleep(1)
+    await sleep(1)
     last = await kst.reply(text)
     NESLAST[towarn] = last.id
     add_col("pmwarns", PMWARN, NESLAST)
@@ -234,7 +233,7 @@ async def PMPermit(kst):
         newmsgt = r"\\**#New_Message**//"
         newmsgt += f"\nUser {mention} [`{user.id}`] has messaged you with **{warn}/{ratelimit}** warns!"
         await sendlog(newmsgt)
-        await asyncio.sleep(1)
+        await sleep(1)
         await sendlog(kst.message, forward=True)
 
 
@@ -314,7 +313,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await sleep(choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Processing...`", silent=True)
     user, reason = await ga.get_user(kst, group=2)
@@ -349,7 +348,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await sleep(choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Processing...`", silent=True)
     user, _ = await ga.get_user(kst)
@@ -551,7 +550,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await sleep(choice((4, 6, 8)))
     ga = kst.client
     chat_id = kst.chat_id
     yy = await kst.eor("`Processing...`", silent=True)
@@ -612,7 +611,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await sleep(choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Processing...`", silent=True)
     user, _ = await ga.get_user(kst)
@@ -643,7 +642,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await sleep(choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Processing...`", silent=True)
     user, _ = await ga.get_user(kst)
@@ -654,7 +653,7 @@ async def _(kst):
     if user.id in DEVS:
         return await yy.eor("`Forbidden to archive our awesome developers.`", time=3)
     await ga.mute_chat(user.id)
-    await asyncio.sleep(0.4)
+    await sleep(0.4)
     is_archive = await ga.archive(user.id)
     if not (is_archive is None):
         text = "`Archived!`"
@@ -682,7 +681,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await sleep(choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Processing...`", silent=True)
     user, _ = await ga.get_user(kst)

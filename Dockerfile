@@ -10,9 +10,8 @@ FROM python:3.10-slim-bullseye
 ENV TZ=Asia/Jakarta \
     TERM=xterm-256color \
     DEBIAN_FRONTEND=noninteractive \
-    PIP_NO_CACHE_DIR=1 \
-    VIRTUAL_ENV=/venv \
-    PATH=/venv/bin:/app/bin:$PATH \
+    VIRTUAL_ENV=/opt/venv \
+    PATH=/opt/venv/bin:/app/bin:$PATH \
     CHROME_BIN=/usr/bin/google-chrome \
     DISPLAY=:99
 
@@ -59,12 +58,12 @@ RUN set -ex \
     && $(command -v chromedriver) --version \
     && cp -rf .config ~/ \
     && python3 -m venv $VIRTUAL_ENV \
-    && pip3 install --disable-pip-version-check --default-timeout=100 --no-cache-dir -r requirements.txt \
+    && pip3 install --disable-pip-version-check --default-timeout=100 -r requirements.txt \
     && apt-get -qqy purge --auto-remove \
         unzip \
         build-essential \
     && apt-get -qqy clean \
-    && rm -rf -- ~/.cache /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/* /usr/share/man/* /usr/share/doc/* /var/log/* /tmp/* /var/tmp/*
+    && rm -rf -- /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/* /usr/share/man/* /usr/share/doc/* /var/log/* /tmp/* /var/tmp/*
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["python3", "-m", "getter"]
