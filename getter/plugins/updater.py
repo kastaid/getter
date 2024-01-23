@@ -5,9 +5,9 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
 import os
 import sys
+from asyncio import sleep, Lock
 from datetime import datetime, timezone
 import aiofiles
 from git import Repo
@@ -35,7 +35,7 @@ from . import (
     hk,
 )
 
-_UPDATE_LOCK = asyncio.Lock()
+_UPDATE_LOCK = Lock()
 UPSTREAM_REPO = "https://github.com/kastaid/getter.git"
 UPSTREAM_BRANCH = "main"
 help_text = f"""
@@ -106,7 +106,7 @@ async def _(kst):
             if not user_id and version == __version__:
                 return
         if kst.is_dev:
-            await asyncio.sleep(choice((5, 7, 9)))
+            await sleep(choice((5, 7, 9)))
         yy = await kst.eor(f"`{state}Fetching...`", silent=True)
         try:
             repo = Repo()
@@ -126,7 +126,7 @@ async def _(kst):
         await Runner(f"git fetch origin {UPSTREAM_BRANCH}")
         if is_deploy:
             if kst.is_dev:
-                await asyncio.sleep(5)
+                await sleep(5)
             await yy.eor(f"`{state}Updating ~ Please Wait...`")
             await Pushing(yy, state, repo)
             return
@@ -142,7 +142,7 @@ async def _(kst):
             await show_changelog(yy, changelog)
             return
         if is_force:
-            await asyncio.sleep(3)
+            await sleep(3)
         if is_now or is_force:
             await yy.eor(f"`{state}Updating ~ Please Wait...`")
             await Pulling(yy, state)
@@ -190,9 +190,9 @@ async def _(kst):
                 return
             clean = True
         if not clean:
-            await asyncio.sleep(choice((4, 6, 8)))
+            await sleep(choice((4, 6, 8)))
     if kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await sleep(choice((4, 6, 8)))
     # http://www.timebie.com/std/utc
     utc_now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
@@ -236,9 +236,7 @@ async def ignores() -> None:
 
 async def update_packages() -> None:
     reqs = Root / "requirements.txt"
-    await Runner(
-        f"{sys.executable} -m pip install --disable-pip-version-check --default-timeout=100 --no-cache-dir -U -r {reqs}"
-    )
+    await Runner(f"{sys.executable} -m pip install --disable-pip-version-check --default-timeout=100 -U -r {reqs}")
 
 
 async def force_pull() -> None:

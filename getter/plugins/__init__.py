@@ -21,6 +21,6 @@ from getter import (
 )
 from getter.config import *
 from getter.core import *
-from getter.logger import LOGS
+from getter.logger import LOG
 
 BOTLOGS = get_botlogs()  # cool yeah?

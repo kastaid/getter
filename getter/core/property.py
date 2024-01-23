@@ -5,16 +5,15 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
 import re
 import sys
 import typing
+from asyncio import sleep
 from base64 import b64decode
-from time import perf_counter
 from asyncache import cached
 from cachetools import TTLCache
 from .. import __license__, __copyright__
-from ..logger import LOGS
+from ..logger import LOG
 from .tools import Fetch
 
 _c, _u, _g = (
@@ -26,13 +25,13 @@ _c, _u, _g = (
 
 def do_not_remove_credit() -> None:
     if _c not in __copyright__:
-        LOGS.warning(__copyright__)
-        LOGS.warning("PLEASE RESPECT US, DO NOT REMOVE THE ORIGINAL CREDITS AND LICENSE !!")
-        LOGS.warning(__license__)
+        LOG.warning(__copyright__)
+        LOG.warning("PLEASE RESPECT US, DO NOT REMOVE THE ORIGINAL CREDITS AND LICENSE !!")
+        LOG.warning(__license__)
         sys.exit(1)
 
 
-@cached(TTLCache(maxsize=1024, ttl=(120 * 30), timer=perf_counter))  # 1 hours
+@cached(TTLCache(maxsize=1024, ttl=(120 * 30)))  # 1 hours
 async def get_blacklisted(
     url: str,
     is_json: bool = False,
@@ -50,7 +49,7 @@ async def get_blacklisted(
         count += 1
         if not res:
             if count != attempts:
-                await asyncio.sleep(1)
+                await sleep(1)
                 continue
             ids = fallbacks or []
             break

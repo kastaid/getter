@@ -5,13 +5,13 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
 import typing
+from asyncio import sleep
 from contextlib import suppress
 from io import BytesIO
 from telethon import hints
 from telethon.client.chats import _ChatAction
-from telethon.errors.rpcerrorlist import (
+from telethon.errors import (
     MessageIdInvalidError,
     MessageNotModifiedError,
     MediaCaptionTooLongError,
@@ -54,7 +54,7 @@ class Message(typ.Message):
                 del args[arg]
         if self.out and not isinstance(self, typ.MessageService):
             if edit_time:
-                await asyncio.sleep(edit_time)
+                await sleep(edit_time)
             if is_file or parts:
                 await self.delete()
             try:
@@ -170,7 +170,7 @@ class Message(typ.Message):
             except BaseException:
                 return None
         if yy and time:
-            await asyncio.sleep(time)
+            await sleep(time)
             return await yy.delete()
         return yy
 
@@ -270,7 +270,7 @@ class Message(typ.Message):
         except BaseException:
             return None
         if yy and time:
-            await asyncio.sleep(time)
+            await sleep(time)
             return await yy.delete()
         return yy
 

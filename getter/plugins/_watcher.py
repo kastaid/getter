@@ -42,7 +42,7 @@ async def OnNewMessageFunc(kst):
     except ConnectionError:
         pass
     except Exception as err:
-        kst.client.logs.exception(err)
+        kst.client.log.exception(err)
 
 
 @getter_app.on(
@@ -56,7 +56,7 @@ async def OnChatActionFunc(kst):
     except ConnectionError:
         pass
     except Exception as err:
-        kst.client.logs.exception(err)
+        kst.client.log.exception(err)
 
 
 async def DeletedUserHandler(kst):

@@ -5,8 +5,8 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
-from telethon.errors.rpcerrorlist import YouBlockedUserError
+from asyncio import exceptions
+from telethon.errors import YouBlockedUserError
 from . import kasta_cmd, plugins_help, events
 
 TW_BOT = "tweedlbot"
@@ -78,7 +78,7 @@ async def conv_tt(conv, link):
             clear_reactions=True,
         )
         return resp
-    except asyncio.exceptions.TimeoutError:
+    except exceptions.TimeoutError:
         return None
     except YouBlockedUserError:
         await conv._client.unblock(conv.chat_id)
@@ -100,7 +100,7 @@ async def conv_tw(conv, link):
             clear_reactions=True,
         )
         return resp
-    except asyncio.exceptions.TimeoutError:
+    except exceptions.TimeoutError:
         return None
     except YouBlockedUserError:
         await conv._client.unblock(conv.chat_id)
