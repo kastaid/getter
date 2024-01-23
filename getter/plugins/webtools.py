@@ -6,7 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import urllib.parse
-from time import perf_counter
+from time import monotonic
 from validators.ip_address import ipv4
 from . import (
     kasta_cmd,
@@ -153,7 +153,7 @@ async def _(kst):
     pattern="speedtest$",
 )
 async def _(kst):
-    start = perf_counter()
+    start = monotonic()
     yy = await kst.eor("`Processing...`")
     try:
         import speedtest
@@ -169,7 +169,7 @@ async def _(kst):
         st.upload()
         resp = st.results.dict()
         client = resp.get("client")
-        text = """<b><u>SpeedTest completed in {}ms</u></b>
+        text = """<b><u>SpeedTest completed in {:.3f}s</u></b>
 ├  <b>Download:</b> <code>{}</code>
 ├  <b>Upload:</b> <code>{}</code>
 ├  <b>Ping:</b> <code>{}</code>
@@ -178,7 +178,7 @@ async def _(kst):
 ┊  ├  <b>IP:</b> <code>{}</code>
 ┊  ├  <b>Country:</b> <code>{}</code>
 └  <b>Sponsor:</b> <code>{}</code>""".format(
-            round(perf_counter() - start, 3),
+            monotonic() - start,
             humanbytes(resp.get("download")),
             humanbytes(resp.get("upload")),
             resp.get("ping"),

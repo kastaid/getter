@@ -5,10 +5,10 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
 import os
 import sys
-from time import sleep, perf_counter
+from asyncio import sleep
+from time import sleep as tsleep, monotonic
 import aiofiles
 from telethon.tl import functions as fun
 from . import (
@@ -46,12 +46,12 @@ async def _(kst):
     edited=True,
 )
 async def _(kst):
-    start_time = perf_counter()
+    start = monotonic()
     await kst.client(fun.PingRequest(ping_id=0))
-    speedy = round(perf_counter() - start_time, 3)
+    speedy = monotonic() - start
     uptime = kst.client.uptime
     await kst.eor(
-        f"🏓 Pong !!\n├  <b>Speedy</b> – <code>{speedy}ms</code>\n├  <b>Uptime</b> – <code>{uptime}</code>\n└  <b>Version</b> – <code>{__version__}</code>",
+        f"🏓 Pong !!\n├  <b>Speedy</b> – <code>{speedy:.3f}s</code>\n├  <b>Uptime</b> – <code>{uptime}</code>\n└  <b>Version</b> – <code>{__version__}</code>",
         parse_mode="html",
     )
 
@@ -74,7 +74,7 @@ async def _(kst):
             pass
         if user_id and user_id != kst.client.uid:
             return
-        await asyncio.sleep(choice((4, 6, 8)))
+        await sleep(choice((4, 6, 8)))
     yy = await kst.eor("`Getting...`", silent=True)
     if mode == "heroku":
         return await heroku_logs(yy)
@@ -136,7 +136,7 @@ async def _(kst):
             pass
         if user_id and user_id != kst.client.uid:
             return
-        await asyncio.sleep(choice((4, 6, 8)))
+        await sleep(choice((4, 6, 8)))
     yy = await kst.eor("`Restarting...`", silent=True)
     try:
         chat_id = yy.chat_id or yy.from_id
@@ -165,7 +165,7 @@ async def _(kst):
     timer = int(sec) if sec.replace(".", "", 1).isdecimal() else 3
     timer = 3 if timer > 30 else timer
     yy = await kst.eor(f"`sleep in {timer} seconds...`")
-    sleep(timer)
+    tsleep(timer)
     await yy.eod(f"`wake-up from {timer} seconds`")
 
 

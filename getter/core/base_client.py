@@ -5,13 +5,13 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
 import importlib.util
-import inspect
 import os
 import sys
 import typing
-from logging import Logger
+from asyncio import sleep, Future
+from inspect import getmembers
+from platform import version, machine
 from random import choice
 from time import time
 from telethon.client.telegramclient import TelegramClient
@@ -33,7 +33,7 @@ from .. import (
     LOOP,
 )
 from ..config import Var, DEVS
-from ..logger import LOGS, TelethonLogger
+from ..logger import LOG, TelethonLogger
 from .db import sgvar
 from .functions import display_name
 from .property import do_not_remove_credit, get_blacklisted
@@ -52,17 +52,23 @@ class KastaClient(TelegramClient):
         api_id: typing.Optional[int] = None,
         api_hash: typing.Optional[str] = None,
         bot_token: typing.Optional[str] = None,
-        logs: Logger = LOGS,
         *args,
         **kwargs,
     ):
         self._dialogs = []
         self._plugins = {}
-        self.logs = logs
+        self.log = LOG
         kwargs["api_id"] = api_id
         kwargs["api_hash"] = api_hash
-        kwargs["base_logger"] = TelethonLogger
+        kwargs["request_retries"] = 3
+        kwargs["connection_retries"] = 3
         kwargs["auto_reconnect"] = True
+        kwargs["device_model"] = "Getter"
+        kwargs["system_version"] = " ".join((version(), machine()))
+        kwargs["app_version"] = __version__
+        kwargs["loop"] = LOOP
+        kwargs["base_logger"] = TelethonLogger
+        kwargs["entity_cache_limit"] = 1000
         super().__init__(session, **kwargs)
         self._event_builders = ReverseList()
         self.run_in_loop(self.start_client(bot_token=bot_token))
@@ -81,9 +87,9 @@ class KastaClient(TelegramClient):
             return self.me.to_dict()
 
     async def start_client(self, **kwargs) -> None:
-        self.logs.info("Trying to login...")
+        self.log.info("Trying to login...")
         do_not_remove_credit()
-        await asyncio.sleep(choice((4, 6, 8)))
+        await sleep(choice((4, 6, 8)))
         try:
             await self.start(**kwargs)
             self._bot = await self.is_bot()
@@ -92,18 +98,18 @@ class KastaClient(TelegramClient):
                 for opt in cfg.dc_options:
                     if opt.ip_address == self.session.server_address:
                         if self.session.dc_id != opt.id:
-                            self.logs.warning(f"Fixed DC ID in session from {self.session.dc_id} to {opt.id}")
+                            self.log.warning(f"Fixed DC ID in session from {self.session.dc_id} to {opt.id}")
                         self.session.set_dc(opt.id, opt.ip_address, opt.port)
                         self.session.save()
                         break
-            await asyncio.sleep(5)
+            await sleep(5)
             self.me = await self.get_me()
             if self.me.bot:
                 me = f"@{self.me.username}"
             else:
                 self.me.phone = None
                 me = self.full_name
-            await asyncio.sleep(5)
+            await sleep(5)
             if self.uid not in DEVS:
                 KASTA_BLACKLIST = await get_blacklisted(
                     url="https://raw.githubusercontent.com/kastaid/resources/main/kastablacklist.py",
@@ -111,32 +117,32 @@ class KastaClient(TelegramClient):
                     fallbacks=None,
                 )
                 if self.uid in KASTA_BLACKLIST:
-                    self.logs.error(
+                    self.log.error(
                         "({} - {}) YOU ARE BLACKLISTED !!".format(
                             me,
                             self.uid,
                         )
                     )
                     sys.exit(1)
-            self.logs.success(
+            self.log.success(
                 "Logged in as {} [{}]".format(
                     me,
                     self.uid,
                 )
             )
         except (ValueError, ApiIdInvalidError):
-            self.logs.critical("API_ID and API_HASH combination does not match, please re-check! Quitting...")
+            self.log.critical("API_ID and API_HASH combination does not match, please re-check! Quitting...")
             sys.exit(1)
         except (AuthKeyDuplicatedError, PhoneNumberInvalidError, EOFError):
-            self.logs.critical("STRING_SESSION expired, please create new! Quitting...")
+            self.log.critical("STRING_SESSION expired, please create new! Quitting...")
             sys.exit(1)
         except (AccessTokenExpiredError, AccessTokenInvalidError):
-            self.logs.critical(
+            self.log.critical(
                 "Bot Token expired or invalid. Create new from @Botfather and update BOT_TOKEN in Config Vars!"
             )
             sys.exit(1)
         except Exception as err:
-            self.logs.exception(f"[KastaClient] - {err}")
+            self.log.exception(f"[KastaClient] - {err}")
             sys.exit(1)
 
     def run_in_loop(self, func: typing.Coroutine[typing.Any, typing.Any, None]) -> typing.Any:
@@ -146,8 +152,8 @@ class KastaClient(TelegramClient):
         try:
             self.run_until_disconnected()
         except InvalidBufferError as err:
-            self.logs.exception(err)
-            self.logs.error("Client was stopped, restarting...")
+            self.log.exception(err)
+            self.log.error("Client was stopped, restarting...")
             try:
                 import psutil
 
@@ -160,7 +166,7 @@ class KastaClient(TelegramClient):
 
     def add_handler(
         self,
-        func: asyncio.Future,
+        func: Future,
         *args,
         **kwargs,
     ) -> None:
@@ -196,11 +202,11 @@ class KastaClient(TelegramClient):
             mod = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(mod)
             self._plugins[plug] = mod
-            self.logs.success(f"Successfully loaded custom plugin {plug}!")
+            self.log.success(f"Successfully loaded custom plugin {plug}!")
             return True
         except Exception as err:
-            self.logs.warning(f"Failed to load custom plugin {plug}!")
-            self.logs.exception(err)
+            self.log.warning(f"Failed to load custom plugin {plug}!")
+            self.log.exception(err)
             return False
 
     def unload_plugin(
@@ -213,7 +219,7 @@ class KastaClient(TelegramClient):
             if cb.__module__ == name:
                 del self._event_builders[x]
         del self._plugins[plugin]
-        self.logs.success(f"Removed custom plugin {plugin}!")
+        self.log.success(f"Removed custom plugin {plugin}!")
 
     @property
     def all_plugins(self) -> typing.List[typing.Dict[str, str]]:
@@ -239,24 +245,21 @@ class KastaClient(TelegramClient):
         return time_formatter((time() - StartTime) * 1000)
 
     def to_dict(self) -> dict:
-        return dict(inspect.getmembers(self))
+        return dict(getmembers(self))
 
 
 _ssn = Var.STRING_SESSION
 if _ssn:
     if _ssn.startswith(CURRENT_VERSION) and len(_ssn) != 353:
-        LOGS.critical("STRING_SESSION wrong. Copy paste correctly! Quitting...")
+        LOG.critical("STRING_SESSION wrong. Copy paste correctly! Quitting...")
         sys.exit(1)
     session = StringSession(_ssn)
 else:
-    LOGS.critical("STRING_SESSION empty. Please filling! Quitting...")
+    LOG.critical("STRING_SESSION empty. Please filling! Quitting...")
     sys.exit(1)
 
 getter_app = KastaClient(
     session=session,
     api_id=Var.API_ID,
     api_hash=Var.API_HASH,
-    loop=LOOP,
-    app_version=__version__,
-    device_model="Getter",
 )

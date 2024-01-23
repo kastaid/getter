@@ -17,7 +17,7 @@ import aiofiles
 import aiohttp
 import telegraph
 from .. import __version__, LOOP, EXECUTOR
-from ..logger import LOGS
+from ..logger import LOG
 from .db import gvar, sgvar
 from .utils import get_random_hex
 
@@ -44,7 +44,7 @@ def import_lib(
     try:
         return import_module(lib_name)
     except ImportError:
-        done = subprocess.run(["python3", "-m", "pip", "install", "--no-cache-dir", "-U", pkg_name])
+        done = subprocess.run(["python3", "-m", "pip", "install", "-U", pkg_name])
         if done.returncode != 0:
             raise AssertionError(f"Failed to install library {pkg_name} (pip exited with code {done.returncode})")
         return import_module(lib_name)
@@ -226,7 +226,7 @@ def Pinger(addr: str) -> str:
             rtt_line = rtt_line.split("/")[0]
             return f"{rtt_line}ms"
         except Exception as err:
-            LOGS.warning(err)
+            LOG.warning(err)
     return "--ms"
 
 

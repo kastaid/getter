@@ -5,11 +5,11 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
+from asyncio import exceptions
 from mimetypes import guess_extension
 from random import randint, uniform
 from PIL import Image, ImageEnhance, ImageOps
-from telethon.errors.rpcerrorlist import YouBlockedUserError
+from telethon.errors import YouBlockedUserError
 from telethon.tl import types as typ
 from . import (
     Root,
@@ -143,7 +143,7 @@ async def conv_fry(conv, image, level):
         await yy.try_delete()
         await resp.read(clear_mentions=True, clear_reactions=True)
         return resp
-    except asyncio.exceptions.TimeoutError:
+    except exceptions.TimeoutError:
         return None
     except YouBlockedUserError:
         await conv._client.unblock(conv.chat_id)
