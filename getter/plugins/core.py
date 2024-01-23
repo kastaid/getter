@@ -501,7 +501,7 @@ async def _(kst):
             if not INVITE_WORKER.get(chat_id):
                 break
             if success == 50:
-                await yy.eor(f"`🔄 Reached 50 members, wait until {900/60} minutes...`")
+                await yy.eor(f"`🔄 Reached 50 members, wait until {900 / 60} minutes...`")
                 await sleep(900)
             try:
                 adding = typ.InputPeerUser(user["user_id"], user["hash"])
