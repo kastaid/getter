@@ -5,9 +5,9 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
+from asyncio import sleep
 from io import BytesIO
-from time import time
+from time import monotonic
 from . import (
     Root,
     kasta_cmd,
@@ -49,7 +49,7 @@ async def _(kst):
             lib_name="selenium.webdriver",
             pkg_name="selenium==4.8.2",
         )
-    start_time = time()
+    start_time = monotonic()
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")
     options.add_argument("--test-type")
@@ -77,11 +77,11 @@ async def _(kst):
     )
     driver.set_window_size(width + 125, height + 125)
     wait_for = height / 1000
-    await asyncio.sleep(int(wait_for))
+    await sleep(int(wait_for))
     ss_png = driver.get_screenshot_as_png()
     await yy.eor("`Screenshot Taked...`")
     driver.close()
-    taken = time_formatter((time() - start_time) * 1000)
+    taken = time_formatter((monotonic() - start_time) * 1000)
     with BytesIO(ss_png) as file:
         file.name = f"ss_{link}.png"
         await yy.eor(
@@ -117,7 +117,7 @@ async def _(kst):
     if not (check_link is True) or not tweetcapture.utils.utils.is_valid_tweet_url(link):
         return await kst.eod("`Input is not valid tweet link!`")
     yy = await kst.eor("`Processing...`")
-    start_time = time()
+    start_time = monotonic()
     tweet = tweetcapture.TweetCapture()
     tweet.set_chromedriver_path(CHROME_DRIVER)
     tweet.add_chrome_argument("--no-sandbox")
@@ -133,7 +133,7 @@ async def _(kst):
         await yy.eod("`Oops, the tweet not found or suspended account.`")
         return
     await yy.eor("`Tweet Screenshot Taked...`")
-    taken = time_formatter((time() - start_time) * 1000)
+    taken = time_formatter((monotonic() - start_time) * 1000)
     await yy.eor(
         f"**URL:** `{link}`\n**Taken:** `{taken}`",
         file=file,

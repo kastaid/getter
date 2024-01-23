@@ -5,7 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
+from asyncio import sleep
 from random import randrange
 from telethon.tl import types as typ
 from . import (
@@ -84,7 +84,7 @@ async def _(kst):
                 parse_mode="html",
             )
             limit += DEFAULT_PERUSER
-            await asyncio.sleep(randrange(5, 7))
+            await sleep(randrange(5, 7))
         except BaseException:
             pass
     if chat_id in ATAGS:
@@ -130,7 +130,7 @@ async def _(kst):
                 parse_mode="html",
             )
             limit += DEFAULT_PERUSER
-            await asyncio.sleep(randrange(5, 7))
+            await sleep(randrange(5, 7))
         except BaseException:
             pass
     if chat_id in ETAGS:

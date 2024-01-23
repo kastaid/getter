@@ -5,12 +5,12 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
+from asyncio import sleep, exceptions
 from html import escape
 from math import sqrt
-from time import time, perf_counter
+from time import monotonic
 from cachetools import LRUCache, TTLCache
-from telethon.errors.rpcerrorlist import YouBlockedUserError, FloodWaitError
+from telethon.errors import YouBlockedUserError, FloodWaitError
 from telethon.tl import functions as fun, types as typ, custom
 from . import (
     kasta_cmd,
@@ -34,12 +34,12 @@ from . import (
 SG_BOT = "SangMata_BOT"
 CREATED_BOT = "creationdatebot"
 ROSE_BOT = "MissRose_bot"
-_TOTAL_BOT_CACHE = TTLCache(maxsize=512, ttl=120, timer=perf_counter)  # 2 mins
-_CREATED_CACHE = TTLCache(maxsize=512, ttl=120, timer=perf_counter)  # 2 mins
+_TOTAL_BOT_CACHE = TTLCache(maxsize=512, ttl=120)  # 2 mins
+_CREATED_CACHE = TTLCache(maxsize=512, ttl=120)  # 2 mins
 _ROSE_LANG_CACHE = LRUCache(maxsize=512)
-_ROSE_STAT_CACHE = TTLCache(maxsize=512, ttl=120, timer=perf_counter)  # 2 mins
-_SPAMWATCH_CACHE = TTLCache(maxsize=512, ttl=120, timer=perf_counter)  # 2 mins
-_CAS_CACHE = TTLCache(maxsize=512, ttl=120, timer=perf_counter)  # 2 mins
+_ROSE_STAT_CACHE = TTLCache(maxsize=512, ttl=120)  # 2 mins
+_SPAMWATCH_CACHE = TTLCache(maxsize=512, ttl=120)  # 2 mins
+_CAS_CACHE = TTLCache(maxsize=512, ttl=120)  # 2 mins
 
 
 @kasta_cmd(
@@ -72,7 +72,7 @@ async def _(kst):
         while True:
             try:
                 resp = await conv.get_response(timeout=2)
-            except asyncio.exceptions.TimeoutError:
+            except exceptions.TimeoutError:
                 break
             texts.append(resp.message)
         if resp:
@@ -88,7 +88,7 @@ async def _(kst):
             silent=True,
             parse_mode=parse_pre,
         )
-        await asyncio.sleep(0.5)
+        await sleep(0.5)
 
 
 @kasta_cmd(
@@ -131,7 +131,7 @@ async def _(kst):
             from_user=from_user,
         )
     except FloodWaitError as fw:
-        await asyncio.sleep(fw.seconds + 10)
+        await sleep(fw.seconds + 10)
         msg = await ga.get_messages(
             chat,
             limit=0,
@@ -147,9 +147,8 @@ async def _(kst):
     pattern="stats?$",
 )
 async def _(kst):
+    start_time = monotonic()
     ga = kst.client
-    yy = await kst.eor("`Collecting Stats...`")
-    start_time = time()
     private_chats = 0
     bots = 0
     groups = 0
@@ -162,6 +161,7 @@ async def _(kst):
     unread_mentions = 0
     archived = 0
     dialog: custom.Dialog
+    yy = await kst.eor("`Collecting Stats...`")
     async for dialog in ga.iter_dialogs():
         entity = dialog.entity
         if isinstance(entity, typ.Channel) and entity.broadcast:
@@ -202,7 +202,7 @@ async def _(kst):
     gmuted_users = len(all_gmute())
     sudo_users = len(jdata.sudo_users)
     allowed_users = len(all_allow())
-    stop_time = time() - start_time
+    stop_time = monotonic() - start_time
     graph = """<b>Stats for {}</b>
 ├  <b>Private:</b> <code>{}</code>
 ┊  ├  <b>Users:</b> <code>{}</code>
@@ -252,7 +252,7 @@ async def _(kst):
         gmuted_users,
         sudo_users,
         allowed_users,
-        f"{stop_time:.02f}",
+        f"{stop_time:.3f}",
     )
     await yy.sod(graph, parse_mode="html")
 
@@ -707,7 +707,7 @@ async def conv_created(conv, user_id):
         created = getattr(resp.message, "message", None)
         _CREATED_CACHE[user_id] = created
         return created
-    except asyncio.exceptions.TimeoutError:
+    except exceptions.TimeoutError:
         return None
     except YouBlockedUserError:
         await conv._client.unblock(conv.chat_id)
@@ -730,7 +730,7 @@ async def conv_total_bot(conv, command):
             clear_reactions=True,
         )
         return resp
-    except asyncio.exceptions.TimeoutError:
+    except exceptions.TimeoutError:
         return None
     except YouBlockedUserError:
         await conv._client.unblock(conv.chat_id)
@@ -781,7 +781,7 @@ async def get_rose_fban(kst, user_id: int) -> bool:
                 await lang.try_delete()
             yy = await conv.send_message(f"/fedstat {user_id}")
         while True:
-            await asyncio.sleep(1.5)
+            await sleep(1.5)
             resp = await conv.get_response()
             await yy.try_delete()
             if not resp.message.lower().startswith("checking fbans"):

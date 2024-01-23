@@ -5,9 +5,9 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
 import base64
 import re
+from asyncio import sleep
 from string import ascii_lowercase
 from . import (
     kasta_cmd,
@@ -225,14 +225,14 @@ async def _(kst):
     typing_symbol = "|"
     prev_text = ""
     await yy.eor(typing_symbol)
-    await asyncio.sleep(0.3)
+    await sleep(0.3)
     for c in match:
         prev_text = prev_text + "" + c
         typing_text = prev_text + "" + typing_symbol
         await yy.eor(typing_text)
-        await asyncio.sleep(0.3)
+        await sleep(0.3)
         await yy.eor(prev_text)
-        await asyncio.sleep(0.3)
+        await sleep(0.3)
 
 
 @kasta_cmd(

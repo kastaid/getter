@@ -8,7 +8,7 @@
 
 from .engine import *
 
-_GDEL_CACHE = TTLCache(maxsize=1024, ttl=30, timer=perf_counter)  # 0.5 mins
+_GDEL_CACHE = TTLCache(maxsize=1024, ttl=30)  # 0.5 mins
 _GDEL_LOCK = RLock()
 
 

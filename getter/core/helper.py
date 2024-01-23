@@ -5,12 +5,12 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import html
 import typing
+from html import escape
 from cachetools import cached, LRUCache
 from heroku3 import from_key
 from ..config import Var, BOTLOGS_CACHE
-from ..logger import LOGS
+from ..logger import LOG
 from .db import gvar, get_col
 from .utils import get_full_class_name
 
@@ -68,7 +68,7 @@ class Heroku:
             if self.is_heroku:
                 _conn = from_key(self.api)
         except BaseException as err:
-            LOGS.exception(err)
+            LOG.exception(err)
         return _conn
 
     @property
@@ -96,7 +96,7 @@ def get_botlogs() -> int:
 
 def formatx_send(err: Exception) -> str:
     _ = r"\\<b>#Getter_Error</b>//"
-    _ += "\n<pre>{}: {}</pre>".format(get_full_class_name(err), html.escape(str(err)))
+    _ += "\n<pre>{}: {}</pre>".format(get_full_class_name(err), escape(str(err)))
     return _
 
 

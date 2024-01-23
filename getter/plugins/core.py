@@ -5,13 +5,13 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import asyncio
 import csv
+from asyncio import sleep, Lock, exceptions
 from datetime import datetime
-from time import time
+from time import monotonic
 import aiofiles
 from aiocsv import AsyncDictReader, AsyncWriter
-from telethon.errors.rpcerrorlist import (
+from telethon.errors import (
     ChannelPrivateError,
     FloodWaitError,
     InputUserDeactivatedError,
@@ -105,9 +105,7 @@ cancelled_text = """
 **{}:** `{}`
 **Time:** `{}`
 """
-_INVITING_LOCK = asyncio.Lock()
-_SCRAPING_LOCK = asyncio.Lock()
-_ADDING_LOCK = asyncio.Lock()
+_INVITING_LOCK, _SCRAPING_LOCK, _ADDING_LOCK = Lock(), Lock(), Lock()
 
 
 @kasta_cmd(
@@ -123,7 +121,7 @@ _ADDING_LOCK = asyncio.Lock()
 async def _(kst):
     ga = kst.client
     if kst.is_dev:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await sleep(choice((4, 6, 8)))
     yy = await kst.eor("`Checking...`", silent=True)
     resp = None
     bot = "SpamBot"
@@ -140,7 +138,7 @@ async def _(kst):
             await conv.send_message("/start")
             resp = await resp
             await conv.read()
-        except asyncio.exceptions.TimeoutError:
+        except exceptions.TimeoutError:
             pass
     if not resp:
         return yy.try_delete()
@@ -161,7 +159,7 @@ async def _(kst):
     if kst.is_dev:
         if kst.client.uid in DEVS:
             return
-        await asyncio.sleep(choice((4, 6, 8)))
+        await sleep(choice((4, 6, 8)))
     if INVITE_WORKER.get(chat_id) or _INVITING_LOCK.locked():
         await kst.eor("`Please wait until previous •invite• finished...`", time=5, silent=True)
         return
@@ -205,7 +203,7 @@ async def _(kst):
             )
         else:
             filters = ("long_time_ago",)
-        start_time = time()
+        start_time = monotonic()
         local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
         max_success, success, failed, error = 300, 0, 0, "none"
         chat = await kst.get_chat()
@@ -229,7 +227,7 @@ async def _(kst):
                         if error.lower().startswith(("too many", "a wait of")) or success > max_success:
                             if INVITE_WORKER.get(chat_id):
                                 INVITE_WORKER.pop(chat_id)
-                            taken = time_formatter((time() - start_time) * 1000)
+                            taken = time_formatter((monotonic() - start_time) * 1000)
                             try:
                                 waitfor = int("".join(filter(str.isdigit, error.lower())))
                             except ValueError:
@@ -274,7 +272,7 @@ async def _(kst):
                     except ChannelPrivateError as err:
                         if INVITE_WORKER.get(chat_id):
                             INVITE_WORKER.pop(chat_id)
-                        taken = time_formatter((time() - start_time) * 1000)
+                        taken = time_formatter((monotonic() - start_time) * 1000)
                         done_error = done_error_text.format(
                             str(err),
                             success,
@@ -292,7 +290,7 @@ async def _(kst):
             pass
         if INVITE_WORKER.get(chat_id):
             INVITE_WORKER.pop(chat_id)
-        taken = time_formatter((time() - start_time) * 1000)
+        taken = time_formatter((monotonic() - start_time) * 1000)
         done = done_text.format(
             success,
             failed,
@@ -323,7 +321,7 @@ async def _(kst):
             return await yy.try_delete()
         args = kst.pattern_match.group(1).split(" ")
         is_append = bool(len(args) > 1 and args[1].lower() in ("-a", "a", "append"))
-        start_time = time()
+        start_time = monotonic()
         local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
         members, admins, bots = 0, 0, 0
         members_file = "members_list.csv"
@@ -403,7 +401,7 @@ async def _(kst):
                             pass
             except BaseException:
                 pass
-        taken = time_formatter((time() - start_time) * 1000)
+        taken = time_formatter((monotonic() - start_time) * 1000)
         await yy.eor("`Uploading CSV Files...`")
         await yy.eor(
             getmembers_text.format(
@@ -477,7 +475,7 @@ async def _(kst):
         elif args.startswith("bot"):
             mode = "bots"
         csv_file = mode + "_list.csv"
-        start_time = time()
+        start_time = monotonic()
         local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
         try:
             await yy.eor(f"`Reading {csv_file} file...`")
@@ -504,7 +502,7 @@ async def _(kst):
                 break
             if success == 50:
                 await yy.eor(f"`🔄 Reached 50 members, wait until {900/60} minutes...`")
-                await asyncio.sleep(900)
+                await sleep(900)
             try:
                 adding = typ.InputPeerUser(user["user_id"], user["hash"])
                 await ga(
@@ -517,7 +515,7 @@ async def _(kst):
                 INVITE_WORKER[chat_id].update({"success": success})
                 await yy.eor(f"`Adding {success} {mode}...`")
             except FloodWaitError as fw:
-                await asyncio.sleep(fw.seconds + 10)
+                await sleep(fw.seconds + 10)
                 try:
                     adding = typ.InputPeerUser(user["user_id"], user["hash"])
                     await ga(
@@ -539,7 +537,7 @@ async def _(kst):
                 pass
         if INVITE_WORKER.get(chat_id):
             INVITE_WORKER.pop(chat_id)
-        taken = time_formatter((time() - start_time) * 1000)
+        taken = time_formatter((monotonic() - start_time) * 1000)
         await yy.eor(f"`✅ Completed adding {success} {mode} in {taken}` at `{local_now}`")
 
 
@@ -557,7 +555,7 @@ async def _(kst):
     if kst.is_dev:
         if kst.client.uid in DEVS:
             return
-        await asyncio.sleep(choice((4, 6, 8)))
+        await sleep(choice((4, 6, 8)))
     if not INVITE_WORKER.get(chat_id):
         return await kst.eod(no_process_text, silent=True)
     _worker = INVITE_WORKER.get(chat_id)

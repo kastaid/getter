@@ -25,7 +25,7 @@ try:
     import psutil
 except ModuleNotFoundError:
     print("Installing psutil...")
-    check_call([sys.executable, "-m", "pip", "install", "--no-cache-dir", "-U", "psutil"])
+    check_call([sys.executable, "-m", "pip", "install", "-U", "psutil"])
 finally:
     import psutil
 

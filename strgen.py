@@ -14,14 +14,13 @@ try:
     import telethon as tl
 except ModuleNotFoundError:
     print("Installing Telethon...")
-    # python3 -m pip install --no-cache-dir https://github.com/kastaid/Telethon/archive/main.zip
+    # python3 -m pip install https://github.com/kastaid/Telethon/archive/main.tar.gz
     check_call(
         [
             sys.executable,
             "-m",
             "pip",
             "install",
-            "--no-cache-dir",
             "https://github.com/kastaid/Telethon/archive/main.zip",
         ]
     )

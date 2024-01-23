@@ -78,10 +78,10 @@ async def _(kst):
             if plugin in ga._plugins:
                 ga.unload_plugin(plugin)
             remove(f"{base}/custom/{plugin}.py")
-            ga.logs.success(f"Successfully to remove custom plugin {plugin}")
+            ga.log.success(f"Successfully to remove custom plugin {plugin}")
             await yy.eor(f"`The plugin {plugin} removed.`")
         except BaseException:
-            ga.logs.error(f"Failed to remove custom plugin {plugin}")
+            ga.log.error(f"Failed to remove custom plugin {plugin}")
             await yy.eor(f"`The plugin {plugin} can't remove, please try again.`")
     elif exists(f"{base}/{plugin}.py"):
         await yy.eor("`It is forbidden to remove built-in plugins, it will disrupt the updater!`")
