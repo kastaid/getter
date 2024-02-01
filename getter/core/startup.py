@@ -12,13 +12,13 @@ from datetime import timedelta
 from async_timeout import timeout as WaitFor
 from telethon.tl import functions as fun, types as typ
 from getter import __version__, LOOP, EXECUTOR
-from getter.base_client import getter_app
 from getter.config import Var, DEVS
-from getter.db.globals_db import gvar, sgvar, dgvar
-from getter.helper import hk, get_botlogs
+from getter.core.base_client import getter_app
+from getter.core.db import gvar, sgvar, dgvar
+from getter.core.helper import hk, get_botlogs
+from getter.core.property import _c, _u, _g
+from getter.core.utils import humanbool
 from getter.logger import LOG
-from getter.property import _c, _u, _g
-from getter.utils import humanbool
 
 _about = """GETTER BOTLOGS
 
