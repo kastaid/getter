@@ -21,7 +21,7 @@ from telethon.errors import (
     FloodWaitError,
 )
 from telethon.tl import types as typ
-from getter.patcher import patch, patchable
+from getter.core.patcher import patch, patchable
 
 
 @patch(telethon.tl.custom.message.Message)

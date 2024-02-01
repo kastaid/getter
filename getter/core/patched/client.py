@@ -12,10 +12,10 @@ from random import randrange
 import telethon.client.telegramclient
 from telethon import hints, utils
 from telethon.tl import functions as fun, types as typ
-from getter.constants import MAX_MESSAGE_LEN
-from getter.functions import get_chat_id, get_text, get_user
+from getter.core.constants import MAX_MESSAGE_LEN
+from getter.core.functions import get_chat_id, get_text, get_user
+from getter.core.patcher import patch, patchable
 from getter.logger import LOG
-from getter.patcher import patch, patchable
 
 delattr(fun.account, "DeleteAccountRequest")
 

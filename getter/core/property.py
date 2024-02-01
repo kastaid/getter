@@ -13,8 +13,8 @@ from base64 import b64decode
 from asyncache import cached
 from cachetools import TTLCache
 from getter import __license__, __copyright__
+from getter.core.tools import Fetch
 from getter.logger import LOG
-from getter.tools import Fetch
 
 _c, _u, _g = (
     b64decode("a2FzdGFpZA==").decode("utf-8"),

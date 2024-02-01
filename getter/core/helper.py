@@ -10,9 +10,9 @@ from html import escape
 from cachetools import cached, LRUCache
 from heroku3 import from_key
 from getter.config import Var, BOTLOGS_CACHE
-from getter.db import gvar, get_col
+from getter.core.db import gvar, get_col
+from getter.core.utils import get_full_class_name
 from getter.logger import LOG
-from getter.utils import get_full_class_name
 
 
 class PluginsHelp(dict):

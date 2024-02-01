@@ -36,7 +36,6 @@ from getter import (
     __layer__,
     __pyversion__,
 )
-from getter.base_client import getter_app
 from getter.config import (
     Var,
     hl,
@@ -44,13 +43,14 @@ from getter.config import (
     SUDO_CMDS,
     DEVS,
 )
-from getter.constants import MAX_MESSAGE_LEN
-from getter.db import gvar
-from getter.functions import display_name, admin_check, to_privilege
-from getter.helper import jdata, get_botlogs
-from getter.property import do_not_remove_credit, get_blacklisted
-from getter.tools import Runner
-from getter.utils import time_formatter, strip_format, normalize
+from getter.core.base_client import getter_app
+from getter.core.constants import MAX_MESSAGE_LEN
+from getter.core.db import gvar
+from getter.core.functions import display_name, admin_check, to_privilege
+from getter.core.helper import jdata, get_botlogs
+from getter.core.property import do_not_remove_credit, get_blacklisted
+from getter.core.tools import Runner
+from getter.core.utils import time_formatter, strip_format, normalize
 
 CommandChats = typing.Union[typing.List[int], typing.Set[int], typing.Tuple[int], None]
 CommandFunc = typing.Callable[[events.NewMessage.Event], typing.Optional[bool]]
