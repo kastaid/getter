@@ -9,6 +9,7 @@ import typing
 from asyncio import sleep
 from contextlib import suppress
 from io import BytesIO
+import telethon.tl.custom
 from telethon import hints
 from telethon.client.chats import _ChatAction
 from telethon.errors import (
@@ -19,11 +20,11 @@ from telethon.errors import (
     ChatSendMediaForbiddenError,
     FloodWaitError,
 )
-from telethon.tl import types as typ, custom
+from telethon.tl import types as typ
 from ..patcher import patch, patchable
 
 
-@patch(custom.message.Message)
+@patch(telethon.tl.custom.message.Message)
 class Message:
     @patchable()
     async def eor(

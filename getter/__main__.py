@@ -20,7 +20,7 @@ from . import (
 from .config import Var, hl
 from .core.base_client import getter_app
 from .core.helper import plugins_help
-from .core.patched import apply
+from .core.patched import *  # noqa
 from .core.property import do_not_remove_credit
 from .core.startup import (
     trap,
@@ -32,8 +32,6 @@ from .core.startup import (
 )
 from .core.utils import time_formatter
 from .logger import LOG
-
-apply()
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

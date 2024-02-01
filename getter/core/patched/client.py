@@ -9,8 +9,8 @@ import logging
 import typing
 from asyncio import sleep
 from random import randrange
+import telethon.client.telegramclient
 from telethon import hints, utils
-from telethon.client.telegramclient import TelegramClient
 from telethon.tl import functions as fun, types as typ
 from ..constants import MAX_MESSAGE_LEN
 from ..functions import get_chat_id, get_text, get_user
@@ -20,7 +20,7 @@ from ..patcher import patch, patchable
 delattr(fun.account, "DeleteAccountRequest")
 
 
-@patch(TelegramClient)
+@patch(telethon.client.telegramclient.TelegramClient)
 class Client:
     @patchable(True)
     def log(self) -> logging:
