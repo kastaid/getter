@@ -57,6 +57,7 @@ class KastaClient(TelegramClient):
     ):
         self._dialogs = []
         self._plugins = {}
+        self.log = LOG
         kwargs["api_id"] = api_id
         kwargs["api_hash"] = api_hash
         kwargs["request_retries"] = 3
