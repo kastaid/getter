@@ -9,7 +9,8 @@ import sys
 from importlib import import_module
 from time import monotonic
 from requests.packages import urllib3
-from . import (
+import getter.core.patched  # noqa
+from getter import (
     __license__,
     __copyright__,
     __version__,
@@ -17,12 +18,11 @@ from . import (
     __layer__,
     __pyversion__,
 )
-from .config import Var, hl
-from .core.base_client import getter_app
-from .core.helper import plugins_help
-from .core.patched import *  # noqa
-from .core.property import do_not_remove_credit
-from .core.startup import (
+from getter.config import Var, hl
+from getter.core.base_client import getter_app
+from getter.core.helper import plugins_help
+from getter.core.property import do_not_remove_credit
+from getter.core.startup import (
     trap,
     migrations,
     autopilot,
@@ -30,8 +30,8 @@ from .core.startup import (
     autous,
     finishing,
 )
-from .core.utils import time_formatter
-from .logger import LOG
+from getter.core.utils import time_formatter
+from getter.logger import LOG
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

@@ -12,9 +12,9 @@ from asyncio import sleep
 from base64 import b64decode
 from asyncache import cached
 from cachetools import TTLCache
-from .. import __license__, __copyright__
-from ..logger import LOG
-from .tools import Fetch
+from getter import __license__, __copyright__
+from getter.logger import LOG
+from getter.tools import Fetch
 
 _c, _u, _g = (
     b64decode("a2FzdGFpZA==").decode("utf-8"),
