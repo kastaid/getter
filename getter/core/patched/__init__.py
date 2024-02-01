@@ -5,8 +5,6 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-
-def apply() -> None:
-    from .client import Client
-    from .conversation import Conversation
-    from .message import Message
+from .client import Client
+from .conversation import Conversation
+from .message import Message
