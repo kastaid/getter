@@ -33,11 +33,11 @@ from getter import (
     LOOP,
 )
 from getter.config import Var, DEVS
-from getter.db import sgvar
-from getter.functions import display_name
+from getter.core.db import sgvar
+from getter.core.functions import display_name
+from getter.core.property import do_not_remove_credit, get_blacklisted
+from getter.core.utils import time_formatter
 from getter.logger import LOG, TelethonLogger
-from getter.property import do_not_remove_credit, get_blacklisted
-from getter.utils import time_formatter
 
 
 class ReverseList(list):

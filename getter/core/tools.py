@@ -17,9 +17,9 @@ import aiofiles
 import aiohttp
 import telegraph
 from getter import __version__, LOOP, EXECUTOR
-from getter.db import gvar, sgvar
+from getter.core.db import gvar, sgvar
+from getter.core.utils import get_random_hex
 from getter.logger import LOG
-from getter.utils import get_random_hex
 
 _TGH: typing.List[telegraph.api.Telegraph] = []
 
