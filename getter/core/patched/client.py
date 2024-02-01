@@ -21,7 +21,7 @@ delattr(fun.account, "DeleteAccountRequest")
 
 
 @patch(telethon.client.telegramclient.TelegramClient)
-class Client:
+class Client(telethon.client.telegramclient.TelegramClient):
     @patchable(True)
     def log(self) -> logging:
         return LOG
