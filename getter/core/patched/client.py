@@ -5,7 +5,6 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import logging
 import typing
 from asyncio import sleep
 from random import randrange
@@ -15,17 +14,12 @@ from telethon.tl import functions as fun, types as typ
 from getter.core.constants import MAX_MESSAGE_LEN
 from getter.core.functions import get_chat_id, get_text, get_user
 from getter.core.patcher import patch, patchable
-from getter.logger import LOG
 
 delattr(fun.account, "DeleteAccountRequest")
 
 
 @patch(telethon.client.telegramclient.TelegramClient)
-class Client(telethon.client.telegramclient.TelegramClient):
-    @patchable(True)
-    def log(self) -> logging:
-        return LOG
-
+class TelegramClient:
     @patchable()
     async def get_id(self, entity: hints.EntityLike) -> int:
         try:
