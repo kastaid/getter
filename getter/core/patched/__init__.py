@@ -5,6 +5,6 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from .client import Client
+from .client import TelegramClient
 from .conversation import Conversation
 from .message import Message
