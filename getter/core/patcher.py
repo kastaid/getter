@@ -5,30 +5,38 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import typing
 from functools import wraps
+from typing import (
+    Any,
+    Tuple,
+    Callable,
+    T,
+    Type,
+)
 
 
-def patch(obj: typing.Any) -> typing.Callable:
-    def is_patchable(item: typing.Tuple[str, typing.Any]) -> bool:
-        return getattr(item[1], "patchable", False) or isinstance(item[1], property)
+def patch(target: Any):
+    def is_patchable(item: Tuple[str, Any]) -> bool:
+        return getattr(item[1], "patchable", False)
 
-    @wraps(obj)
-    def wrap(conta: typing.Any) -> typing.Any:
-        for name, func in filter(is_patchable, conta.__dict__.items()):
-            old = getattr(obj, name, None)
-            setattr(obj, "old" + name, old)
-            setattr(obj, name, func)
-        return conta
+    @wraps(target)
+    def wrapper(container: Type[T]) -> T:
+        for name, func in filter(is_patchable, container.__dict__.items()):
+            old = getattr(target, name, None)
+            if old is not None:
+                setattr(target, f"old_{name}", old)
+            if getattr(func, "is_property", False):
+                func = property(func)
+            setattr(target, name, func)
+        return container
 
-    return wrap
+    return wrapper
 
 
-def patchable(prop: bool = False) -> typing.Callable:
-    def wrapp(func: typing.Any) -> typing.Union[typing.Callable, property]:
+def patchable(is_property: bool = False) -> Callable:
+    def wrapper(func: Callable) -> Callable:
         func.patchable = True
-        if prop:
-            return property(func)
+        func.is_property = is_property
         return func
 
-    return wrapp
+    return wrapper
