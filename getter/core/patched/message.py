@@ -24,7 +24,7 @@ from ..patcher import patch, patchable
 
 
 @patch(custom.message.Message)
-class Message(typ.Message):
+class Message:
     @patchable()
     async def eor(
         self,
@@ -299,7 +299,7 @@ class Message(typ.Message):
     async def send_action(self, *args, **kwargs) -> typing.Union[_ChatAction, typing.Coroutine]:
         return self._client.action(await self.get_input_chat(), *args, **kwargs)
 
-    @patchable(prop=True)
+    @patchable(True)
     def msg_link(self) -> typing.Optional[str]:
         if hasattr(self.chat, "username") and self.chat.username:
             return f"https://t.me/{self.chat.username}/{self.id}"
