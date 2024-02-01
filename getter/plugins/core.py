@@ -215,7 +215,7 @@ async def _(kst):
             "now": local_now,
         }
         try:
-            await yy.eor("`Checking Permissions...`")
+            yy = await yy.eor("`Checking Permissions...`")
             async for x in ga.iter_participants(target_id):
                 if not INVITE_WORKER.get(chat_id):
                     break
