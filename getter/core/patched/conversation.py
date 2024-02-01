@@ -6,11 +6,12 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import typing
-from telethon.tl.custom.conversation import _checks_cancelled, Conversation as _Conversation
+import telethon.tl.custom.conversation
+from telethon.tl.custom.conversation import _checks_cancelled
 from ..patcher import patch, patchable
 
 
-@patch(_Conversation)
+@patch(telethon.tl.custom.conversation.Conversation)
 class Conversation:
     @patchable()
     @_checks_cancelled
