@@ -14,8 +14,8 @@ from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
 from sqlalchemy.schema import Column
 from sqlalchemy.types import *
 from sqlalchemy_json import MutableJson, NestedMutableJson
-from ...config import Var
-from ...logger import LOG
+from getter.config import Var
+from getter.logger import LOG
 
 
 def start() -> scoped_session:

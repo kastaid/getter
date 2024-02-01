@@ -8,7 +8,7 @@
 import typing
 import telethon.tl.custom.conversation
 from telethon.tl.custom.conversation import _checks_cancelled
-from ..patcher import patch, patchable
+from getter.patcher import patch, patchable
 
 
 @patch(telethon.tl.custom.conversation.Conversation)

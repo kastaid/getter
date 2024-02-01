@@ -26,18 +26,18 @@ from telethon.errors import (
 from telethon.sessions.abstract import Session
 from telethon.sessions.string import CURRENT_VERSION, StringSession
 from telethon.tl import functions as fun, types as typ
-from .. import (
+from getter import (
     Root,
     StartTime,
     __version__,
     LOOP,
 )
-from ..config import Var, DEVS
-from ..logger import LOG, TelethonLogger
-from .db import sgvar
-from .functions import display_name
-from .property import do_not_remove_credit, get_blacklisted
-from .utils import time_formatter
+from getter.config import Var, DEVS
+from getter.db import sgvar
+from getter.functions import display_name
+from getter.logger import LOG, TelethonLogger
+from getter.property import do_not_remove_credit, get_blacklisted
+from getter.utils import time_formatter
 
 
 class ReverseList(list):
