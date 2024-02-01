@@ -48,4 +48,3 @@ logging.getLogger("pytgcalls").setLevel(logging.ERROR)
 logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
 TelethonLogger = logging.getLogger("telethon")
 TelethonLogger.setLevel(logging.ERROR)
-TelethonLogger.getLogger("telethon.network.mtprotosender").disabled = True
