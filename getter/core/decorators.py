@@ -30,27 +30,27 @@ from telethon.errors import (
     MessageNotModifiedError,
 )
 from telethon.tl import types as typ
-from .. import (
+from getter import (
     __version__,
     __tlversion__,
     __layer__,
     __pyversion__,
 )
-from ..config import (
+from getter.base_client import getter_app
+from getter.config import (
     Var,
     hl,
     DEV_CMDS,
     SUDO_CMDS,
     DEVS,
 )
-from .base_client import getter_app
-from .constants import MAX_MESSAGE_LEN
-from .db import gvar
-from .functions import display_name, admin_check, to_privilege
-from .helper import jdata, get_botlogs
-from .property import do_not_remove_credit, get_blacklisted
-from .tools import Runner
-from .utils import time_formatter, strip_format, normalize
+from getter.constants import MAX_MESSAGE_LEN
+from getter.db import gvar
+from getter.functions import display_name, admin_check, to_privilege
+from getter.helper import jdata, get_botlogs
+from getter.property import do_not_remove_credit, get_blacklisted
+from getter.tools import Runner
+from getter.utils import time_formatter, strip_format, normalize
 
 CommandChats = typing.Union[typing.List[int], typing.Set[int], typing.Tuple[int], None]
 CommandFunc = typing.Callable[[events.NewMessage.Event], typing.Optional[bool]]

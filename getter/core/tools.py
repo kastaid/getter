@@ -16,10 +16,10 @@ from io import BytesIO
 import aiofiles
 import aiohttp
 import telegraph
-from .. import __version__, LOOP, EXECUTOR
-from ..logger import LOG
-from .db import gvar, sgvar
-from .utils import get_random_hex
+from getter import __version__, LOOP, EXECUTOR
+from getter.db import gvar, sgvar
+from getter.logger import LOG
+from getter.utils import get_random_hex
 
 _TGH: typing.List[telegraph.api.Telegraph] = []
 
