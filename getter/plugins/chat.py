@@ -191,7 +191,6 @@ async def _(kst):
             try:
                 await ga.delete_dialog(x.id, revoke=True)
                 count += 1
-                await sleep(0.3)
             except BaseException:
                 pass
     if not count:
@@ -213,8 +212,8 @@ async def _(kst):
             try:
                 await ga.delete_dialog(x.id, revoke=True)
                 count += 1
-            except Exception as err:
-                ga.log.exception(err)
+            except BaseException:
+                pass
     if not count:
         return await yy.eor("`no users found`", time=3)
     await yy.eod(f"`deleted {count} user chats`", time=None)
