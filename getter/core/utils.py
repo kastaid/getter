@@ -5,13 +5,13 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import typing
 from functools import reduce
 from math import ceil
 from random import choice
 from re import sub, IGNORECASE
 from string import ascii_letters
 from time import time
+from typing import Any
 from uuid import uuid4
 from bs4 import BeautifulSoup
 from cachetools import cached
@@ -20,7 +20,7 @@ from markdown.core import markdown
 from unidecode import unidecode
 
 
-def humanbool(b: typing.Any, toggle: bool = False) -> str:
+def humanbool(b: Any, toggle: bool = False) -> str:
     return ("off" if toggle else "no") if str(b).lower() in ("false", "none", "0", "") else ("on" if toggle else "yes")
 
 
@@ -63,7 +63,7 @@ def strip_ascii(text: str) -> str:
     return text.encode("ascii", "ignore").decode("ascii")
 
 
-def humanbytes(size: typing.Union[int, float]) -> str:
+def humanbytes(size: int | float) -> str:
     if not size:
         return "0 B"
     power = 1024
@@ -75,7 +75,7 @@ def humanbytes(size: typing.Union[int, float]) -> str:
     return f"{size:.2f}{power_dict[pos]}B"
 
 
-def time_formatter(ms: typing.Union[int, float]) -> str:
+def time_formatter(ms: int | float) -> str:
     minutes, seconds = divmod(int(ms / 1000), 60)
     hours, minutes = divmod(minutes, 60)
     days, hours = divmod(hours, 24)
@@ -91,9 +91,9 @@ def time_formatter(ms: typing.Union[int, float]) -> str:
 
 
 def until_time(
-    timing: typing.Union[str, int],
+    timing: str | int,
     unit: str = "m",
-) -> typing.Tuple[float, str]:
+) -> tuple[float, str]:
     if unit.lower() not in (
         "s",
         "m",
@@ -146,28 +146,26 @@ def sort_dict(dct: dict, reverse: bool = False) -> dict:
 def deep_get(
     dct: dict,
     keys: str,
-    default: typing.Any = None,
-) -> typing.Any:
+    default: Any = None,
+) -> Any:
     return reduce(lambda d, key: d.get(key, default) if isinstance(d, dict) else default, keys.split("."), dct)
 
 
 def to_dict(
-    obj: typing.Any,
-    classkey: typing.Optional[str] = None,
-) -> typing.Any:
+    obj: Any,
+    classkey: str | None = None,
+) -> Any:
     if isinstance(obj, dict):
         data = {}
         for k, v in obj.items():
             data[k] = to_dict(v, classkey)
         return data
-    elif hasattr(obj, "_ast"):
+    if hasattr(obj, "_ast"):
         return to_dict(obj._ast())
-    elif hasattr(obj, "__iter__") and not isinstance(obj, str):
+    if hasattr(obj, "__iter__") and not isinstance(obj, str):
         return [to_dict(_, classkey) for _ in obj]
-    elif hasattr(obj, "__dict__"):
-        data = dict(  # noqa
-            [(k, to_dict(v, classkey)) for k, v in obj.__dict__.items() if not callable(v) and not k.startswith("_")]
-        )
+    if hasattr(obj, "__dict__"):
+        data = {k: to_dict(v, classkey) for k, v in obj.__dict__.items() if not callable(v) and not k.startswith("_")}
         if classkey and hasattr(obj, "__class__"):
             data[classkey] = obj.__class__.__name__
         return data
@@ -202,7 +200,7 @@ def normalize(text: str) -> str:
     return unidecode(text)
 
 
-def get_full_class_name(obj: typing.Any) -> str:
+def get_full_class_name(obj: Any) -> str:
     module = obj.__class__.__module__
     if module is None or module == str.__class__.__module__:
         return obj.__class__.__name__

@@ -7,12 +7,12 @@
 
 from asyncio import sleep, Lock
 from datetime import datetime
+from random import choice
 from time import monotonic
 from . import (
     DEVS,
     kasta_cmd,
     plugins_help,
-    choice,
     time_formatter,
     mentionuser,
     display_name,
@@ -38,22 +38,21 @@ _FGBAN_LOCK, _FUNGBAN_LOCK = Lock(), Lock()
 
 
 @kasta_cmd(
-    pattern="fgban(?: |$)((?s).*)",
+    pattern=r"fgban(?: |$)([\s\S]*)",
 )
 @kasta_cmd(
-    pattern="fgban(?: |$)((?s).*)",
+    pattern=r"fgban(?: |$)([\s\S]*)",
     sudo=True,
 )
 @kasta_cmd(
-    pattern="gfgban(?: |$)((?s).*)",
+    pattern=r"gfgban(?: |$)([\s\S]*)",
     dev=True,
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
         await sleep(choice((4, 6, 8)))
     if not kst.is_dev and _FGBAN_LOCK.locked():
-        await kst.eor("`Please wait until previous •gban• finished...`", time=5, silent=True)
-        return
+        return await kst.eor("`Please wait until previous •gban• finished...`", time=5, silent=True)
     async with _FGBAN_LOCK:
         ga = kst.client
         yy = await kst.eor("`GBanning...`", silent=True)
@@ -102,8 +101,7 @@ async def _(kst):
     if kst.is_dev or kst.is_sudo:
         await sleep(choice((4, 6, 8)))
     if not kst.is_dev and _FUNGBAN_LOCK.locked():
-        await kst.eor("`Please wait until previous •ungban• finished...`", time=5, silent=True)
-        return
+        return await kst.eor("`Please wait until previous •ungban• finished...`", time=5, silent=True)
     async with _FUNGBAN_LOCK:
         ga = kst.client
         yy = await kst.eor("`UnGBanning...`", silent=True)

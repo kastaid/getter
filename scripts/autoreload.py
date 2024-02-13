@@ -5,20 +5,19 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import os
 import signal
 import sys
-import time
+from os import getpid, kill
 from subprocess import CalledProcessError, Popen, check_call
-from typing import Generator
+from time import sleep
 from . import (
-    Root,
-    EXTS,
-    WAIT_FOR,
-    RST,
     BOLD,
+    EXTS,
     RED,
+    RST,
+    WAIT_FOR,
     YELLOW,
+    Root,
 )
 
 try:
@@ -30,9 +29,8 @@ finally:
     import psutil
 
 
-def file_times() -> Generator[int, None, None]:
-    for _ in filter(lambda p: p.suffix in EXTS, Root.rglob("*")):
-        yield _.stat().st_mtime
+def file_time() -> float:
+    return max(f.stat().st_mtime for f in Root.rglob("*") if f.suffix in EXTS)
 
 
 def print_stdout(procs) -> None:
@@ -46,8 +44,8 @@ def kill_process_tree(procs) -> None:
         parent = psutil.Process(procs.pid)
         child = parent.children(recursive=True)
         child.append(parent)
-        for _ in child:
-            _.send_signal(signal.SIGTERM)
+        for c in child:
+            c.send_signal(signal.SIGTERM)
     except psutil.NoSuchProcess:
         pass
     procs.terminate()
@@ -59,28 +57,28 @@ def main() -> None:
         sys.exit(0)
     cmd = " ".join(sys.argv[1:])
     procs = Popen(cmd, shell=True)
-    last_mtime = max(file_times())
+    last_mtime = file_time()
     try:
         while True:
-            max_mtime = max(file_times())
+            max_mtime = file_time()
             print_stdout(procs)
             if max_mtime > last_mtime:
                 last_mtime = max_mtime
                 print(f"{BOLD}{YELLOW}Restarting >> {procs.args}{RST}")
                 kill_process_tree(procs)
                 procs = Popen(cmd, shell=True)
-            time.sleep(WAIT_FOR)
+            sleep(WAIT_FOR)
     except CalledProcessError as err:
         kill_process_tree(procs)
         sys.exit(err.returncode)
-    except BaseException:
-        print(f"{BOLD}{RED}Watch interrupted.{RST}")
     except KeyboardInterrupt:
         print(f"{BOLD}{RED}Kill process [{procs.pid}]{RST}")
         kill_process_tree(procs)
         signal.signal(signal.SIGINT, signal.SIG_DFL)
-        os.kill(os.getpid(), signal.SIGINT)
+        kill(getpid(), signal.SIGINT)
+    except BaseException:
+        print(f"{BOLD}{RED}Watch interrupted.{RST}")
 
 
 if __name__ == "__main__":
-    SystemExit(main())
+    raise SystemExit(main())

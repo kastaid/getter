@@ -6,6 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from asyncio import sleep
+from random import choice
 from telethon.errors import UserAlreadyParticipantError
 from telethon.tl import functions as fun
 from . import (
@@ -13,7 +14,6 @@ from . import (
     getter_app,
     kasta_cmd,
     plugins_help,
-    choice,
     mentionuser,
     display_name,
     normalize_chat_id,
@@ -37,8 +37,7 @@ async def _(kst):
     chat_id = normalize_chat_id(kst.chat_id)
     call = await get_call(chat_id)
     if call:
-        await yy.eor("`Video chat is available.`", time=5)
-        return
+        return await yy.eor("`Video chat is available.`", time=5)
     try:
         res = await ga(
             fun.phone.CreateGroupCallRequest(
@@ -51,8 +50,7 @@ async def _(kst):
     if CALLS.get(chat_id):
         CALLS.pop(chat_id, None)
     if not is_silent:
-        await yy.eor("`Video chat started.`", time=5)
-        return
+        return await yy.eor("`Video chat started.`", time=5)
     await yy.try_delete()
     if res:
         ids = [_.id for _ in res.updates if hasattr(_, "id")]
@@ -73,8 +71,7 @@ async def _(kst):
     chat_id = normalize_chat_id(kst.chat_id)
     call = await get_call(chat_id)
     if not call:
-        await yy.eor("`No video chat!`", time=5)
-        return
+        return await yy.eor("`No video chat!`", time=5)
     try:
         res = await ga(fun.phone.DiscardGroupCallRequest(call))
     except BaseException:
@@ -82,8 +79,7 @@ async def _(kst):
     if CALLS.get(chat_id):
         CALLS.pop(chat_id, None)
     if not is_silent:
-        await yy.eor("`Video chat stopped.`", time=5)
-        return
+        return await yy.eor("`Video chat stopped.`", time=5)
     await yy.try_delete()
     if res:
         ids = [_.id for _ in res.updates if hasattr(_, "id")]
@@ -103,8 +99,7 @@ async def _(kst):
     chat_id = normalize_chat_id(kst.chat_id)
     call = await get_call(chat_id)
     if not call:
-        await yy.eor("`No video chat!`", time=5)
-        return
+        return await yy.eor("`No video chat!`", time=5)
     try:
         await ga(fun.phone.EditGroupCallTitleRequest(call, title=title))
         await yy.eor("`Video chat title changed.`", time=5)
@@ -127,8 +122,7 @@ async def _(kst):
     chat_id = normalize_chat_id(kst.chat_id)
     call = await get_call(chat_id)
     if not call:
-        await yy.eor("`No video chat!`", time=5)
-        return
+        return await yy.eor("`No video chat!`", time=5)
     try:
         await ga(fun.phone.InviteToGroupCallRequest(call, users=[user.id]))
         text = "`Invited to video chat.`"
@@ -149,8 +143,7 @@ async def _(kst):
     yy = await kst.eor("`Inviting members to video chat...`")
     call = await get_call(kst.chat_id)
     if not call:
-        await yy.eor("`No video chat!`", time=5)
-        return
+        return await yy.eor("`No video chat!`", time=5)
     users, done = [], 0
     async for x in ga.iter_participants(entity=kst.chat_id, limit=None):
         if not (
@@ -187,8 +180,7 @@ async def _(kst):
     chat_id = normalize_chat_id(kst.chat_id)
     call = await get_call(chat_id)
     if not call:
-        await yy.eor("`No video chat!`", time=5)
-        return
+        return await yy.eor("`No video chat!`", time=5)
     try:
         res = await ga(fun.phone.GetGroupCallRequest(call, limit=1))
     except BaseException:
@@ -226,8 +218,7 @@ async def _(kst):
         return await yy.try_delete()
     call = await get_call(chat_id)
     if not call:
-        await yy.eor("`No video chat!`", time=5)
-        return
+        return await yy.eor("`No video chat!`", time=5)
     in_call = group_call(chat_id)
     if not (in_call and in_call.is_connected):
         try:
@@ -269,8 +260,7 @@ async def _(kst):
         return await yy.try_delete()
     call = await get_call(chat_id)
     if not call:
-        await yy.eor("`No video chat!`", time=5)
-        return
+        return await yy.eor("`No video chat!`", time=5)
     in_call = group_call(chat_id)
     if in_call and in_call.is_connected:
         try:

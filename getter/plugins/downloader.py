@@ -6,8 +6,9 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from asyncio import exceptions
+from telethon import events
 from telethon.errors import YouBlockedUserError
-from . import kasta_cmd, plugins_help, events
+from . import kasta_cmd, plugins_help
 
 TW_BOT = "tweedlbot"
 TT_BOT = "downloader_tiktok_bot"
@@ -20,8 +21,7 @@ async def _(kst):
     ga = kst.client
     link = await ga.get_text(kst)
     if not link:
-        await kst.eor("`Provide a valid tweet link!`", time=5)
-        return
+        return await kst.eor("`Provide a valid tweet link!`", time=5)
     yy = await kst.eor("`Downloading...`")
     async with ga.conversation(TW_BOT) as conv:
         resp = await conv_tw(conv, link)
@@ -45,8 +45,7 @@ async def _(kst):
     ga = kst.client
     link = await ga.get_text(kst)
     if not link:
-        await kst.eor("`Provide a valid tiktok link!`", time=5)
-        return
+        return await kst.eor("`Provide a valid tiktok link!`", time=5)
     yy = await kst.eor("`Downloading...`")
     async with ga.conversation(TT_BOT) as conv:
         resp = await conv_tt(conv, link)

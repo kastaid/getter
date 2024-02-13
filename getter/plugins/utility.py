@@ -28,19 +28,19 @@ from . import (
     Runner,
     Fetch,
     Telegraph,
+    aioify,
     import_lib,
 )
 
 
 @kasta_cmd(
-    pattern="spcheck(?: |$)((?s).*)",
+    pattern=r"spcheck(?: |$)([\s\S]*)",
 )
 async def _(kst):
     ga = kst.client
     sentence = await ga.get_text(kst)
     if not sentence:
-        await kst.eor("`Provide a text/sentence!`", time=5)
-        return
+        return await kst.eor("`Provide a text/sentence!`", time=5)
     yy = await kst.eor("`Processing...`")
     try:
         from textblob import TextBlob
@@ -54,10 +54,7 @@ async def _(kst):
         correct = check.correct()
     except Exception as err:
         return await yy.eor(formatx_send(err), parse_mode="html")
-    text = "• **Given Phrase:** `{}`\n• **Corrected Phrase:** `{}`".format(
-        sentence,
-        correct.strip(),
-    )
+    text = f"• **Given Phrase:** `{sentence}`\n• **Corrected Phrase:** `{correct.strip()}`"
     await yy.eor(text)
 
 
@@ -68,8 +65,7 @@ async def _(kst):
     ga = kst.client
     word = await ga.get_text(kst)
     if not word:
-        await kst.eor("`Provide a word!`", time=5)
-        return
+        return await kst.eor("`Provide a word!`", time=5)
     yy = await kst.eor("`Processing...`")
     url = "http://api.urbandictionary.com/v0/define"
     res = await Fetch(
@@ -98,8 +94,7 @@ async def _(kst):
     ga = kst.client
     word = await ga.get_text(kst)
     if not word:
-        await kst.eor("`Provide a word!`", time=5)
-        return
+        return await kst.eor("`Provide a word!`", time=5)
     yy = await kst.eor("`Processing...`")
     url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
     res = await Fetch(url, re_json=True)
@@ -122,8 +117,7 @@ async def _(kst):
     ga = kst.client
     word = await ga.get_text(kst)
     if not word:
-        await kst.eor("`Provide a word!`", time=5)
-        return
+        return await kst.eor("`Provide a word!`", time=5)
     yy = await kst.eor("`Processing...`")
     try:
         from kbbi import KBBI
@@ -133,7 +127,7 @@ async def _(kst):
             pkg_name="kbbi==0.4.3",
         ).KBBI
     try:
-        mean = KBBI(word)
+        mean = await aioify(KBBI, word)
     except BaseException:
         return await yy.eod(f"**No Results for:** `{word}`")
     text = f"• **Given Word:** `{word}`\n{mean}"
@@ -208,8 +202,7 @@ async def _(kst):
     text = await ga.get_text(kst)
     yy = await kst.eor("`Processing...`")
     if not text:
-        await kst.eor("`Provide a math!`", time=5)
-        return
+        return await kst.eor("`Provide a math!`", time=5)
     text = " ".join(text.split())
     newtext = replace_all(
         text.lower(),
@@ -221,21 +214,20 @@ async def _(kst):
         },
     )
     try:
-        answer = "{} = {}".format(text, eval(newtext))
+        answer = f"{text} = {eval(newtext)}"
     except Exception as err:
-        answer = "{} = {}".format(text, err)
+        answer = f"{text} = {err}"
     await yy.eor(answer, parse_mode=parse_pre)
 
 
 @kasta_cmd(
-    pattern="haste(?: |$)((?s).*)",
+    pattern=r"haste(?: |$)([\s\S]*)",
 )
 async def _(kst):
     ga = kst.client
     text = await ga.get_text(kst)
     if not text:
-        await kst.eor("`Provide a text!`", time=5)
-        return
+        return await kst.eor("`Provide a text!`", time=5)
     yy = await kst.eor("`Processing...`")
     url = "https://hastebin.com"
     res = await Fetch(
@@ -256,8 +248,7 @@ async def _(kst):
     ga = kst.client
     username = await ga.get_text(kst)
     if not username:
-        await kst.eor("`Provide a username!`", time=5)
-        return
+        return await kst.eor("`Provide a username!`", time=5)
     yy = await kst.eor("`Processing...`")
     username = username.replace("@", "")
     url = f"https://api.github.com/users/{username}"
@@ -327,12 +318,10 @@ async def _(kst):
     yy = await kst.eor("`Processing...`")
     reply = await kst.get_reply_message()
     if not reply.media:
-        await yy.eor("`Is not media message!`", time=5)
-        return
+        return await yy.eor("`Is not media message!`", time=5)
     mt = get_media_type(reply.media)
     if not mt.startswith(("audio", "video")):
-        await yy.eor("`Is not audio/video files!`", time=5)
-        return
+        return await yy.eor("`Is not audio/video files!`", time=5)
     file = await reply.download_media(file="downloads")
     voice = "downloads/voice.opus"
     await Runner(f"ffmpeg -i {file} -map 0:a -codec:a libopus -b:a 100k -vbr on {voice}")
@@ -349,14 +338,13 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="tgh(?: |$)((?s).*)",
+    pattern=r"tgh(?: |$)([\s\S]*)",
 )
 async def _(kst):
     ga = kst.client
     text = await ga.get_text(kst)
     if not text and not kst.is_reply:
-        await kst.eor("`Provide a text or reply!`", time=5)
-        return
+        return await kst.eor("`Provide a text or reply!`", time=5)
     yy = await kst.eor("`Processing...`")
     reply = await kst.get_reply_message()
     if kst.is_reply and reply.media:
@@ -384,7 +372,8 @@ async def _(kst):
             return await yy.eor(push)
         text = (Root / res).read_text()
         (Root / res).unlink(missing_ok=True)
-    push = Telegraph(ga.full_name).create_page(
+    tg = await Telegraph(ga.full_name)
+    push = tg.create_page(
         title=text[:256],
         content=[text],
     )
@@ -401,15 +390,14 @@ async def _(kst):
     ga = kst.client
     locco = await ga.get_text(kst)
     if not locco:
-        await kst.eor("`Provide a location or coordinates!`", time=5)
-        return
+        return await kst.eor("`Provide a location or coordinates!`", time=5)
     yy = await kst.eor("`Finding...`")
     try:
         from geopy.geocoders import Nominatim
     except ImportError:
         Nominatim = import_lib(
             lib_name="geopy.geocoders",
-            pkg_name="geopy==2.3.0",
+            pkg_name="geopy==2.4.1",
         ).Nominatim
     geolocator = Nominatim(user_agent="getter")
     location = geolocator.geocode(locco)
@@ -418,12 +406,11 @@ async def _(kst):
         lon = location.longitude
         addr = location.address
         details = f"**Location:** `{locco}`\n**Address:** `{addr}`\n**Coordinates:** `{lat},{lon}`"
-        await yy.eor(
+        return await yy.eor(
             details,
             file=typ.InputMediaGeoPoint(typ.InputGeoPoint(lat, lon)),
             force_document=True,
         )
-        return
     await yy.eod(f"**No Location found:** `{locco}`")
 
 
@@ -434,20 +421,20 @@ async def _(kst):
     ga = kst.client
     link = await ga.get_text(kst, group=2)
     if not link and not kst.is_reply:
-        await kst.eor("`Provide a message link or reply media!`", time=5)
-        return
+        return await kst.eor("`Provide a message link or reply media!`", time=5)
     is_silent = any(_ in kst.pattern_match.group(1) for _ in ("-s", "silent"))
     if is_silent:
         await kst.try_delete()
     else:
         yy = await kst.eor("`Processing...`")
     reply = await kst.get_reply_message()
-    if kst.is_reply and not reply.message or reply.media:
+    if (kst.is_reply and not reply.message) or reply.media:
         link = reply.msg_link
     chat, msg_id = get_msg_id(link)
     if not is_silent and not (chat and msg_id):
-        await yy.eor("Provide a valid message link!\n**E.g:** `https://t.me/tldevs/11` or `https://t.me/tldevs/19`")
-        return
+        return await yy.eor(
+            "Provide a valid message link!\n**E.g:** `https://t.me/tldevs/11` or `https://t.me/tldevs/19`"
+        )
     try:
         from_msg = await ga.get_messages(chat, ids=msg_id)
     except Exception as err:
@@ -483,8 +470,7 @@ async def _(kst):
     ga = kst.client
     args = await ga.get_text(kst, group=2)
     if not args or len(args) < 2:
-        await kst.eor("`Provide a text to search!`", time=5)
-        return
+        return await kst.eor("`Provide a text to search!`", time=5)
     yy = await kst.eor("`Searching...`")
     limit = 5
     if ":" in args:
@@ -493,7 +479,7 @@ async def _(kst):
         limit = int(limit)
     except BaseException:
         pass
-    limit = 99 if limit > 99 else limit
+    limit = 99 if limit > 99 else limit  # noqa
     current, result, total = normalize_chat_id(kst.chat_id), "", 0
     async for msg in ga.iter_messages(
         current,
@@ -503,10 +489,7 @@ async def _(kst):
     ):
         result += f"• [{msg.id}](https://t.me/c/{current}/{msg.id})\n"
         total += 1
-    if total > 0:
-        text = f"**Search Results for:** `{args}`\n{result}"
-    else:
-        text = f"**No Results for:** `{args}`"
+    text = f"**Search Results for:** `{args}`\n{result}" if total > 0 else f"**No Results for:** `{args}`"
     await yy.eor(text)
 
 

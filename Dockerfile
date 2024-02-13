@@ -5,7 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-FROM python:3.10-slim-bullseye
+FROM python:3.12-slim-bookworm
 
 ENV TZ=Asia/Jakarta \
     TERM=xterm-256color \

@@ -1,4 +1,3 @@
-# type: ignore
 # getter < https://t.me/kastaid >
 # Copyright (C) 2022-present kastaid
 #
@@ -6,84 +5,78 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from .engine import *
+from typing import Any
+from sqlalchemy import (
+    Column,
+    String,
+    delete,
+    exists,
+    insert,
+    select,
+    update,
+)
+from sqlalchemy_json import MutableJson, NestedMutableJson
+from .engine import Model, Session
 
-_COLLECTIONS_LOCK = RLock()
 
-
-class Collections(BASE):
+class Collections(Model):
     __tablename__ = "collections"
     keyword = Column(String, primary_key=True)
     json = Column(MutableJson)
     njson = Column(NestedMutableJson)
 
-    def __init__(self, keyword, json, njson):
-        self.keyword = keyword
-        self.json = json
-        self.njson = njson
 
-    def __repr__(self):
-        return "<Database.Collections:\n keyword: {}\n json: {}\n njson: {}\n>".format(
-            self.keyword,
-            self.json,
-            self.njson,
-        )
-
-    def to_dict(self):
-        return {
-            "keyword": self.keyword,
-            "json": self.json,
-            "njson": self.njson,
-        }
+async def get_cols() -> list[Collections]:
+    async with Session() as s:
+        try:
+            return (await s.execute(select(Collections).order_by(Collections.keyword.asc()))).scalars().all()
+        except BaseException:
+            return []
 
 
-Collections.__table__.create(checkfirst=True)
+async def col_list() -> list[dict[str, Any]]:
+    result = await get_cols()
+    return [i.to_dict() for i in result]
 
 
-def get_col(keyword):
-    value = None
-    try:
-        data = SESSION.query(Collections).filter(Collections.keyword == keyword).one_or_none()
-        if data:
-            SESSION.refresh(data)
-            value = data
-        return value
-    except BaseException:
-        return value
-    finally:
-        SESSION.close()
+async def get_col(keyword: str) -> Collections:
+    async with Session() as s:
+        try:
+            data = (await s.execute(select(Collections).filter(Collections.keyword == keyword))).scalar_one_or_none()
+            if data:
+                await s.refresh(data)
+                return data
+        except BaseException:
+            pass
+        return {}
 
 
-def add_col(keyword, json, njson=None):
-    with _COLLECTIONS_LOCK:
-        items = SESSION.query(Collections).get(keyword)
-        if items:
-            SESSION.delete(items)
-        SESSION.add(Collections(keyword, json, njson or {}))
-        SESSION.commit()
+async def set_col(
+    keyword: str,
+    json: str,
+    njson: str | None = None,
+) -> None:
+    njson = njson or {}
+    async with Session(True) as s:
+        data = await s.execute(select(exists().where(Collections.keyword == keyword)))
+        if data.scalar():
+            stmt = (
+                update(Collections)
+                .where(Collections.keyword == keyword)
+                .values(
+                    json=json,
+                    njson=njson,
+                )
+            )
+        else:
+            stmt = insert(Collections).values(
+                keyword=keyword,
+                json=json,
+                njson=njson,
+            )
+        await s.execute(stmt)
 
 
-def del_col(keyword):
-    with _COLLECTIONS_LOCK:
-        items = SESSION.query(Collections).get(keyword)
-        if items:
-            SESSION.delete(items)
-            SESSION.commit()
-
-
-def get_cols():
-    try:
-        return SESSION.query(Collections).order_by(Collections.keyword.asc()).all()
-    except BaseException:
-        return []
-    finally:
-        SESSION.close()
-
-
-def col_list():
-    try:
-        return [x.to_dict() for x in get_cols()]
-    except BaseException:
-        return []
-    finally:
-        SESSION.close()
+async def del_col(keyword: str) -> None:
+    async with Session(True) as s:
+        await s.execute(delete(Collections).where(Collections.keyword == keyword))

@@ -2,13 +2,13 @@ loguru==0.7.2
 python-dotenv==1.0.1
 https://github.com/kastaid/Telethon/archive/main.tar.gz
 cryptg==0.4.0
-pytz==2023.3.post1
 psutil==5.9.8
 heroku3==5.2.1
 GitPython==3.1.41
-psycopg2-binary==2.9.6
-SQLAlchemy==1.4.48
-sqlalchemy-json==0.5.0
+SQLAlchemy==2.0.27
+asyncpg==0.29.0
+aiosqlite==0.19.0
+sqlalchemy-json==0.7.0
 cachetools==5.3.2
 asyncache==0.3.1
 aiofiles==23.2.1

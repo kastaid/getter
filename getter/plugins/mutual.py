@@ -26,11 +26,11 @@ async def _(kst):
 )
 async def _(kst):
     hah = kst.pattern_match.group(1).strip()
-    username = gvar("ig") or "illvart_"
+    username = await gvar("ig") or "illvart_"
     if hah == "u":
-        ig = "𝐈𝐍𝐒𝐓𝐀𝐆𝐑𝐀𝐌  ➥  `@{}`".format(username)
+        ig = f"𝐈𝐍𝐒𝐓𝐀𝐆𝐑𝐀𝐌  ➥  `@{username}`"
     else:
-        ig = "𝐈𝐍𝐒𝐓𝐀𝐆𝐑𝐀𝐌  ➥  [@{}](https://www.instagram.com/{})".format(username, username)
+        ig = f"𝐈𝐍𝐒𝐓𝐀𝐆𝐑𝐀𝐌  ➥  [@{username}](https://www.instagram.com/{username})"
     await kst.sod(ig)
 
 
@@ -39,13 +39,13 @@ async def _(kst):
 )
 async def _(kst):
     hah = kst.pattern_match.group(1).strip()
-    username = gvar("sfs") or "kastaid"
+    username = await gvar("sfs") or "kastaid"
     if hah == "p":
-        sfs = "𝐒𝐔𝐁𝐒 𝐅𝐎𝐑 𝐒𝐔𝐁𝐒  ➥  `t.me/{}`".format(username)
+        sfs = f"𝐒𝐔𝐁𝐒 𝐅𝐎𝐑 𝐒𝐔𝐁𝐒  ➥  `t.me/{username}`"
     elif hah == "u":
-        sfs = "𝐒𝐔𝐁𝐒 𝐅𝐎𝐑 𝐒𝐔𝐁𝐒  ➥  `@{}`".format(username)
+        sfs = f"𝐒𝐔𝐁𝐒 𝐅𝐎𝐑 𝐒𝐔𝐁𝐒  ➥  `@{username}`"
     else:
-        sfs = "𝐒𝐔𝐁𝐒 𝐅𝐎𝐑 𝐒𝐔𝐁𝐒  ➥  [@{}](https://t.me/{})".format(username, username)
+        sfs = f"𝐒𝐔𝐁𝐒 𝐅𝐎𝐑 𝐒𝐔𝐁𝐒  ➥  [@{username}](https://t.me/{username})"
     await kst.sod(sfs)
 
 
@@ -55,27 +55,19 @@ async def _(kst):
 async def _(kst):
     var = kst.pattern_match.group(1)
     val = await kst.client.get_text(kst, group=2)
-    forwhat = gvar(var) or ""
+    forwhat = await gvar(var) or ""
     if not val:
-        if var == "ig":
-            forwhat = forwhat or "illvart_"
-        else:
-            forwhat = forwhat or "kastaid"
-        text = "**{}:** `{}`".format(var.upper(), forwhat)
-        await kst.eor(text)
-        return
+        forwhat = forwhat or "illvart_" if var == "ig" else forwhat or "kastaid"
+        return await kst.eor(f"**{var.upper()}:** `{forwhat}`")
     val = val.replace("@", "")
     if var == "ig":
         if val == forwhat:
-            await kst.eor("`IG is already set.`", time=4)
-            return
-        sgvar(var, val)
-        await kst.eod(f"`IG set to {val}.`")
-        return
+            return await kst.eor("`IG is already set.`", time=4)
+        await sgvar(var, val)
+        return await kst.eod(f"`IG set to {val}.`")
     if val == forwhat:
-        await kst.eor("`SFS is already set.`", time=4)
-        return
-    sgvar(var, val)
+        return await kst.eor("`SFS is already set.`", time=4)
+    await sgvar(var, val)
     await kst.eod(f"`SFS set to {val}.`")
 
 

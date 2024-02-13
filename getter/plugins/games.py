@@ -5,12 +5,12 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+from random import choice
 from telethon.tl.custom.inlineresult import InlineResult
 from . import (
     kasta_cmd,
     plugins_help,
     formatx_send,
-    choice,
     Fetch,
     LANG_CODES,
     import_lib,

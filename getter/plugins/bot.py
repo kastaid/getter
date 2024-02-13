@@ -6,8 +6,9 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import os
-import sys
 from asyncio import sleep
+from random import choice
+from sys import executable
 from time import sleep as tsleep, monotonic
 import aiofiles
 from telethon.tl import functions as fun
@@ -16,7 +17,6 @@ from . import (
     Root,
     kasta_cmd,
     plugins_help,
-    choice,
     sgvar,
     parse_pre,
     formatx_send,
@@ -140,13 +140,12 @@ async def _(kst):
     yy = await kst.eor("`Restarting...`", silent=True)
     try:
         chat_id = yy.chat_id or yy.from_id
-        sgvar("_restart", f"{chat_id}|{yy.id}")
+        await sgvar("_restart", f"{chat_id}|{yy.id}")
     except BaseException:
         pass
     if not hk.is_heroku:
         await yy.eor(r"\\**#Getter**// `Restarting as locally...`")
-        await restart_app()
-        return
+        return await restart_app()
     try:
         await yy.eor(r"\\**#Getter**// `Restarting as heroku... Wait for a few minutes.`")
         app = hk.heroku().app(hk.name)
@@ -169,17 +168,15 @@ async def _(kst):
     await yy.eod(f"`wake-up from {timer} seconds`")
 
 
-def get_terminal_logs():
+def get_terminal_logs() -> list[Root]:
     return sorted((Root / "logs").rglob("getter-*.log"))
 
 
 async def heroku_logs(kst) -> None:
     if not hk.api:
-        await kst.eod("Please set `HEROKU_API` in Config Vars.")
-        return
+        return await kst.eod("Please set `HEROKU_API` in Config Vars.")
     if not hk.name:
-        await kst.eod("Please set `HEROKU_APP_NAME` in Config Vars.")
-        return
+        return await kst.eod("Please set `HEROKU_APP_NAME` in Config Vars.")
     try:
         app = hk.heroku().app(hk.name)
         logs = app.get_log(lines=100)
@@ -206,7 +203,7 @@ async def restart_app() -> None:
             os.close(_.fd)
     except BaseException:
         pass
-    os.execl(sys.executable, sys.executable, "-m", "getter")
+    os.execl(executable, executable, "-m", "getter")
 
 
 plugins_help["bot"] = {

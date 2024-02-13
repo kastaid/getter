@@ -1,3 +1,4 @@
+# ruff: noqa: F401, F403, F405
 # getter < https://t.me/kastaid >
 # Copyright (C) 2022-present kastaid
 #
@@ -5,9 +6,6 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from contextlib import suppress
-from random import choice
-from telethon import events
 from validators.url import url as is_url
 from getter import (
     __layer__,
@@ -22,5 +20,3 @@ from getter import (
 from getter.config import *
 from getter.core import *
 from getter.logger import LOG
-
-BOTLOGS = get_botlogs()  # cool yeah?
