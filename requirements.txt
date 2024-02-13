@@ -14,6 +14,7 @@ asyncache==0.3.1
 aiofiles==23.2.1
 aiocsv==1.2.5
 aiohttp[speedups]==3.9.3
+httpx==0.26.0
 Markdown==3.5.2
 beautifulsoup4==4.12.3
 emoji==2.10.1
