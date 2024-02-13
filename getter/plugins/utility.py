@@ -10,7 +10,6 @@ from datetime import datetime
 from html import escape
 from mimetypes import guess_extension
 import aiofiles
-import telegraph
 from bs4 import BeautifulSoup
 from PIL import Image
 from telethon.tl import types as typ
@@ -362,7 +361,9 @@ async def _(kst):
             res = file
         if mt not in ("document", "text"):
             try:
-                link = "https://telegra.ph" + next((_ for _ in telegraph.upload_file(res)), "")
+                tg = await Telegraph()
+                up = await tg.upload_file(res)
+                link = "https://telegra.ph" + next((_ for _ in up), "")
                 push = f"**Telegraph:** [Telegraph Link]({link})"
             except Exception as err:
                 push = f"**ERROR:**\n`{err}`"
@@ -373,10 +374,9 @@ async def _(kst):
         text = (Root / res).read_text()
         (Root / res).unlink(missing_ok=True)
     tg = await Telegraph(ga.full_name)
-    push = tg.create_page(
-        title=text[:256],
-        content=[text],
-    )
+    if not tg:
+        return await yy.eod("`Try again now!`")
+    push = await tg.create_page(title=text[:256], content=[text])
     res = push.get("url")
     if not res:
         return await yy.eod("`Try again now!`")

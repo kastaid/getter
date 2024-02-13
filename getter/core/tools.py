@@ -14,13 +14,13 @@ from re import sub
 from typing import Any
 import aiofiles
 import aiohttp
-import telegraph
+import telegraph.aio
 from getter import __version__, LOOP, EXECUTOR
 from getter.logger import LOG
 from .db import gvar, sgvar
 from .utils import get_random_hex
 
-_TGH: list[telegraph.api.Telegraph] = []
+_TGH: list[telegraph.aio.Telegraph] = []
 
 
 def is_termux() -> bool:
@@ -226,22 +226,26 @@ def Pinger(addr: str) -> str:
     return "--ms"
 
 
-async def Telegraph(author_name: str) -> telegraph.api.Telegraph:
+async def Telegraph(
+    author: str | None = None,
+) -> telegraph.aio.Telegraph:
     if _TGH:
-        return next((_ for _ in sorted(_TGH, reverse=True)), None)
+        return next(reversed(_TGH), None)
     token = await gvar("_TELEGRAPH_TOKEN")
-    client = telegraph.Telegraph(token)
+    api = telegraph.aio.Telegraph(token)
     if token:
-        _TGH.append(client)
-        return client
+        _TGH.append(api)
+        return api
+    if author is None:
+        return api
     try:
-        client.create_account(
+        await api.create_account(
             short_name="getteruser",
-            author_name=author_name[:128],
+            author_name=author[:128],
             author_url="https://t.me/kastaid",
         )
     except BaseException:
         return None
-    await sgvar("_TELEGRAPH_TOKEN", client.get_access_token())
-    _TGH.append(client)
-    return client
+    await sgvar("_TELEGRAPH_TOKEN", api.get_access_token())
+    _TGH.append(api)
+    return api
