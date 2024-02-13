@@ -7,10 +7,10 @@
 
 import re
 import sys
-import typing
 from asyncio import sleep
+from collections.abc import Callable
 from contextlib import suppress
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from functools import wraps
 from inspect import stack
 from io import BytesIO
@@ -29,7 +29,7 @@ from telethon.errors import (
     MessageIdInvalidError,
     MessageNotModifiedError,
 )
-from telethon.tl import types as typ
+from telethon.tl.types import Message
 from getter import (
     __version__,
     __tlversion__,
@@ -43,17 +43,17 @@ from getter.config import (
     SUDO_CMDS,
     DEVS,
 )
-from getter.core.base_client import getter_app
-from getter.core.constants import MAX_MESSAGE_LEN
-from getter.core.db import gvar
-from getter.core.functions import display_name, admin_check, to_privilege
-from getter.core.helper import jdata, get_botlogs
-from getter.core.property import do_not_remove_credit, get_blacklisted
-from getter.core.tools import Runner
-from getter.core.utils import time_formatter, strip_format, normalize
+from .base_client import getter_app
+from .constants import MAX_MESSAGE_LEN
+from .db import gvar
+from .functions import display_name, admin_check, to_privilege
+from .helper import jdata, get_botlogs
+from .property import do_not_remove_credit, get_blacklisted
+from .tools import Runner
+from .utils import time_formatter, strip_format, normalize
 
-CommandChats = typing.Union[typing.List[int], typing.Set[int], typing.Tuple[int], None]
-CommandFunc = typing.Callable[[events.NewMessage.Event], typing.Optional[bool]]
+CommandChats = list[int] | set[int] | tuple[int] | None
+CommandFunc = Callable[[events.NewMessage.Event], bool | None]
 
 
 def compile_pattern(
@@ -61,7 +61,7 @@ def compile_pattern(
     handler: str,
     ignore_case: bool = False,
 ) -> re.Pattern:
-    flags = re.I if ignore_case else 0
+    flags = re.IGNORECASE if ignore_case else 0
     if pattern.startswith(("^", ".")):
         pattern = pattern[1:]
     if handler == " ":
@@ -70,14 +70,14 @@ def compile_pattern(
 
 
 def kasta_cmd(
-    pattern: typing.Optional[str] = None,
+    pattern: str | None = None,
     edited: bool = False,
     ignore_case: bool = False,
     no_handler: bool = False,
     no_chats: bool = False,
-    users: typing.Optional[CommandChats] = None,
-    chats: typing.Optional[CommandChats] = None,
-    func: typing.Optional[CommandFunc] = None,
+    users: CommandChats | None = None,
+    chats: CommandChats | None = None,
+    func: CommandFunc | None = None,
     private_only: bool = False,
     groups_only: bool = False,
     admins_only: bool = False,
@@ -85,22 +85,22 @@ def kasta_cmd(
     for_dev: bool = False,
     dev: bool = False,
     sudo: bool = False,
-    require: typing.Optional[str] = None,
-) -> typing.Callable:
-    def decorator(fun: typing.Callable) -> None:
+    require: str | None = None,
+) -> Callable:
+    def decorator(fun: Callable) -> None:
         do_not_remove_credit()
 
         @wraps(fun)
-        async def wrapper(kst: typ.Message) -> typing.Callable:
+        async def wrapper(kst: Message) -> Callable:
             kst.is_dev = False
             kst.is_sudo = False
             if not kst.out:
                 sendby = kst.sender_id
                 if dev and sendby in DEVS:
                     kst.is_dev = True
-                if sudo and not gvar("_sudo", use_cache=True):
+                if sudo and not await gvar("_sudo", use_cache=True):
                     return
-                if sendby in jdata.sudo_users:
+                if sendby in await jdata.sudo_users():
                     kst.is_sudo = True
             chat = kst.chat
             chat_id = kst.chat_id
@@ -112,12 +112,7 @@ def kasta_cmd(
                     fallbacks=None,
                 )
                 if myself in KASTA_BLACKLIST:
-                    kst.client.log.error(
-                        "({} - {}) YOU ARE BLACKLISTED !!".format(
-                            kst.client.full_name,
-                            myself,
-                        )
-                    )
+                    kst.client.log.error(f"({kst.client.full_name} - {myself}) YOU ARE BLACKLISTED !!")
                     sys.exit(1)
             if hasattr(chat, "title") and (
                 not (for_dev or dev)
@@ -179,7 +174,7 @@ def kasta_cmd(
                 raise events.StopPropagation
             except Exception as err:
                 kst.client.log.exception(f"[KASTA_CMD] - {err}")
-                date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+                date = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
                 if kst.is_private:
                     chat_type = "private"
                 elif kst.is_group:
@@ -215,7 +210,7 @@ def kasta_cmd(
                     result = stdout + stderr
                     ftext += result + "</pre>"
                 error_log = None
-                BOTLOGS = get_botlogs()
+                BOTLOGS = await get_botlogs()
                 send_to = BOTLOGS or chat_id
                 reply_to = None if BOTLOGS else kst.id
                 if len(ftext) > MAX_MESSAGE_LEN:
@@ -281,7 +276,7 @@ def kasta_cmd(
                     incoming=True if superuser else None,
                     outgoing=True if not superuser else None,
                     forwards=None if for_dev or dev else False,
-                    from_users=DEVS if for_dev or dev else (jdata.sudo_users if sudo else users),
+                    from_users=DEVS if for_dev or dev else (jdata.CACHE_DATA.get("sudo") if sudo else users),
                     func=lambda e: not e.via_bot_id and func(e) and not (e.is_channel and e.chat.broadcast)
                     if not (func is None)
                     else not e.via_bot_id and not (e.is_channel and e.chat.broadcast),
@@ -296,11 +291,11 @@ def kasta_cmd(
                 incoming=True if superuser else None,
                 outgoing=True if not superuser else None,
                 forwards=None if for_dev or dev else False,
-                from_users=DEVS if for_dev or dev else (jdata.sudo_users if sudo else users),
+                from_users=DEVS if for_dev or dev else (jdata.CACHE_DATA.get("sudo") if sudo else users),
                 func=lambda e: not e.via_bot_id and func(e) if not (func is None) else not e.via_bot_id,
             ),
         )
-        if pattern and for_dev or dev or sudo:
+        if (pattern and for_dev) or dev or sudo:
             matches = re.split(r"[$(?].*", pattern)
             cmd_name = "".join(matches) if not (for_dev or dev) else pattern
             cmds = DEV_CMDS if for_dev or dev else SUDO_CMDS
@@ -319,8 +314,8 @@ async def sendlog(
     forward: bool = False,
     fallback: bool = False,
     **args,
-) -> typing.Optional[typ.Message]:
-    BOTLOGS = get_botlogs()
+) -> Message | None:
+    BOTLOGS = await get_botlogs()
     if not BOTLOGS and fallback:
         BOTLOGS = getter_app.uid
     if not BOTLOGS and not fallback:

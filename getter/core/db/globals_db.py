@@ -1,4 +1,3 @@
-# type: ignore
 # getter < https://t.me/kastaid >
 # Copyright (C) 2022-present kastaid
 #
@@ -6,85 +5,80 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from .engine import *
+from typing import Any
+from cachetools import LRUCache
+from sqlalchemy import (
+    Column,
+    String,
+    UnicodeText,
+    delete,
+    exists,
+    insert,
+    select,
+    update,
+)
+from .engine import Model, Session
 
-_GVAR_CACHE = LRUCache(maxsize=1024)
-_GLOBALS_LOCK = RLock()
+_GVAR_CACHE = LRUCache(maxsize=float("inf"))
 
 
-class Globals(BASE):
+class Globals(Model):
     __tablename__ = "globals"
-    var = Column(String, primary_key=True, nullable=False)
-    value = Column(UnicodeText, primary_key=True, nullable=False)
-
-    def __init__(self, var, value):
-        self.var = str(var)
-        self.value = value
-
-    def __repr__(self):
-        return "<Database.Globals:\n var: {}\n value: {}\n>".format(
-            self.var,
-            self.value,
-        )
-
-    def to_dict(self):
-        return {
-            "var": self.var,
-            "value": self.value,
-        }
+    var = Column(String, primary_key=True)
+    value = Column(UnicodeText)
 
 
-Globals.__table__.create(checkfirst=True)
+async def all_gvar() -> list[Globals]:
+    async with Session() as s:
+        try:
+            return (await s.execute(select(Globals).order_by(Globals.var.asc()))).scalars().all()
+        except BaseException:
+            return []
 
 
-def gvar(var, use_cache: bool = False):
-    var, value = str(var), None
+async def gvar_list() -> list[dict[str, Any]]:
+    result = await all_gvar()
+    return [i.to_dict() for i in result]
+
+
+async def gvar(
+    var: str,
+    use_cache: bool = False,
+) -> str | None:
+    value = None
     if use_cache and var in _GVAR_CACHE:
         return _GVAR_CACHE.get(var)
-    try:
-        data = SESSION.query(Globals).filter(Globals.var == var).one_or_none()
-        if data:
-            SESSION.refresh(data)
-            value = data.value
-            if use_cache and not _GVAR_CACHE.get(var):
-                _GVAR_CACHE[var] = value
+    async with Session() as s:
+        try:
+            data = (await s.execute(select(Globals).filter(Globals.var == var))).scalar_one_or_none()
+            if data:
+                await s.refresh(data)
+                value = data.value
+                if use_cache and not _GVAR_CACHE.get(var):
+                    _GVAR_CACHE[var] = value
+        except BaseException:
+            pass
         return value
-    except BaseException:
-        return value
-    finally:
-        SESSION.close()
 
 
-def sgvar(var, value):
-    with _GLOBALS_LOCK:
-        var = str(var)
-        if SESSION.query(Globals).filter(Globals.var == var).one_or_none():
-            dgvar(var)
-        SESSION.add(Globals(var, value))
-        SESSION.commit()
+async def sgvar(
+    var: str,
+    value: str,
+) -> None:
+    value = str(value)
+    async with Session(True) as s:
+        data = await s.execute(select(exists().where(Globals.var == var)))
+        if data.scalar():
+            if var in _GVAR_CACHE:
+                del _GVAR_CACHE[var]
+            stmt = update(Globals).where(Globals.var == var).values(value=value)
+        else:
+            stmt = insert(Globals).values(var=var, value=value)
+        await s.execute(stmt)
 
 
-def dgvar(var):
-    with _GLOBALS_LOCK:
-        var = str(var)
-        done = SESSION.query(Globals).filter(Globals.var == var).delete(synchronize_session="fetch")
-        if done:
-            SESSION.commit()
-
-
-def all_gvar():
-    try:
-        return SESSION.query(Globals).order_by(Globals.var.asc()).all()
-    except BaseException:
-        return []
-    finally:
-        SESSION.close()
-
-
-def gvar_list():
-    try:
-        return [x.to_dict() for x in all_gvar()]
-    except BaseException:
-        return []
-    finally:
-        SESSION.close()
+async def dgvar(var: str) -> None:
+    async with Session(True) as s:
+        if var in _GVAR_CACHE:
+            del _GVAR_CACHE[var]
+        await s.execute(delete(Globals).where(Globals.var == var))

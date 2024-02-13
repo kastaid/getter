@@ -6,12 +6,11 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from asyncio import sleep
-from random import randrange
+from random import choice, randrange
 from telethon.tl import types as typ
 from . import (
     kasta_cmd,
     plugins_help,
-    choice,
     mentionuser,
     display_name,
     get_user_status,
@@ -47,15 +46,14 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="atag(?: |$)((?s).*)",
+    pattern=r"atag(?: |$)([\s\S]*)",
     groups_only=True,
 )
 async def _(kst):
     ga = kst.client
     chat_id = normalize_chat_id(kst.chat_id)
     if chat_id in ATAGS:
-        await kst.eor("`Please wait until previous •atag• finished...`", time=5, silent=True)
-        return
+        return await kst.eor("`Please wait until previous •atag• finished...`", time=5, silent=True)
     caption = kst.pattern_match.group(1)
     users, limit = [], 0
     ATAGS.append(chat_id)
@@ -70,16 +68,16 @@ async def _(kst):
             if not hasattr(x.participant, "admin_rights"):
                 users.append(mentionuser(x.id, display_name(x), html=True))
             if isinstance(x.participant, typ.ChannelParticipantAdmin):
-                users.append("👮 {}".format(mentionuser(x.id, display_name(x), html=True)))
+                users.append(f"👮 {mentionuser(x.id, display_name(x), html=True)}")
             if isinstance(x.participant, typ.ChannelParticipantCreator):
-                users.append("🤴 {}".format(mentionuser(x.id, display_name(x), html=True)))
+                users.append(f"🤴 {mentionuser(x.id, display_name(x), html=True)}")
     caption = f"{md_to_html(caption)}\n" if caption else caption
     for men in chunk(users, DEFAULT_PERUSER):
         try:
             if chat_id not in ATAGS:
                 break
             await kst.sod(
-                caption + "  {}  ".format(DEFAULT_SEP).join(map(str, men)),
+                caption + f"  {DEFAULT_SEP}  ".join(map(str, men)),
                 delete=False,
                 parse_mode="html",
             )
@@ -93,15 +91,14 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="etag(?: |$)((?s).*)",
+    pattern=r"etag(?: |$)([\s\S]*)",
     groups_only=True,
 )
 async def _(kst):
     ga = kst.client
     chat_id = normalize_chat_id(kst.chat_id)
     if chat_id in ETAGS:
-        await kst.eor("`Please wait until previous •etag• finished...`", time=5, silent=True)
-        return
+        return await kst.eor("`Please wait until previous •etag• finished...`", time=5, silent=True)
     caption = kst.pattern_match.group(1)
     users, limit = [], 0
     ETAGS.append(chat_id)
@@ -116,9 +113,9 @@ async def _(kst):
             if not hasattr(x.participant, "admin_rights"):
                 users.append(mentionuser(x.id, choice(EMOJIS), html=True))
             if isinstance(x.participant, typ.ChannelParticipantAdmin):
-                users.append("👮 {}".format(mentionuser(x.id, choice(EMOJIS), html=True)))
+                users.append(f"👮 {mentionuser(x.id, choice(EMOJIS), html=True)}")
             if isinstance(x.participant, typ.ChannelParticipantCreator):
-                users.append("🤴 {}".format(mentionuser(x.id, choice(EMOJIS), html=True)))
+                users.append(f"🤴 {mentionuser(x.id, choice(EMOJIS), html=True)}")
     caption = f"{md_to_html(caption)}\n" if caption else caption
     for men in chunk(users, DEFAULT_PERUSER):
         try:
@@ -148,13 +145,11 @@ async def _(kst):
     yy = await kst.eor("`Processing...`")
     if match == "a":
         if chat_id not in ATAGS:
-            await yy.eod("__No current atag are running.__")
-            return
+            return await yy.eod("__No current atag are running.__")
         ATAGS.remove(chat_id)
     else:
         if chat_id not in ETAGS:
-            await yy.eod("__No current etag are running.__")
-            return
+            return await yy.eod("__No current etag are running.__")
         ETAGS.remove(chat_id)
     await yy.eor("`cancelled`", time=5)
 
@@ -179,7 +174,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="men(tion|)(?: |$)((?s).*)",
+    pattern=r"men(tion|)(?: |$)([\s\S]*)",
 )
 async def _(kst):
     user, name = await kst.client.get_user(kst, 2)

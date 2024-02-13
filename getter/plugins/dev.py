@@ -5,10 +5,11 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import json
 import sys
 from io import BytesIO, StringIO
+from json import dumps
 from pathlib import Path
+from random import choice
 from traceback import format_exc
 import aiofiles
 from telethon.tl import functions, types
@@ -23,7 +24,6 @@ from . import (
     getter_app,
     kasta_cmd,
     plugins_help,
-    choice,
     strip_format,
     humanbytes,
     to_dict,
@@ -46,7 +46,7 @@ async def _(kst):
     mode = kst.pattern_match.group(1)
     msg = await kst.get_reply_message() if kst.is_reply else kst
     if mode == "json":
-        text = json.dumps(
+        text = dumps(
             to_dict(msg),
             indent=1,
             default=str,
@@ -172,7 +172,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="eval(?: |$)((?s).*)",
+    pattern=r"eval(?: |$)([\s\S]*)",
 )
 async def _(kst):
     code = await kst.client.get_text(kst)
@@ -189,10 +189,10 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="exec(?: |$)((?s).*)",
+    pattern=r"exec(?: |$)([\s\S]*)",
 )
 @kasta_cmd(
-    pattern="exec(?: |$)((?s).*)",
+    pattern=r"exec(?: |$)([\s\S]*)",
     dev=True,
 )
 async def _(kst):
@@ -231,7 +231,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="(shell|sh)(?: |$)((?s).*)",
+    pattern=r"(shell|sh)(?: |$)([\s\S]*)",
 )
 async def _(kst):
     cmd = await kst.client.get_text(kst, group=2)
@@ -301,7 +301,7 @@ def _parse_eval(value=None):
             pass
     elif isinstance(value, dict):
         try:
-            return json.dumps(value, indent=1, ensure_ascii=False)
+            return dumps(value, indent=1, ensure_ascii=False)
         except BaseException:
             pass
     return str(value)

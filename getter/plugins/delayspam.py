@@ -6,7 +6,6 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from asyncio import sleep
-from typing import Dict, Set
 from telethon.errors import RPCError, FloodWaitError, SlowModeWaitError
 from . import (
     hl,
@@ -15,15 +14,15 @@ from . import (
     normalize_chat_id,
 )
 
-DS_TASKS: Dict[int, Set[int]] = {i: set() for i in range(10)}
+DS_TASKS: dict[int, set[int]] = {i: set() for i in range(10)}
 
 
-def get_task(ds: str) -> Set[int]:
+def get_task(ds: str) -> set[int]:
     return DS_TASKS.get(int(ds or 0))
 
 
 @kasta_cmd(
-    pattern="ds(1|2|3|4|5|6|7|8|9|)(?: |$)((?s).*)",
+    pattern=r"ds(1|2|3|4|5|6|7|8|9|)(?: |$)([\s\S]*)",
 )
 async def _(kst):
     ga = kst.client

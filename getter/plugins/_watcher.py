@@ -5,11 +5,11 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+from telethon import events
 from telethon.tl import types as typ
 from . import (
     getter_app,
     sendlog,
-    events,
     mentionuser,
     display_name,
     humanbool,
@@ -63,9 +63,9 @@ async def DeletedUserHandler(kst):
     user = await kst.get_sender()
     if not isinstance(user, typ.User):
         return
-    if kst.is_private and is_allow(user.id, use_cache=True):
+    if kst.is_private and await is_allow(user.id, use_cache=True):
         return
-    if is_gdel(user.id, use_cache=True):
+    if await is_gdel(user.id, use_cache=True):
         try:
             await kst.delete()
         except BaseException:
@@ -78,7 +78,7 @@ async def JoinedHandler(kst):
     if not (chat.admin_rights or chat.creator):
         return
     user = await kst.get_user()
-    gban = is_gban(user.id, use_cache=True)
+    gban = await is_gban(user.id, use_cache=True)
     if gban:
         mention = mentionuser(user.id, display_name(user), width=15, html=True)
         is_reported = await ga.report_spam(user.id)
@@ -98,11 +98,11 @@ async def JoinedHandler(kst):
             await ga.edit_permissions(chat.id, user.id, view_messages=False)
         except BaseException:
             pass
-        logs_text += "<b>Reported:</b> <code>{}</code>\n".format(humanbool(is_reported))
+        logs_text += f"<b>Reported:</b> <code>{humanbool(is_reported)}</code>\n"
         logs_text += "<b>Reason:</b> {}\n".format(f"<pre>{gban.reason}</pre>" if gban.reason else "None given.")
         await sendlog(logs_text)
 
-    gmute = is_gmute(user.id, use_cache=True)
+    gmute = await is_gmute(user.id, use_cache=True)
     if gmute and kst.is_group:
         mention = mentionuser(user.id, display_name(user), width=15, html=True)
         logs_text = r"\\<b>#GMuted_Watch</b>//"

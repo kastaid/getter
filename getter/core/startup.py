@@ -7,18 +7,21 @@
 
 import asyncio
 import signal
-import typing
-from datetime import timedelta
-from async_timeout import timeout as WaitFor
+from typing import Any
 from telethon.tl import functions as fun, types as typ
 from getter import __version__, LOOP, EXECUTOR
 from getter.config import Var, DEVS
-from getter.core.base_client import getter_app
-from getter.core.db import gvar, sgvar, dgvar
-from getter.core.helper import hk, get_botlogs
-from getter.core.property import _c, _u, _g
-from getter.core.utils import humanbool
 from getter.logger import LOG
+from .base_client import getter_app
+from .db import (
+    db_disconnect,
+    gvar,
+    sgvar,
+    dgvar,
+)
+from .helper import hk, get_botlogs
+from .property import _c, _u, _g
+from .utils import humanbool
 
 _about = """GETTER BOTLOGS
 
@@ -65,6 +68,10 @@ _reboot_text = r"""
 async def shutdown(signum: str) -> None:
     LOG.warning(f"Stop signal received : {signum}")
     try:
+        await db_disconnect()
+    except BaseException:
+        pass
+    try:
         await getter_app.disconnect()
     except BaseException:
         pass
@@ -82,7 +89,7 @@ def trap() -> None:
         LOOP.add_signal_handler(sig, lambda s=sig: asyncio.create_task(shutdown(s.name)))
 
 
-def migrations(app: typing.Any = None) -> None:
+def migrations(app: Any = None) -> None:
     if Var.DEV_MODE or not hk.is_heroku:
         return
     LOG.info(">> Migrations...")
@@ -122,13 +129,13 @@ def migrations(app: typing.Any = None) -> None:
 
 
 async def autopilot() -> None:
-    if Var.BOTLOGS or gvar("BOTLOGS"):
+    if Var.BOTLOGS or await gvar("BOTLOGS"):
         return
     LOG.info(">> Auto-Pilot...")
     photo = None
     try:
         photo = await getter_app.upload_file("assets/getter_botlogs.png")
-        await asyncio.sleep(2)
+        await asyncio.sleep(3)
     except BaseException:
         pass
     LOG.info("Creating a group for BOTLOGS...")
@@ -141,9 +148,9 @@ async def autopilot() -> None:
     if not chat_id:
         LOG.warning("Something happened while creating a group for BOTLOGS, please report this one to our developers!")
         return
-    sgvar("BOTLOGS", chat_id)
+    await sgvar("BOTLOGS", chat_id)
     try:
-        await asyncio.sleep(2)
+        await asyncio.sleep(3)
         await getter_app(
             fun.messages.EditChatAboutRequest(
                 chat_id,
@@ -154,7 +161,7 @@ async def autopilot() -> None:
         pass
     try:
         msg = await getter_app.send_message(chat_id, _warn.format(chat_id, getter_app.uid), parse_mode="html")
-        await asyncio.sleep(2)
+        await asyncio.sleep(3)
         await msg.pin(notify=True)
     except BaseException:
         pass
@@ -166,7 +173,7 @@ async def autopilot() -> None:
 
 
 async def verify() -> None:
-    BOTLOGS = get_botlogs()
+    BOTLOGS = await get_botlogs()
     if not BOTLOGS:
         return
     ls = None
@@ -186,70 +193,72 @@ async def autous(user_id: int) -> None:
     if Var.DEV_MODE and user_id in DEVS:
         return
     await getter_app.join_to(_c)
-    await asyncio.sleep(5)
+    await asyncio.sleep(3)
     await getter_app.join_to(_u)
-    await asyncio.sleep(5)
+    await asyncio.sleep(3)
     await getter_app.mute_chat(_u)
-    await asyncio.sleep(5)
+    await asyncio.sleep(3)
     await getter_app.join_to(_g)
 
 
-async def finishing(launch_msg: str) -> None:
-    BOTLOGS = get_botlogs()
+async def finishing(text: str) -> None:
+    BOTLOGS = await get_botlogs()
     is_restart, is_reboot = False, False
     try:
-        _restart = gvar("_restart").split("|")
+        _restart = (await gvar("_restart")).split("|")
         is_restart = True
     except BaseException:
         pass
     try:
-        _reboot = gvar("_reboot").split("|")
+        _reboot = (await gvar("_reboot")).split("|")
         is_reboot = True
     except BaseException:
         pass
     if is_restart:
         try:
             chat_id, msg_id = int(_restart[0]), int(_restart[1])
-            async with WaitFor(5):
+            async with asyncio.timeout(5):
                 await getter_app.edit_message(
                     chat_id,
                     message=msg_id,
                     text=_restart_text.format(
-                        humanbool(gvar("_sudo"), toggle=True),
-                        humanbool(gvar("_pmguard"), toggle=True),
-                        humanbool(gvar("_pmlog"), toggle=True),
-                        humanbool(gvar("_pmblock"), toggle=True),
-                        humanbool(gvar("_antipm"), toggle=True),
+                        humanbool(await gvar("_sudo"), toggle=True),
+                        humanbool(await gvar("_pmguard"), toggle=True),
+                        humanbool(await gvar("_pmlog"), toggle=True),
+                        humanbool(await gvar("_pmblock"), toggle=True),
+                        humanbool(await gvar("_antipm"), toggle=True),
                         __version__,
                     ),
                     link_preview=False,
                 )
+            await asyncio.sleep(3)
         except BaseException:
             pass
-        dgvar("_restart")
+        await dgvar("_restart")
     if is_reboot:
         try:
             chat_id, msg_id = int(_reboot[0]), int(_reboot[1])
-            async with WaitFor(5):
+            async with asyncio.timeout(5):
                 await getter_app.edit_message(
                     chat_id,
                     message=msg_id,
                     text=_reboot_text.format(
-                        humanbool(gvar("_sudo"), toggle=True),
-                        humanbool(gvar("_pmguard"), toggle=True),
-                        humanbool(gvar("_pmlog"), toggle=True),
-                        humanbool(gvar("_pmblock"), toggle=True),
-                        humanbool(gvar("_antipm"), toggle=True),
+                        humanbool(await gvar("_sudo"), toggle=True),
+                        humanbool(await gvar("_pmguard"), toggle=True),
+                        humanbool(await gvar("_pmlog"), toggle=True),
+                        humanbool(await gvar("_pmblock"), toggle=True),
+                        humanbool(await gvar("_antipm"), toggle=True),
                         __version__,
                     ),
                     link_preview=False,
                 )
+            await asyncio.sleep(3)
         except BaseException:
             pass
-        dgvar("_reboot")
+        await dgvar("_reboot")
     if BOTLOGS:
         try:
-            text = f"<pre>{launch_msg}</pre>"
+            text = f"<pre>{text}</pre>"
             text += "\n(c) @kastaid #getter #launch"
             await getter_app.send_message(
                 BOTLOGS,
@@ -257,7 +266,6 @@ async def finishing(launch_msg: str) -> None:
                 parse_mode="html",
                 link_preview=False,
                 silent=True,
-                schedule=timedelta(seconds=5),
             )
         except BaseException:
             pass

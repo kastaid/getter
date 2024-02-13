@@ -5,9 +5,13 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+
 def get_version() -> str:
     import json
-    with open("manifest.json", mode="r") as fp:
-        data = json.load(fp)
+
+    with open("manifest.json") as f:
+        data = json.load(f)
     return data.get("version", "unknown")
+
+
 __version__ = get_version()

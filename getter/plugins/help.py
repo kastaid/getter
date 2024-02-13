@@ -37,13 +37,13 @@ help_text = """
 
 {}
 
-<b>Usage:</b> <code>{}help [plugin_name]</code>
+<blockquote><b>Usage:</b> <code>{}help [plugin_name]</code>
 <b>Tips:</b>
 - To check how fast response use <code>{}ping</code>
 - Get details about ur self use <code>{}test</code>
 - Collect ur stats by using <code>{}stats</code>
 - Get users ids use <code>{}id</code>
-- Get users info use <code>{}info</code>
+- Get users info use <code>{}info</code></blockquote>
 
 (c) @kastaid #getter
 """
@@ -74,10 +74,10 @@ async def _(kst):
                 # args --> cmd.split(maxsplit=1)[1]
                 text += "**❯** `{}`\n{}\n\n".format(cmd.replace("{i}", hl), desc.strip().replace("{i}", hl))
             text += "(c) @kastaid #getter"
-            await yy.sod(text)
-            return
-        await yy.sod(f"**404 Plugin Not Found  ➞**  `{plugin_name}`\nType  `{hl}help`  to see valid plugins name.")
-        return
+            return await yy.sod(text)
+        return await yy.sod(
+            f"**404 Plugin Not Found  ➞**  `{plugin_name}`\nType  `{hl}help`  to see valid plugins name."
+        )
     plugins = ""
     for plug in chunk(sorted(plugins_help), 3):
         _pr = ""
@@ -96,7 +96,7 @@ async def _(kst):
             ga.uptime,
             plugins_help.count,
             plugins_help.total,
-            humanbool(gvar("_sudo", use_cache=True), toggle=True),
+            humanbool(await gvar("_sudo", use_cache=True), toggle=True),
             plugins.strip(),
             hl,
             hl,

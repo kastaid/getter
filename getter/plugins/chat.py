@@ -6,6 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from asyncio import sleep
+from random import choice
 from telethon.errors import UserBotError
 from telethon.tl import functions as fun, types as typ
 from . import (
@@ -13,13 +14,12 @@ from . import (
     hl,
     kasta_cmd,
     plugins_help,
-    choice,
     formatx_send,
     display_name,
     mentionuser,
     normalize_chat_id,
     NOCHATS,
-    BOTLOGS,
+    get_botlogs,
 )
 
 
@@ -93,14 +93,15 @@ async def _(kst):
     chat = await kst.get_input_chat()
     num = kst.pattern_match.group(2)
     if kst.is_reply:
-        msgs = []
         reply = await kst.get_reply_message()
-        async for msg in ga.iter_messages(
-            chat,
-            from_user="me",
-            min_id=reply.id,
-        ):
-            msgs.append(msg.id)
+        msgs = [
+            msg.id
+            async for msg in ga.iter_messages(
+                chat,
+                from_user="me",
+                min_id=reply.id,
+            )
+        ]
         if reply.sender_id == ga.uid:
             msgs.append(reply.id)
         if msgs:
@@ -188,14 +189,34 @@ async def _(kst):
     async for x in ga.iter_dialogs():
         if x.is_user and x.entity.deleted:
             try:
-                await ga.delete_chat(x.id, revoke=True)
+                await ga.delete_dialog(x.id, revoke=True)
                 count += 1
-                await sleep(0.3)
             except BaseException:
                 pass
     if not count:
         return await yy.eor("`no ghosts found`", time=3)
     await yy.eod(f"`deleted {count} ghost chats`", time=None)
+
+
+@kasta_cmd(
+    pattern="cleanuser?$",
+)
+async def _(kst):
+    ga = kst.client
+    count = 0
+    yy = await kst.eor("`Processing...`")
+    async for x in ga.iter_dialogs():
+        if x.is_user and not x.entity.bot:
+            if x.id in DEVS:
+                continue
+            try:
+                await ga.delete_dialog(x.id, revoke=True)
+                count += 1
+            except BaseException:
+                pass
+    if not count:
+        return await yy.eor("`no users found`", time=3)
+    await yy.eod(f"`deleted {count} user chats`", time=None)
 
 
 @kasta_cmd(
@@ -212,26 +233,24 @@ async def _(kst):
             or (mode == "bot" and x.is_user and x.entity.bot and not x.entity.deleted)
             or (mode == "channel" and isinstance(x.entity, typ.Channel) and x.entity.broadcast)
             or (
-                mode == "group"
-                and (isinstance(x.entity, typ.Channel) and x.entity.megagroup)
+                (mode == "group" and (isinstance(x.entity, typ.Channel) and x.entity.megagroup))
                 or isinstance(x.entity, typ.Chat)
             )
         ):
-            try:
-                await ga.mute_chat(x.id)
+            if x.id in DEVS:
+                continue
+            if await ga.mute_chat(x.id):
                 await sleep(0.4)
-                await ga.archive(x.id)
+            if await ga.archive(x.id):
                 count += 1
                 await sleep(0.3)
-            except BaseException:
-                pass
     if not count:
         return await yy.eor(f"`no {mode}s found`", time=3)
     await yy.eod(f"`archived and muted {count} {mode}s`", time=None)
 
 
 @kasta_cmd(
-    pattern="sd(m|)(?: |$)(\\d*)(?: |$)((?s).*)",
+    pattern=r"sd(m|)(?: |$)(\d*)(?: |$)([\s\S]*)",
 )
 async def _(kst):
     group = kst.pattern_match.group
@@ -245,13 +264,12 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="(send|dm)(?: |$)((?s).*)",
+    pattern=r"(send|dm)(?: |$)([\s\S]*)",
 )
 async def _(kst):
     ga = kst.client
     if len(kst.text.split()) <= 1:
-        await kst.eor("`Give chat username or id where to send.`", time=5)
-        return
+        return await kst.eor("`Give chat username or id where to send.`", time=5)
     chat = kst.text.split()[1]
     try:
         chat_id = await ga.get_id(chat)
@@ -262,8 +280,7 @@ async def _(kst):
     elif kst.is_reply:
         message = await kst.get_reply_message()
     else:
-        await kst.eor("`Give text to send or reply to message.`", time=5)
-        return
+        return await kst.eor("`Give text to send or reply to message.`", time=5)
     try:
         sent = await ga.send_message(chat_id, message=message)
         delivered = "Message Delivered!"
@@ -282,7 +299,7 @@ async def _(kst):
     ga = kst.client
     group = kst.pattern_match.group
     reply = await kst.get_reply_message()
-    where = (BOTLOGS if group(2).strip() == "l" else ga.uid) or ga.uid
+    where = (await get_botlogs() if group(2).strip() == "l" else ga.uid) or ga.uid
     if group(1).strip() == "f":
         await reply.forward_to(where)
     else:
@@ -439,16 +456,10 @@ async def _(kst):
         await kst.try_delete()
     if is_unarchive:
         has_unarchive = await ga.unarchive(chat_id)
-        if not (has_unarchive is None):
-            text = "UnArchived!"
-        else:
-            text = "Cannot UnArchive!"
+        text = "UnArchived!" if not has_unarchive is None else "Cannot UnArchive!"
     else:
         has_archive = await ga.archive(chat_id)
-        if not (has_archive is None):
-            text = "Archived!"
-        else:
-            text = "Cannot Archive!"
+        text = "Archived!" if not has_archive is None else "Cannot Archive!"
     await kst.eod(f"`{chat_id} {text}`")
 
 
@@ -484,6 +495,7 @@ plugins_help["chat"] = {
     "{i}copy [reply]": "Copy the replied message.",
     "{i}nodraft": "Clear all drafts.",
     "{i}noghost": "Delete all chats with deleted account users/bots.",
+    "{i}cleanuser": "Delete all user chats.",
     "{i}nouser": "Archive all chats with users.",
     "{i}nobot": "Archive all chats with bots.",
     "{i}nochannel": "Archive all channels.",

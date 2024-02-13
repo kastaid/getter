@@ -1,4 +1,3 @@
-# type: ignore
 # getter < https://t.me/kastaid >
 # Copyright (C) 2022-present kastaid
 #
@@ -6,82 +5,72 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from .engine import *
+from typing import Any
+from sqlalchemy import (
+    Column,
+    Boolean,
+    UnicodeText,
+    Float,
+    delete,
+    insert,
+    select,
+)
+from sqlalchemy_json import MutableJson
+from .engine import Model, Session
 
-_GOAFK_LOCK = RLock()
 
-
-class GoAFK(BASE):
+class GoAFK(Model):
     __tablename__ = "afk"
     state = Column(Boolean, primary_key=True)
     reason = Column(UnicodeText)
     start = Column(Float)
-    last = Column(MutableJson)  # MutableDict.as_mutable(JSON)
+    last = Column(MutableJson)
 
-    def __init__(self, state, reason, start, last):
-        self.state = state
-        self.reason = reason
-        self.start = start
-        self.last = last
 
-    def __repr__(self):
-        return "<Database.GoAFK:\n state: {}\n reason: {}\n start: {}\n last: {}\n>".format(
-            self.state,
-            self.reason,
-            self.start,
-            self.last,
+async def is_afk() -> GoAFK | None:
+    async with Session() as s:
+        try:
+            data = (await s.execute(select(GoAFK).filter(GoAFK.state == True))).scalar_one_or_none()
+            if data:
+                await s.refresh(data)
+                return data
+        except BaseException:
+            pass
+        return None
+
+
+async def add_afk(
+    reason: str,
+    start: float,
+) -> None:
+    await del_afk()
+    async with Session(True) as s:
+        await s.execute(
+            insert(GoAFK).values(
+                state=True,
+                reason=reason,
+                start=start,
+                last={},
+            )
         )
 
-    def to_dict(self):
-        return {
-            "state": self.state,
-            "reason": self.reason,
-            "start": self.start,
-            "last": self.last,
-        }
+
+async def del_afk():
+    if not await is_afk():
+        return
+    async with Session(True) as s:
+        await s.execute(delete(GoAFK).where(GoAFK.state == True))
 
 
-GoAFK.__table__.create(checkfirst=True)
-
-
-def is_afk():
-    state, value = True, None
-    try:
-        data = SESSION.query(GoAFK).filter(GoAFK.state == state).one_or_none()
-        if data:
-            SESSION.refresh(data)
-            value = data
-        return value
-    except BaseException:
-        return value
-    finally:
-        SESSION.close()
-
-
-def add_afk(reason, start):
-    with _GOAFK_LOCK:
-        afk = SESSION.query(GoAFK).get(True)
-        if afk:
-            SESSION.delete(afk)
-        SESSION.add(GoAFK(True, reason, start, {}))
-        SESSION.commit()
-
-
-def del_afk():
-    with _GOAFK_LOCK:
-        afk = SESSION.query(GoAFK).get(True)
-        if afk:
-            SESSION.delete(afk)
-            SESSION.commit()
-
-
-def set_last_afk(chat_id, msg_id):
-    with _GOAFK_LOCK:
-        afk = SESSION.query(GoAFK).get(True)
-        if not afk:
-            return {}
+async def set_last_afk(
+    chat_id: str,
+    msg_id: int,
+) -> dict[str, Any]:
+    afk = await is_afk()
+    if not afk:
+        return {}
+    async with Session(True) as s:
         old_last = afk.last
         afk.last[chat_id] = msg_id
-        SESSION.merge(afk)
-        SESSION.commit()
+        await s.merge(afk)
         return old_last

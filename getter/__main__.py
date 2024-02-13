@@ -6,11 +6,12 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import sys
+from asyncio import gather
 from importlib import import_module
 from time import monotonic
 from requests.packages import urllib3
 import getter.core.patched  # noqa
-from getter import (
+from . import (
     __license__,
     __copyright__,
     __version__,
@@ -18,11 +19,12 @@ from getter import (
     __layer__,
     __pyversion__,
 )
-from getter.config import Var, hl
-from getter.core.base_client import getter_app
-from getter.core.helper import plugins_help
-from getter.core.property import do_not_remove_credit
-from getter.core.startup import (
+from .config import Var, hl
+from .core.base_client import getter_app
+from .core.db import db_connect
+from .core.helper import plugins_help, jdata
+from .core.property import do_not_remove_credit
+from .core.startup import (
     trap,
     migrations,
     autopilot,
@@ -30,8 +32,8 @@ from getter.core.startup import (
     autous,
     finishing,
 )
-from getter.core.utils import time_formatter
-from getter.logger import LOG
+from .core.utils import time_formatter
+from .logger import LOG
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -46,6 +48,8 @@ if Var.DEV_MODE:
 
 
 async def main() -> None:
+    await db_connect()
+    await jdata.sudo_users()
     migrations()
     await autopilot()
     await verify()
@@ -54,14 +58,19 @@ async def main() -> None:
     plugins = getter_app.all_plugins
     for p in plugins:
         try:
-            if p["path"].startswith("custom"):
-                plugin = "getter.plugins." + p["path"]
-            else:
-                plugin = "getter." + p["path"]
+            plugin = (
+                "".join(("getter.plugins.", p["path"]))
+                if p["path"].startswith("custom")
+                else "".join(("getter.", p["path"]))
+            )
             import_module(plugin)
             LOG.success("[+] " + p["name"])
         except Exception as err:
             LOG.exception(f"[-] {p['name']} : {err}")
+    from .plugins.afk import handle_afk
+    from .plugins.pmpermit import handle_pmpermit
+
+    await gather(*[handle_afk(), handle_pmpermit()])
     loaded_time = time_formatter((monotonic() - load) * 1000)
     loaded_msg = ">> Loaded Plugins: {} , Commands: {} (took {}) : {}".format(
         plugins_help.count,
@@ -71,13 +80,8 @@ async def main() -> None:
     )
     LOG.info(loaded_msg)
     do_not_remove_credit()
-    python_msg = ">> Python Version - {}".format(
-        __pyversion__,
-    )
-    telethon_msg = ">> Telethon Version - {} [Layer: {}]".format(
-        __tlversion__,
-        __layer__,
-    )
+    python_msg = f">> Python Version - {__pyversion__}"
+    telethon_msg = f">> Telethon Version - {__tlversion__} [Layer: {__layer__}]"
     launch_msg = ">> 🚀 Getter v{} launch ({} - {}) in {} with handler [ {}ping ]".format(
         __version__,
         getter_app.full_name,

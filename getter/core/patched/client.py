@@ -5,7 +5,6 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import typing
 from asyncio import sleep
 from random import randrange
 import telethon.client.telegramclient
@@ -29,7 +28,7 @@ class TelegramClient:
         return await self.get_peer_id(entity)
 
     @patchable()
-    async def get_chat_id(self, *args, **kwargs) -> typing.Optional[int]:
+    async def get_chat_id(self, *args, **kwargs) -> int | None:
         return await get_chat_id(*args, **kwargs)
 
     @patchable()
@@ -37,7 +36,7 @@ class TelegramClient:
         return await get_text(*args, **kwargs)
 
     @patchable()
-    async def get_user(self, *args, **kwargs) -> typing.Optional[typing.Tuple[typ.User, str]]:
+    async def get_user(self, *args, **kwargs) -> tuple[typ.User, str] | None:
         return await get_user(*args, **kwargs)
 
     @patchable()
@@ -64,14 +63,14 @@ class TelegramClient:
             return False
 
     @patchable()
-    async def archive(self, entity: hints.EntityLike) -> typing.Optional[typ.Updates]:
+    async def archive(self, entity: hints.EntityLike) -> typ.Updates | None:
         try:
             return await self.edit_folder(entity, folder=1)
         except BaseException:
             return None
 
     @patchable()
-    async def unarchive(self, entity: hints.EntityLike) -> typing.Optional[typ.Updates]:
+    async def unarchive(self, entity: hints.EntityLike) -> typ.Updates | None:
         try:
             return await self.edit_folder(entity, folder=0)
         except BaseException:
@@ -82,7 +81,7 @@ class TelegramClient:
         self,
         entity: hints.EntityLike,
         revoke: bool = False,
-    ) -> typing.Optional[typ.Updates]:
+    ) -> typ.Updates | None:
         try:
             return await self.delete_dialog(entity, revoke=revoke)
         except BaseException:
@@ -103,8 +102,8 @@ class TelegramClient:
         message: hints.MessageIDLike,
         big: bool = False,
         add_to_recent: bool = False,
-        reaction: typing.Optional[str] = None,
-    ) -> typing.Optional[typ.Updates]:
+        reaction: str | None = None,
+    ) -> typ.Updates | None:
         try:
             message = utils.get_message_id(message) or 0
             entity = await self.get_input_entity(entity)
@@ -121,7 +120,7 @@ class TelegramClient:
             return None
 
     @patchable()
-    async def join_to(self, entity: hints.EntityLike) -> typing.Optional[typ.Updates]:
+    async def join_to(self, entity: hints.EntityLike) -> typ.Updates | None:
         try:
             entity = await self.get_input_entity(entity)
             return await self(fun.channels.JoinChannelRequest(entity))
@@ -151,9 +150,9 @@ class TelegramClient:
         self,
         title: str = "Getter",
         about: str = "",
-        users: typing.Optional[typing.List[typing.Union[str, int]]] = None,
-        photo: typing.Optional[str] = None,
-    ) -> typing.Tuple[typing.Optional[str], typing.Optional[int]]:
+        users: list[str | int] | None = None,
+        photo: str | None = None,
+    ) -> tuple[str | None, int | None]:
         users = users or []
         try:
             created = await self(

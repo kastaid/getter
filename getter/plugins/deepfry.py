@@ -9,13 +9,13 @@ from asyncio import exceptions
 from mimetypes import guess_extension
 from random import randint, uniform
 from PIL import Image, ImageEnhance, ImageOps
+from telethon import events
 from telethon.errors import YouBlockedUserError
 from telethon.tl import types as typ
 from . import (
     Root,
     kasta_cmd,
     plugins_help,
-    events,
     aioify,
     Runner,
     Screenshot,
@@ -35,8 +35,7 @@ async def _(kst):
     reply = await kst.get_reply_message()
     data = check_media(reply)
     if isinstance(data, bool):
-        await kst.eor("`Cannot frying that!`", time=5)
-        return
+        return await kst.eor("`Cannot frying that!`", time=5)
     yy = await kst.eor("`...`")
     ext = None
     fry_img = Root / "downloads/fry.jpeg"
@@ -88,8 +87,7 @@ async def _(kst):
     reply = await kst.get_reply_message()
     data = check_media(reply)
     if isinstance(data, bool):
-        await kst.eor("`Cannot uglying that!`", time=5)
-        return
+        return await kst.eor("`Cannot uglying that!`", time=5)
     yy = await kst.eor("`...`")
     ext = None
     ugly_img = Root / "downloads/ugly.jpeg"
@@ -141,7 +139,10 @@ async def conv_fry(conv, image, level):
         resp = conv.wait_event(events.NewMessage(incoming=True, from_users=conv.chat_id))
         resp = await resp
         await yy.try_delete()
-        await resp.read(clear_mentions=True, clear_reactions=True)
+        await resp.read(
+            clear_mentions=True,
+            clear_reactions=True,
+        )
         return resp
     except exceptions.TimeoutError:
         return None

@@ -33,7 +33,7 @@ async def _(kst):
         if api.get("type") == "text":
             source = api.get("source")
             if source:
-                out += "\n~ {}".format(res.get(source))
+                out += f"\n~ {res.get(source)}"
             await yy.eor(out)
         else:
             await yy.eor(
