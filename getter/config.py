@@ -81,7 +81,7 @@ if not (
 else:
     hl = "".join(Var.HANDLER.split())
 
-BOTLOGS_CACHE: set[int] = set()
+BOTLOGS_CACHE: list[int] = []
 DEV_CMDS: dict[str, list[str]] = {}
 SUDO_CMDS: dict[str, list[str]] = {}
 INVITE_WORKER: dict[str, Any] = {}

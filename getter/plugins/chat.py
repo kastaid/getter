@@ -497,6 +497,7 @@ plugins_help["chat"] = {
     "{i}copy [reply]": "Copy the replied message.",
     "{i}nodraft": "Clear all drafts.",
     "{i}noghost": "Delete all chats with deleted account users/bots.",
+    "{i}cleanuser": "Delete all user chats.",
     "{i}nouser": "Archive all chats with users.",
     "{i}nobot": "Archive all chats with bots.",
     "{i}nochannel": "Archive all channels.",

@@ -95,10 +95,10 @@ class Heroku:
 
 async def get_botlogs() -> int:
     if BOTLOGS_CACHE:
-        return next((i for i in sorted(BOTLOGS_CACHE, reverse=True)), 0)
+        return next(reversed(BOTLOGS_CACHE), 0)
     b = await gvar("BOTLOGS", use_cache=True)
     i = int(Var.BOTLOGS or b or 0)
-    BOTLOGS_CACHE.add(i)
+    BOTLOGS_CACHE.append(i)
     return i
 
 
