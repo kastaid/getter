@@ -9,11 +9,7 @@ from pathlib import Path
 
 Root: Path = Path(__file__).parent.parent
 
-EXTS = (
-    ".py",
-    ".yml",
-    ".env",
-)
+EXTS = (".py", ".yml", ".env")
 
 WAIT_FOR = 1
 

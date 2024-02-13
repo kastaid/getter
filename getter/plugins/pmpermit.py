@@ -8,7 +8,9 @@
 from asyncio import sleep
 from datetime import datetime
 from html import escape
+from random import choice
 from cachetools import TTLCache
+from telethon import events
 from telethon.tl import functions as fun, types as typ
 from . import (
     DEVS,
@@ -18,12 +20,10 @@ from . import (
     plugins_help,
     DEFAULT_GUCAST_BLACKLIST,
     get_blacklisted,
-    events,
-    choice,
     dgvar,
     sgvar,
     gvar,
-    add_col,
+    set_col,
     jdata,
     display_name,
     mentionuser,
@@ -64,7 +64,7 @@ async def PMLogs(kst):
         or getattr(user, "verified", False)
     ):
         return
-    pmlog = gvar("_pmlog", use_cache=True)
+    pmlog = await gvar("_pmlog", use_cache=True)
     if pmlog == "media":
         if kst.message.media:
             return await sendlog(kst.message, forward=True)
@@ -89,17 +89,17 @@ async def PMPermit(kst):
     )
     if user.id in {*DEVS, *GUCAST_BLACKLIST}:
         return
-    if is_allow(user.id, use_cache=True):
+    if await is_allow(user.id, use_cache=True):
         return
     ga = kst.client
     towarn = str(user.id)
-    PMWARN, NESLAST = jdata.pmwarns(), jdata.pmlasts()
-    antipm = gvar("_antipm", use_cache=True)
-    is_pmlog = gvar("_pmlog", use_cache=True)
+    PMWARN, NESLAST = await jdata.pmwarns(), await jdata.pmlasts()
+    antipm = await gvar("_antipm", use_cache=True)
+    is_pmlog = await gvar("_pmlog", use_cache=True)
     if antipm:
         if towarn in PMWARN:
             del PMWARN[towarn]
-            add_col("pmwarns", PMWARN, NESLAST)
+            await set_col("pmwarns", PMWARN, NESLAST)
         if is_pmlog:
             mention = mentionuser(user.id, display_name(user), width=70)
             antipmt = r"\\**#Anti_PM**//"
@@ -124,7 +124,7 @@ async def PMPermit(kst):
     if "_pmtotal" in _PMTOTAL_CACHE:
         ratelimit = _PMTOTAL_CACHE.get("_pmtotal")
     else:
-        ratelimit = int(gvar("_pmtotal") or pmtotal_default)
+        ratelimit = int(await gvar("_pmtotal") or pmtotal_default)
         _PMTOTAL_CACHE["_pmtotal"] = ratelimit
     name = " ".join(replace_all(user.first_name, _TORM).split())
     last = " ".join(replace_all(user.last_name, _TORM).split()) if user.last_name else ""
@@ -137,7 +137,7 @@ async def PMPermit(kst):
     my_fullname = f"{my_name} {my_last}".rstrip()
     my_mention = mentionuser(my_id, my_fullname, width=70)
     my_username = f"@{me.username}" if me.username else my_mention
-    is_block = bool(gvar("_pmblock", use_cache=True))
+    is_block = bool(await gvar("_pmblock", use_cache=True))
     mode = "blocked" if is_block else "archived"
     if PMWARN[towarn] > ratelimit:
         if is_pmlog:
@@ -149,7 +149,7 @@ async def PMPermit(kst):
         if "_pmbye" in _PMBYE_CACHE:
             pmbye = _PMBYE_CACHE.get("_pmbye")
         else:
-            pmbye = gvar("_pmbye") or pmbye_default
+            pmbye = await gvar("_pmbye") or pmbye_default
             _PMBYE_CACHE["_pmbye"] = pmbye
         text = pmbye.format(
             id=user.id,
@@ -172,7 +172,7 @@ async def PMPermit(kst):
             pass
         if is_block:
             await ga.read(
-                user.id,
+                entity=user.id,
                 clear_mentions=True,
                 clear_reactions=True,
             )
@@ -198,12 +198,11 @@ async def PMPermit(kst):
                 warnt += "archived due to spamming in PM !!"
                 await sendlog(r"\\**#Archived**//" + warnt)
         del PMWARN[towarn]
-        add_col("pmwarns", PMWARN, NESLAST)
-        return
+        return await set_col("pmwarns", PMWARN, NESLAST)
     if "_pmmsg" in _PMMSG_CACHE:
         pmmsg = _PMMSG_CACHE.get("_pmmsg")
     else:
-        pmmsg = gvar("_pmmsg") or pmmsg_default
+        pmmsg = await gvar("_pmmsg") or pmmsg_default
         _PMMSG_CACHE["_pmmsg"] = pmmsg
     text = pmmsg.format(
         id=user.id,
@@ -227,8 +226,14 @@ async def PMPermit(kst):
     await sleep(1)
     last = await kst.reply(text)
     NESLAST[towarn] = last.id
-    add_col("pmwarns", PMWARN, NESLAST)
-    # await ga.read(user.id, clear_mentions=True, clear_reactions=True)
+    await set_col("pmwarns", PMWARN, NESLAST)
+    """
+    await ga.read(
+        entity=user.id,
+        clear_mentions=True,
+        clear_reactions=True,
+    )
+    """
     if is_pmlog:
         newmsgt = r"\\**#New_Message**//"
         newmsgt += f"\nUser {mention} [`{user.id}`] has messaged you with **{warn}/{ratelimit}** warns!"
@@ -244,23 +249,21 @@ async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Processing...`")
     toggle = kst.pattern_match.group(1)
-    pmguard = bool(gvar("_pmguard"))
+    pmguard = bool(await gvar("_pmguard"))
     if not toggle:
         text = f"**PM-Guard Status:** `{humanbool(pmguard, toggle=True)}`"
         return await yy.eod(text)
     if toggle in ("yes", "on", "true", "1"):
         if pmguard:
-            await yy.eor("`PM-Guard is already on.`", time=4)
-            return
-        sgvar("_pmguard", "true")
+            return await yy.eor("`PM-Guard is already on.`", time=4)
+        await sgvar("_pmguard", "true")
         text = "`Successfully to switch on PM-Guard!`"
         text += "\n`Rebooting to apply...`"
         msg = await yy.eor(text)
         return await ga.reboot(msg)
     if not pmguard:
-        await yy.eor("`PM-Guard is already off.`", time=4)
-        return
-    dgvar("_pmguard")
+        return await yy.eor("`PM-Guard is already off.`", time=4)
+    await dgvar("_pmguard")
     text = "`Successfully to switch off PM-Guard!`"
     text += "\n`Rebooting to apply...`"
     msg = await yy.eor(text)
@@ -275,7 +278,7 @@ async def _(kst):
     yy = await kst.eor("`Processing...`")
     group = kst.pattern_match.group
     toggle, opts = group(1), group(2).lower()
-    pmlog = gvar("_pmlog")
+    pmlog = await gvar("_pmlog")
     if not toggle:
         text = f"**PM-Logs Status:** `{humanbool(pmlog, toggle=True)}`"
         if pmlog and pmlog == "media":
@@ -283,21 +286,19 @@ async def _(kst):
         return await yy.eod(text)
     if toggle in ("yes", "on", "true", "1"):
         if pmlog:
-            await yy.eor("`PM-Logs is already on.`", time=4)
-            return
+            return await yy.eor("`PM-Logs is already on.`", time=4)
         if opts and any(_ in opts for _ in ("-m", "media")):
-            sgvar("_pmlog", "media")
+            await sgvar("_pmlog", "media")
             text = "`Successfully to switch on-media PM-Logs!`"
         else:
-            sgvar("_pmlog", "true")
+            await sgvar("_pmlog", "true")
             text = "`Successfully to switch on PM-Logs!`"
         text += "\n`Rebooting to apply...`"
         msg = await yy.eor(text)
         return await ga.reboot(msg)
     if not pmlog:
-        await yy.eor("`PM-Logs is already off.`", time=4)
-        return
-    dgvar("_pmlog")
+        return await yy.eor("`PM-Logs is already off.`", time=4)
+    await dgvar("_pmlog")
     text = "`Successfully to switch off PM-Logs!`"
     text += "\n`Rebooting to apply...`"
     msg = await yy.eor(text)
@@ -323,18 +324,18 @@ async def _(kst):
         return await yy.eor("`Cannot allow to myself.`", time=3)
     if user.id in DEVS:
         return await yy.eor("`Our devs auto allowed!`", time=3)
-    if is_allow(user.id):
+    if await is_allow(user.id):
         return await yy.eor("`User is already Allowed.`", time=4)
     date = datetime.now().timestamp()
-    allow_user(user.id, date, reason)
-    text = "<b><u>User {} allowed to PM!</u></b>\n".format(display_name(user))
+    await allow_user(user.id, date, reason)
+    text = f"<b><u>User {display_name(user)} allowed to PM!</u></b>\n"
     text += "<b>Date:</b> <code>{}</code>\n".format(datetime.fromtimestamp(date).strftime("%Y-%m-%d"))
     text += "<b>Reason:</b> {}".format(f"<pre>{reason}</pre>" if reason else "None given.")
     done = await yy.eor(text, parse_mode="html")
-    towarn, PMWARN = str(user.id), jdata.pmwarns()
+    towarn, PMWARN = str(user.id), await jdata.pmwarns()
     if towarn in PMWARN:
         del PMWARN[towarn]
-        add_col("pmwarns", PMWARN, jdata.pmlasts())
+        await set_col("pmwarns", PMWARN, await jdata.pmlasts())
     msg = await done.reply("`Rebooting to apply...`", silent=True)
     await kst.client.reboot(msg)
 
@@ -356,7 +357,7 @@ async def _(kst):
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
         return await yy.eor("`Cannot deny to myself.`", time=3)
-    deny_user(user.id)
+    await deny_user(user.id)
     done = await yy.eor(f"<code>User {display_name(user)} disallowed to PM!</code>", parse_mode="html")
     msg = await done.reply("`Rebooting to apply...`", silent=True)
     await kst.client.reboot(msg)
@@ -366,7 +367,7 @@ async def _(kst):
     pattern="listpm$",
 )
 async def _(kst):
-    allowed_users = all_allow()
+    allowed_users = await all_allow()
     total = len(allowed_users)
     if total > 0:
         text = f"<b><u>{total} Allowed Users PM</u></b>\n"
@@ -383,9 +384,9 @@ async def _(kst):
     pattern="denyall$",
 )
 async def _(kst):
-    if not all_allow():
+    if not await all_allow():
         return await kst.eor("`You got no allowed users!`", time=3)
-    deny_all()
+    await deny_all()
     done = await kst.eor("`Successfully to delete all allowed users!`")
     msg = await done.reply("`Rebooting to apply...`", silent=True)
     await kst.client.reboot(msg)
@@ -398,23 +399,21 @@ async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Processing...`")
     toggle = kst.pattern_match.group(1)
-    pmblock = bool(gvar("_pmblock"))
+    pmblock = bool(await gvar("_pmblock"))
     if not toggle:
         text = f"**PM-Block Status:** `{humanbool(pmblock, toggle=True)}`"
         return await yy.eod(text)
     if toggle in ("yes", "on", "true", "1"):
         if pmblock:
-            await yy.eor("`PM-Block is already on.`", time=4)
-            return
-        sgvar("_pmblock", "true")
+            return await yy.eor("`PM-Block is already on.`", time=4)
+        await sgvar("_pmblock", "true")
         text = "`Successfully to switch on PM-Block!`"
         text += "\n`Rebooting to apply...`"
         msg = await yy.eor(text)
         return await ga.reboot(msg)
     if not pmblock:
-        await yy.eor("`PM-Block is already off.`", time=4)
-        return
-    dgvar("_pmblock")
+        return await yy.eor("`PM-Block is already off.`", time=4)
+    await dgvar("_pmblock")
     text = "`Successfully to switch off PM-Block!`"
     text += "\n`Rebooting to apply...`"
     msg = await yy.eor(text)
@@ -429,7 +428,7 @@ async def _(kst):
     yy = await kst.eor("`Processing...`")
     group = kst.pattern_match.group
     toggle, opts = group(1), group(2).lower()
-    antipm = gvar("_antipm")
+    antipm = await gvar("_antipm")
     if not toggle:
         text = f"**Anti-PM Status:** `{humanbool(antipm, toggle=True)}`"
         if antipm and antipm == "del":
@@ -437,21 +436,19 @@ async def _(kst):
         return await yy.eod(text)
     if toggle in ("yes", "on", "true", "1"):
         if antipm:
-            await yy.eor("`Anti-PM is already on.`", time=4)
-            return
+            return await yy.eor("`Anti-PM is already on.`", time=4)
         if opts and any(_ in opts for _ in ("-d", "delete")):
-            sgvar("_antipm", "del")
+            await sgvar("_antipm", "del")
             text = "`Successfully to switch on-delete Anti-PM!`"
         else:
-            sgvar("_antipm", "true")
+            await sgvar("_antipm", "true")
             text = "`Successfully to switch on Anti-PM!`"
         text += "\n`Rebooting to apply...`"
         msg = await yy.eor(text)
         return await ga.reboot(msg)
     if not antipm:
-        await yy.eor("`Anti-PM is already off.`", time=4)
-        return
-    dgvar("_antipm")
+        return await yy.eor("`Anti-PM is already off.`", time=4)
+    await dgvar("_antipm")
     text = "`Successfully to switch off Anti-PM!`"
     text += "\n`Rebooting to apply...`"
     msg = await yy.eor(text)
@@ -459,7 +456,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="setpm(bye|msg|total)(?: |$)((?s).*)",
+    pattern=r"setpm(bye|msg|total)(?: |$)([\s\S]*)",
 )
 async def _(kst):
     ga = kst.client
@@ -473,41 +470,38 @@ async def _(kst):
     cmd = kst.pattern_match.group(1)
     if cmd == "bye":
         mode = "pmbye"
-        pmbye = gvar("_pmbye")
+        pmbye = await gvar("_pmbye")
         if not custom:
             text = "<b>PM-Bye:</b>\n"
-            text += "<pre>{}</pre>".format(escape(pmbye or pmbye_default))
-            await yy.eor(text, parse_mode="html")
-            return
+            text += f"<pre>{escape(pmbye or pmbye_default)}</pre>"
+            return await yy.eor(text, parse_mode="html")
         if pmbye == custom:
             return await yy.eor(f"`{mode} is already set.`", time=4)
-        sgvar("_pmbye", custom)
+        await sgvar("_pmbye", custom)
     elif cmd == "msg":
         mode = "pmmsg"
-        pmmsg = gvar("_pmmsg")
+        pmmsg = await gvar("_pmmsg")
         if not custom:
             text = "<b>PM-Message:</b>\n"
-            text += "<pre>{}</pre>".format(escape(pmmsg or pmmsg_default))
-            await yy.eor(text, parse_mode="html")
-            return
+            text += f"<pre>{escape(pmmsg or pmmsg_default)}</pre>"
+            return await yy.eor(text, parse_mode="html")
         if pmmsg == custom:
             return await yy.eor(f"`{mode} is already set.`", time=4)
-        sgvar("_pmmsg", custom)
+        await sgvar("_pmmsg", custom)
     elif cmd == "total":
         mode = "pmtotal"
-        pmtotal = gvar("_pmtotal")
+        pmtotal = await gvar("_pmtotal")
         custom = custom.strip()
         if not custom:
-            text = "**PM-Total:** `{}`".format(pmtotal or pmtotal_default)
-            await yy.eod(text)
-            return
+            text = f"**PM-Total:** `{pmtotal or pmtotal_default}`"
+            return await yy.eod(text)
         if not custom.isdecimal():
             return await yy.eor("`Provide a valid number!`", time=5)
         if int(custom) <= 1:
             return await yy.eor(f"`{mode} must be greater than 1.`", time=4)
         if pmtotal and int(pmtotal) == int(custom):
             return await yy.eor(f"`{mode} is already set.`", time=4)
-        sgvar("_pmtotal", custom)
+        await sgvar("_pmtotal", custom)
     text = f"`Successfully to set {mode}!`"
     await yy.eor(text)
 
@@ -520,19 +514,19 @@ async def _(kst):
     cmd = kst.pattern_match.group(1)
     if cmd == "bye":
         mode = "pmbye"
-        if not gvar("_pmbye"):
+        if not await gvar("_pmbye"):
             return await yy.eor(f"`{mode} is already default.`", time=4)
-        dgvar("_pmbye")
+        await dgvar("_pmbye")
     elif cmd == "msg":
         mode = "pmmsg"
-        if not gvar("_pmmsg"):
+        if not await gvar("_pmmsg"):
             return await yy.eor(f"`{mode} is already default.`", time=4)
-        dgvar("_pmmsg")
+        await dgvar("_pmmsg")
     elif cmd == "total":
         mode = "pmtotal"
-        if not gvar("_pmtotal"):
+        if not await gvar("_pmtotal"):
             return await yy.eor(f"`{mode} is already default.`", time=4)
-        dgvar("_pmtotal")
+        await dgvar("_pmtotal")
     text = f"`Successfully to reset {mode}!`"
     await yy.eor(text)
 
@@ -585,14 +579,11 @@ async def _(kst):
     except BaseException:
         pass
     is_block = await ga.block(user.id)
-    if is_block:
-        text = "`User blocked and {} reported!`".format("was" if is_reported else "not")
-    else:
-        text = "`Cannot Block!`"
-    towarn, PMWARN = str(user.id), jdata.pmwarns()
+    text = "`User blocked and {} reported!`".format("was" if is_reported else "not") if is_block else "`Cannot Block!`"
+    towarn, PMWARN = str(user.id), await jdata.pmwarns()
     if towarn in PMWARN:
         del PMWARN[towarn]
-        add_col("pmwarns", PMWARN, jdata.pmlasts())
+        await set_col("pmwarns", PMWARN, await jdata.pmlasts())
     if kst.is_dev or kst.is_sudo:
         return await yy.eor(text)
     await yy.eod(text)
@@ -620,10 +611,7 @@ async def _(kst):
     if user.id == ga.uid:
         return await yy.eor("`Cannot unblock to myself.`", time=3)
     is_unblock = await ga.unblock(user.id)
-    if is_unblock:
-        text = "`User UnBlocked!`"
-    else:
-        text = "`Cannot UnBlock!`"
+    text = "`User UnBlocked!`" if is_unblock else "`Cannot UnBlock!`"
     if kst.is_dev or kst.is_sudo:
         return await yy.eor(text)
     await yy.eod(text)
@@ -655,14 +643,11 @@ async def _(kst):
     await ga.mute_chat(user.id)
     await sleep(0.4)
     is_archive = await ga.archive(user.id)
-    if not (is_archive is None):
-        text = "`Archived!`"
-    else:
-        text = "`Cannot Archive!`"
-    towarn, PMWARN = str(user.id), jdata.pmwarns()
+    text = "`Archived!`" if not is_archive is None else "`Cannot Archive!`"
+    towarn, PMWARN = str(user.id), await jdata.pmwarns()
     if towarn in PMWARN:
         del PMWARN[towarn]
-        add_col("pmwarns", PMWARN, jdata.pmlasts())
+        await set_col("pmwarns", PMWARN, await jdata.pmlasts())
     if kst.is_dev or kst.is_sudo:
         return await yy.eor(text)
     await yy.eod(text)
@@ -690,10 +675,7 @@ async def _(kst):
     if user.id == ga.uid:
         return await yy.eor("`Cannot unarchive to myself.`", time=3)
     is_unarchive = await ga.unarchive(user.id)
-    if not (is_unarchive is None):
-        text = "`UnArchived!`"
-    else:
-        text = "`Cannot UnArchive!`"
+    text = "`UnArchived!`" if not is_unarchive is None else "`Cannot UnArchive!`"
     if kst.is_dev or kst.is_sudo:
         return await yy.eor(text)
     await yy.eod(text)
@@ -710,29 +692,31 @@ async def _(kst):
     chat_id = kst.chat_id
     if chat_id == ga.uid:
         return await kst.eor("`Cannot delete myself, protected!`", time=5)
-    towarn, PMWARN = str(chat_id), jdata.pmwarns()
+    towarn, PMWARN = str(chat_id), await jdata.pmwarns()
     if towarn in PMWARN:
         del PMWARN[towarn]
-        add_col("pmwarns", PMWARN, jdata.pmlasts())
+        await set_col("pmwarns", PMWARN, await jdata.pmlasts())
     await ga.delete_chat(chat_id, revoke=True)
 
 
-if gvar("_pmlog", use_cache=True):
-    getter_app.add_handler(
-        PMLogs,
-        event=events.NewMessage(
-            incoming=True,
-            func=lambda e: e.is_private,
-        ),
-    )
-if gvar("_pmguard", use_cache=True):
-    getter_app.add_handler(
-        PMPermit,
-        event=events.NewMessage(
-            incoming=True,
-            func=lambda e: e.is_private,
-        ),
-    )
+async def handle_pmpermit() -> None:
+    if await gvar("_pmlog", use_cache=True):
+        getter_app.add_handler(
+            PMLogs,
+            event=events.NewMessage(
+                incoming=True,
+                func=lambda e: e.is_private,
+            ),
+        )
+    if await gvar("_pmguard", use_cache=True):
+        getter_app.add_handler(
+            PMPermit,
+            event=events.NewMessage(
+                incoming=True,
+                func=lambda e: e.is_private,
+            ),
+        )
+
 
 plugins_help["pmpermit"] = {
     "{i}pmguard [yes/no/on/off]": "Switch the pmpermit plugin on or off. Default: off",

@@ -8,12 +8,13 @@
 import importlib.util
 import os
 import sys
-import typing
 from asyncio import sleep, Future
+from collections.abc import Coroutine
 from inspect import getmembers
 from platform import version, machine
 from random import choice
 from time import time
+from typing import Any, NoReturn
 from telethon.client.telegramclient import TelegramClient
 from telethon.errors import (
     ApiIdInvalidError,
@@ -32,12 +33,19 @@ from getter import (
     __version__,
     LOOP,
 )
-from getter.config import Var, DEVS
-from getter.core.db import sgvar
-from getter.core.functions import display_name
-from getter.core.property import do_not_remove_credit, get_blacklisted
-from getter.core.utils import time_formatter
+from getter.config import (
+    Var,
+    tz,
+    hl,
+    INVITE_WORKER,
+    DEVS,
+)
 from getter.logger import LOG, TelethonLogger
+from .db import sgvar
+from .functions import display_name
+from .helper import plugins_help
+from .property import do_not_remove_credit, get_blacklisted
+from .utils import time_formatter
 
 
 class ReverseList(list):
@@ -48,10 +56,10 @@ class ReverseList(list):
 class KastaClient(TelegramClient):
     def __init__(
         self,
-        session: typing.Union[str, Session],
-        api_id: typing.Optional[int] = None,
-        api_hash: typing.Optional[str] = None,
-        bot_token: typing.Optional[str] = None,
+        session: str | Session,
+        api_id: int | None = None,
+        api_hash: str | None = None,
+        bot_token: str | None = None,
         *args,
         **kwargs,
     ):
@@ -75,14 +83,10 @@ class KastaClient(TelegramClient):
         self.dc_id = self.session.dc_id
 
     def __repr__(self):
-        return "<Kasta.Client:\n self: {}\n id: {}\n bot: {}\n>".format(
-            self.full_name,
-            self.uid,
-            self._bot,
-        )
+        return f"<Kasta.Client:\n self: {self.full_name}\n id: {self.uid}\n bot: {self._bot}\n>"
 
     @property
-    def __dict__(self) -> typing.Optional[dict]:
+    def __dict__(self) -> dict | None:
         if self.me:
             return self.me.to_dict()
 
@@ -117,19 +121,9 @@ class KastaClient(TelegramClient):
                     fallbacks=None,
                 )
                 if self.uid in KASTA_BLACKLIST:
-                    self.log.error(
-                        "({} - {}) YOU ARE BLACKLISTED !!".format(
-                            me,
-                            self.uid,
-                        )
-                    )
+                    self.log.error(f"({me} - {self.uid}) YOU ARE BLACKLISTED !!")
                     sys.exit(1)
-            self.log.success(
-                "Logged in as {} [{}]".format(
-                    me,
-                    self.uid,
-                )
-            )
+            self.log.success(f"Logged in as {me} [{self.uid}]")
         except (ValueError, ApiIdInvalidError):
             self.log.critical("API_ID and API_HASH combination does not match, please re-check! Quitting...")
             sys.exit(1)
@@ -145,10 +139,10 @@ class KastaClient(TelegramClient):
             self.log.exception(f"[KastaClient] - {err}")
             sys.exit(1)
 
-    def run_in_loop(self, func: typing.Coroutine[typing.Any, typing.Any, None]) -> typing.Any:
+    def run_in_loop(self, func: Coroutine[Any, Any, None]) -> Any:
         return self.loop.run_until_complete(func)
 
-    def run(self) -> typing.NoReturn:
+    def run(self) -> NoReturn:
         try:
             self.run_until_disconnected()
         except InvalidBufferError as err:
@@ -174,10 +168,13 @@ class KastaClient(TelegramClient):
             return
         self.add_event_handler(func, *args, **kwargs)
 
-    def reboot(self, message: typ.Message) -> typing.NoReturn:
+    async def reboot(
+        self,
+        message: typ.Message,
+    ) -> NoReturn:
         try:
             chat_id = message.chat_id or message.from_id
-            sgvar("_reboot", f"{chat_id}|{message.id}")
+            await sgvar("_reboot", f"{chat_id}|{message.id}")
         except BaseException:
             pass
         try:
@@ -200,6 +197,12 @@ class KastaClient(TelegramClient):
             name = f"getter.plugins.custom.{plug}"
             spec = importlib.util.spec_from_file_location(name, path)
             mod = importlib.util.module_from_spec(spec)
+            mod.Var = Var
+            mod.tz = tz
+            mod.hl = hl
+            mod.INVITE_WORKER = INVITE_WORKER
+            mod.DEVS = DEVS
+            mod.plugins_help = plugins_help
             spec.loader.exec_module(mod)
             self._plugins[plug] = mod
             self.log.success(f"Successfully loaded custom plugin {plug}!")
@@ -215,14 +218,14 @@ class KastaClient(TelegramClient):
     ) -> None:
         name = self._plugins[plugin].__name__
         for x in reversed(range(len(self._event_builders))):
-            ev, cb = self._event_builders[x]
+            _, cb = self._event_builders[x]
             if cb.__module__ == name:
                 del self._event_builders[x]
         del self._plugins[plugin]
         self.log.success(f"Removed custom plugin {plugin}!")
 
     @property
-    def all_plugins(self) -> typing.List[typing.Dict[str, str]]:
+    def all_plugins(self) -> list[dict[str, str]]:
         return [
             {
                 "path": ".".join(str(_.resolve()).replace(".py", "").split("/")[-2:]),

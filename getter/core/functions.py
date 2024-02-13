@@ -6,7 +6,6 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import re
-import typing
 from functools import partial
 from textwrap import shorten
 from telethon import hints
@@ -14,24 +13,24 @@ from telethon.helpers import add_surrogate
 from telethon.tl import functions as fun, types as typ
 from telethon.utils import get_display_name
 
-TELEGRAM_LINK_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog)/)([\w-]+)$"
-USERNAME_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog)?(?:/)?(.*?))"
-MSG_ID_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog)/)(?:c\/|)(.*)\/(.*)|(?:tg//openmessage\?)?(?:user_id=(.*))?(?:\&message_id=(.*))"
+TELEGRAM_LINK_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog|space)/)([\w-]+)$"
+USERNAME_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog|space)?(?:/)?(.*?))"
+MSG_ID_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog|space)/)(?:c\/|)(.*)\/(.*)|(?:tg//openmessage\?)?(?:user_id=(.*))?(?:\&message_id=(.*))"
 
 
 def is_telegram_link(url: str) -> bool:
     # TODO: support for username.t.me
-    return bool(re.match(TELEGRAM_LINK_RE, url, flags=re.I))
+    return bool(re.match(TELEGRAM_LINK_RE, url, flags=re.IGNORECASE))
 
 
 def get_username(url: str) -> str:
     # TODO: support for username.t.me
-    return "".join(re.sub(USERNAME_RE, "@", url, flags=re.I).split("/")[:1])
+    return "".join(re.sub(USERNAME_RE, "@", url, flags=re.IGNORECASE).split("/")[:1])
 
 
-def get_msg_id(link: str) -> typing.Tuple[typing.Union[str, None], typing.Union[int, None]]:
+def get_msg_id(link: str) -> tuple[str | None, int | None]:
     # TODO: support for username.t.me
-    idx = [tuple(filter(None, _)) for _ in re.findall(MSG_ID_RE, link, flags=re.I)]
+    idx = [tuple(filter(None, _)) for _ in re.findall(MSG_ID_RE, link, flags=re.IGNORECASE)]
     ids = next((_ for _ in idx), None)
     if not ids:
         return None, None
@@ -42,7 +41,7 @@ def get_msg_id(link: str) -> typing.Tuple[typing.Union[str, None], typing.Union[
 
 
 def mentionuser(
-    user_id: typing.Union[int, str],
+    user_id: int | str,
     name: str,
     sep: str = "",
     width: int = 20,
@@ -59,7 +58,7 @@ def display_name(entity: hints.Entity) -> str:
     return name if name else "{}".format(getattr(entity, "first_name", "unknown") or "unknown")
 
 
-def normalize_chat_id(chat_id: typing.Union[int, str]) -> typing.Union[int, str]:
+def normalize_chat_id(chat_id: int | str) -> int | str:
     if str(chat_id).startswith(("-100", "-")) and str(chat_id)[1:].isdecimal():
         chat_id = int(str(chat_id).replace("-100", "").replace("-", ""))
     elif str(chat_id).isdecimal():
@@ -70,7 +69,7 @@ def normalize_chat_id(chat_id: typing.Union[int, str]) -> typing.Union[int, str]
 async def get_chat_id(
     message: typ.Message,
     group: int = 1,
-) -> typing.Union[int, str, None]:
+) -> int | str | None:
     chat_id = None
     target = await get_text(message, group=group)
     if not target:
@@ -132,7 +131,7 @@ def get_user_status(user: typ.User) -> str:
 async def get_user(
     message: typ.Message,
     group: int = 1,
-) -> typing.Tuple[typing.Union[typ.User, None], typing.Union[str, None]]:
+) -> tuple[typ.User | None, str | None]:
     args = message.pattern_match.group(group).strip().split(" ", 1)
     extra = ""
     try:
@@ -216,7 +215,7 @@ async def admin_check(
     message: typ.Message,
     chat_id: hints.EntityLike,
     user_id: hints.EntityLike,
-    require: typing.Optional[str] = None,
+    require: str | None = None,
 ) -> bool:
     if message.is_private:
         return True
@@ -249,7 +248,7 @@ def to_privilege(privilege: str) -> str:
     return privileges[privilege]
 
 
-def parse_pre(text: str) -> typing.Tuple[str, typing.List[typ.MessageEntityPre]]:
+def parse_pre(text: str) -> tuple[str, list[typ.MessageEntityPre]]:
     text = text.strip()
     return (
         text,
@@ -283,10 +282,7 @@ def get_media_type(media: typ.TypeMessageMedia) -> str:
         elif "audio" in mim:
             ret = "audio"
         else:
-            if mim.startswith(("text", "application")):
-                ret = "text"
-            else:
-                ret = "document"
+            ret = "text" if mim.startswith(("text", "application")) else "document"
     elif mdt == "MessageMediaPhoto":
         ret = "pic"
     elif mdt == "MessageMediaWebPage":

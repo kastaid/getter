@@ -1,3 +1,4 @@
+# ruff: noqa: F401
 # getter < https://t.me/kastaid >
 # Copyright (C) 2022-present kastaid
 #
@@ -28,9 +29,6 @@ if not sys.platform.startswith("linux"):
     sys.exit(1)
 if "/com.termux" in sys.executable:
     print("You are detected using Termux, maybe the functionality will not work normally.")
-if sys.version_info < (3, 10, 0):
-    print(f"You must use at least Python version 3.10.0, currently {__pyversion__}. Quitting...")
-    sys.exit(1)
 
 Root: Path = Path(__file__).parent.parent
 LOOP = uvloop.new_event_loop()

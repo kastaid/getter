@@ -7,13 +7,13 @@
 
 from asyncio import sleep
 from io import BytesIO
+from random import choice
 from time import monotonic
 from . import (
     Root,
     kasta_cmd,
     plugins_help,
     is_url,
-    choice,
     is_termux,
     time_formatter,
     get_random_hex,
@@ -29,8 +29,7 @@ from . import (
 async def _(kst):
     link = await kst.client.get_text(kst)
     if not link:
-        await kst.eor("`Provide a valid link!`", time=5)
-        return
+        return await kst.eor("`Provide a valid link!`", time=5)
     toss = link
     check_link = is_url(toss)
     if not (check_link is True):
@@ -43,11 +42,10 @@ async def _(kst):
         from selenium import webdriver
     except ImportError:
         if is_termux():
-            await kst.eor("`This command doesn't not supported Termux. Use proot-distro instantly!`", time=5)
-            return
+            return await kst.eor("`This command doesn't not supported Termux. Use proot-distro instantly!`", time=5)
         webdriver = import_lib(
             lib_name="selenium.webdriver",
-            pkg_name="selenium==4.8.2",
+            pkg_name="selenium==4.17.2",
         )
     start_time = monotonic()
     options = webdriver.ChromeOptions()
@@ -97,8 +95,7 @@ async def _(kst):
 async def _(kst):
     link = await kst.client.get_text(kst)
     if not link:
-        await kst.eor("`Provide a valid tweet link!`", time=5)
-        return
+        return await kst.eor("`Provide a valid tweet link!`", time=5)
     toss = link
     check_link = is_url(toss)
     if not (check_link is True):
@@ -108,11 +105,10 @@ async def _(kst):
         import tweetcapture
     except ImportError:
         if is_termux():
-            await kst.eor("`This command doesn't not supported Termux. Use proot-distro instantly!`", time=5)
-            return
+            return await kst.eor("`This command doesn't not supported Termux. Use proot-distro instantly!`", time=5)
         tweetcapture = import_lib(
             lib_name="tweetcapture",
-            pkg_name="tweet-capture==0.1.7",
+            pkg_name="tweet-capture==0.2.4",
         )
     if not (check_link is True) or not tweetcapture.utils.utils.is_valid_tweet_url(link):
         return await kst.eod("`Input is not valid tweet link!`")
@@ -130,8 +126,7 @@ async def _(kst):
             night_mode=choice((0, 1, 2)),
         )
     except BaseException:
-        await yy.eod("`Oops, the tweet not found or suspended account.`")
-        return
+        return await yy.eod("`Oops, the tweet not found or suspended account.`")
     await yy.eor("`Tweet Screenshot Taked...`")
     taken = time_formatter((monotonic() - start_time) * 1000)
     await yy.eor(

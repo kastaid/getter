@@ -23,15 +23,13 @@ python = "python3"
 nocache = f"{python} -B"
 app = f"{python} -m getter"
 app_watch = f"{python} -m scripts.autoreload {app}"
-
-black = "black --line-length 120 --exclude version.py ."
-isort = "isort --settings-file=setup.cfg ."
-flake8 = "flake8 --config=setup.cfg ."
-mypy = "mypy --config-file=setup.cfg ."
+ruff_check = "ruff check ."
+ruff_format = "ruff format ."
+isort = "isort --settings-file=pyproject.toml ."
 prettyjson = f"{nocache} -m scripts.prettyjson"
 
 
-def run_cmd(cmd) -> None:
+def run_cmd(cmd: str) -> None:
     try:
         proc = run(shlex.split(cmd), shell=False)
         if proc.returncode != 0:
@@ -51,19 +49,19 @@ def clean() -> None:
 def lint() -> None:
     print(f"{CYAN}>> {prettyjson}{RST}")
     run_cmd(prettyjson)
-    print(f"{CYAN}>> {black}{RST}")
-    run_cmd(black)
     print(f"{CYAN}>> {isort}{RST}")
     run_cmd(isort)
-    print(f"{CYAN}>> {flake8}{RST}")
-    run_cmd(flake8)
+    print(f"{CYAN}>> {ruff_check}{RST}")
+    run_cmd(ruff_check)
+    print(f"{CYAN}>> {ruff_format}{RST}")
+    run_cmd(ruff_format)
 
 
 class CapitalisedHelpFormatter(argparse.HelpFormatter):
     def add_usage(self, usage, actions, groups, prefix=None):
         if not prefix:
             prefix = "Usage: "
-        return super(CapitalisedHelpFormatter, self).add_usage(usage, actions, groups, prefix)
+        return super().add_usage(usage, actions, groups, prefix)
 
 
 parser = argparse.ArgumentParser(
@@ -74,12 +72,36 @@ parser = argparse.ArgumentParser(
     add_help=False,
 )
 parser._optionals.title = "Options"
-parser.add_argument("-p", "--prod", help="run in production mode", action="store_true")
-parser.add_argument("-d", "--dev", help="run in development mode", action="store_true")
-parser.add_argument("-w", "--watch", help="run and watch in development mode", action="store_true")
-parser.add_argument("-l", "--lint", help="run linting and format code", action="store_true")
-parser.add_argument("-t", "--type", help="run type checker only", action="store_true")
-parser.add_argument("-c", "--clean", help="remove python caches", action="store_true")
+parser.add_argument(
+    "-p",
+    "--prod",
+    help="run in production mode",
+    action="store_true",
+)
+parser.add_argument(
+    "-d",
+    "--dev",
+    help="run in development mode",
+    action="store_true",
+)
+parser.add_argument(
+    "-w",
+    "--watch",
+    help="run and watch in development mode",
+    action="store_true",
+)
+parser.add_argument(
+    "-l",
+    "--lint",
+    help="run linting and format code",
+    action="store_true",
+)
+parser.add_argument(
+    "-c",
+    "--clean",
+    help="remove python caches",
+    action="store_true",
+)
 parser.add_argument(
     "-v",
     "--version",
@@ -118,10 +140,6 @@ def main() -> None:
         print(f"{BOLD}{YELLOW}Run linting and format code...{RST}")
         clean()
         lint()
-    elif args.type:
-        print(f"{BOLD}{YELLOW}Run type checker...{RST}")
-        clean()
-        run_cmd(mypy)
     elif args.clean:
         clean()
     else:
@@ -129,4 +147,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    SystemExit(main())
+    raise SystemExit(main())

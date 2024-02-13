@@ -5,16 +5,16 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import json
 from asyncio import sleep
 from datetime import datetime
 from html import escape
+from json import dumps
 from math import floor
+from random import choice
 from . import (
     getter_app,
     kasta_cmd,
     plugins_help,
-    choice,
     humanbytes,
     to_dict,
     formatx_send,
@@ -67,10 +67,7 @@ usage_text = """
 )
 async def _(kst):
     yy = await kst.eor("`Processing...`")
-    if hk.is_heroku:
-        usage = default_usage() + await heroku_usage()
-    else:
-        usage = default_usage()
+    usage = default_usage() + await heroku_usage() if hk.is_heroku else default_usage()
     await yy.eor(usage, parse_mode="html")
 
 
@@ -80,22 +77,20 @@ async def _(kst):
 async def _(kst):
     yy = await kst.eor("`Processing...`")
     if not hk.api:
-        await yy.eod("Please set `HEROKU_API` in Config Vars.")
-        return
+        return await yy.eod("Please set `HEROKU_API` in Config Vars.")
     if not hk.name:
-        await yy.eod("Please set `HEROKU_APP_NAME` in Config Vars.")
-        return
+        return await yy.eod("Please set `HEROKU_APP_NAME` in Config Vars.")
     try:
         conn = hk.heroku()
         app = conn.app(hk.name)
     except Exception as err:
         return await yy.eor(formatx_send(err), parse_mode="html")
-    account = json.dumps(to_dict(conn.account()), indent=1, default=str)
-    capp = json.dumps(to_dict(app.info), indent=1, default=str)
-    dyno = json.dumps(to_dict(app.dynos()), indent=1, default=str)
-    addons = json.dumps(to_dict(app.addons()), indent=1, default=str)
-    buildpacks = json.dumps(to_dict(app.buildpacks()), indent=1, default=str)
-    configs = json.dumps(app.config().to_dict(), indent=1, default=str)
+    account = dumps(to_dict(conn.account()), indent=1, default=str)
+    capp = dumps(to_dict(app.info), indent=1, default=str)
+    dyno = dumps(to_dict(app.dynos()), indent=1, default=str)
+    addons = dumps(to_dict(app.addons()), indent=1, default=str)
+    buildpacks = dumps(to_dict(app.buildpacks()), indent=1, default=str)
+    configs = dumps(app.config().to_dict(), indent=1, default=str)
     await sendlog(f"<b>Account:</b>\n<pre>{escape(account)}</pre>", fallback=True, parse_mode="html")
     await sleep(1)
     await sendlog(f"<b>App:</b>\n<pre>{escape(capp)}</pre>", fallback=True, parse_mode="html")
@@ -132,18 +127,15 @@ def default_usage() -> str:
         FREE = 0
     try:
         cpu_freq = psutil.cpu_freq().current
-        if cpu_freq >= 1000:
-            cpu_freq = "{}GHz".format(round(cpu_freq / 1000, 2))
-        else:
-            cpu_freq = "{}MHz".format(round(cpu_freq, 2))
-        CPU = "{}% ({}) {}".format(psutil.cpu_percent(), psutil.cpu_count(), cpu_freq)
+        cpu_freq = f"{round(cpu_freq / 1000, 2)}GHz" if cpu_freq >= 1000 else f"{round(cpu_freq, 2)}MHz"
+        CPU = f"{psutil.cpu_percent()}% ({psutil.cpu_count()}) {cpu_freq}"
     except BaseException:
         try:
-            CPU = "{}%".format(psutil.cpu_percent())
+            CPU = f"{psutil.cpu_percent()}%"
         except BaseException:
             CPU = "0%"
     try:
-        RAM = "{}%".format(psutil.virtual_memory().percent)
+        RAM = f"{psutil.virtual_memory().percent}%"
     except BaseException:
         RAM = "0%"
     try:
@@ -152,7 +144,7 @@ def default_usage() -> str:
         DISK = "0%"
     try:
         swap = psutil.swap_memory()
-        SWAP = "{} | {}%".format(humanbytes(swap.total), swap.percent or 0)
+        SWAP = f"{humanbytes(swap.total)} | {swap.percent or 0}%"
     except BaseException:
         SWAP = "0 | 0%"
     return usage_text.format(

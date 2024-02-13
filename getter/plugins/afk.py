@@ -7,6 +7,8 @@
 
 from datetime import datetime
 from html import escape
+from random import choice
+from telethon import events
 from . import (
     DEVS,
     NOCHATS,
@@ -15,8 +17,6 @@ from . import (
     plugins_help,
     DEFAULT_GUCAST_BLACKLIST,
     get_blacklisted,
-    events,
-    choice,
     time_formatter,
     OUTS_AFK,
     is_afk,
@@ -41,14 +41,14 @@ _ON_STOP = (
 
 
 @kasta_cmd(
-    pattern="afk(?: |$)((?s).*)",
+    pattern=r"afk(?: |$)([\s\S]*)",
 )
 @kasta_cmd(
-    pattern="brb(?: |$)((?s).*)",
+    pattern=r"brb(?: |$)([\s\S]*)",
     no_handler=True,
 )
 async def _(kst):
-    if is_afk():
+    if await is_afk():
         return
     yy = await kst.eor("`Go To AFK...!!`")
     start = datetime.now().timestamp()
@@ -57,7 +57,7 @@ async def _(kst):
     if reason:
         reason = escape(reason)
         text += f"\n<b>Reason:</b> <pre>{reason}</pre>"
-    add_afk(reason, start)
+    await add_afk(reason, start)
     getter_app.add_handler(
         StopAFK,
         event=events.NewMessage(
@@ -81,16 +81,17 @@ async def StopAFK(kst):
         return
     if kst.chat_id in NOCHATS and kst.client.uid not in DEVS:
         return
-    if is_afk():
-        start = datetime.fromtimestamp(is_afk().start)
+    afk = await is_afk()
+    if afk:
+        start = datetime.fromtimestamp(afk.start)
         end = datetime.now().replace(microsecond=0)
         afk_time = time_formatter((end - start).seconds * 1000)
         try:
-            for x, y in is_afk().last.items():
+            for x, y in afk.last.items():
                 await kst.client.delete_messages(int(x), [y])
         except BaseException:
             pass
-        del_afk()
+        await del_afk()
         myself = escape(kst.client.full_name)
         text = f"{myself}\n"
         text += f"{choice(OUTS_AFK)}\n"
@@ -101,14 +102,14 @@ async def StopAFK(kst):
 async def OnAFK(kst):
     if any(_ in kst.raw_text.lower() for _ in ("afk", "brb")):
         return
-    if not is_afk():
+    if not await is_afk():
         return
     user = await kst.get_sender()
     if getattr(user, "bot", False) or getattr(user, "support", False) or getattr(user, "verified", False):
         return
     if kst.chat_id in NOCHATS and user.id not in DEVS:
         return
-    if kst.is_private and gvar("_pmguard", use_cache=True) and not is_allow(user.id, use_cache=True):
+    if kst.is_private and await gvar("_pmguard", use_cache=True) and not await is_allow(user.id, use_cache=True):
         return
     GUCAST_BLACKLIST = await get_blacklisted(
         url="https://raw.githubusercontent.com/kastaid/resources/main/gucastblacklist.py",
@@ -117,18 +118,19 @@ async def OnAFK(kst):
     )
     if user.id in {*DEVS, *GUCAST_BLACKLIST}:
         return
-    if is_afk():
-        start = datetime.fromtimestamp(is_afk().start)
+    afk = await is_afk()
+    if afk:
+        start = datetime.fromtimestamp(afk.start)
         end = datetime.now().replace(microsecond=0)
         afk_time = time_formatter((end - start).seconds * 1000)
         text = "<b><u>I`m Now AFK ツ</u></b>\n"
         text += f"Last seen {afk_time} ago."
-        reason = f"<pre>{is_afk().reason}</pre>" if is_afk().reason else "No reason."
+        reason = f"<pre>{afk.reason}</pre>" if afk.reason else "No reason."
         text += f"\n<b>Reason:</b> {reason}"
         chat_id = str(kst.chat_id)
-        if chat_id in is_afk().last:
+        if chat_id in afk.last:
             try:
-                await kst.client.delete_messages(int(chat_id), [is_afk().last[chat_id]])
+                await kst.client.delete_messages(int(chat_id), [afk.last[chat_id]])
             except BaseException:
                 pass
         last = await kst.reply(
@@ -136,25 +138,26 @@ async def OnAFK(kst):
             link_preview=False,
             parse_mode="html",
         )
-        set_last_afk(chat_id, last.id)
+        await set_last_afk(chat_id, last.id)
 
 
-if is_afk():
-    getter_app.add_handler(
-        StopAFK,
-        event=events.NewMessage(
-            outgoing=True,
-            forwards=False,
-        ),
-    )
-    getter_app.add_handler(
-        OnAFK,
-        event=events.NewMessage(
-            incoming=True,
-            func=lambda e: bool(e.mentioned or e.is_private),
-            forwards=False,
-        ),
-    )
+async def handle_afk() -> None:
+    if await is_afk():
+        getter_app.add_handler(
+            StopAFK,
+            event=events.NewMessage(
+                outgoing=True,
+                forwards=False,
+            ),
+        )
+        getter_app.add_handler(
+            OnAFK,
+            event=events.NewMessage(
+                incoming=True,
+                func=lambda e: bool(e.mentioned or e.is_private),
+                forwards=False,
+            ),
+        )
 
 
 plugins_help["afk"] = {

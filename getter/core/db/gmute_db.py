@@ -1,4 +1,3 @@
-# type: ignore
 # getter < https://t.me/kastaid >
 # Copyright (C) 2022-present kastaid
 #
@@ -6,98 +5,95 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from .engine import *
+from typing import Any
+from cachetools import TTLCache
+from sqlalchemy import (
+    Column,
+    String,
+    Float,
+    UnicodeText,
+    delete,
+    insert,
+    select,
+)
+from .engine import Model, Session
 
-_GMUTE_CACHE = TTLCache(maxsize=1024, ttl=60)  # 1 mins
-_GMUTE_LOCK = RLock()
+_GMUTE_CACHE = TTLCache(maxsize=100, ttl=60)  # 1 mins
 
 
-class GMute(BASE):
+class GMute(Model):
     __tablename__ = "gmute"
     user_id = Column(String, primary_key=True)
     date = Column(Float)
     reason = Column(UnicodeText)
 
-    def __init__(self, user_id, date, reason):
-        self.user_id = str(user_id)
-        self.date = date
-        self.reason = reason
 
-    def __repr__(self):
-        return "<Database.GMute:\n user_id: {}\n date: {}\n reason: {}\n>".format(
-            self.user_id,
-            self.date,
-            self.reason,
-        )
-
-    def to_dict(self):
-        return {
-            "user_id": self.user_id,
-            "date": self.date,
-            "reason": self.reason,
-        }
+async def all_gmute() -> list[GMute]:
+    async with Session() as s:
+        try:
+            return (await s.execute(select(GMute).order_by(GMute.date.asc()))).scalars().all()
+        except BaseException:
+            return []
 
 
-GMute.__table__.create(checkfirst=True)
+async def gmute_list() -> list[dict[str, Any]]:
+    result = await all_gmute()
+    return [i.to_dict() for i in result]
 
 
-def is_gmute(user_id, use_cache: bool = False):
+async def is_gmute(
+    user_id: int,
+    use_cache: bool = False,
+) -> GMute | None:
     user_id, value = str(user_id), None
     if use_cache and user_id in _GMUTE_CACHE:
         return _GMUTE_CACHE.get(user_id)
-    try:
-        data = SESSION.query(GMute).filter(GMute.user_id == user_id).one_or_none()
-        if data:
-            SESSION.refresh(data)
-            value = data
-            if use_cache and not _GMUTE_CACHE.get(user_id):
-                _GMUTE_CACHE[user_id] = value
+    async with Session() as s:
+        try:
+            data = (await s.execute(select(GMute).filter(GMute.user_id == user_id))).scalar_one_or_none()
+            if data:
+                await s.refresh(data)
+                value = data
+                if use_cache and not _GMUTE_CACHE.get(user_id):
+                    _GMUTE_CACHE[user_id] = value
+            return value
+        except BaseException:
+            pass
         return value
-    except BaseException:
-        return value
-    finally:
-        SESSION.close()
 
 
-def add_gmute(user_id, date, reason=None):
-    with _GMUTE_LOCK:
-        SESSION.add(GMute(str(user_id), date, reason or ""))
-        SESSION.commit()
+async def add_gmute(
+    user_id: int,
+    date: float,
+    reason: str = "",
+) -> None:
+    async with Session(True) as s:
+        await s.execute(
+            insert(GMute).values(
+                user_id=str(user_id),
+                date=date,
+                reason=reason,
+            ),
+        )
 
 
-def del_gmute(user_id):
-    with _GMUTE_LOCK:
-        user = SESSION.query(GMute).get(str(user_id))
-        if user:
-            SESSION.delete(user)
-            SESSION.commit()
+async def del_gmute(user_id: int) -> None:
+    async with Session(True) as s:
+        user_id = str(user_id)
+        if user_id in _GMUTE_CACHE:
+            del _GMUTE_CACHE[user_id]
+        await s.execute(delete(GMute).where(GMute.user_id == user_id))
 
 
-def set_gmute_reason(user_id, reason):
-    with _GMUTE_LOCK:
-        user = SESSION.query(GMute).get(str(user_id))
-        if not user:
-            return ""
-        prev_reason = user.reason
-        user.reason = reason
-        SESSION.merge(user)
-        SESSION.commit()
+async def set_gmute_reason(
+    user_id: int,
+    reason: str = "",
+) -> str:
+    gmute = await is_gmute(user_id)
+    if not gmute:
+        return ""
+    async with Session(True) as s:
+        prev_reason = gmute.reason
+        gmute.reason = reason
+        await s.merge(gmute)
         return prev_reason
-
-
-def all_gmute():
-    try:
-        return SESSION.query(GMute).order_by(GMute.date.asc()).all()
-    except BaseException:
-        return []
-    finally:
-        SESSION.close()
-
-
-def gmute_list():
-    try:
-        return [x.to_dict() for x in all_gmute()]
-    except BaseException:
-        return []
-    finally:
-        SESSION.close()

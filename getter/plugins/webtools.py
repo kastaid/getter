@@ -30,8 +30,7 @@ async def _(kst):
     engine = kst.pattern_match.group(1)
     keywords = await kst.client.get_text(kst, group=2)
     if not keywords:
-        await kst.eor("`Provide a keywords!`", time=5)
-        return
+        return await kst.eor("`Provide a keywords!`", time=5)
     yy = await kst.eor("`Searching...`")
     if engine == "google":
         search = "Google"
@@ -56,7 +55,7 @@ async def _(kst):
         url = "https://www.ecosia.org/search?q={}"
     result = url.format(keywords.replace("\n", " ").replace(" ", "+")).strip()
     keywords = keywords.replace("\n", " ").strip()
-    await yy.eor("**🔎 {} Search Result:**\n\n[{}]({})".format(search, keywords, result))
+    await yy.eor(f"**🔎 {search} Search Result:**\n\n[{keywords}]({result})")
 
 
 @kasta_cmd(
@@ -65,8 +64,7 @@ async def _(kst):
 async def _(kst):
     text = await kst.client.get_text(kst, group=2)
     if not text or not (is_url(text) is True):
-        await kst.eor("`Provide a valid link!`", time=5)
-        return
+        return await kst.eor("`Provide a valid link!`", time=5)
     yy = await kst.eor("`Processing...`")
     if kst.pattern_match.group(1).strip() == "un":
         res = await Fetch(
@@ -83,7 +81,7 @@ async def _(kst):
         res = await Fetch(url)
         if not res:
             return await yy.eod("`Try again now!`")
-        output = "• **Shorted Link:** {}\n• **Original Link:** {}".format(res.strip(), text)
+        output = f"• **Shorted Link:** {res.strip()}\n• **Original Link:** {text}"
     await yy.eor(output)
 
 
@@ -102,8 +100,7 @@ async def _(kst):
 async def _(kst):
     ipaddr = await kst.client.get_text(kst)
     if not ipaddr or not (ipv4(ipaddr) is True):
-        await kst.eor("`Provide a valid IP address!`", time=5)
-        return
+        return await kst.eor("`Provide a valid IP address!`", time=5)
     yy = await kst.eor("`Processing...`")
     url = f"http://ip-api.com/json/{ipaddr}?fields=status,message,continent,country,countryCode,regionName,city,zip,lat,lon,timezone,currency,isp,mobile,query"
     res = await Fetch(url, re_json=True)
@@ -199,8 +196,7 @@ async def _(kst):
 async def _(kst):
     link = await kst.client.get_text(kst)
     if not link:
-        await kst.eor("`Provide a valid link!`", time=5)
-        return
+        return await kst.eor("`Provide a valid link!`", time=5)
     toget = link
     check_link = is_url(toget)
     if not (check_link is True):
@@ -213,8 +209,7 @@ async def _(kst):
     url = f"https://da.gd/dns/{hostname}"
     res = await Fetch(url)
     if res:
-        await yy.eor(f"<b>DNS Records {hostname}</b>\n<pre>{res.strip()}</pre>", parts=True, parse_mode="html")
-        return
+        return await yy.eor(f"<b>DNS Records {hostname}</b>\n<pre>{res.strip()}</pre>", parts=True, parse_mode="html")
     await yy.eor(f"`Cannot resolve {hostname} dns.`")
 
 
@@ -224,8 +219,7 @@ async def _(kst):
 async def _(kst):
     link = await kst.client.get_text(kst)
     if not link:
-        await kst.eor("`Provide a valid link or IP address!`", time=5)
-        return
+        return await kst.eor("`Provide a valid link or IP address!`", time=5)
     toget = link
     check_link = is_url(toget)
     if not (check_link is True):
@@ -234,15 +228,11 @@ async def _(kst):
     if not (check_link is True):
         return await kst.eod("`Input is not supported link!`")
     yy = await kst.eor("`Processing...`")
-    if ipv4(link) is True:
-        hostname = link
-    else:
-        hostname = ".".join(urllib.parse.urlparse(toget).netloc.split(".")[-2:])
+    hostname = link if ipv4(link) is True else ".".join(urllib.parse.urlparse(toget).netloc.split(".")[-2:])
     url = f"https://da.gd/w/{hostname}"
     res = await Fetch(url)
     if res:
-        await yy.eor(f"<b>WHOIS For {hostname}</b>\n<pre>{res.strip()}</pre>", parts=True, parse_mode="html")
-        return
+        return await yy.eor(f"<b>WHOIS For {hostname}</b>\n<pre>{res.strip()}</pre>", parts=True, parse_mode="html")
     await yy.eod(f"`Cannot resolve {hostname} whois.`")
 
 
@@ -252,8 +242,7 @@ async def _(kst):
 async def _(kst):
     link = await kst.client.get_text(kst)
     if not link:
-        await kst.eor("`Provide a valid link!`", time=5)
-        return
+        return await kst.eor("`Provide a valid link!`", time=5)
     toget = link
     check_link = is_url(toget)
     if not (check_link is True):
@@ -265,8 +254,7 @@ async def _(kst):
     url = f"https://da.gd/headers?url={toget}"
     res = await Fetch(url)
     if res:
-        await yy.eor(f"<b>HTTP Headers {toget}</b>\n<pre>{res.strip()}</pre>", parts=True, parse_mode="html")
-        return
+        return await yy.eor(f"<b>HTTP Headers {toget}</b>\n<pre>{res.strip()}</pre>", parts=True, parse_mode="html")
     await yy.eod(f"`Cannot resolve {toget} headers.`")
 
 
@@ -276,8 +264,7 @@ async def _(kst):
 async def _(kst):
     dns = await kst.client.get_text(kst)
     if not dns:
-        await kst.eor("`Provide a valid DNS or IP address!`", time=5)
-        return
+        return await kst.eor("`Provide a valid DNS or IP address!`", time=5)
     yy = await kst.eor("`Processing...`")
     duration = Pinger(dns)
     await yy.eor(f"• **DNS:** `{dns}`\n• **Ping Speed:** `{duration}`")

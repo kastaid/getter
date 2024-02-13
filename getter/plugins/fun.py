@@ -8,12 +8,12 @@
 from asyncio import sleep
 from collections import deque
 from html import escape
+from random import choice
 from telethon.tl import types as typ
 from . import (
     kasta_cmd,
     plugins_help,
     parse_pre,
-    choice,
     UWUS,
     SHRUGS,
 )

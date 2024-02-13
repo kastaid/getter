@@ -6,12 +6,8 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from asyncio import sleep
-from . import (
-    kasta_cmd,
-    plugins_help,
-    choice,
-    time_formatter,
-)
+from random import choice
+from . import kasta_cmd, plugins_help, time_formatter
 
 
 @kasta_cmd(

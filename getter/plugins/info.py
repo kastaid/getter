@@ -10,12 +10,12 @@ from html import escape
 from math import sqrt
 from time import monotonic
 from cachetools import LRUCache, TTLCache
+from telethon import events
 from telethon.errors import YouBlockedUserError, FloodWaitError
 from telethon.tl import functions as fun, types as typ, custom
 from . import (
     kasta_cmd,
     plugins_help,
-    events,
     display_name,
     humanbool,
     get_user_status,
@@ -34,12 +34,12 @@ from . import (
 SG_BOT = "SangMata_BOT"
 CREATED_BOT = "creationdatebot"
 ROSE_BOT = "MissRose_bot"
-_TOTAL_BOT_CACHE = TTLCache(maxsize=512, ttl=120)  # 2 mins
-_CREATED_CACHE = TTLCache(maxsize=512, ttl=120)  # 2 mins
-_ROSE_LANG_CACHE = LRUCache(maxsize=512)
-_ROSE_STAT_CACHE = TTLCache(maxsize=512, ttl=120)  # 2 mins
-_SPAMWATCH_CACHE = TTLCache(maxsize=512, ttl=120)  # 2 mins
-_CAS_CACHE = TTLCache(maxsize=512, ttl=120)  # 2 mins
+_TOTAL_BOT_CACHE = TTLCache(maxsize=100, ttl=120)  # 2 mins
+_CREATED_CACHE = TTLCache(maxsize=100, ttl=120)  # 2 mins
+_ROSE_LANG_CACHE = LRUCache(maxsize=100)
+_ROSE_STAT_CACHE = TTLCache(maxsize=100, ttl=120)  # 2 mins
+_SPAMWATCH_CACHE = TTLCache(maxsize=100, ttl=120)  # 2 mins
+_CAS_CACHE = TTLCache(maxsize=100, ttl=120)  # 2 mins
 
 
 @kasta_cmd(
@@ -98,10 +98,7 @@ async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Processing...`")
     user, _ = await ga.get_user(kst)
-    if user:
-        user_id = user.id
-    else:
-        user_id = ga.uid
+    user_id = user.id if user else ga.uid
     async with ga.conversation(CREATED_BOT) as conv:
         resp = await conv_created(conv, user_id)
     if not resp:
@@ -198,10 +195,10 @@ async def _(kst):
         sp_count = 0
     sc_count = await get_total_bot(kst, "Stickers", "/stats")
     bc_count = await get_total_bot(kst, "BotFather", "/setcommands")
-    gbanned_users = len(all_gban())
-    gmuted_users = len(all_gmute())
-    sudo_users = len(jdata.sudo_users)
-    allowed_users = len(all_allow())
+    gbanned_users = len(await all_gban())
+    gmuted_users = len(await all_gmute())
+    sudo_users = len(await jdata.sudo_users())
+    allowed_users = len(await all_allow())
     stop_time = monotonic() - start_time
     graph = """<b>Stats for {}</b>
 ├  <b>Private:</b> <code>{}</code>
@@ -301,8 +298,6 @@ async def _(kst):
     if user.id == ga.uid:
         return await yy.eor("`Cannot get cc to myself.`", time=3)
     try:
-        collect = []
-        collect.clear()
         chat = await ga(
             fun.messages.GetCommonChatsRequest(
                 user.id,
@@ -310,8 +305,7 @@ async def _(kst):
                 limit=0,
             )
         )
-        for _ in chat.chats:
-            collect.append(_.title + "\n")
+        collect = [_.title + "\n" for _ in chat.chats]
         whois = display_name(await ga.get_entity(user.id))
         if collect:
             text = f"<b>{len(collect)} Groups in common with:</b> <code>{whois}</code>\n" + "".join(collect)
@@ -349,63 +343,44 @@ async def _(kst):
         async with ga.conversation(CREATED_BOT) as conv:
             resp = await conv_created(conv, user_id)
         created = f"\n├  <b>Created:</b> <code>{resp}</code>"
-        await ga.delete_chat(CREATED_BOT, revoke=True)
+        await ga.delete_dialog(CREATED_BOT, revoke=True)
     except BaseException:
         pass
-    dc_id = user.photo and user.photo.dc_id or 0
+    dc_id = (user.photo and user.photo.dc_id) or 0
     first_name = escape(user.first_name).replace("\u2060", "")
     last_name = (
-        user.last_name and "\n├  <b>Last Name:</b> <code>{}</code>".format(user.last_name.replace("\u2060", "")) or ""
-    )
-    username = user.username and "\n├  <b>Username:</b> @{}".format(user.username) or ""
+        user.last_name and "\n├  <b>Last Name:</b> <code>{}</code>".format(user.last_name.replace("\u2060", ""))
+    ) or ""
+    username = (user.username and f"\n├  <b>Username:</b> @{user.username}") or ""
     user_pictures = (await ga.get_profile_photos(user_id, limit=0)).total or 0
     user_status = get_user_status(user)
     user_bio = escape(full_user.about or "")
     if not is_full:
-        caption = """<b><u>USER INFORMATION</u></b>
-├  <b>ID:</b> <code>{}</code>{}
-├  <b>DC ID:</b> <code>{}</code>
-├  <b>First Name:</b> <code>{}</code>{}{}
-├  <b>Profile:</b> <a href=tg://user?id={}>Link</a>
-├  <b>Pictures:</b> <code>{}</code>
-├  <b>Last Seen:</b> <code>{}</code>
-├  <b>Is Premium:</b> <code>{}</code>
-├  <b>Is Bot:</b> <code>{}</code>
-├  <b>Is Blocked:</b> <code>{}</code>
-├  <b>Is Contact:</b> <code>{}</code>
-├  <b>Is Deleted:</b> <code>{}</code>
-├  <b>Is Private Forward:</b> <code>{}</code>
-├  <b>Is Scam:</b> <code>{}</code>
-├  <b>Groups In Common:</b> <code>{}</code>
+        caption = f"""<b><u>USER INFORMATION</u></b>
+├  <b>ID:</b> <code>{user_id}</code>{created}
+├  <b>DC ID:</b> <code>{dc_id}</code>
+├  <b>First Name:</b> <code>{first_name}</code>{last_name}{username}
+├  <b>Profile:</b> <a href=tg://user?id={user_id}>Link</a>
+├  <b>Pictures:</b> <code>{user_pictures}</code>
+├  <b>Last Seen:</b> <code>{user_status}</code>
+├  <b>Is Premium:</b> <code>{humanbool(user.premium)}</code>
+├  <b>Is Bot:</b> <code>{humanbool(user.bot)}</code>
+├  <b>Is Blocked:</b> <code>{humanbool(full_user.blocked)}</code>
+├  <b>Is Contact:</b> <code>{humanbool(user.contact)}</code>
+├  <b>Is Deleted:</b> <code>{humanbool(user.deleted)}</code>
+├  <b>Is Private Forward:</b> <code>{humanbool(full_user.private_forward_name)}</code>
+├  <b>Is Scam:</b> <code>{humanbool(user.scam)}</code>
+├  <b>Groups In Common:</b> <code>{full_user.common_chats_count}</code>
 └  <b>Bio:</b>
-<pre>{}</pre>""".format(
-            user_id,
-            created,
-            dc_id,
-            first_name,
-            last_name,
-            username,
-            user_id,
-            user_pictures,
-            user_status,
-            humanbool(user.premium),
-            humanbool(user.bot),
-            humanbool(full_user.blocked),
-            humanbool(user.contact),
-            humanbool(user.deleted),
-            humanbool(full_user.private_forward_name),
-            humanbool(user.scam),
-            full_user.common_chats_count,
-            user_bio,
-        )
+<pre>{user_bio}</pre>"""
     else:
         is_rose_fban = await get_rose_fban(kst, user_id)
         is_spamwatch_banned = await get_spamwatch_banned(kst, user_id)
         is_cas_banned = await get_cas_banned(kst, user_id)
-        is_gbanned = bool(is_gban(user_id))
-        is_gmuted = bool(is_gmute(user_id))
-        is_sudo = user_id in jdata.sudo_users
-        is_allowed = bool(is_allow(user_id))
+        is_gbanned = bool(await is_gban(user_id))
+        is_gmuted = bool(await is_gmute(user_id))
+        is_sudo = user_id in await jdata.sudo_users()
+        is_allowed = bool(await is_allow(user_id))
         caption = """<b><u>USER INFORMATION</u></b>
 ├  <b>ID:</b> <code>{}</code>{}
 ├  <b>DC ID:</b> <code>{}</code>
@@ -506,29 +481,17 @@ async def _(kst):
     gifs = (await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterGif())).total
     maps = (await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterGeo())).total
     contact = (await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterContacts())).total
-    text = """<b><u>{} TOTAL MESSAGES</u></b>
-├  <b>Photo:</b> <code>{}</code>
-├  <b>Video:</b> <code>{}</code>
-├  <b>Music:</b> <code>{}</code>
-├  <b>Voice Note:</b> <code>{}</code>
-├  <b>Video Note:</b> <code>{}</code>
-├  <b>Document:</b> <code>{}</code>
-├  <b>URL:</b> <code>{}</code>
-├  <b>Gif:</b> <code>{}</code>
-├  <b>Map:</b> <code>{}</code>
-└  <b>Contact:</b> <code>{}</code>""".format(
-        total,
-        photo,
-        video,
-        music,
-        voice_note,
-        video_note,
-        files,
-        urls,
-        gifs,
-        maps,
-        contact,
-    )
+    text = f"""<b><u>{total} TOTAL MESSAGES</u></b>
+├  <b>Photo:</b> <code>{photo}</code>
+├  <b>Video:</b> <code>{video}</code>
+├  <b>Music:</b> <code>{music}</code>
+├  <b>Voice Note:</b> <code>{voice_note}</code>
+├  <b>Video Note:</b> <code>{video_note}</code>
+├  <b>Document:</b> <code>{files}</code>
+├  <b>URL:</b> <code>{urls}</code>
+├  <b>Gif:</b> <code>{gifs}</code>
+├  <b>Map:</b> <code>{maps}</code>
+└  <b>Contact:</b> <code>{contact}</code>"""
     await yy.eor(text, parse_mode="html")
 
 
@@ -612,7 +575,7 @@ async def get_chat_info(kst, chat):
     msgs_sent_alt = getattr(full, "read_outbox_max_id", None)
     exp_count = getattr(full, "pts", None)
     supergroup = humanbool(getattr(chat, "megagroup", None))
-    creator_username = "@{}".format(creator_username) if creator_username else None
+    creator_username = f"@{creator_username}" if creator_username else None
     if not admins:
         try:
             admin_rights = await ga(
@@ -787,13 +750,16 @@ async def get_rose_fban(kst, user_id: int) -> bool:
             if not resp.message.lower().startswith("checking fbans"):
                 break
         if resp:
-            await resp.read(clear_mentions=True, clear_reactions=True)
+            await resp.read(
+                clear_mentions=True,
+                clear_reactions=True,
+            )
         _ROSE_LANG_CACHE["lang"] = True
     if (not resp) or ("hasn't been banned" in resp.message.lower()):
         _ROSE_STAT_CACHE[user_id] = False
         await resp.try_delete()
         return False
-    elif "to be banned" in resp.message.lower():
+    if "to be banned" in resp.message.lower():
         _ROSE_STAT_CACHE[user_id] = True
         await resp.try_delete()
         return True

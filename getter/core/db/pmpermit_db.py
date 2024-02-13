@@ -1,4 +1,3 @@
-# type: ignore
 # getter < https://t.me/kastaid >
 # Copyright (C) 2022-present kastaid
 #
@@ -6,88 +5,80 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from .engine import *
+from cachetools import LRUCache
+from sqlalchemy import (
+    Column,
+    String,
+    Float,
+    UnicodeText,
+    delete,
+    insert,
+    select,
+)
+from .engine import Model, Session
 
-_PMPERMIT_CACHE = LRUCache(maxsize=1024)
-_PMPERMIT_LOCK = RLock()
+_PMPERMIT_CACHE = LRUCache(maxsize=100)
 
 
-class PMPermit(BASE):
+class PMPermit(Model):
     __tablename__ = "pmpermit"
     user_id = Column(String, primary_key=True)
     date = Column(Float)
     reason = Column(UnicodeText)
 
-    def __init__(self, user_id, date, reason):
-        self.user_id = str(user_id)
-        self.date = date
-        self.reason = reason
 
-    def __repr__(self):
-        return "<Database.PMPermit:\n user_id: {}\n date: {}\n reason: {}\n>".format(
-            self.user_id,
-            self.date,
-            self.reason,
-        )
-
-    def to_dict(self):
-        return {
-            "user_id": self.user_id,
-            "date": self.date,
-            "reason": self.reason,
-        }
+async def all_allow() -> list[PMPermit]:
+    async with Session() as s:
+        try:
+            return (await s.execute(select(PMPermit).order_by(PMPermit.date.asc()))).scalars().all()
+        except BaseException:
+            return []
 
 
-PMPermit.__table__.create(checkfirst=True)
-
-
-def is_allow(user_id, use_cache: bool = False):
+async def is_allow(
+    user_id: int,
+    use_cache: bool = False,
+) -> PMPermit | None:
     user_id, value = str(user_id), None
     if use_cache and user_id in _PMPERMIT_CACHE:
         return _PMPERMIT_CACHE.get(user_id)
-    try:
-        data = SESSION.query(PMPermit).filter(PMPermit.user_id == user_id).one_or_none()
-        if data:
-            SESSION.refresh(data)
-            value = data
-            if use_cache and not _PMPERMIT_CACHE.get(user_id):
-                _PMPERMIT_CACHE[user_id] = value
+    async with Session() as s:
+        try:
+            data = (await s.execute(select(PMPermit).filter(PMPermit.user_id == user_id))).scalar_one_or_none()
+            if data:
+                await s.refresh(data)
+                value = data
+                if use_cache and not _PMPERMIT_CACHE.get(user_id):
+                    _PMPERMIT_CACHE[user_id] = value
+            return value
+        except BaseException:
+            pass
         return value
-    except BaseException:
-        return value
-    finally:
-        SESSION.close()
 
 
-def allow_user(user_id, date, reason=None):
-    with _PMPERMIT_LOCK:
-        SESSION.add(PMPermit(str(user_id), date, reason or ""))
-        SESSION.commit()
+async def allow_user(
+    user_id: int,
+    date: float,
+    reason: str = "",
+) -> None:
+    async with Session(True) as s:
+        await s.execute(
+            insert(PMPermit).values(
+                user_id=str(user_id),
+                date=date,
+                reason=reason,
+            ),
+        )
 
 
-def deny_user(user_id):
-    with _PMPERMIT_LOCK:
-        user = SESSION.query(PMPermit).get(str(user_id))
-        if user:
-            SESSION.delete(user)
-            SESSION.commit()
+async def deny_user(user_id: int) -> None:
+    async with Session(True) as s:
+        user_id = str(user_id)
+        if user_id in _PMPERMIT_CACHE:
+            del _PMPERMIT_CACHE[user_id]
+        await s.execute(delete(PMPermit).where(PMPermit.user_id == user_id))
 
 
-def all_allow():
-    try:
-        return SESSION.query(PMPermit).order_by(PMPermit.date.asc()).all()
-    except BaseException:
-        return []
-    finally:
-        SESSION.close()
-
-
-def deny_all():
-    try:
-        SESSION.query(PMPermit).delete()
-        SESSION.commit()
-        return True
-    except BaseException:
-        return False
-    finally:
-        SESSION.close()
+async def deny_all() -> None:
+    async with Session(True) as s:
+        await s.execute(delete(PMPermit))

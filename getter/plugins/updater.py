@@ -6,9 +6,10 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import os
-import sys
 from asyncio import sleep, Lock
-from datetime import datetime, timezone
+from datetime import datetime, UTC
+from random import choice
+from sys import executable
 import aiofiles
 from git import Repo
 from git.exc import GitCommandError, InvalidGitRepositoryError, NoSuchPathError
@@ -23,7 +24,6 @@ from . import (
     hl,
     kasta_cmd,
     plugins_help,
-    choice,
     sgvar,
     gvar,
     strip_format,
@@ -79,8 +79,7 @@ test_text = """
 )
 async def _(kst):
     if not kst.is_dev and _UPDATE_LOCK.locked():
-        await kst.eor("`Please wait until previous •update• finished...`", time=5, silent=True)
-        return
+        return await kst.eor("`Please wait until previous •update• finished...`", time=5, silent=True)
     async with _UPDATE_LOCK:
         group = kst.pattern_match.group
         mode, opt, is_force, is_now, is_deploy, state = group(1), group(2), False, False, False, ""
@@ -111,11 +110,9 @@ async def _(kst):
         try:
             repo = Repo()
         except NoSuchPathError as err:
-            await yy.eor(f"`{state}Directory not found : {err}`")
-            return
+            return await yy.eor(f"`{state}Directory not found : {err}`")
         except GitCommandError as err:
-            await yy.eor(f"`{state}Early failure : {err}`")
-            return
+            return await yy.eor(f"`{state}Early failure : {err}`")
         except InvalidGitRepositoryError:
             repo = Repo.init()
             origin = repo.create_remote("origin", UPSTREAM_REPO)
@@ -128,19 +125,16 @@ async def _(kst):
             if kst.is_dev:
                 await sleep(5)
             await yy.eor(f"`{state}Updating ~ Please Wait...`")
-            await Pushing(yy, state, repo)
-            return
+            return await Pushing(yy, state, repo)
         try:
             verif = verify(repo, f"HEAD..origin/{UPSTREAM_BRANCH}")
         except BaseException:
             verif = None
         if not (verif or is_force):
-            await yy.eor(rf"\\**#Getter**// `v{__version__} up-to-date as {UPSTREAM_BRANCH}`")
-            return
+            return await yy.eor(rf"\\**#Getter**// `v{__version__} up-to-date as {UPSTREAM_BRANCH}`")
         if not (mode or is_force):
             changelog = generate_changelog(repo, f"HEAD..origin/{UPSTREAM_BRANCH}")
-            await show_changelog(yy, changelog)
-            return
+            return await show_changelog(yy, changelog)
         if is_force:
             await sleep(3)
         if is_now or is_force:
@@ -194,7 +188,7 @@ async def _(kst):
     if kst.is_sudo:
         await sleep(choice((4, 6, 8)))
     # http://www.timebie.com/std/utc
-    utc_now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    utc_now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
     local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
     yy = await kst.eor("`Processing...`", silent=True, force_reply=True)
     await yy.eor(
@@ -206,11 +200,11 @@ async def _(kst):
             __tlversion__,
             __layer__,
             hl,
-            humanbool(gvar("_sudo", use_cache=True), toggle=True),
-            humanbool(gvar("_pmguard", use_cache=True), toggle=True),
-            humanbool(gvar("_pmlog", use_cache=True), toggle=True),
-            humanbool(gvar("_pmblock", use_cache=True), toggle=True),
-            humanbool(gvar("_antipm", use_cache=True), toggle=True),
+            humanbool(await gvar("_sudo", use_cache=True), toggle=True),
+            humanbool(await gvar("_pmguard", use_cache=True), toggle=True),
+            humanbool(await gvar("_pmlog", use_cache=True), toggle=True),
+            humanbool(await gvar("_pmblock", use_cache=True), toggle=True),
+            humanbool(await gvar("_antipm", use_cache=True), toggle=True),
             hk.name or "none",
             hk.stack,
             ga.uptime,
@@ -236,7 +230,7 @@ async def ignores() -> None:
 
 async def update_packages() -> None:
     reqs = Root / "requirements.txt"
-    await Runner(f"{sys.executable} -m pip install --disable-pip-version-check --default-timeout=100 -U -r {reqs}")
+    await Runner(f"{executable} -m pip install --disable-pip-version-check --default-timeout=100 -U -r {reqs}")
 
 
 async def force_pull() -> None:
@@ -298,7 +292,7 @@ Wait for a few seconds, then run `{hl}ping` command."""
     yy = await kst.eor(up)
     try:
         chat_id = yy.chat_id or yy.from_id
-        sgvar("_restart", f"{chat_id}|{yy.id}")
+        await sgvar("_restart", f"{chat_id}|{yy.id}")
     except BaseException:
         pass
     try:
@@ -309,16 +303,14 @@ Wait for a few seconds, then run `{hl}ping` command."""
             os.close(_.fd)
     except BaseException:
         pass
-    os.execl(sys.executable, sys.executable, "-m", "getter")
+    os.execl(executable, executable, "-m", "getter")
 
 
 async def Pushing(kst, state, repo) -> None:
     if not hk.api:
-        await kst.eod("Please set `HEROKU_API` in Config Vars.")
-        return
+        return await kst.eod("Please set `HEROKU_API` in Config Vars.")
     if not hk.name:
-        await kst.eod("Please set `HEROKU_APP_NAME` in Config Vars.")
-        return
+        return await kst.eod("Please set `HEROKU_APP_NAME` in Config Vars.")
     try:
         conn = hk.heroku()
         app = conn.app(hk.name)
@@ -329,15 +321,14 @@ async def Pushing(kst, state, repo) -> None:
             msg = err
         up = rf"""\\**#Getter**// **Heroku Error:**
 `{msg}`"""
-        await kst.eor(up)
-        return
+        return await kst.eor(up)
     await force_pull()
     up = rf"""\\**#Getter**// `{state}Updated Successfully...`
 Wait for a few minutes, then run `{hl}ping` command."""
     yy = await kst.eor(up)
     try:
         chat_id = yy.chat_id or yy.from_id
-        sgvar("_restart", f"{chat_id}|{yy.id}")
+        await sgvar("_restart", f"{chat_id}|{yy.id}")
     except BaseException:
         pass
     url = app.git_url.replace("https://", f"https://api:{hk.api}@")

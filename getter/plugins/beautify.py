@@ -5,11 +5,11 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+from random import choice
 from . import (
     Root,
     kasta_cmd,
     plugins_help,
-    choice,
     mentionuser,
     get_media_type,
     Carbon,
@@ -19,7 +19,7 @@ from . import (
 
 
 @kasta_cmd(
-    pattern="carbon(?: |$)((?s).*)",
+    pattern=r"carbon(?: |$)([\s\S]*)",
 )
 async def _(kst):
     ga = kst.client
@@ -65,10 +65,9 @@ async def _(kst):
         windowTheme=windowTheme,
     )
     if not carbon:
-        await yy.eod("`Carbon API not responding.`")
-        return
+        return await yy.eod("`Carbon API not responding.`")
     await yy.eor(
-        "Carboniz by {}".format(mentionuser(ga.uid, ga.full_name, html=True)),
+        f"Carboniz by {mentionuser(ga.uid, ga.full_name, html=True)}",
         file=carbon,
         parse_mode="html",
         force_document=False,
@@ -77,7 +76,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="rayso(?: |$)((?s).*)",
+    pattern=r"rayso(?: |$)([\s\S]*)",
 )
 async def _(kst):
     ga = kst.client
@@ -120,10 +119,9 @@ async def _(kst):
         darkMode=darkMode,
     )
     if not rayso:
-        await yy.eod("`Rayso API not responding.`")
-        return
+        return await yy.eod("`Rayso API not responding.`")
     await yy.eor(
-        "Raysoniz by {}".format(mentionuser(ga.uid, ga.full_name, html=True)),
+        f"Raysoniz by {mentionuser(ga.uid, ga.full_name, html=True)}",
         file=rayso,
         parse_mode="html",
         force_document=False,

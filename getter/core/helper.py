@@ -5,22 +5,22 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import typing
 from html import escape
+from typing import Any
 from cachetools import cached, LRUCache
 from heroku3 import from_key
 from getter.config import Var, BOTLOGS_CACHE
-from getter.core.db import gvar, get_col
-from getter.core.utils import get_full_class_name
 from getter.logger import LOG
+from .db import gvar, get_col
+from .utils import get_full_class_name
 
 
 class PluginsHelp(dict):
     def append(self, obj: dict) -> None:
-        plug = list(obj.keys())[0]
+        plug = next(iter(obj.keys()))
         cmds = {}
         for _ in obj[plug]:
-            name = list(_.keys())[0]
+            name = next(iter(_.keys()))
             desc = _[name]
             cmds[name] = desc
         self[plug] = cmds
@@ -31,30 +31,37 @@ class PluginsHelp(dict):
 
     @property
     def total(self) -> int:
-        return sum(len(_) for _ in self.values())
+        return sum(len(i) for i in self.values())
 
 
 class JSONData:
-    def sudos(self) -> typing.Dict[str, typing.Any]:
-        return getattr(get_col("sudos"), "json", {})
+    def __init__(self) -> None:
+        self.CACHE_DATA = LRUCache(maxsize=float("inf"))
 
-    def pmwarns(self) -> typing.Dict[str, int]:
-        return getattr(get_col("pmwarns"), "json", {})
+    async def sudos(self) -> dict[str, Any]:
+        return getattr(await get_col("sudos"), "json", {})
 
-    def pmlasts(self) -> typing.Dict[str, int]:
-        return getattr(get_col("pmwarns"), "njson", {})
+    async def pmwarns(self) -> dict[str, int]:
+        return getattr(await get_col("pmwarns"), "json", {})
 
-    def gblack(self) -> typing.Dict[str, typing.Any]:
-        return getattr(get_col("gblack"), "json", {})
+    async def pmlasts(self) -> dict[str, int]:
+        return getattr(await get_col("pmwarns"), "njson", {})
 
-    @property
-    def gblacklist(self) -> typing.Set[int]:
-        return {int(_) for _ in self.gblack()}
+    async def gblack(self) -> dict[str, Any]:
+        return getattr(await get_col("gblack"), "json", {})
 
-    @property
-    @cached(LRUCache(maxsize=1024))
-    def sudo_users(self) -> typing.List[int]:
-        return [int(_) for _ in self.sudos()]
+    async def gblacklist(self) -> set[int]:
+        result = await self.gblack()
+        return {int(i) for i in result}
+
+    async def sudo_users(self) -> list[int]:
+        if "sudo" in self.CACHE_DATA:
+            return self.CACHE_DATA.get("sudo", [])
+        result = await self.sudos()
+        users = [int(i) for i in result]
+        if "sudo" not in self.CACHE_DATA:
+            self.CACHE_DATA["sudo"] = users
+        return users
 
 
 class Heroku:
@@ -62,7 +69,7 @@ class Heroku:
         self.name: str = Var.HEROKU_APP_NAME
         self.api: str = Var.HEROKU_API
 
-    def heroku(self) -> typing.Any:
+    def heroku(self) -> Any:
         _conn = None
         try:
             if self.is_heroku:
@@ -86,18 +93,19 @@ class Heroku:
         return bool(self.api and self.name)
 
 
-def get_botlogs() -> int:
+async def get_botlogs() -> int:
     if BOTLOGS_CACHE:
-        return next((_ for _ in sorted(BOTLOGS_CACHE, reverse=True)), 0)
-    nope = int(Var.BOTLOGS or gvar("BOTLOGS", use_cache=True) or 0)
-    BOTLOGS_CACHE.add(nope)
-    return nope
+        return next((i for i in sorted(BOTLOGS_CACHE, reverse=True)), 0)
+    b = await gvar("BOTLOGS", use_cache=True)
+    i = int(Var.BOTLOGS or b or 0)
+    BOTLOGS_CACHE.add(i)
+    return i
 
 
 def formatx_send(err: Exception) -> str:
-    _ = r"\\<b>#Getter_Error</b>//"
-    _ += "\n<pre>{}: {}</pre>".format(get_full_class_name(err), escape(str(err)))
-    return _
+    text = r"\\<b>#Getter_Error</b>//"
+    text += f"\n<pre>{get_full_class_name(err)}: {escape(str(err))}</pre>"
+    return text
 
 
 plugins_help = PluginsHelp()

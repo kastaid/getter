@@ -142,3 +142,5 @@ backup
 
 */plugins/custom/*
 !*/plugins/custom/__init__.py
+
+.ruff*

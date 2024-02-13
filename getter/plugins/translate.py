@@ -22,7 +22,7 @@ from . import (
 
 
 @kasta_cmd(
-    pattern="tr(?: |$)((?s).*)",
+    pattern=r"tr(?: |$)([\s\S]*)",
     edited=True,
 )
 async def _(kst):
@@ -47,8 +47,7 @@ async def _(kst):
             except BaseException:
                 pass
     if not words:
-        await kst.eor("`Reply to text message or provide a text!`", time=5)
-        return
+        return await kst.eor("`Reply to text message or provide a text!`", time=5)
     yy = await kst.eor("`...`")
     try:
         from gpytranslate import Translator
@@ -72,7 +71,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="tl(?: |$)((?s).*)",
+    pattern=r"tl(?: |$)([\s\S]*)",
     edited=True,
 )
 async def _(kst):
@@ -97,8 +96,7 @@ async def _(kst):
             except BaseException:
                 pass
     if not words:
-        await kst.eor("`Reply to text message or provide a text!`", time=5)
-        return
+        return await kst.eor("`Reply to text message or provide a text!`", time=5)
     try:
         from gpytranslate import Translator
     except ImportError:
@@ -115,7 +113,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="t(t|)s(?: |$)((?s).*)",
+    pattern=r"t(t|)s(?: |$)([\s\S]*)",
     edited=True,
 )
 async def _(kst):
@@ -140,15 +138,14 @@ async def _(kst):
             except BaseException:
                 pass
     if not words:
-        await kst.eor("`Reply to text message or provide a text!`", time=5)
-        return
+        return await kst.eor("`Reply to text message or provide a text!`", time=5)
     yy = await kst.eor("`...`")
     try:
         from gtts import gTTS
     except ImportError:
         gTTS = import_lib(
             lib_name="gtts",
-            pkg_name="gTTS==2.3.2",
+            pkg_name="gTTS==2.5.1",
         ).gTTS
     try:
         from gpytranslate import Translator
