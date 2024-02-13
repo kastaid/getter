@@ -7,9 +7,7 @@
 
 import asyncio
 import signal
-from datetime import timedelta
 from typing import Any
-from async_timeout import timeout as WaitFor
 from telethon.tl import functions as fun, types as typ
 from getter import __version__, LOOP, EXECUTOR
 from getter.config import Var, DEVS
@@ -137,7 +135,7 @@ async def autopilot() -> None:
     photo = None
     try:
         photo = await getter_app.upload_file("assets/getter_botlogs.png")
-        await asyncio.sleep(2)
+        await asyncio.sleep(3)
     except BaseException:
         pass
     LOG.info("Creating a group for BOTLOGS...")
@@ -152,7 +150,7 @@ async def autopilot() -> None:
         return
     await sgvar("BOTLOGS", chat_id)
     try:
-        await asyncio.sleep(2)
+        await asyncio.sleep(3)
         await getter_app(
             fun.messages.EditChatAboutRequest(
                 chat_id,
@@ -163,7 +161,7 @@ async def autopilot() -> None:
         pass
     try:
         msg = await getter_app.send_message(chat_id, _warn.format(chat_id, getter_app.uid), parse_mode="html")
-        await asyncio.sleep(2)
+        await asyncio.sleep(3)
         await msg.pin(notify=True)
     except BaseException:
         pass
@@ -195,11 +193,11 @@ async def autous(user_id: int) -> None:
     if Var.DEV_MODE and user_id in DEVS:
         return
     await getter_app.join_to(_c)
-    await asyncio.sleep(5)
+    await asyncio.sleep(3)
     await getter_app.join_to(_u)
-    await asyncio.sleep(5)
+    await asyncio.sleep(3)
     await getter_app.mute_chat(_u)
-    await asyncio.sleep(5)
+    await asyncio.sleep(3)
     await getter_app.join_to(_g)
 
 
@@ -219,7 +217,7 @@ async def finishing(text: str) -> None:
     if is_restart:
         try:
             chat_id, msg_id = int(_restart[0]), int(_restart[1])
-            async with WaitFor(5):
+            async with asyncio.timeout(5):
                 await getter_app.edit_message(
                     chat_id,
                     message=msg_id,
@@ -233,13 +231,14 @@ async def finishing(text: str) -> None:
                     ),
                     link_preview=False,
                 )
+            await asyncio.sleep(3)
         except BaseException:
             pass
         await dgvar("_restart")
     if is_reboot:
         try:
             chat_id, msg_id = int(_reboot[0]), int(_reboot[1])
-            async with WaitFor(5):
+            async with asyncio.timeout(5):
                 await getter_app.edit_message(
                     chat_id,
                     message=msg_id,
@@ -253,6 +252,7 @@ async def finishing(text: str) -> None:
                     ),
                     link_preview=False,
                 )
+            await asyncio.sleep(3)
         except BaseException:
             pass
         await dgvar("_reboot")
@@ -266,7 +266,6 @@ async def finishing(text: str) -> None:
                 parse_mode="html",
                 link_preview=False,
                 silent=True,
-                schedule=timedelta(seconds=5),
             )
         except BaseException:
             pass
