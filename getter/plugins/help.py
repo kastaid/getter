@@ -37,13 +37,13 @@ help_text = """
 
 {}
 
-<b>Usage:</b> <code>{}help [plugin_name]</code>
+<blockquote><b>Usage:</b> <code>{}help [plugin_name]</code>
 <b>Tips:</b>
 - To check how fast response use <code>{}ping</code>
 - Get details about ur self use <code>{}test</code>
 - Collect ur stats by using <code>{}stats</code>
 - Get users ids use <code>{}id</code>
-- Get users info use <code>{}info</code>
+- Get users info use <code>{}info</code></blockquote>
 
 (c) @kastaid #getter
 """
