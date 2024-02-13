@@ -26,7 +26,7 @@ from . import (
 
 
 @kasta_cmd(
-    pattern="getformat(?: |$)((?s).*)",
+    pattern=r"getformat(?: |$)([\s\S]*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst, plain=False)
@@ -36,7 +36,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="noformat(?: |$)((?s).*)",
+    pattern=r"noformat(?: |$)([\s\S]*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst)
@@ -47,7 +47,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="nospace(?: |$)((?s).*)",
+    pattern=r"nospace(?: |$)([\s\S]*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst, plain=False)
@@ -58,7 +58,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="noemoji(?: |$)((?s).*)",
+    pattern=r"noemoji(?: |$)([\s\S]*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst, plain=False)
@@ -86,7 +86,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="count(?: |$)((?s).*)",
+    pattern=r"count(?: |$)([\s\S]*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst)
@@ -98,7 +98,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="(upper|lower|title|capital|camel|snake|kebab)(?: |$)((?s).*)",
+    pattern=r"(upper|lower|title|capital|camel|snake|kebab)(?: |$)([\s\S]*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst, group=2, plain=False)
@@ -123,7 +123,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="b64(encode|en|e)(?: |$)((?s).*)",
+    pattern=r"b64(encode|en|e)(?: |$)([\s\S]*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst, group=2)
@@ -145,13 +145,12 @@ async def _(kst):
     try:
         text = base64.b64decode(text).decode("utf-8", "replace")
     except Exception as err:
-        await yy.eor(formatx_send(err), parse_mode="html")
-        return
+        return await yy.eor(formatx_send(err), parse_mode="html")
     await yy.sod(text, parse_mode=parse_pre)
 
 
 @kasta_cmd(
-    pattern="(to|no)bin(?: |$)((?s).*)",
+    pattern=r"(to|no)bin(?: |$)([\s\S]*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst, group=2)
@@ -203,7 +202,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="(spoiler|sp)(?: |$)((?s).*)",
+    pattern=r"(spoiler|sp)(?: |$)([\s\S]*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst, group=2, plain=False)
@@ -214,7 +213,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="type(?: |$)((?s).*)",
+    pattern=r"type(?: |$)([\s\S]*)",
 )
 async def _(kst):
     match = await kst.client.get_text(kst)
@@ -236,7 +235,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="flip(?: |$)((?s).*)",
+    pattern=r"flip(?: |$)([\s\S]*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst, plain=False)
@@ -253,7 +252,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="small(?: |$)((?s).*)",
+    pattern=r"small(?: |$)([\s\S]*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst)
@@ -265,7 +264,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="normal(?: |$)((?s).*)",
+    pattern=r"normal(?: |$)([\s\S]*)",
 )
 async def _(kst):
     text = await kst.client.get_text(kst)

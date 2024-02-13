@@ -8,15 +8,18 @@
 from asyncio import sleep
 from collections import deque
 from html import escape
+from random import choice
+from emoji import emojize
 from telethon.tl import types as typ
 from . import (
     kasta_cmd,
     plugins_help,
     parse_pre,
-    choice,
     UWUS,
     SHRUGS,
 )
+
+dices = emojize(":game_die: :bullseye: :basketball: :soccer_ball: :bowling: :slot_machine:").split()
 
 
 @kasta_cmd(
@@ -27,7 +30,7 @@ async def _(kst):
     if cmd == "roll":
         chars = range(1, 7)
     elif cmd == "decide":
-        chars = ("Yes", "No", "Maybe")
+        chars = ("yes", "no", "maybe")
     text = choice(chars)
     await kst.sod(str(text))
 
@@ -39,11 +42,15 @@ async def _(kst):
     pattern="owo$",
     sudo=True,
 )
+@kasta_cmd(
+    pattern="owo$",
+    dev=True,
+)
 async def _(kst):
-    if kst.is_sudo:
+    if kst.is_dev or kst.is_sudo:
         await sleep(choice((4, 6, 8)))
     text = escape(choice(UWUS))
-    await kst.sod(f"<pre>{text}</pre>", parse_mode="html", silent=True)
+    await kst.sod(f"<code>{text}</code>", parse_mode="html", silent=True)
 
 
 @kasta_cmd(
@@ -53,11 +60,15 @@ async def _(kst):
     pattern="shg$",
     sudo=True,
 )
+@kasta_cmd(
+    pattern="shg$",
+    dev=True,
+)
 async def _(kst):
-    if kst.is_sudo:
+    if kst.is_dev or kst.is_sudo:
         await sleep(choice((4, 6, 8)))
     text = escape(choice(SHRUGS))
-    await kst.sod(f"<pre>{text}</pre>", parse_mode="html", silent=True)
+    await kst.sod(f"<code>{text}</code>", parse_mode="html", silent=True)
 
 
 @kasta_cmd(
@@ -66,21 +77,21 @@ async def _(kst):
 async def _(kst):
     cmd = kst.pattern_match.group(1)
     if cmd == "ran":
-        dice = choice(("⚽", "🏀", "🎳", "🎲", "🎯", "🎰"))
+        dice = choice(dices)
     if cmd == "bol":
-        dice = "⚽"
+        dice = ":soccer_ball:"
     elif cmd == "bas":
-        dice = "🏀"
+        dice = ":basketball:"
     elif cmd == "bow":
-        dice = "🎳"
+        dice = ":bowling:"
     elif cmd == "dic":
-        dice = "🎲"
+        dice = ":game_die:"
     elif cmd == "dar":
-        dice = "🎯"
+        dice = ":bullseye:"
     elif cmd == "slot":
-        dice = "🎰"
+        dice = ":slot_machine:"
     async with await kst.send_action(action="game"):
-        await kst.eor(file=typ.InputMediaDice(dice))
+        await kst.eor(file=typ.InputMediaDice(emojize(dice)))
         await sleep(2)
 
 
@@ -288,7 +299,7 @@ async def _(kst):
 ⢿⠀⢧⡀⠀⠀⠀⠀⠀⢈⡇
 ⠈⠳⣼⡙⠒⠶⠶⠖⠚⠉⠳⣄
 ⠀⠀⠈⣇⠀⠀⠀⠀⠀⠀⠀⠈⠳⣄
-⠀⠀⠀⠘⣆ ⠀⠀⠀⠀ ⠀⠈⠓⢦⣀
+⠀⠀⠀⠘⣆ ⠀⠀⠀ ⠀   ⠈⠓⢦⣀
 ⠀⠀⠀⠀⠈⢳⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠲⢤
 ⠀⠀⠀⠀⠀⠀⠙⢦⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢧
 ⠀⠀⠀⠀⠀⠀⠀⡴⠋⠓⠦⣤⡀⠀⠀⠀⠀⠀⠀⠀⠈⣇
@@ -423,7 +434,7 @@ async def _(kst):
 ⣿⣿⣧⣀⣿.........⣀⣰⣏⣘⣆⣀
 ㅤ
 """
-    await kst.sod(art, parse_mode=parse_pre)
+    await kst.sod(f"<code>{art}</code>", parse_mode="html")
 
 
 @kasta_cmd(

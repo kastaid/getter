@@ -5,17 +5,17 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import typing
 from base64 import b64decode
 from os import getenv
 from string import ascii_lowercase
+from typing import Any
+from zoneinfo import ZoneInfo
 from dotenv import load_dotenv, find_dotenv
-from pytz import timezone
 
 load_dotenv(find_dotenv("config.env"))
 
 
-def tobool(val: str) -> typing.Optional[int]:
+def tobool(val: str) -> int | None:
     """
     Convert a string representation of truth to true (1) or false (0).
     https://github.com/python/cpython/blob/main/Lib/distutils/util.py
@@ -23,7 +23,7 @@ def tobool(val: str) -> typing.Optional[int]:
     val = val.lower()
     if val in ("y", "yes", "t", "true", "on", "1"):
         return 1
-    elif val in ("n", "no", "f", "false", "off", "0"):
+    if val in ("n", "no", "f", "false", "off", "0"):
         return 0
     raise ValueError("invalid truth value %r" % (val,))
 
@@ -34,15 +34,10 @@ class Var:
     API_HASH: str = getenv("API_HASH", "").strip()
     STRING_SESSION: str = getenv("STRING_SESSION", "").strip()
     DATABASE_URL: str = (
-        lambda c: c.replace(c.split("://")[0], "postgresql+psycopg2")
-        if c.startswith(
-            (
-                "postgres:",
-                "postgresql:",
-            )
+        lambda c: (
+            c.replace(c.split("://")[0], "postgresql+asyncpg") if c.startswith(("postgres:", "postgresql:")) else c
         )
-        else c
-    )(getenv("DATABASE_URL", "sqlite:///./getter.db").strip())
+    )(getenv("DATABASE_URL", "sqlite+aiosqlite:///./getter.db").strip())
     BOTLOGS: int = int(getenv("BOTLOGS", "0").strip())
     HANDLER: str = getenv("HANDLER", ".").strip()
     NO_HANDLER: bool = tobool(getenv("NO_HANDLER", "false").strip())
@@ -53,12 +48,12 @@ class Var:
 
 
 try:
-    tz = timezone(Var.TZ)
+    tz = ZoneInfo(Var.TZ)
 except BaseException:
     _ = "Asia/Jakarta"
     print("An error or unknown TZ :", Var.TZ)
     print("Set default TZ as", _)
-    tz = timezone(_)
+    tz = ZoneInfo(_)
 
 if not (
     Var.HANDLER.lower().startswith(
@@ -81,16 +76,16 @@ if not (
     )
 ):
     hl = "."
-    print("Your HANDLER [ {} ] is not supported.".format(Var.HANDLER))
+    print(f"Your HANDLER [ {Var.HANDLER} ] is not supported.")
     print("Set default HANDLER as dot [ .command ]")
 else:
     hl = "".join(Var.HANDLER.split())
 
-BOTLOGS_CACHE: typing.Set[int] = set()
-DEV_CMDS: typing.Dict[str, typing.List[str]] = {}
-SUDO_CMDS: typing.Dict[str, typing.List[str]] = {}
-INVITE_WORKER: typing.Dict[str, typing.Any] = {}
-CALLS: typing.Dict[int, typing.Any] = {}
+BOTLOGS_CACHE: list[int] = []
+DEV_CMDS: dict[str, list[str]] = {}
+SUDO_CMDS: dict[str, list[str]] = {}
+INVITE_WORKER: dict[str, Any] = {}
+CALLS: dict[int, Any] = {}
 TESTER = {5215824623}
 # va, vn, en, xl
 DEVS = {
@@ -101,4 +96,4 @@ NOCHATS = {
     -1001699144606,
     -1001700971911,
 }
-del typing, b64decode, ascii_lowercase, load_dotenv, find_dotenv, timezone
+del Any, b64decode, ascii_lowercase, ZoneInfo, load_dotenv, find_dotenv

@@ -5,8 +5,8 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import typing
 from asyncio import sleep
+from collections.abc import Sequence, Coroutine
 from contextlib import suppress
 from io import BytesIO
 import telethon.tl.custom
@@ -29,15 +29,15 @@ class Message:
     @patchable()
     async def eor(
         self,
-        text: typing.Optional[str] = None,
+        text: str | None = None,
         link_preview: bool = False,
         silent: bool = False,
-        time: typing.Optional[typing.Union[int, float]] = None,
-        edit_time: typing.Optional[typing.Union[int, float]] = None,
+        time: int | float | None = None,
+        edit_time: int | float | None = None,
         force_reply: bool = False,
         parts: bool = False,
         **args,
-    ) -> typing.Optional[typing.Union[typ.Message, typing.Sequence[typ.messages.AffectedMessages]]]:
+    ) -> typ.Message | Sequence[typ.messages.AffectedMessages] | None:
         if self is None:
             return
         _ = args.get("reply_to")
@@ -176,26 +176,24 @@ class Message:
         return yy
 
     @patchable()
-    async def eod(
-        self, *args, **kwargs
-    ) -> typing.Optional[typing.Union[typ.Message, typing.Sequence[typ.messages.AffectedMessages]]]:
+    async def eod(self, *args, **kwargs) -> typ.Message | Sequence[typ.messages.AffectedMessages] | None:
         kwargs["time"] = kwargs.get("time", 8)
         return await self.eor(*args, **kwargs)
 
     @patchable()
     async def sod(
         self,
-        text: typing.Optional[str] = None,
-        chat_id: typing.Optional[hints.EntityLike] = None,
+        text: str | None = None,
+        chat_id: hints.EntityLike | None = None,
         link_preview: bool = False,
         silent: bool = False,
-        time: typing.Optional[typing.Union[int, float]] = None,
-        edit_time: typing.Optional[typing.Union[int, float]] = None,
+        time: int | float | None = None,
+        edit_time: int | float | None = None,
         force_reply: bool = False,
         delete: bool = True,
         parts: bool = False,
         **args,
-    ) -> typing.Optional[typing.Union[typ.Message, typing.Sequence[typ.messages.AffectedMessages]]]:
+    ) -> typ.Message | Sequence[typ.messages.AffectedMessages] | None:
         if self is None:
             return
         chat_id = chat_id or self.chat_id
@@ -276,32 +274,37 @@ class Message:
         return yy
 
     @patchable()
-    async def try_delete(self) -> typing.Optional[typing.Sequence[typ.messages.AffectedMessages]]:
+    async def try_delete(self) -> Sequence[typ.messages.AffectedMessages] | None:
         try:
             return await self.delete()
         except BaseException:
             return None
 
     @patchable()
-    async def read(self, *args, **kwargs) -> bool:
+    async def read(self, **args) -> bool:
         return await self._client.read_chat(
-            await self.get_input_chat(),
+            entity=await self.get_input_chat(),
             max_id=self.id,
-            *args,
-            **kwargs,
+            **args,
         )
 
     @patchable()
-    async def send_react(self, *args, **kwargs) -> typing.Optional[typ.Updates]:
-        kwargs["message"] = self.id
-        return await self._client.send_reaction(await self.get_input_chat(), *args, **kwargs)
+    async def send_react(self, **args) -> typ.Updates | None:
+        args["message"] = self.id
+        return await self._client.send_reaction(
+            entity=await self.get_input_chat(),
+            **args,
+        )
 
     @patchable()
-    async def send_action(self, *args, **kwargs) -> typing.Union[_ChatAction, typing.Coroutine]:
-        return self._client.action(await self.get_input_chat(), *args, **kwargs)
+    async def send_action(self, **args) -> _ChatAction | Coroutine:
+        return self._client.action(
+            entity=await self.get_input_chat(),
+            **args,
+        )
 
     @patchable(True)
-    def msg_link(self) -> typing.Optional[str]:
+    def msg_link(self) -> str | None:
         if hasattr(self.chat, "username") and self.chat.username:
             return f"https://t.me/{self.chat.username}/{self.id}"
         if self.chat and self.chat.id:

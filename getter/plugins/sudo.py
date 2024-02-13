@@ -7,15 +7,15 @@
 
 from asyncio import sleep
 from datetime import datetime
+from random import choice
 from . import (
     kasta_cmd,
     plugins_help,
     SUDO_CMDS,
-    choice,
     dgvar,
     sgvar,
     gvar,
-    add_col,
+    set_col,
     del_col,
     jdata,
     display_name,
@@ -36,23 +36,21 @@ async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Processing...`", silent=True)
     toggle = kst.pattern_match.group(1)
-    sudo = bool(gvar("_sudo"))
+    sudo = bool(await gvar("_sudo"))
     if not toggle:
         text = f"**Sudo Status:** `{humanbool(sudo, toggle=True)}`"
         return await yy.eod(text)
     if toggle in ("yes", "on", "true", "1"):
         if sudo:
-            await yy.eor("`Sudo is already on.`", time=4)
-            return
-        sgvar("_sudo", "true")
+            return await yy.eor("`Sudo is already on.`", time=4)
+        await sgvar("_sudo", "true")
         text = "`Successfully to switch on Sudo!`"
         text += "\n`Rebooting to apply...`"
         msg = await yy.eor(text)
         return await ga.reboot(msg)
     if not sudo:
-        await yy.eor("`Sudo is already off.`", time=4)
-        return
-    dgvar("_sudo")
+        return await yy.eor("`Sudo is already off.`", time=4)
+    await dgvar("_sudo")
     text = "`Successfully to switch off Sudo!`"
     text += "\n`Rebooting to apply...`"
     msg = await yy.eor(text)
@@ -84,7 +82,7 @@ async def _(kst):
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
         return await yy.eor("`Cannot add sudo to myself.`", time=3)
-    if user.id in jdata.sudo_users:
+    if user.id in await jdata.sudo_users():
         return await yy.eor("`User is already sudo.`", time=4)
     full_name = display_name(user)
     userdata = {
@@ -92,9 +90,9 @@ async def _(kst):
         "username": "@" + user.username if user.username else "none",
         "date": datetime.now().timestamp(),
     }
-    sudos = jdata.sudos()
+    sudos = await jdata.sudos()
     sudos[str(user.id)] = userdata
-    add_col("sudos", sudos)
+    await set_col("sudos", sudos)
     done = await yy.eor(f"<code>User {full_name} added to sudo list.</code>", parse_mode="html")
     msg = await done.reply("`Rebooting to apply...`", silent=True)
     await ga.reboot(msg)
@@ -115,12 +113,12 @@ async def _(kst):
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
         return await yy.eor("`Cannot delete sudo to myself.`", time=3)
-    if user.id not in jdata.sudo_users:
+    if user.id not in await jdata.sudo_users():
         return await yy.eor("`User is not sudo.`", time=4)
     full_name = display_name(user)
-    sudos = jdata.sudos()
+    sudos = await jdata.sudos()
     del sudos[str(user.id)]
-    add_col("sudos", sudos)
+    await set_col("sudos", sudos)
     done = await yy.eor(f"<code>User {full_name} deleted in sudo list.</code>", parse_mode="html")
     msg = await done.reply("`Rebooting to apply...`", silent=True)
     await ga.reboot(msg)
@@ -130,11 +128,11 @@ async def _(kst):
     pattern="listsudo$",
 )
 async def _(kst):
-    sudo_users = jdata.sudo_users
+    sudo_users = await jdata.sudo_users()
     total = len(sudo_users)
     if total > 0:
         text = f"<b><u>{total} Sudo Users</u></b>\n"
-        sudos = jdata.sudos()
+        sudos = await jdata.sudos()
         for x in sudo_users:
             user_id = str(x)
             text += "User: {}\n".format(sudos[user_id]["full_name"])
@@ -150,9 +148,9 @@ async def _(kst):
     pattern="delallsudos$",
 )
 async def _(kst):
-    if not jdata.sudo_users:
+    if not await jdata.sudo_users():
         return await kst.eor("`You got no sudo users!`", time=3)
-    del_col("sudos")
+    await del_col("sudos")
     done = await kst.eor("`Successfully to delete all sudo users!`")
     msg = await done.reply("`Rebooting to apply...`", silent=True)
     await kst.client.reboot(msg)

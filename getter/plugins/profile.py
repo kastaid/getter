@@ -145,8 +145,7 @@ async def _(kst):
     is_all = any(_ in args.lower() for _ in ("-a", "all"))
     total = (await ga.get_profile_photos(user.id, limit=0)).total or 0
     if not total:
-        await yy.eor("`User doesn't have profile picture!`", time=3)
-        return
+        return await yy.eor("`User doesn't have profile picture!`", time=3)
     try:
         async for photo in ga.iter_profile_photos(user.id):
             await yy.eor(

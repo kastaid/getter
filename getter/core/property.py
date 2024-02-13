@@ -5,16 +5,15 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import re
 import sys
-import typing
 from asyncio import sleep
 from base64 import b64decode
+from re import findall
 from asyncache import cached
 from cachetools import TTLCache
 from getter import __license__, __copyright__
-from getter.core.tools import Fetch
 from getter.logger import LOG
+from .tools import Fetch
 
 _c, _u, _g = (
     b64decode("a2FzdGFpZA==").decode("utf-8"),
@@ -31,13 +30,13 @@ def do_not_remove_credit() -> None:
         sys.exit(1)
 
 
-@cached(TTLCache(maxsize=1024, ttl=(120 * 30)))  # 1 hours
+@cached(TTLCache(maxsize=1000, ttl=(120 * 30)))  # 1 hours
 async def get_blacklisted(
     url: str,
     is_json: bool = False,
     attempts: int = 3,
-    fallbacks: typing.Optional[typing.Tuple[typing.Union[int, str]]] = None,
-) -> typing.Set[typing.Union[int, str]]:
+    fallbacks: tuple[int | str] | None = None,
+) -> set[int | str]:
     count = 0
     is_content = not is_json
     while count < attempts:
@@ -55,7 +54,7 @@ async def get_blacklisted(
             break
         if is_content:
             reg = r"[^\s#,\[\]\{\}]+"
-            data = re.findall(reg, res.decode("utf-8"))
+            data = findall(reg, res.decode("utf-8"))
             ids = [int(x) for x in data if x.isdecimal() or (x.startswith("-") and x[1:].isdecimal())]
         else:
             ids = list(res)

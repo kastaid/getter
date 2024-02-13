@@ -25,7 +25,7 @@ from . import (
 
 
 @kasta_cmd(
-    pattern="ban(?: |$)((?s).*)",
+    pattern=r"ban(?: |$)([\s\S]*)",
     admins_only=True,
     require="ban_users",
 )
@@ -67,7 +67,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="dban(?: |$)((?s).*)",
+    pattern=r"dban(?: |$)([\s\S]*)",
     admins_only=True,
     require="ban_users",
     func=lambda e: e.is_reply,
@@ -146,7 +146,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="tban(?: |$)((?s).*)",
+    pattern=r"tban(?: |$)([\s\S]*)",
     admins_only=True,
     require="ban_users",
 )
@@ -180,7 +180,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="unban(?: |$)((?s).*)",
+    pattern=r"unban(?: |$)([\s\S]*)",
     admins_only=True,
     require="ban_users",
 )
@@ -205,7 +205,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="mute(?: |$)((?s).*)",
+    pattern=r"mute(?: |$)([\s\S]*)",
     admins_only=True,
     require="ban_users",
 )
@@ -232,7 +232,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="dmute(?: |$)((?s).*)",
+    pattern=r"dmute(?: |$)([\s\S]*)",
     admins_only=True,
     require="ban_users",
     func=lambda e: e.is_reply,
@@ -284,7 +284,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="tmute(?: |$)((?s).*)",
+    pattern=r"tmute(?: |$)([\s\S]*)",
     admins_only=True,
     require="ban_users",
 )
@@ -318,7 +318,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="unmute(?: |$)((?s).*)",
+    pattern=r"unmute(?: |$)([\s\S]*)",
     admins_only=True,
     require="ban_users",
 )
@@ -345,7 +345,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="kick(?: |$)((?s).*)",
+    pattern=r"kick(?: |$)([\s\S]*)",
     admins_only=True,
     require="ban_users",
 )
@@ -372,7 +372,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="dkick(?: |$)((?s).*)",
+    pattern=r"dkick(?: |$)([\s\S]*)",
     admins_only=True,
     require="ban_users",
     func=lambda e: e.is_reply,
@@ -573,7 +573,7 @@ async def _(kst):
         return await yy.eor("`No Pinned!`", time=5)
     msg = await ga.get_messages(chat.id, ids=msg_id)
     if msg:
-        await yy.eor("Pinned message [in here]({}).".format(msg.msg_link))
+        await yy.eor(f"Pinned message [in here]({msg.msg_link}).")
 
 
 @kasta_cmd(
@@ -643,10 +643,7 @@ async def _(kst):
                 anonymous=False,
                 title=title,
             )
-        text = "<code>{} promoted as {}</code>".format(
-            mentionuser(user.id, display_name(user), width=15, html=True),
-            title,
-        )
+        text = f"<code>{mentionuser(user.id, display_name(user), width=15, html=True)} promoted as {title}</code>"
         await yy.eor(text, parse_mode="html")
     except Exception as err:
         await yy.eor(formatx_send(err), parse_mode="html")
@@ -681,9 +678,7 @@ async def _(kst):
             manage_call=False,
             anonymous=False,
         )
-        text = "<code>{} demoted!</code>".format(
-            mentionuser(user.id, display_name(user), width=15, html=True),
-        )
+        text = f"<code>{mentionuser(user.id, display_name(user), width=15, html=True)} demoted!</code>"
         await yy.eor(text, parse_mode="html")
     except Exception as err:
         await yy.eor(formatx_send(err), parse_mode="html")
@@ -784,10 +779,7 @@ async def _(kst):
                     pass
             else:
                 none += 1
-    if user:
-        text = f"**Kicked {kicked} / {total} Users**\n"
-    else:
-        text = f"**Total {total} Users**\n"
+    text = f"**Kicked {kicked} / {total} Users**\n" if user else f"**Total {total} Users**\n"
     text += f"`{hl}kickusers deleted`  •  `{deleted}`\n"
     text += f"`{hl}kickusers empty`  •  `{empty}`\n"
     text += f"`{hl}kickusers month`  •  `{month}`\n"
@@ -869,13 +861,13 @@ async def _(kst):
     ):
         if not (x.deleted or x.participant.admin_rights.anonymous):
             if isinstance(x.participant, typ.ChannelParticipantCreator):
-                text += "- {} Owner\n".format(mentionuser(x.id, display_name(x), html=True))
+                text += f"- {mentionuser(x.id, display_name(x), html=True)} Owner\n"
             elif x.bot:
-                text += "- {} Bot\n".format(mentionuser(x.id, display_name(x), html=True))
+                text += f"- {mentionuser(x.id, display_name(x), html=True)} Bot\n"
             elif x.is_self:
-                text += "- {} Me\n".format(mentionuser(x.id, display_name(x), html=True))
+                text += f"- {mentionuser(x.id, display_name(x), html=True)} Me\n"
             else:
-                text += "- {}\n".format(mentionuser(x.id, display_name(x), html=True))
+                text += f"- {mentionuser(x.id, display_name(x), html=True)}\n"
             total += 1
     text += f"\n<i>Found {total} admins without anonymously.</i>"
     await yy.eor(text, parts=True, parse_mode="html")

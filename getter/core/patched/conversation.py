@@ -5,7 +5,6 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-import typing
 import telethon.tl.custom.conversation
 from telethon.tl.custom.conversation import _checks_cancelled
 from getter.core.patcher import patch, patchable
@@ -17,7 +16,7 @@ class Conversation:
     @_checks_cancelled
     async def read(
         self,
-        message: typing.Optional[int] = None,
+        message: int | None = None,
         **args,
     ):
         if message is None:
@@ -25,7 +24,7 @@ class Conversation:
         elif not isinstance(message, int):
             message = message.id
         return await self._client.read_chat(
-            self._input_chat,
+            entity=self._input_chat,
             max_id=message,
             **args,
         )

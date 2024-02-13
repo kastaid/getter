@@ -8,9 +8,11 @@
 import csv
 from asyncio import sleep, Lock, exceptions
 from datetime import datetime
+from random import choice
 from time import monotonic
 import aiofiles
 from aiocsv import AsyncDictReader, AsyncWriter
+from telethon import events
 from telethon.errors import (
     ChannelPrivateError,
     FloodWaitError,
@@ -31,8 +33,6 @@ from . import (
     hl,
     kasta_cmd,
     plugins_help,
-    events,
-    choice,
     is_telegram_link,
     get_username,
     get_user_status,
@@ -161,8 +161,7 @@ async def _(kst):
             return
         await sleep(choice((4, 6, 8)))
     if INVITE_WORKER.get(chat_id) or _INVITING_LOCK.locked():
-        await kst.eor("`Please wait until previous •invite• finished...`", time=5, silent=True)
-        return
+        return await kst.eor("`Please wait until previous •invite• finished...`", time=5, silent=True)
     async with _INVITING_LOCK:
         ga = kst.client
         yy = await kst.eor("`Processing...`", silent=True)
@@ -308,8 +307,7 @@ async def _(kst):
 async def _(kst):
     chat_id = normalize_chat_id(kst.chat_id)
     if _SCRAPING_LOCK.locked():
-        await kst.eor("`Please wait until previous •scraping• finished...`", time=5)
-        return
+        return await kst.eor("`Please wait until previous •scraping• finished...`", time=5)
     async with _SCRAPING_LOCK:
         ga = kst.client
         yy = await kst.eor("`Processing...`")
@@ -330,7 +328,7 @@ async def _(kst):
         await yy.eor("`Scraping Members...`")
         members_exist = bool(is_append and (Root / members_file).exists())
         if members_exist:
-            with open(members_file, "r") as f:
+            with open(members_file) as f:
                 rows = [int(x[0]) for x in csv.reader(f) if str(x[0]).isdecimal()]
             members = len(rows)
             async with aiofiles.open(members_file, mode="a") as f:
@@ -460,8 +458,7 @@ async def _(kst):
 async def _(kst):
     chat_id = normalize_chat_id(kst.chat_id)
     if INVITE_WORKER.get(chat_id) or _ADDING_LOCK.locked():
-        await kst.eor("`Please wait until previous •adding• finished...`", time=5)
-        return
+        return await kst.eor("`Please wait until previous •adding• finished...`", time=5)
     async with _ADDING_LOCK:
         ga = kst.client
         yy = await kst.eor("`Processing...`")
@@ -484,10 +481,9 @@ async def _(kst):
                     user = {"user_id": int(row["user_id"]), "hash": int(row["hash"])}
                     users.append(user)
         except FileNotFoundError:
-            await yy.eor(
+            return await yy.eor(
                 f"File `{csv_file}` not found.\nPlease run `{hl}getmembers [username/link/id]/[reply]` and try again!"
             )
-            return
         success = 0
         chat = await kst.get_chat()
         INVITE_WORKER[chat_id] = {

@@ -6,22 +6,21 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-import os.path
-import re
 import subprocess
 import sys
-import typing
 from functools import partial
 from io import BytesIO
+from re import sub
+from typing import Any
 import aiofiles
 import aiohttp
-import telegraph
+import telegraph.aio
 from getter import __version__, LOOP, EXECUTOR
-from getter.core.db import gvar, sgvar
-from getter.core.utils import get_random_hex
 from getter.logger import LOG
+from .db import gvar, sgvar
+from .utils import get_random_hex
 
-_TGH: typing.List[telegraph.api.Telegraph] = []
+_TGH: list[telegraph.aio.Telegraph] = []
 
 
 def is_termux() -> bool:
@@ -34,13 +33,13 @@ async def aioify(func, *args, **kwargs):
 
 def import_lib(
     lib_name: str,
-    pkg_name: typing.Optional[str] = None,
-) -> typing.Any:
+    pkg_name: str | None = None,
+) -> Any:
     from importlib import import_module
 
     if pkg_name is None:
         pkg_name = lib_name
-    lib_name = re.sub(r"(=|>|<|~).*", "", lib_name)
+    lib_name = sub(r"(=|>|<|~).*", "", lib_name)
     try:
         return import_module(lib_name)
     except ImportError:
@@ -50,7 +49,7 @@ def import_lib(
         return import_module(lib_name)
 
 
-async def Runner(cmd: str) -> typing.Tuple[str, str, int, int]:
+async def Runner(cmd: str) -> tuple[str, str, int, int]:
     proc = await asyncio.create_subprocess_shell(
         cmd,
         stdout=asyncio.subprocess.PIPE,
@@ -70,19 +69,18 @@ async def Runner(cmd: str) -> typing.Tuple[str, str, int, int]:
 
 async def Fetch(
     url: str,
-    post: bool = None,
-    headers: dict = None,
-    params: dict = None,
-    json: dict = None,
-    data: dict = None,
-    ssl: typing.Any = None,
+    post: bool | None = None,
+    headers: dict | None = None,
+    params: dict | None = None,
+    json: dict | None = None,
+    data: dict | None = None,
+    ssl: Any = None,
     re_json: bool = False,
     re_content: bool = False,
     real: bool = False,
-    statuses: typing.Optional[typing.Set[int]] = None,
-    *args,
-    **kwargs,
-) -> typing.Any:
+    statuses: set[int] | None = None,
+    **args,
+) -> Any:
     statuses = statuses or {}
     if not headers:
         headers = {
@@ -101,8 +99,7 @@ async def Fetch(
                     data=data,
                     ssl=ssl,
                     raise_for_status=False,
-                    *args,
-                    **kwargs,
+                    **args,
                 )
             else:
                 resp = await session.get(
@@ -110,8 +107,7 @@ async def Fetch(
                     params=params,
                     ssl=ssl,
                     raise_for_status=False,
-                    *args,
-                    **kwargs,
+                    **args,
                 )
         except BaseException:
             return None
@@ -132,8 +128,8 @@ async def Carbon(
     file_name: str = "carbon",
     download: bool = False,
     rayso: bool = False,
-    **kwargs: typing.Optional[typing.Any],
-) -> typing.Any:
+    **kwargs: Any | None,
+) -> Any:
     kwargs["code"] = code
     if rayso:
         url = "rayso/api"
@@ -164,11 +160,11 @@ async def Screenshot(
     video: str,
     duration: int,
     output: str = "",
-) -> typing.Optional[str]:
+) -> str | None:
     ttl = duration // 2
     cmd = f"ffmpeg -v quiet -ss {ttl} -i {video} -vframes 1 {output}"
     await Runner(cmd)
-    return output if os.path.exists(output) else None
+    return output if await aiofiles.os.path.isfile(output) else None
 
 
 async def MyIp() -> str:
@@ -230,22 +226,26 @@ def Pinger(addr: str) -> str:
     return "--ms"
 
 
-def Telegraph(author_name: str) -> telegraph.api.Telegraph:
+async def Telegraph(
+    author: str | None = None,
+) -> telegraph.aio.Telegraph:
     if _TGH:
-        return next((_ for _ in sorted(_TGH, reverse=True)), None)
-    token = gvar("_TELEGRAPH_TOKEN")
-    client = telegraph.Telegraph(token)
+        return next(reversed(_TGH), None)
+    token = await gvar("_TELEGRAPH_TOKEN")
+    api = telegraph.aio.Telegraph(token)
     if token:
-        _TGH.append(client)
-        return client
+        _TGH.append(api)
+        return api
+    if author is None:
+        return api
     try:
-        client.create_account(
+        await api.create_account(
             short_name="getteruser",
-            author_name=author_name[:128],
+            author_name=author[:128],
             author_url="https://t.me/kastaid",
         )
     except BaseException:
         return None
-    sgvar("_TELEGRAPH_TOKEN", client.get_access_token())
-    _TGH.append(client)
-    return client
+    await sgvar("_TELEGRAPH_TOKEN", api.get_access_token())
+    _TGH.append(api)
+    return api

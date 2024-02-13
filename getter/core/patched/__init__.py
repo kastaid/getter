@@ -1,3 +1,4 @@
+# ruff: noqa: F401
 # getter < https://t.me/kastaid >
 # Copyright (C) 2022-present kastaid
 #
