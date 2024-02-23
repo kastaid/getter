@@ -428,7 +428,7 @@ async def _(kst):
     else:
         yy = await kst.eor("`Processing...`")
     reply = await kst.get_reply_message()
-    if (kst.is_reply and not reply.message) or reply.media:
+    if (kst.is_reply and not reply.message) or getattr(reply, "media", None):
         link = reply.msg_link
     chat, msg_id = get_msg_id(link)
     if not is_silent and not (chat and msg_id):
