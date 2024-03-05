@@ -54,7 +54,7 @@
 
 ## Requirements
 
-- Python 3.9.x
+- Python 3.11.x
 - Linux (Recommend Debian/Ubuntu)
 - Telegram `API_ID` and `API_HASH` from [API development tools](https://my.telegram.org)
 
