@@ -64,7 +64,7 @@ async def _(kst):
 async def _(kst):
     yy = await kst.eor("`Processing...`")
     file = "downloads/neofetch.txt"
-    _, _, ret, _ = await Runner(f"neofetch|sed 's/\x1B\\[[0-9;\\?]*[a-zA-Z]//g'>>{file}")
+    _, _, ret, _ = await Runner(f"neofetch|sed 's/\x1b\\[[0-9;\\?]*[a-zA-Z]//g'>>{file}")
     if ret != 0:
         return await yy.try_delete()
     info = (Root / file).read_text()

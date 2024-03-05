@@ -490,7 +490,7 @@ async def _(kst):
     if user.id == ga.uid:
         return await yy.eor(f"`Cannot set {cmd} reason to myself.`", time=3)
     if user.id in DEVS:
-        return await yy.eor("`Forbidden to set {cmd} reason for our awesome developers.`", time=3)
+        return await yy.eor(f"`Forbidden to set {cmd} reason for our awesome developers.`", time=3)
     if cmd == "gban":
         mode = "GBanned"
         is_banned = await is_gban(user.id)
