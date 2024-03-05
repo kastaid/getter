@@ -7,7 +7,7 @@
 
 import os
 from asyncio import sleep, Lock
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 from random import choice
 from sys import executable
 import aiofiles
@@ -188,7 +188,7 @@ async def _(kst):
     if kst.is_sudo:
         await sleep(choice((4, 6, 8)))
     # http://www.timebie.com/std/utc
-    utc_now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
+    utc_now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")  # noqa: UP017
     local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
     yy = await kst.eor("`Processing...`", silent=True, force_reply=True)
     await yy.eor(
