@@ -4,15 +4,9 @@
 
 <p align="center">
     <a href="https://github.com/kastaid/getter/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/kastaid/getter/ci.yml?branch=main&logo=github&label=CI" /></a>
-    <a href="https://www.codefactor.io/repository/github/kastaid/getter"><img alt="CodeFactor" src="https://www.codefactor.io/repository/github/kastaid/getter/badge" /></a>
-    <a href="https://app.codacy.com/gh/kastaid/getter/dashboard"><img alt="Codacy grade" src="https://img.shields.io/codacy/grade/2f86ed8f8534424c8d4cdaa197dc5ce2?logo=codacy" /></a>
-    <a href="https://github.com/kastaid/getter/blob/main/LICENSE"><img alt="LICENSE" src="https://img.shields.io/github/license/kastaid/getter" /></a>
-    <br>
+    <img alt="Python" src="https://img.shields.io/badge/Python-3.11.x%20%7C%203.12.x-blue?logoColor=white&logo=python" />
     <img alt="Version" src="https://img.shields.io/github/manifest-json/v/kastaid/getter" />
-    <img alt="Size" src="https://img.shields.io/github/repo-size/kastaid/getter" />
-    <a href="https://github.com/kastaid/getter/issues"><img alt="Issues" src="https://img.shields.io/github/issues/kastaid/getter" /></a>
-    <a href="https://github.com/kastaid/getter/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/kastaid/getter" /></a>
-    <a href="https://github.com/kastaid/getter/network/members"><img alt="Forks" src="https://img.shields.io/github/forks/kastaid/getter" /></a>
+    <a href="https://github.com/kastaid/getter/blob/main/LICENSE"><img alt="LICENSE" src="https://img.shields.io/github/license/kastaid/getter" /></a>
     <a href="https://telegram.me/kastaid"><img alt="Telegram" src="https://img.shields.io/badge/kastaid-blue?logo=telegram" /></a>
 </p>
 

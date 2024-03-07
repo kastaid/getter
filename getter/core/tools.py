@@ -84,7 +84,7 @@ async def Fetch(
     statuses = statuses or {}
     if not headers:
         headers = {
-            "User-Agent": "Python/{0[0]}.{0[1]} aiohttp/{1} getter/{2}".format(
+            "User-Agent": "Python/{0[0]}.{0[1]} aiohttp/{1} getter/{2}".format(  # noqa: UP032
                 sys.version_info,
                 aiohttp.__version__,
                 __version__,
