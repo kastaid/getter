@@ -60,11 +60,7 @@ async def _(kst):
         text = strip_format(strip_emoji(words))
         translator = Translator()
         translation = await translator(text, targetlang=lang)
-        tr = "**Detected:** `{}`\n**Translated:** `{}`\n\n```{}```".format(
-            await translator.detect(translation.orig),
-            await translator.detect(translation.text),
-            translation.text,
-        )
+        tr = f"**Detected:** `{await translator.detect(translation.orig)}`\n**Translated:** `{await translator.detect(translation.text)}`\n\n```{translation.text}```"
         await yy.eor(tr, parts=True)
     except Exception as err:
         await yy.eor(formatx_send(err), parse_mode="html")
