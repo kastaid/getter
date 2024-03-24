@@ -204,9 +204,7 @@ async def is_admin(
 ) -> bool:
     try:
         prm = await message.client.get_permissions(chat_id, user_id)
-        if prm.is_admin:
-            return True
-        return False
+        return bool(prm.is_admin)
     except BaseException:
         return False
 
@@ -225,9 +223,7 @@ async def admin_check(
         return False
     if not prm.is_admin:
         return False
-    if require and not getattr(prm, require, False):
-        return False
-    return True
+    return not (require and not getattr(prm, require, False))
 
 
 def to_privilege(privilege: str) -> str:
