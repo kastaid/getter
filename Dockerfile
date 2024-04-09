@@ -14,6 +14,7 @@ ENV TZ=Asia/Jakarta \
     PATH=/opt/venv/bin:/app/bin:$PATH \
     CHROME_BIN=/usr/bin/google-chrome \
     DISPLAY=:99
+ARG LANG=en_US
 
 WORKDIR /app
 COPY . .
@@ -21,7 +22,6 @@ COPY . .
 RUN set -ex \
     && apt-get -qqy update \
     && apt-get -qqy install --no-install-recommends \
-        tini \
         gnupg \
         git \
         curl \
@@ -40,7 +40,7 @@ RUN set -ex \
         libnss3 \
         unzip \
         build-essential \
-    && localedef --quiet -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8 \
+    && localedef --quiet -i ${LANG} -c -f UTF-8 -A /usr/share/locale/locale.alias ${LANG}.UTF-8 \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && dpkg-reconfigure --force -f noninteractive tzdata >/dev/null 2>&1 \
     && install -m 0755 -d /etc/apt/keyrings \
@@ -65,5 +65,4 @@ RUN set -ex \
     && apt-get -qqy clean \
     && rm -rf -- /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/* /usr/share/man/* /usr/share/doc/* /var/log/* /tmp/* /var/tmp/*
 
-ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["python3", "-m", "getter"]
