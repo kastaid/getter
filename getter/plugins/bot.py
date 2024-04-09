@@ -195,14 +195,17 @@ async def heroku_logs(kst) -> None:
 
 
 async def restart_app() -> None:
+    os.system("clear")
     try:
         import psutil
 
         proc = psutil.Process(os.getpid())
-        for _ in proc.open_files() + proc.connections():
-            os.close(_.fd)
+        for p in proc.open_files() + proc.connections():
+            os.close(p.fd)
     except BaseException:
         pass
+    reqs = Root / "requirements.txt"
+    os.system(f"{executable} -m pip install --disable-pip-version-check --default-timeout=100 -U -r {reqs}")
     os.execl(executable, executable, "-m", "getter")
 
 
