@@ -12,6 +12,7 @@ ENV TZ=Asia/Jakarta \
     DEBIAN_FRONTEND=noninteractive \
     VIRTUAL_ENV=/opt/venv \
     PATH=/opt/venv/bin:/app/bin:$PATH
+ARG LANG=en_US
 
 WORKDIR /app
 COPY . .
@@ -19,13 +20,12 @@ COPY . .
 RUN set -ex \
     && apt-get -qqy update \
     && apt-get -qqy install --no-install-recommends \
-        tini \
         gnupg2 \
         git \
         locales \
         tzdata \
         build-essential \
-    && localedef --quiet -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8 \
+    && localedef --quiet -i ${LANG} -c -f UTF-8 -A /usr/share/locale/locale.alias ${LANG}.UTF-8 \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && dpkg-reconfigure --force -f noninteractive tzdata >/dev/null 2>&1 \
     && python3 -m venv $VIRTUAL_ENV \
@@ -35,5 +35,4 @@ RUN set -ex \
     && apt-get -qqy clean \
     && rm -rf -- /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/* /usr/share/man/* /usr/share/doc/* /var/log/* /tmp/* /var/tmp/*
 
-ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["python3", "-m", "getter"]
