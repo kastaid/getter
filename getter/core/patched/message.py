@@ -41,7 +41,7 @@ class Message:
         if self is None:
             return
         _ = args.get("reply_to")
-        reply_to = _ if _ else (self.reply_to_msg_id or (self if force_reply else None))
+        reply_to = _ or (self.reply_to_msg_id or (self if force_reply else None))
         is_file = "file" in args and args.get("file", "") and not self.media
         for arg in (
             "entity",
@@ -198,7 +198,7 @@ class Message:
             return
         chat_id = chat_id or self.chat_id
         _ = args.get("reply_to")
-        reply_to = _ if _ else (self.reply_to_msg_id or (self if force_reply else None))
+        reply_to = _ or (self.reply_to_msg_id or (self if force_reply else None))
         is_file = "file" in args and args.get("file", "") and not self.media
         for arg in (
             "entity",

@@ -36,7 +36,8 @@ ignore=[
   "RET503",
   "UP031",
   "RUF001",
-  "RUF017"
+  "RUF017",
+  "FURB118",
 ]
 [tool.ruff.lint.isort]
 force-single-line = true

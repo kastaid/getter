@@ -12,7 +12,7 @@ from asyncio import sleep, Future
 from collections.abc import Coroutine
 from inspect import getmembers
 from platform import version, machine
-from random import choice
+from random import randrange
 from time import time
 from typing import Any, NoReturn
 from telethon.client.telegramclient import TelegramClient
@@ -94,7 +94,7 @@ class KastaClient(TelegramClient):
         self.log.info("Trying to login...")
         do_not_remove_credit()
         try:
-            await sleep(choice((3, 6)))
+            await sleep(randrange(3, 6))
             await self.start(**kwargs)
             self._bot = await self.is_bot()
             if not self._bot:
