@@ -55,7 +55,7 @@ def mentionuser(
 
 def display_name(entity: hints.Entity) -> str:
     name = get_display_name(entity)
-    return name if name else "{}".format(getattr(entity, "first_name", "unknown") or "unknown")
+    return name or "{}".format(getattr(entity, "first_name", "unknown") or "unknown")
 
 
 def normalize_chat_id(chat_id: int | str) -> int | str:
