@@ -319,7 +319,7 @@ def group_call_instance(chat_id: int) -> None:
         call = CALLS.get(chat_id)
 
         @call.on_network_status_changed
-        async def __(context, is_connected):
+        async def __(context, is_connected):  # noqa: RUF029
             if not is_connected:
                 CALLS.pop(chat_id, None)
 
