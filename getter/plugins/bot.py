@@ -145,7 +145,7 @@ async def _(kst):
         pass
     if not hk.is_heroku:
         await yy.eor(r"\\**#Getter**// `Restarting as locally...`")
-        return await restart_app()
+        return restart_app()
     try:
         await yy.eor(r"\\**#Getter**// `Restarting as heroku... Wait for a few minutes.`")
         app = hk.heroku().app(hk.name)
@@ -153,7 +153,7 @@ async def _(kst):
     except Exception as err:
         reply = await yy.eor(formatx_send(err), parse_mode="html")
         await reply.reply(r"\\**#Getter**// `Restarting as locally...`", silent=True)
-        await restart_app()
+        restart_app()
 
 
 @kasta_cmd(
@@ -194,7 +194,7 @@ async def heroku_logs(kst) -> None:
     (file).unlink(missing_ok=True)
 
 
-async def restart_app() -> None:
+def restart_app() -> None:
     os.system("clear")
     try:
         import psutil
