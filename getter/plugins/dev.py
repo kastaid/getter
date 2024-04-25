@@ -287,7 +287,7 @@ async def _(kst):
     pattern="crash$",
     dev=True,
 )
-async def _(kst):
+async def _(kst):  # noqa: RUF029
     raise ValueError("not an error, just for testing (>_")
 
 
