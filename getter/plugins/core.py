@@ -188,20 +188,17 @@ async def _(kst):
         )
         if is_active:
             filters = (
-                "within_week",
                 "within_month",
                 "long_time_ago",
             )
         elif is_online:
             filters = (
-                "recently",
-                "offline",
                 "within_week",
                 "within_month",
                 "long_time_ago",
             )
         else:
-            filters = ("long_time_ago",)
+            filters = ("none",)
         start_time = monotonic()
         local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
         max_success, success, failed, error = 300, 0, 0, "none"
