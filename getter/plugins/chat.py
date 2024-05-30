@@ -205,9 +205,9 @@ async def _(kst):
     ga = kst.client
     count = 0
     yy = await kst.eor("`Processing...`")
-    async for x in ga.iter_dialogs():
+    async for x in ga.iter_dialogs(ignore_pinned=True):
         if x.is_user and not x.entity.bot:
-            if x.id in DEVS:
+            if x.is_self or x.id in DEVS:
                 continue
             try:
                 await ga.delete_dialog(x.id, revoke=True)
