@@ -58,8 +58,7 @@ async def _(kst):
             await ga.send_message(
                 chat_id,
                 message=message,
-                parse_mode=None,
-                link_preview=False,
+                parse_mode="markdown",
                 silent=True,
             )
             await sleep(delay)
@@ -68,8 +67,7 @@ async def _(kst):
             await ga.send_message(
                 chat_id,
                 message=message,
-                parse_mode=None,
-                link_preview=False,
+                parse_mode="markdown",
                 silent=True,
             )
             await sleep(delay)
