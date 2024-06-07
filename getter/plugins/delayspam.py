@@ -42,7 +42,7 @@ async def _(kst):
             return await kst.eor(f"`{hl}ds{ds} [delay] [count] [reply]`", time=4)
     else:
         try:
-            args = kst.text.split(" ", 3)
+            args = kst.text_markdown.split(" ", 3)
             delay = int(args[1])
             count = int(args[2])
             message = str(args[3])
