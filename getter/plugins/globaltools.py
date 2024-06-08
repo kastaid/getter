@@ -824,7 +824,7 @@ async def _(kst):
                         await ga.send_message(
                             chat_id,
                             message=message,
-                            link_preview=False,
+                            link_preview=True,
                         )
                         await sleep(randrange(2, 5))
                         success += 1
@@ -834,7 +834,7 @@ async def _(kst):
                             await ga.send_message(
                                 chat_id,
                                 message=message,
-                                link_preview=False,
+                                link_preview=True,
                             )
                             await sleep(randrange(2, 5))
                             success += 1
@@ -909,7 +909,7 @@ async def _(kst):
                         await ga.send_message(
                             chat_id,
                             message=message,
-                            link_preview=False,
+                            link_preview=True,
                         )
                         await sleep(randrange(2, 5))
                         success += 1
@@ -919,7 +919,7 @@ async def _(kst):
                             await ga.send_message(
                                 chat_id,
                                 message=message,
-                                link_preview=False,
+                                link_preview=True,
                             )
                             await sleep(randrange(2, 5))
                             success += 1
