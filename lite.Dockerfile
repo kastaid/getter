@@ -20,7 +20,6 @@ COPY . .
 RUN set -ex \
     && apt-get -qqy update \
     && apt-get -qqy install --no-install-recommends \
-        tini \
         gnupg2 \
         git \
         locales \
@@ -36,5 +35,4 @@ RUN set -ex \
     && apt-get -qqy clean \
     && rm -rf -- /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/* /usr/share/man/* /usr/share/doc/* /var/log/* /tmp/* /var/tmp/*
 
-ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["python3", "-m", "getter"]
