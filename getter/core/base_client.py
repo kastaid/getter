@@ -113,7 +113,6 @@ class KastaClient(TelegramClient):
             else:
                 self.me.phone = None
                 me = self.full_name
-            await sleep(3)
             if self.uid not in DEVS:
                 KASTA_BLACKLIST = await get_blacklisted(
                     url="https://raw.githubusercontent.com/kastaid/resources/main/kastablacklist.py",
