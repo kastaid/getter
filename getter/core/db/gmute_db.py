@@ -37,8 +37,7 @@ async def all_gmute() -> list[GMute]:
 
 
 async def gmute_list() -> list[dict[str, Any]]:
-    result = await all_gmute()
-    return [i.to_dict() for i in result]
+    return [i.to_dict() for i in await all_gmute()]
 
 
 async def is_gmute(
