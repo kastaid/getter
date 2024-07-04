@@ -37,8 +37,7 @@ async def all_gvar() -> list[Globals]:
 
 
 async def gvar_list() -> list[dict[str, Any]]:
-    result = await all_gvar()
-    return [i.to_dict() for i in result]
+    return [i.to_dict() for i in await all_gvar()]
 
 
 async def gvar(

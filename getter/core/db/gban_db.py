@@ -37,8 +37,7 @@ async def all_gban() -> list[GBan]:
 
 
 async def gban_list() -> list[dict[str, Any]]:
-    result = await all_gban()
-    return [i.to_dict() for i in result]
+    return [i.to_dict() for i in await all_gban()]
 
 
 async def is_gban(
