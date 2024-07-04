@@ -37,8 +37,7 @@ async def all_gdel() -> list[GDel]:
 
 
 async def gdel_list() -> list[dict[str, Any]]:
-    result = await all_gdel()
-    return [i.to_dict() for i in result]
+    return [i.to_dict() for i in await all_gdel()]
 
 
 async def is_gdel(

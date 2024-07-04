@@ -35,8 +35,7 @@ async def get_cols() -> list[Collections]:
 
 
 async def col_list() -> list[dict[str, Any]]:
-    result = await get_cols()
-    return [i.to_dict() for i in result]
+    return [i.to_dict() for i in await get_cols()]
 
 
 async def get_col(keyword: str) -> Collections:
