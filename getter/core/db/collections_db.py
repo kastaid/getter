@@ -52,8 +52,8 @@ async def get_col(keyword: str) -> Collections:
 
 async def set_col(
     keyword: str,
-    json: str,
-    njson: str | None = None,
+    json: Any,
+    njson: Any = None,
 ) -> None:
     njson = njson or {}
     async with Session(True) as s:
