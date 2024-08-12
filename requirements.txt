@@ -5,7 +5,7 @@ cryptg==0.4.0
 psutil==6.0.0
 heroku3==5.2.1
 GitPython==3.1.43
-SQLAlchemy==2.0.31
+SQLAlchemy==2.0.32
 asyncpg==0.29.0
 aiosqlite==0.20.0
 sqlalchemy-json==0.7.0
@@ -26,4 +26,4 @@ lottie==0.7.0
 Pillow==10.4.0
 CairoSVG==2.7.1
 uvloop==0.19.0
-orjson==3.10.6
+orjson==3.10.7
