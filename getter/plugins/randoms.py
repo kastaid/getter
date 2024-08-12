@@ -44,7 +44,7 @@ async def _(kst):
         await yy.eor(formatx_send(err), parse_mode="html")
 
 
-plugins_help["random"] = {
+plugins_help["randoms"] = {
     "{i}getcat": "Random cat image.",
     "{i}getdog": "Random dog image.",
     "{i}getfood": "Random food image.",
