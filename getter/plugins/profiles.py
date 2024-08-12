@@ -161,7 +161,7 @@ async def _(kst):
         await yy.eor(formatx_send(err), parse_mode="html")
 
 
-plugins_help["profile"] = {
+plugins_help["profiles"] = {
     "{i}pbio [bio]": "Change my profile bio. If empty the current bio removed.",
     "{i}pname [first_name] ; [last_name]": "Change my profile name. If empty the current name set to blank `ㅤ`.",
     "{i}puname [username]": "Change my profile username. If empty the current username removed.",
