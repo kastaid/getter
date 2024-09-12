@@ -5,7 +5,7 @@ cryptg==0.4.0
 psutil==6.0.0
 heroku3==5.2.1
 GitPython==3.1.43
-SQLAlchemy==2.0.32
+SQLAlchemy==2.0.34
 asyncpg==0.29.0
 aiosqlite==0.20.0
 sqlalchemy-json==0.7.0
@@ -19,7 +19,7 @@ Markdown==3.7
 beautifulsoup4==4.12.3
 emoji==2.12.1
 Unidecode==1.3.8
-validators==0.33.0
+validators==0.34.0
 telegraph==2.2.0
 requests==2.32.3
 lottie==0.7.0
