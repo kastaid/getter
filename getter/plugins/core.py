@@ -473,7 +473,7 @@ async def _(kst):
         local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
         try:
             await yy.eor(f"`Reading {csv_file} file...`")
-            async with aiofiles.open(csv_file, mode="r") as f:
+            async with aiofiles.open(csv_file) as f:
                 async for row in AsyncDictReader(f, delimiter=","):
                     user = {"user_id": int(row["user_id"]), "hash": int(row["hash"])}
                     users.append(user)
