@@ -1,7 +1,7 @@
 loguru==0.7.2
 python-dotenv==1.0.1
 https://github.com/kastaid/Telethon/archive/main.tar.gz
-cryptg==0.4.0
+cryptg==0.5.0
 psutil==6.0.0
 heroku3==5.2.1
 GitPython==3.1.43
@@ -25,5 +25,5 @@ requests==2.32.3
 lottie==0.7.0
 Pillow==10.4.0
 CairoSVG==2.7.1
-uvloop==0.20.0
+uvloop==0.21.0
 orjson==3.10.7
