@@ -26,4 +26,4 @@ lottie==0.7.1
 Pillow==11.0.0
 CairoSVG==2.7.1
 uvloop==0.21.0
-orjson==3.10.9
+orjson==3.10.11

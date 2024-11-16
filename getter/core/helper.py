@@ -5,6 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+from collections import UserDict
 from html import escape
 from typing import Any
 from cachetools import cached, LRUCache
@@ -15,7 +16,7 @@ from .db import gvar, get_col
 from .utils import get_full_class_name
 
 
-class PluginsHelp(dict):
+class PluginsHelp(UserDict):
     def append(self, obj: dict) -> None:
         plug = next(iter(obj.keys()))
         cmds = {}

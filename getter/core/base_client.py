@@ -9,6 +9,7 @@ import importlib.util
 import os
 import sys
 from asyncio import sleep, Future
+from collections import UserList
 from collections.abc import Coroutine
 from inspect import getmembers
 from platform import version, machine
@@ -48,7 +49,7 @@ from .property import do_not_remove_credit, get_blacklisted
 from .utils import time_formatter
 
 
-class ReverseList(list):
+class ReverseList(UserList):
     def __iter__(self):
         return reversed(self)
 
