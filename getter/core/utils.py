@@ -178,7 +178,7 @@ def camel(text: str) -> str:
 
 
 def snake(text: str) -> str:
-    return "_".join(sub("([A-Z][a-z]+)", r" \1", sub("([A-Z]+)", r" \1", text.replace("-", " "))).split()).lower()
+    return "_".join(sub(r"([A-Z][a-z]+)", r" \1", sub(r"([A-Z]+)", r" \1", text.replace("-", " "))).split()).lower()
 
 
 def kebab(text: str) -> str:
