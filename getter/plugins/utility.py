@@ -146,7 +146,7 @@ async def _(kst):
     if not res:
         return await yy.eod("`Try again now!`")
     soup = BeautifulSoup(res, "html.parser", from_encoding="utf-8")
-    days = soup.find_all("a", "js-link-target", href=re.compile("daysoftheyear.com/days"))
+    days = soup.find_all("a", "js-link-target", href=re.compile(r"daysoftheyear.com/days"))
     text = "🎊 **Events of the Day**\n"
     for x in days[:5]:
         text += "• [{}]({})\n".format(x.text, x["href"])
