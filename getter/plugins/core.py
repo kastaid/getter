@@ -551,20 +551,20 @@ async def _(kst):
         await sleep(choice((4, 6, 8)))
     if not INVITE_WORKER.get(chat_id):
         return await kst.eod(no_process_text, silent=True)
-    _worker = INVITE_WORKER.get(chat_id)
+    worker = INVITE_WORKER.get(chat_id)
     if INVITE_WORKER.get(chat_id):
         INVITE_WORKER.pop(chat_id)
     await kst.sod(
         cancelled_text.format(
-            _worker.get("mode"),
-            _worker.get("current"),
-            "Inviting" if _worker.get("mode") == "invite" else "Adding",
-            _worker.get("success"),
-            _worker.get("now"),
+            worker.get("mode"),
+            worker.get("current"),
+            "Inviting" if worker.get("mode") == "invite" else "Adding",
+            worker.get("success"),
+            worker.get("now"),
         ),
         silent=True,
         time=100,
-        reply_to=_worker.get("msg_id"),
+        reply_to=worker.get("msg_id"),
     )
 
 
