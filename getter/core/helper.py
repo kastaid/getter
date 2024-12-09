@@ -71,13 +71,13 @@ class Heroku:
         self.api: str = Var.HEROKU_API
 
     def heroku(self) -> Any:
-        _conn = None
+        conn = None
         try:
             if self.is_heroku:
-                _conn = from_key(self.api)
+                conn = from_key(self.api)
         except BaseException as err:
             LOG.exception(err)
-        return _conn
+        return conn
 
     @property
     @cached(LRUCache(maxsize=512))

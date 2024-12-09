@@ -105,29 +105,29 @@ async def _(kst):
         paths = None
     if not paths:
         return await yy.eor("`No such directory or empty or incorrect.`", time=5)
-    _symlinks, _folders, _dockers, _allfiles = [], [], [], []
+    symlinks, folders, dockers, allfiles = [], [], [], []
     for p in paths:
         if p.is_symlink():
-            _symlinks.append(("🔗", p))
+            symlinks.append(("🔗", p))
         elif p.is_dir():
-            _folders.append(("📂", p))
+            folders.append(("📂", p))
         elif "docker" in str(p).lower():
-            _dockers.append(("🐋", p))
+            dockers.append(("🐋", p))
         else:
             for x in LSFILES_MAP:
                 if p.suffix in x:
-                    _allfiles.append((LSFILES_MAP[x], p))
+                    allfiles.append((LSFILES_MAP[x], p))
                     break
             else:
                 if p.is_file():
-                    _allfiles.append(("🏷️", p))
+                    allfiles.append(("🏷️", p))
                 else:
-                    _allfiles.append(("📒", p))
+                    allfiles.append(("📒", p))
     lists = [
-        *sorted(_folders),
-        *sorted(_symlinks),
-        *sorted(_allfiles),
-        *sorted(_dockers),
+        *sorted(folders),
+        *sorted(symlinks),
+        *sorted(allfiles),
+        *sorted(dockers),
     ]
     directory = ""
     sfile, sfolder, cfile, cfolder = 0, 0, 0, 0

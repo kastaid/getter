@@ -205,18 +205,18 @@ async def finishing(text: str) -> None:
     BOTLOGS = await get_botlogs()
     is_restart, is_reboot = False, False
     try:
-        _restart = (await gvar("_restart")).split("|")
+        restart = (await gvar("_restart")).split("|")
         is_restart = True
     except BaseException:
         pass
     try:
-        _reboot = (await gvar("_reboot")).split("|")
+        reboot = (await gvar("_reboot")).split("|")
         is_reboot = True
     except BaseException:
         pass
     if is_restart:
         try:
-            chat_id, msg_id = int(_restart[0]), int(_restart[1])
+            chat_id, msg_id = int(restart[0]), int(restart[1])
             async with asyncio.timeout(5):
                 await getter_app.edit_message(
                     chat_id,
@@ -237,7 +237,7 @@ async def finishing(text: str) -> None:
         await dgvar("_restart")
     if is_reboot:
         try:
-            chat_id, msg_id = int(_reboot[0]), int(_reboot[1])
+            chat_id, msg_id = int(reboot[0]), int(reboot[1])
             async with asyncio.timeout(5):
                 await getter_app.edit_message(
                     chat_id,
