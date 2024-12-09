@@ -80,11 +80,11 @@ async def _(kst):
         )
     plugins = ""
     for plug in chunk(sorted(plugins_help), 3):
-        _pr = ""
+        pr = ""
         for _ in plug:
-            _pr += f"<code>{_}</code> • "
-        _pr = _pr[:-3]
-        plugins += f"\n{_pr}"
+            pr += f"<code>{_}</code> • "
+        pr = pr[:-3]
+        plugins += f"\n{pr}"
     await yy.sod(
         help_text.format(
             ga.full_name,
