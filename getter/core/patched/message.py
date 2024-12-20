@@ -51,8 +51,7 @@ class Message:
             "silent",
             "reply_to",
         ):
-            if arg in args:
-                del args[arg]
+            args.pop(arg, None)
         if self.out and not isinstance(self, typ.MessageService):
             if edit_time:
                 await sleep(edit_time)
@@ -207,8 +206,7 @@ class Message:
             "silent",
             "reply_to",
         ):
-            if arg in args:
-                del args[arg]
+            args.pop(arg, None)
         if self.out and delete:
             await self.delete()
         try:
