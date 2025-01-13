@@ -4,8 +4,8 @@ https://github.com/kastaid/Telethon/archive/main.tar.gz
 cryptg==0.5.0
 psutil==6.1.1
 heroku3==5.2.1
-GitPython==3.1.43
-SQLAlchemy==2.0.36
+GitPython==3.1.44
+SQLAlchemy==2.0.37
 asyncpg==0.30.0
 aiosqlite==0.20.0
 sqlalchemy-json==0.7.0
@@ -23,7 +23,7 @@ validators==0.34.0
 telegraph==2.2.0
 requests==2.32.3
 lottie==0.7.1
-Pillow==11.0.0
+Pillow==11.1.0
 CairoSVG==2.7.1
 uvloop==0.21.0
-orjson==3.10.12
+orjson==3.10.14
