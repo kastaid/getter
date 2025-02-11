@@ -4,9 +4,9 @@ services:
       context: .
       dockerfile: lite.Dockerfile
     image: getter:latest
+    restart: on-failure
     volumes:
       - ./:/app
     env_file:
       - config.env
-    restart: on-failure
     network_mode: bridge

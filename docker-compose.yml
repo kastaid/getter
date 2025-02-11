@@ -2,7 +2,6 @@ services:
   worker:
     build: .
     environment:
-      DEV_MODE: $DEV_MODE
       API_ID: $API_ID
       API_HASH: $API_HASH
       STRING_SESSION: $STRING_SESSION
