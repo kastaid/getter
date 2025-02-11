@@ -18,6 +18,7 @@ ARG LANG=en_US
 
 WORKDIR /app
 COPY requirements.txt /tmp/
+COPY .config .
 
 RUN set -eux \
     && apt-get -qqy update \
