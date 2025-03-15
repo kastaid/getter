@@ -430,6 +430,8 @@ async def _(kst):
     reply = await kst.get_reply_message()
     if (kst.is_reply and not reply.message) or getattr(reply, "media", None):
         link = reply.msg_link
+    if link.endswith("?single"):
+        link = link.replace("?single", "")
     chat, msg_id = get_msg_id(link)
     if not is_silent and not (chat and msg_id):
         return await yy.eor(
