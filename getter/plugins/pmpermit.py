@@ -6,6 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from asyncio import sleep
+from contextlib import suppress
 from datetime import datetime
 from html import escape
 from random import choice
@@ -142,10 +143,8 @@ async def PMPermit(kst):
     if PMWARN[towarn] > ratelimit:
         if is_pmlog:
             warnt = f"\nUser {mention} [`{user.id}`] has been "
-        try:
+        with suppress(BaseException):
             await ga.delete_messages(user.id, [NESLAST[towarn]])
-        except BaseException:
-            pass
         if "_pmbye" in _PMBYE_CACHE:
             pmbye = _PMBYE_CACHE.get("_pmbye")
         else:
@@ -166,17 +165,15 @@ async def PMPermit(kst):
             total=ratelimit,
             mode=mode,
         )
-        try:
+        with suppress(BaseException):
             await kst.respond(text)
-        except BaseException:
-            pass
         if is_block:
             await ga.read(
                 entity=user.id,
                 clear_mentions=True,
                 clear_reactions=True,
             )
-            try:
+            with suppress(BaseException):
                 await ga(
                     fun.account.ReportPeerRequest(
                         user.id,
@@ -184,8 +181,6 @@ async def PMPermit(kst):
                         message="Sends spam messages to my account. I ask Telegram to ban such user.",
                     )
                 )
-            except BaseException:
-                pass
             await ga.block(user.id)
             if is_pmlog:
                 warnt += "blocked due to spamming in PM !!"
@@ -219,10 +214,8 @@ async def PMPermit(kst):
         total=ratelimit,
         mode=mode,
     )
-    try:
+    with suppress(BaseException):
         await ga.delete_messages(user.id, [NESLAST[towarn]])
-    except BaseException:
-        pass
     await sleep(1)
     last = await kst.reply(text)
     NESLAST[towarn] = last.id
@@ -253,7 +246,7 @@ async def _(kst):
     if not toggle:
         text = f"**PM-Guard Status:** `{humanbool(pmguard, toggle=True)}`"
         return await yy.eod(text)
-    if toggle in ("yes", "on", "true", "1"):
+    if toggle in {"yes", "on", "true", "1"}:
         if pmguard:
             return await yy.eor("`PM-Guard is already on.`", time=4)
         await sgvar("_pmguard", "true")
@@ -284,7 +277,7 @@ async def _(kst):
         if pmlog and pmlog == "media":
             text += "\n__Only media!__"
         return await yy.eod(text)
-    if toggle in ("yes", "on", "true", "1"):
+    if toggle in {"yes", "on", "true", "1"}:
         if pmlog:
             return await yy.eor("`PM-Logs is already on.`", time=4)
         if opts and any(_ in opts for _ in ("-m", "media")):
@@ -403,7 +396,7 @@ async def _(kst):
     if not toggle:
         text = f"**PM-Block Status:** `{humanbool(pmblock, toggle=True)}`"
         return await yy.eod(text)
-    if toggle in ("yes", "on", "true", "1"):
+    if toggle in {"yes", "on", "true", "1"}:
         if pmblock:
             return await yy.eor("`PM-Block is already on.`", time=4)
         await sgvar("_pmblock", "true")
@@ -434,7 +427,7 @@ async def _(kst):
         if antipm and antipm == "del":
             text += "\n__With delete chat!__"
         return await yy.eod(text)
-    if toggle in ("yes", "on", "true", "1"):
+    if toggle in {"yes", "on", "true", "1"}:
         if antipm:
             return await yy.eor("`Anti-PM is already on.`", time=4)
         if opts and any(_ in opts for _ in ("-d", "delete")):

@@ -6,6 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from asyncio import sleep
+from contextlib import suppress
 from random import choice
 from telethon.errors import UserAlreadyParticipantError
 from telethon.tl import functions as fun
@@ -263,10 +264,8 @@ async def _(kst):
         return await yy.eor("`No video chat!`", time=5)
     in_call = group_call(chat_id)
     if in_call and in_call.is_connected:
-        try:
+        with suppress(BaseException):
             await in_call.stop()
-        except BaseException:
-            pass
         text = "`Leaved video chat.`"
     else:
         text = "`Not joined video chat!`"

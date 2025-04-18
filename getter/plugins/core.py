@@ -173,18 +173,18 @@ async def _(kst):
         is_active = bool(
             len(args) > 1
             and args[1].lower()
-            in (
+            in {
                 "active",
                 "a",
-            )
+            }
         )
         is_online = bool(
             len(args) > 1
             and args[1].lower()
-            in (
+            in {
                 "online",
                 "on",
-            )
+            }
         )
         if is_active:
             filters = (
@@ -315,7 +315,7 @@ async def _(kst):
         if chat_id == target_id:
             return await yy.try_delete()
         args = kst.pattern_match.group(1).split(" ")
-        is_append = bool(len(args) > 1 and args[1].lower() in ("-a", "a", "append"))
+        is_append = bool(len(args) > 1 and args[1].lower() in {"-a", "a", "append"})
         start_time = monotonic()
         local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
         members, admins, bots = 0, 0, 0

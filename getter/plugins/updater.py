@@ -7,6 +7,7 @@
 
 import os
 from asyncio import sleep, Lock
+from contextlib import suppress
 from datetime import datetime, timezone
 from random import choice
 from sys import executable
@@ -86,10 +87,10 @@ async def _(kst):
         if not Var.DEV_MODE and mode == "force":
             is_force = True
             state = "[FORCE] "
-        elif mode in ("now", "pull"):
+        elif mode in {"now", "pull"}:
             is_now = True
             state = "[NOW] "
-        elif mode in ("deploy", "push"):
+        elif mode in {"deploy", "push"}:
             is_deploy = True
             state = "[DEPLOY] "
         else:
@@ -337,10 +338,8 @@ Wait for a few minutes, then run `{hl}ping` command."""
         remote.set_url(url)
     else:
         remote = repo.create_remote("heroku", url)
-    try:
+    with suppress(BaseException):
         remote.push(refspec="HEAD:refs/heads/main", force=True)
-    except BaseException:
-        pass
     build = app.builds(order_by="created_at", sort="desc")[0]
     if build.status != "succeeded":
         up = rf"""\\**#Getter**// `{state}Update Failed...`
