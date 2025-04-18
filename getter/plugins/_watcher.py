@@ -5,6 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+from contextlib import suppress
 from telethon import events
 from telethon.tl import types as typ
 from . import (
@@ -66,10 +67,8 @@ async def DeletedUserHandler(kst):
     if kst.is_private and await is_allow(user.id, use_cache=True):
         return
     if await is_gdel(user.id, use_cache=True):
-        try:
+        with suppress(BaseException):
             await kst.delete()
-        except BaseException:
-            pass
 
 
 async def JoinedHandler(kst):
@@ -94,10 +93,8 @@ async def JoinedHandler(kst):
                 parse_mode="html",
                 silent=True,
             )
-        try:
+        with suppress(BaseException):
             await ga.edit_permissions(chat.id, user.id, view_messages=False)
-        except BaseException:
-            pass
         logs_text += f"<b>Reported:</b> <code>{humanbool(is_reported)}</code>\n"
         logs_text += "<b>Reason:</b> {}\n".format(f"<pre>{gban.reason}</pre>" if gban.reason else "None given.")
         await sendlog(logs_text)
@@ -115,9 +112,7 @@ async def JoinedHandler(kst):
             parse_mode="html",
             silent=True,
         )
-        try:
+        with suppress(BaseException):
             await ga.edit_permissions(chat.id, user.id, send_messages=False)
-        except BaseException:
-            pass
         logs_text += "<b>Reason:</b> {}\n".format(f"<pre>{gban.reason}</pre>" if gban.reason else "None given.")
         await sendlog(logs_text)

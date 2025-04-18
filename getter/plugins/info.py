@@ -6,6 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from asyncio import sleep, exceptions
+from contextlib import suppress
 from html import escape
 from math import sqrt
 from time import monotonic
@@ -262,10 +263,8 @@ async def _(kst):
     user_id = None
     match = kst.pattern_match.group(1)
     if match:
-        try:
+        with suppress(BaseException):
             user_id = await ga.get_id(match)
-        except BaseException:
-            pass
     chat_id = kst.chat_id or kst.from_id
     if kst.is_reply:
         user_id, msg_id = (await kst.get_reply_message()).sender_id, kst.reply_to_msg_id

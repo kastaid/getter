@@ -6,6 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from asyncio import sleep
+from contextlib import suppress
 from random import randrange
 import telethon.client.telegramclient
 from telethon import hints, utils
@@ -21,10 +22,8 @@ delattr(fun.account, "DeleteAccountRequest")
 class TelegramClient:
     @patchable()
     async def get_id(self, entity: hints.EntityLike) -> int:
-        try:
+        with suppress(ValueError):
             entity = int(entity)
-        except ValueError:
-            pass
         return await self.get_peer_id(entity)
 
     @patchable()

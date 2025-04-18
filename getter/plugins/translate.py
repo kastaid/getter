@@ -5,6 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+from contextlib import suppress
 from . import (
     Root,
     Var,
@@ -35,17 +36,13 @@ async def _(kst):
     if kst.is_reply:
         words = (await kst.get_reply_message()).message
         if is_lang:
-            try:
+            with suppress(BaseException):
                 words = match.split(maxsplit=1)[1]
-            except BaseException:
-                pass
     else:
         words = match
         if is_lang:
-            try:
+            with suppress(BaseException):
                 words = match.split(maxsplit=1)[1]
-            except BaseException:
-                pass
     if not words:
         return await kst.eor("`Reply to text message or provide a text!`", time=5)
     yy = await kst.eor("`...`")
@@ -80,17 +77,13 @@ async def _(kst):
     if kst.is_reply:
         words = (await kst.get_reply_message()).message
         if is_lang:
-            try:
+            with suppress(BaseException):
                 words = match.split(maxsplit=1)[1]
-            except BaseException:
-                pass
     else:
         words = match
         if is_lang:
-            try:
+            with suppress(BaseException):
                 words = match.split(maxsplit=1)[1]
-            except BaseException:
-                pass
     if not words:
         return await kst.eor("`Reply to text message or provide a text!`", time=5)
     try:
@@ -122,17 +115,13 @@ async def _(kst):
     if kst.is_reply:
         words = (await kst.get_reply_message()).message
         if is_lang:
-            try:
+            with suppress(BaseException):
                 words = match.split(maxsplit=1)[1]
-            except BaseException:
-                pass
     else:
         words = match
         if is_lang:
-            try:
+            with suppress(BaseException):
                 words = match.split(maxsplit=1)[1]
-            except BaseException:
-                pass
     if not words:
         return await kst.eor("`Reply to text message or provide a text!`", time=5)
     yy = await kst.eor("`...`")

@@ -5,6 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+from contextlib import suppress
 from datetime import datetime
 from html import escape
 from random import choice
@@ -129,10 +130,8 @@ async def OnAFK(kst):
         text += f"\n<b>Reason:</b> {reason}"
         chat_id = str(kst.chat_id)
         if chat_id in afk.last:
-            try:
+            with suppress(BaseException):
                 await kst.client.delete_messages(int(chat_id), [afk.last[chat_id]])
-            except BaseException:
-                pass
         last = await kst.reply(
             text,
             link_preview=False,

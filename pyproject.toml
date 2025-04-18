@@ -26,18 +26,19 @@ select = [
     "FURB", # refurb
     "PERF", # perflint
     "RUF", # ruff-specific rules
+    "PLR6201", # Pylint: literal-membership
+    "PLC1901", # Pylint: compare-to-empty-string
 ]
 # https://docs.astral.sh/ruff/rules/
 ignore=[
   "I001",
-  "SIM105",
   "B904",
   "RET502",
   "RET503",
-  "UP031",
   "RUF001",
   "RUF017",
   "FURB118",
+  "RUF052",
 ]
 [tool.ruff.lint.isort]
 force-single-line = true

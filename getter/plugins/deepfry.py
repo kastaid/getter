@@ -46,7 +46,7 @@ async def _(kst):
         ext = guess_extension(mim)
         file = Root / ("downloads/" + f"fry{ext}")
     await reply.download_media(file=file)
-    if ext and ext in (".mp4", ".gif", ".webm"):
+    if ext and ext in {".mp4", ".gif", ".webm"}:
         ss = await Screenshot(file, 0, fry_img)
         if not ss:
             (file).unlink(missing_ok=True)
@@ -98,7 +98,7 @@ async def _(kst):
         ext = guess_extension(mim)
         file = Root / ("downloads/" + f"ugly{ext}")
     await reply.download_media(file=file)
-    if ext and ext in (".mp4", ".gif", ".webm"):
+    if ext and ext in {".mp4", ".gif", ".webm"}:
         to_ugly = ugly_img
         ss = await Screenshot(file, 0, ugly_img)
         if not ss:
