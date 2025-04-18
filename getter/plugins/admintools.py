@@ -6,6 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from asyncio import sleep
+from contextlib import suppress
 from telethon.errors import FloodWaitError
 from telethon.tl import functions as fun, types as typ
 from . import (
@@ -139,10 +140,8 @@ async def _(kst):
             await ga.report_spam(user.id)
     except BaseException:
         pass
-    try:
+    with suppress(BaseException):
         await ga.edit_permissions(chat_id, user.id, view_messages=False)
-    except BaseException:
-        pass
 
 
 @kasta_cmd(
@@ -277,10 +276,8 @@ async def _(kst):
         return
     if user.id in DEVS:
         return
-    try:
+    with suppress(BaseException):
         await ga.edit_permissions(chat_id, user.id, send_messages=False)
-    except BaseException:
-        pass
 
 
 @kasta_cmd(
@@ -416,10 +413,8 @@ async def _(kst):
         return
     if user.id in DEVS:
         return
-    try:
+    with suppress(BaseException):
         await ga.kick_participant(kst.chat_id, user.id)
-    except BaseException:
-        pass
 
 
 @kasta_cmd(

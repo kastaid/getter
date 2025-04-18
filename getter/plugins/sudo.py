@@ -40,7 +40,7 @@ async def _(kst):
     if not toggle:
         text = f"**Sudo Status:** `{humanbool(sudo, toggle=True)}`"
         return await yy.eod(text)
-    if toggle in ("yes", "on", "true", "1"):
+    if toggle in {"yes", "on", "true", "1"}:
         if sudo:
             return await yy.eor("`Sudo is already on.`", time=4)
         await sgvar("_sudo", "true")

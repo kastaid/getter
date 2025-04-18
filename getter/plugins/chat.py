@@ -6,6 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from asyncio import sleep
+from contextlib import suppress
 from random import choice
 from telethon.errors import UserBotError
 from telethon.tl import functions as fun, types as typ
@@ -28,10 +29,8 @@ from . import (
     edited=True,
 )
 async def _(kst):
-    try:
+    with suppress(BaseException):
         await kst.delete()
-    except BaseException:
-        pass
     await kst.read(
         clear_mentions=True,
         clear_reactions=True,
@@ -44,15 +43,11 @@ async def _(kst):
     edited=True,
 )
 async def _(kst):
-    try:
+    with suppress(BaseException):
         await kst.delete()
-    except BaseException:
-        pass
     if kst.is_reply:
-        try:
+        with suppress(BaseException):
             await (await kst.get_reply_message()).delete()
-        except BaseException:
-            pass
 
 
 @kasta_cmd(
@@ -68,10 +63,8 @@ async def _(kst):
     ):
         await msg.try_delete()
         total += 1
-    try:
+    with suppress(BaseException):
         await (await kst.get_reply_message()).delete()
-    except BaseException:
-        pass
     await kst.sod(f"`Purged {total}`", time=3, silent=True)
 
 
@@ -149,10 +142,8 @@ async def _(kst):
     func=lambda e: e.is_reply,
 )
 async def _(kst):
-    try:
+    with suppress(BaseException):
         await kst.delete()
-    except BaseException:
-        pass
     try:
         copy = await kst.get_reply_message()
         await copy.reply(copy)

@@ -5,6 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+from contextlib import suppress
 from random import choice
 from . import (
     Root,
@@ -38,17 +39,13 @@ async def _(kst):
         else:
             code = reply.message
         if is_theme:
-            try:
+            with suppress(BaseException):
                 code = match.split(maxsplit=1)[1]
-            except BaseException:
-                pass
     else:
         code = match
         if is_theme:
-            try:
+            with suppress(BaseException):
                 code = match.split(maxsplit=1)[1]
-            except BaseException:
-                pass
     if not code:
         return await kst.eod("`Reply to text message or readable file.`")
     yy = await kst.eor("`Processing...`")
@@ -95,17 +92,13 @@ async def _(kst):
         else:
             code = reply.message
         if is_theme:
-            try:
+            with suppress(BaseException):
                 code = match.split(maxsplit=1)[1]
-            except BaseException:
-                pass
     else:
         code = match
         if is_theme:
-            try:
+            with suppress(BaseException):
                 code = match.split(maxsplit=1)[1]
-            except BaseException:
-                pass
     if not code:
         return await kst.eod("`Reply to text message or readable file.`")
     yy = await kst.eor("`Processing...`")
