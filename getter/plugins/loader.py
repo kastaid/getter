@@ -6,6 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from asyncio import sleep
+from contextlib import suppress
 from os.path import dirname, realpath
 from random import choice
 from aiofiles.os import path, remove
@@ -37,10 +38,8 @@ async def _(kst):
         if await path.isfile(f"{base}/custom/{plugin_file}"):
             if plugin in ga._plugins:
                 ga.unload_plugin(plugin)
-            try:
+            with suppress(BaseException):
                 await remove(f"{base}/custom/{plugin_file}")
-            except BaseException:
-                pass
         file = await reply.download_media(file=f"{base}/custom")
         if file:
             if ga.load_plugin(plugin_file):

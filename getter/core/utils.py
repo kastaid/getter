@@ -21,7 +21,7 @@ from unidecode import unidecode
 
 
 def humanbool(b: Any, toggle: bool = False) -> str:
-    return ("off" if toggle else "no") if str(b).lower() in ("false", "none", "0", "") else ("on" if toggle else "yes")
+    return ("off" if toggle else "no") if str(b).lower() in {"false", "none", "0", ""} else ("on" if toggle else "yes")
 
 
 def replace_all(
@@ -94,13 +94,13 @@ def until_time(
     timing: str | int,
     unit: str = "m",
 ) -> tuple[float, str]:
-    if unit.lower() not in (
+    if unit.lower() not in {
         "s",
         "m",
         "h",
         "d",
         "w",
-    ):
+    }:
         unit = "m"
     if not str(timing).isdecimal():
         raise TypeError("'timing' must be integers or str digits")

@@ -22,7 +22,7 @@ async def _(kst):
         await sleep(choice((4, 6, 8)))
     action = kst.pattern_match.group(1)
     act = action
-    if action in ("audio", "round", "video"):
+    if action in {"audio", "round", "video"}:
         action = "record-" + action
     sec = await kst.client.get_text(kst, group=2)
     sec = int(60 if not sec.replace(".", "", 1).isdecimal() else sec)

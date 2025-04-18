@@ -669,7 +669,7 @@ async def _(kst):
         if user.id == ga.uid:
             return await yy.eor("`Cannot gpromote to myself.`", time=3)
         opts = args.split(" ")
-        to = opts[0].lower() if opts[0].lower() in ("group", "channel") else ""
+        to = opts[0].lower() if opts[0].lower() in {"group", "channel"} else ""
         title = " ".join(strip_emoji(" ".join(opts[1:] if to else opts)).split()).strip()
         if len(title) > 16:
             title = title[:16]
@@ -734,7 +734,7 @@ async def _(kst):
         if user.id == ga.uid:
             return await yy.eor("`Cannot gdemote to myself.`", time=3)
         opts = args.split(" ")
-        to = opts[0].lower() if opts[0].lower() in ("group", "channel") else ""
+        to = opts[0].lower() if opts[0].lower() in {"group", "channel"} else ""
         start_time, success, failed = monotonic(), 0, 0
         async for gg in ga.iter_dialogs():
             if (

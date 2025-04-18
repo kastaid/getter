@@ -6,6 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import re
+from contextlib import suppress
 from datetime import datetime
 from html import escape
 from mimetypes import guess_extension
@@ -359,7 +360,7 @@ async def _(kst):
             await Runner(f"lottie_convert.py {res} {file}")
             (Root / res).unlink(missing_ok=True)
             res = file
-        if mt not in ("document", "text"):
+        if mt not in {"document", "text"}:
             try:
                 tg = await Telegraph()
                 up = await tg.upload_file(res)
@@ -477,10 +478,8 @@ async def _(kst):
     limit = 5
     if ":" in args:
         args, limit = args.split(":", 1)
-    try:
+    with suppress(BaseException):
         limit = int(limit)
-    except BaseException:
-        pass
     limit = 99 if limit > 99 else limit  # noqa
     current, result, total = normalize_chat_id(kst.chat_id), "", 0
     async for msg in ga.iter_messages(
