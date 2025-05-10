@@ -9,20 +9,25 @@ import logging
 import sys
 from datetime import date
 from loguru import logger as LOG
+from .config import Var
 
 LOG.remove(0)
 LOG.add(
     "logs/getter-{}.log".format(date.today().strftime("%Y-%m-%d")),
     format="{time:YY/MM/DD HH:mm:ss} | {level: <8} | {name: ^15} | {function: ^15} | {line: >3} : {message}",
-    rotation="1 days",
+    rotation="1 MB",
+    backtrace=False,
+    diagnose=not Var.DEV_MODE,
+    enqueue=True,
 )
 LOG.add(
     sys.stderr,
     format="{time:YY/MM/DD HH:mm:ss} | {level} | {name}:{function}:{line} | {message}",
     level="INFO",
     colorize=False,
+    backtrace=False,
+    diagnose=not Var.DEV_MODE,
 )
-LOG.opt(lazy=True, colors=False)
 
 
 class InterceptHandler(logging.Handler):
@@ -35,9 +40,14 @@ class InterceptHandler(logging.Handler):
         while frame and frame.f_code.co_filename == logging.__file__:
             frame = frame.f_back
             depth += 1
-        LOG.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
+        LOG.opt(
+            exception=record.exc_info,
+            lazy=True,
+            depth=depth,
+        ).log(level, record.getMessage())
 
 
+logging.basicConfig(handlers=[InterceptHandler()], level=logging.INFO)
 logging.disable(logging.DEBUG)
 logging.getLogger("asyncio").setLevel(logging.ERROR)
 logging.getLogger("urllib3").disabled = True
@@ -45,6 +55,5 @@ logging.getLogger("urllib3.connectionpool").disabled = True
 logging.getLogger("PIL").disabled = True
 logging.getLogger("webdriver_manager").disabled = True
 logging.getLogger("pytgcalls").setLevel(logging.ERROR)
-logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
 TelethonLogger = logging.getLogger("telethon")
 TelethonLogger.setLevel(logging.ERROR)
