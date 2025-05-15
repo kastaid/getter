@@ -5,7 +5,7 @@ cryptg==0.5.0
 psutil==7.0.0
 heroku3==5.2.1
 GitPython==3.1.44
-SQLAlchemy==2.0.40
+SQLAlchemy==2.0.41
 asyncpg==0.30.0
 aiosqlite==0.21.0
 sqlalchemy-json==0.7.0
