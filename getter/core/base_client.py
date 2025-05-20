@@ -164,7 +164,7 @@ class KastaClient(TelegramClient):
         *args,
         **kwargs,
     ) -> None:
-        if func in [_[0] for _ in self.list_event_handlers()]:
+        if func in [i[0] for i in self.list_event_handlers()]:
             return
         self.add_event_handler(func, *args, **kwargs)
 
@@ -228,11 +228,11 @@ class KastaClient(TelegramClient):
     def all_plugins(self) -> list[dict[str, str]]:
         return [
             {
-                "path": ".".join(str(_.resolve()).replace(".py", "").split("/")[-2:]),
-                "name": _.stem,
+                "path": ".".join(str(i.resolve()).replace(".py", "").split("/")[-2:]),
+                "name": i.stem,
             }
-            for _ in (Root / "getter/plugins/").rglob("*.py")
-            if not str(_).endswith(("__.py", "_draft.py"))
+            for i in (Root / "getter/plugins/").rglob("*.py")
+            if not str(i).endswith(("__.py", "_draft.py"))
         ]
 
     @property

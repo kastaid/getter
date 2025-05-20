@@ -14,22 +14,21 @@ from . import (
     normalize_chat_id,
 )
 
-DS_TASKS: dict[int, set[int]] = {i: set() for i in range(10)}
+DS_TASKS: dict[int, dict[int, asyncio.Task]] = {i: {} for i in range(10)}
 
 
-def get_task(ds: str) -> set[int]:
-    return DS_TASKS.get(int(ds or 0))
+def get_task_store(ds: int) -> dict[int, asyncio.Task]:
+    return DS_TASKS.get(ds)
 
 
 @kasta_cmd(
     pattern=r"ds(1|2|3|4|5|6|7|8|9|)(?: |$)([\s\S]*)",
 )
 async def _(kst):
-    ga = kst.client
     chat_id = normalize_chat_id(kst.chat_id)
-    ds = kst.pattern_match.group(1).strip()
-    task = get_task(ds)
-    if chat_id in task:
+    ds = int(kst.pattern_match.group(1) or 0)
+    task_store = get_task_store(ds)
+    if chat_id in task_store:
         return await kst.eor(f"Please wait until previous •ds{ds}• is finished or cancel it.", time=2)
     if kst.is_reply:
         try:
@@ -49,13 +48,74 @@ async def _(kst):
             await kst.try_delete()
         except BaseException:
             return await kst.eor(f"`{hl}ds{ds} [delay] [count] [text]`", time=4)
-    delay = 2 if int(delay) < 2 else delay
-    task.add(chat_id)
+    delay = max(2, delay)
+    task = asyncio.create_task(
+        run_delayspam(
+            kst,
+            ds,
+            chat_id,
+            message,
+            delay,
+            count,
+        )
+    )
+    DS_TASKS[ds][chat_id] = task
+    task.add_done_callback(lambda t, k=chat_id: get_task_store(ds).pop(k, None))
+
+
+@kasta_cmd(
+    pattern="ds(1|2|3|4|5|6|7|8|9|)cancel$",
+)
+async def _(kst):
+    chat_id = normalize_chat_id(kst.chat_id)
+    ds = int(kst.pattern_match.group(1) or 0)
+    task_store = get_task_store(ds)
+    if chat_id not in task_store:
+        return await kst.eor(f"No running •ds{ds}• in current chat.", time=2)
+    task = task_store.pop(chat_id)
+    if not task.done():
+        task.cancel()
+    await kst.eor(f"`canceled ds{ds} in current chat`", time=2)
+
+
+@kasta_cmd(
+    pattern="ds(1|2|3|4|5|6|7|8|9|)stop$",
+)
+async def _(kst):
+    ds = int(kst.pattern_match.group(1) or 0)
+    task_store = get_task_store(ds)
+    for task in list(task_store.values()):
+        if not task.done():
+            task.cancel()
+    task_store.clear()
+    await kst.eor(f"`stopped ds{ds} in all chats`", time=4)
+
+
+@kasta_cmd(
+    pattern="dsclear$",
+)
+async def _(kst):
+    for store in DS_TASKS.values():
+        for task in list(store.values()):
+            if not task.done():
+                task.cancel()
+        store.clear()
+    await kst.eor("`clear all ds*`", time=4)
+
+
+async def run_delayspam(
+    kst,
+    ds: int,
+    chat_id: int,
+    message: str,
+    delay: int,
+    count: int,
+) -> None:
     for _ in range(count):
-        if chat_id not in get_task(ds):
+        if chat_id not in get_task_store(ds):
             break
         try:
-            await ga.send_message(
+            await kst.client.send_message(
                 chat_id,
                 message=message,
                 parse_mode="markdown",
@@ -64,7 +124,7 @@ async def _(kst):
             await asyncio.sleep(delay)
         except FloodWaitError as fw:
             await asyncio.sleep(fw.seconds)
-            await ga.send_message(
+            await kst.client.send_message(
                 chat_id,
                 message=message,
                 parse_mode="markdown",
@@ -75,38 +135,6 @@ async def _(kst):
             pass
         except RPCError:
             break
-    get_task(ds).discard(chat_id)
-
-
-@kasta_cmd(
-    pattern="ds(1|2|3|4|5|6|7|8|9|)cancel$",
-)
-async def _(kst):
-    chat_id = normalize_chat_id(kst.chat_id)
-    ds = kst.pattern_match.group(1).strip()
-    task = get_task(ds)
-    if chat_id not in task:
-        return await kst.eor(f"No running •ds{ds}• in current chat.", time=2)
-    task.discard(chat_id)
-    await kst.eor(f"`cancelled ds{ds} in current chat`", time=2)
-
-
-@kasta_cmd(
-    pattern="ds(1|2|3|4|5|6|7|8|9|)stop$",
-)
-async def _(kst):
-    ds = kst.pattern_match.group(1).strip()
-    get_task(ds).clear()
-    await kst.eor(f"`stopped ds{ds} in all chats`", time=4)
-
-
-@kasta_cmd(
-    pattern="dsclear$",
-)
-async def _(kst):
-    for task in DS_TASKS.values():
-        task.clear()
-    await kst.eor("`clear all ds*`", time=4)
 
 
 plugins_help["delayspam"] = {
