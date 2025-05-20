@@ -107,7 +107,7 @@ def migrations(app: Any = None) -> None:
     cfg = app.config()
     if "HEROKU_API_KEY" in cfg:
         cfg["HEROKU_API"] = cfg["HEROKU_API_KEY"]
-        del cfg["HEROKU_APIiKEY"]
+        del cfg["HEROKU_API_KEY"]
     """
     addons = app.addons()
     pg, pgv = "heroku-postgresql", "14"
