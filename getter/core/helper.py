@@ -20,9 +20,9 @@ class PluginsHelp(UserDict):
     def append(self, obj: dict) -> None:
         plug = next(iter(obj.keys()))
         cmds = {}
-        for _ in obj[plug]:
-            name = next(iter(_.keys()))
-            desc = _[name]
+        for i in obj[plug]:
+            name = next(iter(i.keys()))
+            desc = i[name]
             cmds[name] = desc
         self[plug] = cmds
 

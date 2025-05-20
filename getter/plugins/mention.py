@@ -151,7 +151,7 @@ async def _(kst):
         if chat_id not in ETAGS:
             return await yy.eod("__No current etag are running.__")
         ETAGS.remove(chat_id)
-    await yy.eor("`cancelled`", time=5)
+    await yy.eor("`canceled`", time=5)
 
 
 @kasta_cmd(

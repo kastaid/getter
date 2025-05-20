@@ -97,8 +97,8 @@ getmembers_text = """
 <b>Time:</b> <code>{}</code>
 """
 no_process_text = "`There is no running proccess.`"
-cancelled_text = """
-✅ **The process has been cancelled**
+canceled_text = """
+✅ **The process has been canceled**
 
 **Mode:** `{}`
 **Current:** `{}`
@@ -555,7 +555,7 @@ async def _(kst):
     if INVITE_WORKER.get(chat_id):
         INVITE_WORKER.pop(chat_id)
     await kst.sod(
-        cancelled_text.format(
+        canceled_text.format(
             worker.get("mode"),
             worker.get("current"),
             "Inviting" if worker.get("mode") == "invite" else "Adding",
