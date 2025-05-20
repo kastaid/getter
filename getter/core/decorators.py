@@ -5,9 +5,9 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+import asyncio
 import re
 import sys
-from asyncio import sleep
 from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime, timezone
@@ -152,7 +152,7 @@ def kasta_cmd(
                 kst.client.log.warning(
                     f"A FloodWait Error of {FLOOD_WAIT}. Sleeping for {FLOOD_WAIT_HUMAN} and try again."
                 )
-                await sleep(FLOOD_WAIT + 10)
+                await asyncio.sleep(FLOOD_WAIT + 10)
                 return  # safety first
             except (
                 MessageIdInvalidError,
@@ -239,12 +239,14 @@ def kasta_cmd(
                         text = text.format(error_log.msg_link)
                     else:
                         text = text.format(f"<code>{error_log.msg_link}</code>")
-                    with suppress(BaseException):
+                    try:
                         await kst.edit(
                             text,
                             link_preview=False,
                             parse_mode="html",
                         )
+                    except BaseException:
+                        pass
 
         superuser = dev or sudo
         cmd = None
@@ -331,7 +333,7 @@ async def sendlog(
             **args,
         )
     except FloodWaitError as fw:
-        await sleep(fw.seconds + 10)
+        await asyncio.sleep(fw.seconds + 10)
         return await sendlog(
             message=message,
             forward=forward,

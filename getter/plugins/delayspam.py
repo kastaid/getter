@@ -5,7 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from asyncio import sleep
+import asyncio
 from telethon.errors import RPCError, FloodWaitError, SlowModeWaitError
 from . import (
     hl,
@@ -61,16 +61,16 @@ async def _(kst):
                 parse_mode="markdown",
                 silent=True,
             )
-            await sleep(delay)
+            await asyncio.sleep(delay)
         except FloodWaitError as fw:
-            await sleep(fw.seconds)
+            await asyncio.sleep(fw.seconds)
             await ga.send_message(
                 chat_id,
                 message=message,
                 parse_mode="markdown",
                 silent=True,
             )
-            await sleep(delay)
+            await asyncio.sleep(delay)
         except SlowModeWaitError:
             pass
         except RPCError:

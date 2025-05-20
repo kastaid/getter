@@ -5,7 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from asyncio import sleep
+import asyncio
 from telethon.tl import functions as fun, types as typ
 from . import (
     Root,
@@ -41,7 +41,7 @@ async def _(kst):
     if ";" in name:
         first_name, last_name = name.split(";", 1)
     try:
-        await sleep(1)
+        await asyncio.sleep(1)
         await ga(
             fun.account.UpdateProfileRequest(
                 first_name=first_name,
@@ -62,7 +62,7 @@ async def _(kst):
     username = await ga.get_text(kst)
     yy = await kst.eor("`Processing...`")
     try:
-        await sleep(1)
+        await asyncio.sleep(1)
         await ga(fun.account.UpdateUsernameRequest(username))
         await yy.eod(f"`Successfully change my username to “{username}”.`")
     except Exception as err:
@@ -121,7 +121,7 @@ async def _(kst):
     toggle = kst.pattern_match.group(1)
     rule = typ.InputPrivacyValueAllowAll() if toggle == "show" else typ.InputPrivacyValueDisallowAll()
     try:
-        await sleep(1)
+        await asyncio.sleep(1)
         await ga(
             fun.account.SetPrivacyRequest(
                 key=typ.InputPrivacyKeyProfilePhoto(),
@@ -154,7 +154,7 @@ async def _(kst):
             )
             if not is_all:
                 break
-            await sleep(1)
+            await asyncio.sleep(1)
         total = total if is_all else 1
         await yy.sod(f"`Successfully to get {total} profile picture(s).`", time=8)
     except Exception as err:

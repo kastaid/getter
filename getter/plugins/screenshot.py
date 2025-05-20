@@ -5,7 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from asyncio import sleep
+import asyncio
 from io import BytesIO
 from random import choice
 from time import monotonic
@@ -75,7 +75,7 @@ async def _(kst):
     )
     driver.set_window_size(width + 125, height + 125)
     wait_for = height / 1000
-    await sleep(int(wait_for))
+    await asyncio.sleep(int(wait_for))
     ss_png = driver.get_screenshot_as_png()
     await yy.eor("`Screenshot Taked...`")
     driver.close()

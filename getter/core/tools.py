@@ -12,7 +12,7 @@ from functools import partial
 from io import BytesIO
 from re import sub
 from typing import Any
-import aiofiles
+import aiofiles.os
 import aiohttp
 import telegraph.aio
 from getter import __version__, LOOP, EXECUTOR

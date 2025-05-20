@@ -7,7 +7,6 @@
 
 import asyncio
 import signal
-from contextlib import suppress
 from typing import Any
 from telethon.tl import functions as fun, types as typ
 from getter import __version__, LOOP, EXECUTOR
@@ -68,10 +67,14 @@ _reboot_text = r"""
 
 async def shutdown(signum: str) -> None:
     LOG.warning(f"Stop signal received : {signum}")
-    with suppress(BaseException):
+    try:
         await db_disconnect()
-    with suppress(BaseException):
+    except BaseException:
+        pass
+    try:
         await getter_app.disconnect()
+    except BaseException:
+        pass
     tasks = [_ for _ in asyncio.all_tasks() if _ is not asyncio.current_task()]
     [task.cancel() for task in tasks]
     await asyncio.gather(*tasks, return_exceptions=True)
@@ -174,8 +177,10 @@ async def verify() -> None:
     if not BOTLOGS:
         return
     ls = None
-    with suppress(BaseException):
+    try:
         ls = await getter_app.get_entity(BOTLOGS)
+    except BaseException:
+        pass
     if not ls:
         return
     if not (isinstance(ls, typ.User) and ls.creator) and ls.default_banned_rights.send_messages:

@@ -5,7 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from asyncio import sleep
+import asyncio
 from telethon.errors import FloodWaitError
 from . import DEVS, kasta_cmd
 
@@ -33,21 +33,21 @@ async def _(kst):
                     cry = [_.id for _ in crying.updates if hasattr(_, "id")]
                     if cry:
                         await ga.delete_messages(chat_id, cry)
-                await sleep(0.5)
+                await asyncio.sleep(0.5)
                 await ga.edit_permissions(chat_id, x.id)
-                await sleep(0.5)
+                await asyncio.sleep(0.5)
                 success += 1
             except FloodWaitError as fw:
-                await sleep(fw.seconds + 10)
+                await asyncio.sleep(fw.seconds + 10)
                 try:
                     crying = await ga.edit_permissions(chat_id, x.id, view_messages=False)
                     if rocker and crying:
                         cry = [_.id for _ in crying.updates if hasattr(_, "id")]
                         if cry:
                             await ga.delete_messages(chat_id, cry)
-                    await sleep(0.5)
+                    await asyncio.sleep(0.5)
                     await ga.edit_permissions(chat_id, x.id)
-                    await sleep(0.5)
+                    await asyncio.sleep(0.5)
                     success += 1
                 except BaseException:
                     failed += 1
@@ -80,17 +80,17 @@ async def _(kst):
                     cry = [_.id for _ in crying.updates if hasattr(_, "id")]
                     if cry:
                         await ga.delete_messages(chat_id, cry)
-                await sleep(0.5)
+                await asyncio.sleep(0.5)
                 success += 1
             except FloodWaitError as fw:
-                await sleep(fw.seconds + 10)
+                await asyncio.sleep(fw.seconds + 10)
                 try:
                     crying = await ga.edit_permissions(chat_id, x.id, view_messages=False)
                     if lucifer and crying:
                         cry = [_.id for _ in crying.updates if hasattr(_, "id")]
                         if cry:
                             await ga.delete_messages(chat_id, cry)
-                    await sleep(0.5)
+                    await asyncio.sleep(0.5)
                     success += 1
                 except BaseException:
                     failed += 1

@@ -163,7 +163,7 @@ def to_dict(
     if hasattr(obj, "_ast"):
         return to_dict(obj._ast())
     if hasattr(obj, "__iter__") and not isinstance(obj, str):
-        return [to_dict(_, classkey) for _ in obj]
+        return [to_dict(i, classkey) for i in obj]
     if hasattr(obj, "__dict__"):
         data = {k: to_dict(v, classkey) for k, v in obj.__dict__.items() if not callable(v) and not k.startswith("_")}
         if classkey and hasattr(obj, "__class__"):

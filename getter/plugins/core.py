@@ -5,8 +5,8 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+import asyncio
 import csv
-from asyncio import sleep, Lock, exceptions
 from datetime import datetime
 from random import choice
 from time import monotonic
@@ -105,7 +105,7 @@ cancelled_text = """
 **{}:** `{}`
 **Time:** `{}`
 """
-_INVITING_LOCK, _SCRAPING_LOCK, _ADDING_LOCK = Lock(), Lock(), Lock()
+_INVITING_LOCK, _SCRAPING_LOCK, _ADDING_LOCK = asyncio.Lock(), asyncio.Lock(), asyncio.Lock()
 
 
 @kasta_cmd(
@@ -121,7 +121,7 @@ _INVITING_LOCK, _SCRAPING_LOCK, _ADDING_LOCK = Lock(), Lock(), Lock()
 async def _(kst):
     ga = kst.client
     if kst.is_dev:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     yy = await kst.eor("`Checking...`", silent=True)
     resp = None
     bot = "SpamBot"
@@ -138,7 +138,7 @@ async def _(kst):
             await conv.send_message("/start")
             resp = await resp
             await conv.read()
-        except exceptions.TimeoutError:
+        except asyncio.exceptions.TimeoutError:
             pass
     if not resp:
         return yy.try_delete()
@@ -159,7 +159,7 @@ async def _(kst):
     if kst.is_dev:
         if kst.client.uid in DEVS:
             return
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     if INVITE_WORKER.get(chat_id) or _INVITING_LOCK.locked():
         return await kst.eor("`Please wait until previous •invite• finished...`", time=5, silent=True)
     async with _INVITING_LOCK:
@@ -495,7 +495,7 @@ async def _(kst):
                 break
             if success == 50:
                 await yy.eor(f"`🔄 Reached 50 members, wait until {900 / 60} minutes...`")
-                await sleep(900)
+                await asyncio.sleep(900)
             try:
                 adding = typ.InputPeerUser(user["user_id"], user["hash"])
                 await ga(
@@ -508,7 +508,7 @@ async def _(kst):
                 INVITE_WORKER[chat_id].update({"success": success})
                 await yy.eor(f"`Adding {success} {mode}...`")
             except FloodWaitError as fw:
-                await sleep(fw.seconds + 10)
+                await asyncio.sleep(fw.seconds + 10)
                 try:
                     adding = typ.InputPeerUser(user["user_id"], user["hash"])
                     await ga(
@@ -548,7 +548,7 @@ async def _(kst):
     if kst.is_dev:
         if kst.client.uid in DEVS:
             return
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     if not INVITE_WORKER.get(chat_id):
         return await kst.eod(no_process_text, silent=True)
     worker = INVITE_WORKER.get(chat_id)

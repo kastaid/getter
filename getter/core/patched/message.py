@@ -5,7 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from asyncio import sleep
+import asyncio
 from collections.abc import Sequence, Coroutine
 from contextlib import suppress
 from io import BytesIO
@@ -54,7 +54,7 @@ class Message:
             args.pop(arg, None)
         if self.out and not isinstance(self, typ.MessageService):
             if edit_time:
-                await sleep(edit_time)
+                await asyncio.sleep(edit_time)
             if is_file or parts:
                 await self.delete()
             try:
@@ -170,7 +170,7 @@ class Message:
             except BaseException:
                 return None
         if yy and time:
-            await sleep(time)
+            await asyncio.sleep(time)
             return await yy.delete()
         return yy
 
@@ -267,7 +267,7 @@ class Message:
         except BaseException:
             return None
         if yy and time:
-            await sleep(time)
+            await asyncio.sleep(time)
             return await yy.delete()
         return yy
 

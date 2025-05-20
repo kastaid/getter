@@ -5,7 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from asyncio import sleep
+import asyncio
 from collections import deque
 from html import escape
 from random import choice
@@ -48,7 +48,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     text = escape(choice(UWUS))
     await kst.sod(f"<code>{text}</code>", parse_mode="html", silent=True)
 
@@ -66,7 +66,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     text = escape(choice(SHRUGS))
     await kst.sod(f"<code>{text}</code>", parse_mode="html", silent=True)
 
@@ -92,7 +92,7 @@ async def _(kst):
         dice = ":slot_machine:"
     async with await kst.send_action(action="game"):
         await kst.eor(file=typ.InputMediaDice(emojize(dice)))
-        await sleep(2)
+        await asyncio.sleep(2)
 
 
 @kasta_cmd(
@@ -130,7 +130,7 @@ async def _(kst):
         emot = "🟥🟧🟨🟩🟦🟪🟫⬛⬜"
     deq = deque(emot)
     for _ in range(48):
-        await sleep(0.2)
+        await asyncio.sleep(0.2)
         await kst.eor("".join(deq))
         deq.rotate(1)
 
@@ -161,7 +161,7 @@ async def _(kst):
     )
     yy = await kst.eor("🖤")
     for x in range(54):
-        await sleep(0.5)
+        await asyncio.sleep(0.5)
         await yy.eor(chars[x % 18])
 
 
@@ -181,7 +181,7 @@ async def _(kst):
     )
     yy = await kst.eor("`solarsystem...`")
     for x in range(80):
-        await sleep(0.3)
+        await asyncio.sleep(0.3)
         await yy.eor(chars[x % 8], parse_mode=parse_pre)
 
 
@@ -282,7 +282,7 @@ async def _(kst):
             "🧎🦖",
         )
     for char in chars:
-        await sleep(0.3)
+        await asyncio.sleep(0.3)
         await kst.eor(char, parse_mode=parse_pre)
 
 
@@ -508,7 +508,7 @@ async def _(kst):
     )
     yy = await kst.eor("`Thinking...`")
     for x in range(288):
-        await sleep(0.1)
+        await asyncio.sleep(0.1)
         await yy.eor(chars[x % 36])
 
 
@@ -538,7 +538,7 @@ async def _(kst):
     )
     yy = await kst.eor("`Calling Pavel Durov (ceo of telegram)......`")
     for char in chars:
-        await sleep(3)
+        await asyncio.sleep(3)
         await yy.eor(char, parse_mode=parse_pre)
 
 
@@ -561,9 +561,9 @@ async def _(kst):
         "Build Succeeded",
     )
     yy = await kst.eor("`Deploying...`")
-    await sleep(3)
+    await asyncio.sleep(3)
     for char in chars:
-        await sleep(3)
+        await asyncio.sleep(3)
         await yy.eor(char, parse_mode=parse_pre)
 
 
