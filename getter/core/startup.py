@@ -75,7 +75,7 @@ async def shutdown(signum: str) -> None:
         await getter_app.disconnect()
     except BaseException:
         pass
-    tasks = [_ for _ in asyncio.all_tasks() if _ is not asyncio.current_task()]
+    tasks = [i for i in asyncio.all_tasks() if i is not asyncio.current_task()]
     [task.cancel() for task in tasks]
     await asyncio.gather(*tasks, return_exceptions=True)
     EXECUTOR.shutdown(wait=False)
@@ -112,7 +112,7 @@ def migrations(app: Any = None) -> None:
     addons = app.addons()
     pg, pgv = "heroku-postgresql", "14"
     if addons:
-        if not [_ for _ in addons if str(_.plan.name).lower().startswith(pg)]:
+        if not [i for i in addons if str(i.plan.name).lower().startswith(pg)]:
             app.install_addon(pg, config={"version": pgv})
     else:
         app.install_addon(pg, config={"version": pgv})
