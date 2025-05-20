@@ -5,9 +5,8 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+import asyncio
 import os
-from asyncio import sleep
-from contextlib import suppress
 from random import choice
 from sys import executable
 from time import sleep as tsleep, monotonic
@@ -69,11 +68,13 @@ async def _(kst):
     if kst.is_dev:
         opt = kst.pattern_match.group(2)
         user_id = None
-        with suppress(ValueError):
+        try:
             user_id = int(opt)
+        except ValueError:
+            pass
         if user_id and user_id != kst.client.uid:
             return
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     yy = await kst.eor("`Getting...`", silent=True)
     if mode == "heroku":
         return await heroku_logs(yy)
@@ -93,12 +94,14 @@ async def _(kst):
             )
             if not logs:
                 continue
-            with suppress(BaseException):
+            try:
                 await yy.eor(
                     r"\\**#Getter**// Carbon Terminal Logs",
                     file=logs,
                     force_document=True,
                 )
+            except BaseException:
+                pass
             (Root / logs).unlink(missing_ok=True)
     elif mode == "open":
         for file in get_terminal_logs():
@@ -127,11 +130,13 @@ async def _(kst):
     if kst.is_dev:
         opt = kst.pattern_match.group(1)
         user_id = None
-        with suppress(ValueError):
+        try:
             user_id = int(opt)
+        except ValueError:
+            pass
         if user_id and user_id != kst.client.uid:
             return
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     yy = await kst.eor("`Restarting...`", silent=True)
     try:
         chat_id = yy.chat_id or yy.from_id

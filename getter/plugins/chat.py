@@ -5,8 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from asyncio import sleep
-from contextlib import suppress
+import asyncio
 from random import choice
 from telethon.errors import UserBotError
 from telethon.tl import functions as fun, types as typ
@@ -29,8 +28,10 @@ from . import (
     edited=True,
 )
 async def _(kst):
-    with suppress(BaseException):
+    try:
         await kst.delete()
+    except BaseException:
+        pass
     await kst.read(
         clear_mentions=True,
         clear_reactions=True,
@@ -43,11 +44,15 @@ async def _(kst):
     edited=True,
 )
 async def _(kst):
-    with suppress(BaseException):
+    try:
         await kst.delete()
+    except BaseException:
+        pass
     if kst.is_reply:
-        with suppress(BaseException):
+        try:
             await (await kst.get_reply_message()).delete()
+        except BaseException:
+            pass
 
 
 @kasta_cmd(
@@ -63,8 +68,10 @@ async def _(kst):
     ):
         await msg.try_delete()
         total += 1
-    with suppress(BaseException):
+    try:
         await (await kst.get_reply_message()).delete()
+    except BaseException:
+        pass
     await kst.sod(f"`Purged {total}`", time=3, silent=True)
 
 
@@ -81,7 +88,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await sleep(choice((1, 2, 3)))
+        await asyncio.sleep(choice((1, 2, 3)))
     ga = kst.client
     chat = await kst.get_input_chat()
     num = kst.pattern_match.group(2)
@@ -142,8 +149,10 @@ async def _(kst):
     func=lambda e: e.is_reply,
 )
 async def _(kst):
-    with suppress(BaseException):
+    try:
         await kst.delete()
+    except BaseException:
+        pass
     try:
         copy = await kst.get_reply_message()
         await copy.reply(copy)
@@ -162,7 +171,7 @@ async def _(kst):
         try:
             await x.delete()
             count += 1
-            await sleep(0.3)
+            await asyncio.sleep(0.3)
         except BaseException:
             pass
     if not count:
@@ -231,10 +240,10 @@ async def _(kst):
             if x.id in DEVS:
                 continue
             if await ga.mute_chat(x.id):
-                await sleep(0.4)
+                await asyncio.sleep(0.4)
             if await ga.archive(x.id):
                 count += 1
-                await sleep(0.3)
+                await asyncio.sleep(0.3)
     if not count:
         return await yy.eor(f"`no {mode}s found`", time=3)
     await yy.eod(f"`archived and muted {count} {mode}s`", time=None)
@@ -326,7 +335,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     ga = kst.client
     chat_id = kst.chat_id
     yy = await kst.eor("`Reporting...`", silent=True)

@@ -5,7 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from asyncio import sleep
+import asyncio
 from datetime import datetime
 from html import escape
 from json import dumps
@@ -92,15 +92,15 @@ async def _(kst):
     buildpacks = dumps(to_dict(app.buildpacks()), indent=1, default=str)
     configs = dumps(app.config().to_dict(), indent=1, default=str)
     await sendlog(f"<b>Account:</b>\n<pre>{escape(account)}</pre>", fallback=True, parse_mode="html")
-    await sleep(1)
+    await asyncio.sleep(1)
     await sendlog(f"<b>App:</b>\n<pre>{escape(capp)}</pre>", fallback=True, parse_mode="html")
-    await sleep(1)
+    await asyncio.sleep(1)
     await sendlog(f"<b>Dyno:</b>\n<pre>{escape(dyno)}</pre>", fallback=True, parse_mode="html")
-    await sleep(1)
+    await asyncio.sleep(1)
     await sendlog(f"<b>Addons:</b>\n<pre>{escape(addons)}</pre>", fallback=True, parse_mode="html")
-    await sleep(1)
+    await asyncio.sleep(1)
     await sendlog(f"<b>Buildpacks:</b>\n<pre>{escape(buildpacks)}</pre>", fallback=True, parse_mode="html")
-    await sleep(1)
+    await asyncio.sleep(1)
     await sendlog(f"<b>Configs:</b>\n<pre>{escape(configs)}</pre>", fallback=True, parse_mode="html")
     await yy.eor("`Heroku details sent at botlogs.`")
 

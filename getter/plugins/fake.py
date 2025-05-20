@@ -5,7 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from asyncio import sleep, Lock
+import asyncio
 from datetime import datetime
 from random import choice
 from time import monotonic
@@ -34,7 +34,7 @@ fungban_text = r"""
 
 <i>Wait for 1 minutes before released.</i>
 """
-_FGBAN_LOCK, _FUNGBAN_LOCK = Lock(), Lock()
+_FGBAN_LOCK, _FUNGBAN_LOCK = asyncio.Lock(), asyncio.Lock()
 
 
 @kasta_cmd(
@@ -50,7 +50,7 @@ _FGBAN_LOCK, _FUNGBAN_LOCK = Lock(), Lock()
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     if not kst.is_dev and _FGBAN_LOCK.locked():
         return await kst.eor("`Please wait until previous •gban• finished...`", time=5, silent=True)
     async with _FGBAN_LOCK:
@@ -72,7 +72,7 @@ async def _(kst):
             ga._dialogs.extend(dialog)
         for gg in dialog:
             if gg.is_group or gg.is_channel:
-                await sleep(0.2)
+                await asyncio.sleep(0.2)
                 done += 1
         taken = time_formatter((monotonic() - start_time) * 1000)
         text = fgban_text.format(
@@ -99,7 +99,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     if not kst.is_dev and _FUNGBAN_LOCK.locked():
         return await kst.eor("`Please wait until previous •ungban• finished...`", time=5, silent=True)
     async with _FUNGBAN_LOCK:
@@ -119,7 +119,7 @@ async def _(kst):
             ga._dialogs.extend(dialog)
         for gg in dialog:
             if gg.is_group or gg.is_channel:
-                await sleep(0.2)
+                await asyncio.sleep(0.2)
                 done += 1
         taken = time_formatter((monotonic() - start_time) * 1000)
         text = fungban_text.format(

@@ -5,7 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from asyncio import sleep
+import asyncio
 from datetime import datetime
 from random import choice
 from . import (
@@ -32,7 +32,7 @@ from . import (
 )
 async def _(kst):
     if kst.is_dev:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Processing...`", silent=True)
     toggle = kst.pattern_match.group(1)
@@ -74,7 +74,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Processing...`", silent=True)
     user, _ = await ga.get_user(kst)

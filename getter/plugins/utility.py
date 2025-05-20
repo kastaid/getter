@@ -6,7 +6,6 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import re
-from contextlib import suppress
 from datetime import datetime
 from html import escape
 from mimetypes import guess_extension
@@ -478,8 +477,10 @@ async def _(kst):
     limit = 5
     if ":" in args:
         args, limit = args.split(":", 1)
-    with suppress(BaseException):
+    try:
         limit = int(limit)
+    except BaseException:
+        pass
     limit = 99 if limit > 99 else limit  # noqa
     current, result, total = normalize_chat_id(kst.chat_id), "", 0
     async for msg in ga.iter_messages(

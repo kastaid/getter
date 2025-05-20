@@ -5,8 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from asyncio import sleep
-from contextlib import suppress
+import asyncio
 from random import choice
 from telethon.errors import UserAlreadyParticipantError
 from telethon.tl import functions as fun
@@ -162,7 +161,7 @@ async def _(kst):
             # from telethon.errors import FloodWaitError
             flood = fw.seconds
             await yy.eor("`Inviting wait in {}...`".format(time_formatter((flood + 5) * 1000)))
-            await sleep(flood + 5)
+            await asyncio.sleep(flood + 5)
             await ga(InviteToGroupCallRequest(call=call, users=user))
             done += 6
         except BaseException:
@@ -211,7 +210,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Joining video chat...`")
     chat_id = await ga.get_chat_id(kst)
@@ -226,7 +225,7 @@ async def _(kst):
             await in_call.start(chat_id, enable_action=False)
             text = "`Joined video chat.`"
             try:
-                await sleep(3)
+                await asyncio.sleep(3)
                 await in_call.set_is_mute(is_muted=True)
             except BaseException:
                 pass
@@ -253,7 +252,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Leaving video chat...`")
     chat_id = await ga.get_chat_id(kst)
@@ -264,8 +263,10 @@ async def _(kst):
         return await yy.eor("`No video chat!`", time=5)
     in_call = group_call(chat_id)
     if in_call and in_call.is_connected:
-        with suppress(BaseException):
+        try:
             await in_call.stop()
+        except BaseException:
+            pass
         text = "`Leaved video chat.`"
     else:
         text = "`Not joined video chat!`"

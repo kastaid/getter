@@ -5,7 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from asyncio import exceptions
+import asyncio
 from telethon import events
 from telethon.errors import YouBlockedUserError
 from . import kasta_cmd, plugins_help
@@ -77,7 +77,7 @@ async def conv_tt(conv, link):
             clear_reactions=True,
         )
         return resp
-    except exceptions.TimeoutError:
+    except asyncio.exceptions.TimeoutError:
         return None
     except YouBlockedUserError:
         await conv._client.unblock(conv.chat_id)
@@ -99,7 +99,7 @@ async def conv_tw(conv, link):
             clear_reactions=True,
         )
         return resp
-    except exceptions.TimeoutError:
+    except asyncio.exceptions.TimeoutError:
         return None
     except YouBlockedUserError:
         await conv._client.unblock(conv.chat_id)

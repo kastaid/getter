@@ -50,9 +50,6 @@ async def _(kst):
     elif engine == "baidu":
         search = "Baidu"
         url = "https://www.baidu.com/s?wd={}"
-    elif engine == "ecosia":
-        search = "Ecosia"
-        url = "https://www.ecosia.org/search?q={}"
     result = url.format(keywords.replace("\n", " ").replace(" ", "+")).strip()
     keywords = keywords.replace("\n", " ").strip()
     await yy.eor(f"**🔎 {search} Search Result:**\n\n[{keywords}]({result})")
@@ -277,7 +274,6 @@ plugins_help["webtools"] = {
     "{i}bing [keywords]/[reply]": "How to Bing...",
     "{i}yahoo [keywords]/[reply]": "How to Yahoo...",
     "{i}baidu [keywords]/[reply]": "How to Baidu...",
-    "{i}ecosia [keywords]/[reply]": "How to Ecosia...",
     "{i}short [link]/[reply]": "Shorten a link into `da.gd` link.",
     "{i}unshort [short_link]/[reply]": "Reverse the shortened link to real link.",
     "{i}ip": "Get my current public IP address.",

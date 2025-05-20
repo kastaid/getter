@@ -5,8 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from asyncio import sleep, exceptions
-from contextlib import suppress
+import asyncio
 from html import escape
 from math import sqrt
 from time import monotonic
@@ -73,7 +72,7 @@ async def _(kst):
         while True:
             try:
                 resp = await conv.get_response(timeout=2)
-            except exceptions.TimeoutError:
+            except asyncio.exceptions.TimeoutError:
                 break
             texts.append(resp.message)
         if resp:
@@ -89,7 +88,7 @@ async def _(kst):
             silent=True,
             parse_mode=parse_pre,
         )
-        await sleep(0.5)
+        await asyncio.sleep(0.5)
 
 
 @kasta_cmd(
@@ -129,7 +128,7 @@ async def _(kst):
             from_user=from_user,
         )
     except FloodWaitError as fw:
-        await sleep(fw.seconds + 10)
+        await asyncio.sleep(fw.seconds + 10)
         msg = await ga.get_messages(
             chat,
             limit=0,
@@ -263,8 +262,10 @@ async def _(kst):
     user_id = None
     match = kst.pattern_match.group(1)
     if match:
-        with suppress(BaseException):
+        try:
             user_id = await ga.get_id(match)
+        except BaseException:
+            pass
     chat_id = kst.chat_id or kst.from_id
     if kst.is_reply:
         user_id, msg_id = (await kst.get_reply_message()).sender_id, kst.reply_to_msg_id
@@ -669,7 +670,7 @@ async def conv_created(conv, user_id):
         created = getattr(resp.message, "message", None)
         _CREATED_CACHE[user_id] = created
         return created
-    except exceptions.TimeoutError:
+    except asyncio.exceptions.TimeoutError:
         return None
     except YouBlockedUserError:
         await conv._client.unblock(conv.chat_id)
@@ -692,7 +693,7 @@ async def conv_total_bot(conv, command):
             clear_reactions=True,
         )
         return resp
-    except exceptions.TimeoutError:
+    except asyncio.exceptions.TimeoutError:
         return None
     except YouBlockedUserError:
         await conv._client.unblock(conv.chat_id)
@@ -743,7 +744,7 @@ async def get_rose_fban(kst, user_id: int) -> bool:
                 await lang.try_delete()
             yy = await conv.send_message(f"/fedstat {user_id}")
         while True:
-            await sleep(1.5)
+            await asyncio.sleep(1.5)
             resp = await conv.get_response()
             await yy.try_delete()
             if not resp.message.lower().startswith("checking fbans"):
