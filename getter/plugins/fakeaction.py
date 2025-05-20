@@ -5,7 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from asyncio import sleep
+import asyncio
 from random import choice
 from . import kasta_cmd, plugins_help, time_formatter
 
@@ -19,7 +19,7 @@ from . import kasta_cmd, plugins_help, time_formatter
 )
 async def _(kst):
     if kst.is_dev:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     action = kst.pattern_match.group(1)
     act = action
     if action in {"audio", "round", "video"}:
@@ -29,7 +29,7 @@ async def _(kst):
     typefor = time_formatter(sec * 1000)
     await kst.eor(f"`Starting fake {act} for {typefor}...`", time=3, silent=True)
     async with await kst.send_action(action=action):
-        await sleep(sec)
+        await asyncio.sleep(sec)
 
 
 plugins_help["fakeaction"] = {

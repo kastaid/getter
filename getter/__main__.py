@@ -5,8 +5,8 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+import asyncio
 import sys
-from asyncio import gather
 from importlib import import_module
 from time import monotonic
 from requests.packages import urllib3
@@ -70,7 +70,7 @@ async def main() -> None:
     from .plugins.afk import handle_afk
     from .plugins.pmpermit import handle_pmpermit
 
-    await gather(*[handle_afk(), handle_pmpermit()])
+    await asyncio.gather(*[handle_afk(), handle_pmpermit()])
     loaded_time = time_formatter((monotonic() - load) * 1000)
     loaded_msg = ">> Loaded Plugins: {} , Commands: {} (took {}) : {}".format(
         plugins_help.count,

@@ -6,8 +6,8 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+import asyncio
 import sys
-from asyncio import sleep
 from subprocess import check_call
 
 try:
@@ -76,13 +76,13 @@ client = tl.TelegramClient(
 
 async def main() -> None:
     try:
-        await sleep(1)
+        await asyncio.sleep(1)
         print("Generating Telethon STRING_SESSION...")
         string_session = client.session.save()
         saved_messages = template.format("Telethon", string_session)
         print("\n" + string_session + "\n")
         await client.send_message("me", saved_messages)
-        await sleep(1)
+        await asyncio.sleep(1)
         print(generated)
         sys.exit(0)
     except tl.errors.ApiIdInvalidError:

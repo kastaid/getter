@@ -5,10 +5,10 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+import asyncio
 import importlib.util
 import os
 import sys
-from asyncio import sleep, Future
 from collections import UserList
 from collections.abc import Coroutine
 from inspect import getmembers
@@ -95,7 +95,7 @@ class KastaClient(TelegramClient):
         self.log.info("Trying to login...")
         do_not_remove_credit()
         try:
-            await sleep(randrange(3, 6))
+            await asyncio.sleep(randrange(3, 6))
             await self.start(**kwargs)
             self._bot = await self.is_bot()
             if not self._bot:
@@ -107,7 +107,7 @@ class KastaClient(TelegramClient):
                         self.session.set_dc(opt.id, opt.ip_address, opt.port)
                         self.session.save()
                         break
-            await sleep(3)
+            await asyncio.sleep(3)
             self.me = await self.get_me()
             if self.me.bot:
                 me = f"@{self.me.username}"
@@ -160,7 +160,7 @@ class KastaClient(TelegramClient):
 
     def add_handler(
         self,
-        func: Future,
+        func: asyncio.Future,
         *args,
         **kwargs,
     ) -> None:

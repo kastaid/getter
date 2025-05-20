@@ -5,8 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from asyncio import sleep
-from contextlib import suppress
+import asyncio
 from random import randrange
 import telethon.client.telegramclient
 from telethon import hints, utils
@@ -22,8 +21,10 @@ delattr(fun.account, "DeleteAccountRequest")
 class TelegramClient:
     @patchable()
     async def get_id(self, entity: hints.EntityLike) -> int:
-        with suppress(ValueError):
+        try:
             entity = int(entity)
+        except ValueError:
+            pass
         return await self.get_peer_id(entity)
 
     @patchable()
@@ -162,10 +163,10 @@ class TelegramClient:
                 )
             )
             chat_id = created.chats[0].id
-            await sleep(6)
+            await asyncio.sleep(6)
             link = await self(fun.messages.ExportChatInviteRequest(chat_id))
             if users:
-                await sleep(6)
+                await asyncio.sleep(6)
                 await self(
                     fun.channels.InviteToChannelRequest(
                         chat_id,
@@ -173,7 +174,7 @@ class TelegramClient:
                     )
                 )
             if photo:
-                await sleep(6)
+                await asyncio.sleep(6)
                 await self(
                     fun.channels.EditPhotoRequest(
                         chat_id,
@@ -212,6 +213,6 @@ class TelegramClient:
             msg = None
             for part in parts[:-1]:
                 msg = await self.send_message(entity, part, **kwargs)
-                await sleep(randrange(1, 3))
+                await asyncio.sleep(randrange(1, 3))
             return msg
         return await self.send_message(entity, text, **kwargs)
