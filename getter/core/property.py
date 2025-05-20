@@ -5,8 +5,8 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+import asyncio
 import sys
-from asyncio import sleep
 from base64 import b64decode
 from re import findall
 from asyncache import cached
@@ -48,7 +48,7 @@ async def get_blacklisted(
         count += 1
         if not res:
             if count != attempts:
-                await sleep(1)
+                await asyncio.sleep(1)
                 continue
             ids = fallbacks or []
             break

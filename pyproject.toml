@@ -39,6 +39,7 @@ ignore=[
   "RUF017",
   "FURB118",
   "RUF052",
+  "SIM105",
 ]
 [tool.ruff.lint.isort]
 force-single-line = true

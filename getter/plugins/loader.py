@@ -5,11 +5,10 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from asyncio import sleep
-from contextlib import suppress
+import asyncio
 from os.path import dirname, realpath
 from random import choice
-from aiofiles.os import path, remove
+import aiofiles.os
 from telethon.utils import get_extension
 from . import kasta_cmd, plugins_help, get_media_type
 
@@ -25,7 +24,7 @@ base = dirname(realpath(__file__))
 )
 async def _(kst):
     if kst.is_dev:
-        await sleep(choice((2, 4)))
+        await asyncio.sleep(choice((2, 4)))
     ga = kst.client
     reply = await kst.get_reply_message()
     if not reply or (reply and not reply.media):
@@ -35,11 +34,13 @@ async def _(kst):
     if mt == "text" and get_extension(reply.media) == ".py":
         plugin_file = "".join([_.file_name for _ in reply.media.document.attributes])
         plugin = plugin_file.replace(".py", "")
-        if await path.isfile(f"{base}/custom/{plugin_file}"):
+        if await aiofiles.os.path.isfile(f"{base}/custom/{plugin_file}"):
             if plugin in ga._plugins:
                 ga.unload_plugin(plugin)
-            with suppress(BaseException):
-                await remove(f"{base}/custom/{plugin_file}")
+            try:
+                await aiofiles.os.remove(f"{base}/custom/{plugin_file}")
+            except BaseException:
+                pass
         file = await reply.download_media(file=f"{base}/custom")
         if file:
             if ga.load_plugin(plugin_file):
@@ -61,24 +62,24 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev:
-        await sleep(choice((2, 4)))
+        await asyncio.sleep(choice((2, 4)))
     ga = kst.client
     plugin = await ga.get_text(kst, plain=True)
     if not plugin:
         return await kst.eor("`Please input plugin name.`")
     plugin = plugin.replace(".py", "")
     yy = await kst.eor("`Processing...`")
-    if await path.isfile(f"{base}/custom/{plugin}.py") and plugin != "__init__.py":
+    if await aiofiles.os.path.isfile(f"{base}/custom/{plugin}.py") and plugin != "__init__.py":
         try:
             if plugin in ga._plugins:
                 ga.unload_plugin(plugin)
-            await remove(f"{base}/custom/{plugin}.py")
+            await aiofiles.os.remove(f"{base}/custom/{plugin}.py")
             ga.log.success(f"Successfully to remove custom plugin {plugin}")
             await yy.eor(f"`The plugin {plugin} removed.`")
         except BaseException:
             ga.log.error(f"Failed to remove custom plugin {plugin}")
             await yy.eor(f"`The plugin {plugin} can't remove, please try again.`")
-    elif await path.isfile(f"{base}/{plugin}.py"):
+    elif await aiofiles.os.path.isfile(f"{base}/{plugin}.py"):
         await yy.eor("`It is forbidden to remove built-in plugins, it will disrupt the updater!`")
     else:
         await yy.eor(f"`Plugin {plugin} not found.`")

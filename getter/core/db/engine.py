@@ -8,7 +8,7 @@
 import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from orjson import dumps, loads
+import orjson
 from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     AsyncSession,
@@ -41,11 +41,11 @@ class Model(DeclarativeBase):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
     def to_json(self):
-        return dumps(self.to_dict()).decode()
+        return orjson.dumps(self.to_dict()).decode()
 
     @classmethod
     def from_json(cls, json_data):
-        return cls(**loads(json_data))
+        return cls(**orjson.loads(json_data))
 
     def __repr__(self):
         return f"{self.__class__.__name__} ({self.to_dict()})"
@@ -63,8 +63,8 @@ async def db_connect() -> AsyncEngine:
     engine = create_async_engine(
         db_url,
         echo=False,
-        json_deserializer=loads,
-        json_serializer=lambda x: dumps(x).decode(),
+        json_deserializer=orjson.loads,
+        json_serializer=lambda x: orjson.dumps(x).decode(),
     )
     try:
         async with engine.connect() as conn:

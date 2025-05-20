@@ -5,8 +5,7 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
-from asyncio import sleep
-from contextlib import suppress
+import asyncio
 from telethon.errors import FloodWaitError
 from telethon.tl import functions as fun, types as typ
 from . import (
@@ -140,8 +139,10 @@ async def _(kst):
             await ga.report_spam(user.id)
     except BaseException:
         pass
-    with suppress(BaseException):
+    try:
         await ga.edit_permissions(chat_id, user.id, view_messages=False)
+    except BaseException:
+        pass
 
 
 @kasta_cmd(
@@ -276,8 +277,10 @@ async def _(kst):
         return
     if user.id in DEVS:
         return
-    with suppress(BaseException):
+    try:
         await ga.edit_permissions(chat_id, user.id, send_messages=False)
+    except BaseException:
+        pass
 
 
 @kasta_cmd(
@@ -413,8 +416,10 @@ async def _(kst):
         return
     if user.id in DEVS:
         return
-    with suppress(BaseException):
+    try:
         await ga.kick_participant(kst.chat_id, user.id)
+    except BaseException:
+        pass
 
 
 @kasta_cmd(
@@ -518,7 +523,7 @@ async def _(kst):
     except Exception as err:
         return await kst.eor(formatx_send(err), parse_mode="html")
     try:
-        await sleep(sec)
+        await asyncio.sleep(sec)
         await ga.unpin_message(chat_id, msg_id)
     except BaseException:
         pass
@@ -825,13 +830,13 @@ async def _(kst):
     ):
         try:
             await ga.edit_permissions(chat_id, x.id)
-            await sleep(0.5)
+            await asyncio.sleep(0.5)
             done += 1
         except FloodWaitError as fw:
-            await sleep(fw.seconds + 10)
+            await asyncio.sleep(fw.seconds + 10)
             try:
                 await ga.edit_permissions(chat_id, x.id)
-                await sleep(0.5)
+                await asyncio.sleep(0.5)
                 done += 1
             except BaseException:
                 pass

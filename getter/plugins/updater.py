@@ -5,9 +5,8 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+import asyncio
 import os
-from asyncio import sleep, Lock
-from contextlib import suppress
 from datetime import datetime, timezone
 from random import choice
 from sys import executable
@@ -36,7 +35,7 @@ from . import (
     hk,
 )
 
-_UPDATE_LOCK = Lock()
+_UPDATE_LOCK = asyncio.Lock()
 UPSTREAM_REPO = "https://github.com/kastaid/getter.git"
 UPSTREAM_BRANCH = "main"
 help_text = f"""
@@ -106,7 +105,7 @@ async def _(kst):
             if not user_id and version == __version__:
                 return
         if kst.is_dev:
-            await sleep(choice((5, 7, 9)))
+            await asyncio.sleep(choice((5, 7, 9)))
         yy = await kst.eor(f"`{state}Fetching...`", silent=True)
         try:
             repo = Repo()
@@ -124,7 +123,7 @@ async def _(kst):
         await Runner(f"git fetch origin {UPSTREAM_BRANCH}")
         if is_deploy:
             if kst.is_dev:
-                await sleep(5)
+                await asyncio.sleep(5)
             await yy.eor(f"`{state}Updating ~ Please Wait...`")
             return await Pushing(yy, state, repo)
         try:
@@ -137,7 +136,7 @@ async def _(kst):
             changelog = generate_changelog(repo, f"HEAD..origin/{UPSTREAM_BRANCH}")
             return await show_changelog(yy, changelog)
         if is_force:
-            await sleep(3)
+            await asyncio.sleep(3)
         if is_now or is_force:
             await yy.eor(f"`{state}Updating ~ Please Wait...`")
             await Pulling(yy, state)
@@ -185,9 +184,9 @@ async def _(kst):
                 return
             clean = True
         if not clean:
-            await sleep(choice((4, 6, 8)))
+            await asyncio.sleep(choice((4, 6, 8)))
     if kst.is_sudo:
-        await sleep(choice((4, 6, 8)))
+        await asyncio.sleep(choice((4, 6, 8)))
     # http://www.timebie.com/std/utc
     utc_now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")  # noqa: UP017
     local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
@@ -338,8 +337,10 @@ Wait for a few minutes, then run `{hl}ping` command."""
         remote.set_url(url)
     else:
         remote = repo.create_remote("heroku", url)
-    with suppress(BaseException):
+    try:
         remote.push(refspec="HEAD:refs/heads/main", force=True)
+    except BaseException:
+        pass
     build = app.builds(order_by="created_at", sort="desc")[0]
     if build.status != "succeeded":
         up = rf"""\\**#Getter**// `{state}Update Failed...`
