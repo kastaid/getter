@@ -46,13 +46,13 @@ RUN set -eux && \
     cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
     echo "${TZ}" > /etc/timezone && \
     dpkg-reconfigure --force -f noninteractive tzdata >/dev/null 2>&1 && \
-    curl -sS -o /tmp/chrome.zip https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROME_VERSION}/linux64/chrome-linux64.zip && \
+    curl -sS -o /tmp/chrome.zip https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chrome-linux64.zip && \
     unzip -qq /tmp/chrome.zip -d /opt/ && \
     mv /opt/chrome-linux64 /opt/chrome && \
     ln -s /opt/chrome/chrome $CHROME_BIN && \
     chmod +x $CHROME_BIN && \
     rm -f /tmp/chrome.zip && \
-    curl -sS -o /tmp/chromedriver.zip https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROME_VERSION}/linux64/chromedriver-linux64.zip && \
+    curl -sS -o /tmp/chromedriver.zip https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip && \
     unzip -qq /tmp/chromedriver.zip -d /opt/ && \
     mv /opt/chromedriver-linux64/chromedriver /usr/bin/chromedriver && \
     chmod +x /usr/bin/chromedriver && \
