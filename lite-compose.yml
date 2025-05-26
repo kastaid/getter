@@ -2,7 +2,7 @@ services:
   getter:
     build:
       context: .
-      dockerfile: lite.Dockerfile
+      dockerfile: Dockerfile.lite
     image: getter:latest
     restart: on-failure
     volumes:
