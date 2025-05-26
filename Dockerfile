@@ -39,6 +39,7 @@ RUN set -eux && \
         libjpeg-dev \
         libpng-dev \
         libnss3 \
+        jq \
         unzip \
         build-essential && \
     localedef --quiet -i ${LANG} -c -f UTF-8 -A /usr/share/locale/locale.alias ${LANG}.UTF-8 && \
@@ -51,10 +52,13 @@ RUN set -eux && \
     echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list > /dev/null && \
     apt-get -qqy update && \
     apt-get -qqy install --no-install-recommends google-chrome-stable && \
-    wget -qN https://chromedriver.storage.googleapis.com/$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip -P ~/ && \
-    unzip -qq ~/chromedriver_linux64.zip -d ~/ && \
-    rm -rf ~/chromedriver_linux64.zip && \
-    mv -f ~/chromedriver /usr/bin/chromedriver && \
+    CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+') && \
+    DRIVER_VERSION=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json \
+        | jq -r --arg ver "$CHROME_VERSION" '.channels.Stable.versions[] | select(.version | startswith($ver)) | .version' | head -n1) && \
+    echo "Using ChromeDriver version: $DRIVER_VERSION" && \
+    curl -sS -o /tmp/chromedriver.zip https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${DRIVER_VERSION}/linux64/chromedriver-linux64.zip && \
+    unzip -qq /tmp/chromedriver.zip -d /tmp/ && \
+    mv /tmp/chromedriver-linux64/chromedriver /usr/bin/chromedriver && \
     chmod +x /usr/bin/chromedriver && \
     command -v chromedriver && \
     $(command -v chromedriver) --version && \
@@ -64,6 +68,7 @@ RUN set -eux && \
     $VIRTUAL_ENV/bin/pip install --no-cache-dir --disable-pip-version-check --default-timeout=100 -r /tmp/requirements.txt && \
     apt-get -qqy purge --auto-remove \
         locales \
+        jq \
         unzip \
         build-essential && \
     apt-get -qqy clean && \
