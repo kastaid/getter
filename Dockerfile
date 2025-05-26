@@ -14,6 +14,7 @@ ENV TZ=Asia/Jakarta \
     CHROME_BIN=/usr/bin/google-chrome \
     DISPLAY=:99
 ARG LANG=en_US
+ARG CHROME_VERSION=124.0.6367.207
 
 WORKDIR /app
 COPY requirements.txt /tmp/
@@ -39,27 +40,23 @@ RUN set -eux && \
         libjpeg-dev \
         libpng-dev \
         libnss3 \
-        jq \
         unzip \
         build-essential && \
     localedef --quiet -i ${LANG} -c -f UTF-8 -A /usr/share/locale/locale.alias ${LANG}.UTF-8 && \
     cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
     echo "${TZ}" > /etc/timezone && \
     dpkg-reconfigure --force -f noninteractive tzdata >/dev/null 2>&1 && \
-    install -m 0755 -d /etc/apt/keyrings && \
-    curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /etc/apt/keyrings/google-chrome.gpg && \
-    chmod a+r /etc/apt/keyrings/google-chrome.gpg && \
-    echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list > /dev/null && \
-    apt-get -qqy update && \
-    apt-get -qqy install --no-install-recommends google-chrome-stable && \
-    CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+') && \
-    DRIVER_VERSION=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json \
-        | jq -r --arg ver "$CHROME_VERSION" '.channels.Stable.versions[] | select(.version | startswith($ver)) | .version' | head -n1) && \
-    echo "Using ChromeDriver version: $DRIVER_VERSION" && \
-    curl -sS -o /tmp/chromedriver.zip https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${DRIVER_VERSION}/linux64/chromedriver-linux64.zip && \
-    unzip -qq /tmp/chromedriver.zip -d /tmp/ && \
-    mv /tmp/chromedriver-linux64/chromedriver /usr/bin/chromedriver && \
+    curl -sS -o /tmp/chrome.zip https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROME_VERSION}/linux64/chrome-linux64.zip && \
+    unzip -qq /tmp/chrome.zip -d /opt/ && \
+    mv /opt/chrome-linux64 /opt/chrome && \
+    ln -s /opt/chrome/chrome $CHROME_BIN && \
+    chmod +x $CHROME_BIN && \
+    rm -f /tmp/chrome.zip && \
+    curl -sS -o /tmp/chromedriver.zip https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROME_VERSION}/linux64/chromedriver-linux64.zip && \
+    unzip -qq /tmp/chromedriver.zip -d /opt/ && \
+    mv /opt/chromedriver-linux64/chromedriver /usr/bin/chromedriver && \
     chmod +x /usr/bin/chromedriver && \
+    rm -f /tmp/chromedriver.zip && \
     command -v chromedriver && \
     $(command -v chromedriver) --version && \
     cp -rf .config ~/ && \
@@ -68,7 +65,6 @@ RUN set -eux && \
     $VIRTUAL_ENV/bin/pip install --no-cache-dir --disable-pip-version-check --default-timeout=100 -r /tmp/requirements.txt && \
     apt-get -qqy purge --auto-remove \
         locales \
-        jq \
         unzip \
         build-essential && \
     apt-get -qqy clean && \
