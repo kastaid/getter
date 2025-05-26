@@ -9,7 +9,7 @@ SQLAlchemy==2.0.41
 asyncpg==0.30.0
 aiosqlite==0.21.0
 sqlalchemy-json==0.7.0
-cachetools==6.0.0
+cachetools==5.5.2
 asyncache==0.3.1
 aiofiles==24.1.0
 aiocsv==1.3.2
