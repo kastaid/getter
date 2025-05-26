@@ -49,7 +49,8 @@ async def _(kst):
         )
     start_time = monotonic()
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
+    options.add_argument("--headless=new")
+    options.add_argument("--disable-gpu")
     options.add_argument("--test-type")
     options.add_argument("--disable-logging")
     options.add_argument("--ignore-certificate-errors")
@@ -78,7 +79,7 @@ async def _(kst):
     await asyncio.sleep(int(wait_for))
     ss_png = driver.get_screenshot_as_png()
     await yy.eor("`Screenshot Taked...`")
-    driver.close()
+    driver.quit()
     taken = time_formatter((monotonic() - start_time) * 1000)
     with BytesIO(ss_png) as file:
         file.name = f"ss_{link}.png"
