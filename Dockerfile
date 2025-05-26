@@ -40,6 +40,19 @@ RUN set -eux && \
         libjpeg-dev \
         libpng-dev \
         libnss3 \
+        libatk1.0-0 \
+        libatk-bridge2.0-0 \
+        libcups2 \
+        libxcomposite1 \
+        libxdamage1 \
+        libxrandr2 \
+        libxcb1 \
+        libxext6 \
+        libxfixes3 \
+        libasound2 \
+        libgtk-3-0 \
+        xdg-utils \
+        ca-certificates \
         unzip \
         build-essential && \
     localedef --quiet -i ${LANG} -c -f UTF-8 -A /usr/share/locale/locale.alias ${LANG}.UTF-8 && \
@@ -68,7 +81,7 @@ RUN set -eux && \
         unzip \
         build-essential && \
     apt-get -qqy clean && \
-    rm -rf -- /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/* /usr/share/man/* /usr/share/doc/* /tmp/* /var/tmp/*
+    rm -rf -- /var/lib/apt/lists/* /var/cache/apt/archives/* /usr/share/man/* /usr/share/doc/* /tmp/* /var/tmp/*
 
 COPY . .
 
