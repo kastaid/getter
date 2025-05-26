@@ -45,7 +45,7 @@ async def _(kst):
             return await kst.eor("`This command doesn't not supported Termux. Use proot-distro instantly!`", time=5)
         webdriver = import_lib(
             lib_name="selenium.webdriver",
-            pkg_name="selenium==4.17.2",
+            pkg_name="selenium==4.33.0",
         )
     start_time = monotonic()
     options = webdriver.ChromeOptions()
@@ -108,7 +108,7 @@ async def _(kst):
             return await kst.eor("`This command doesn't not supported Termux. Use proot-distro instantly!`", time=5)
         tweetcapture = import_lib(
             lib_name="tweetcapture",
-            pkg_name="tweet-capture==0.2.4",
+            pkg_name="tweet-capture==0.2.5",
         )
     if not (check_link is True) or not tweetcapture.utils.utils.is_valid_tweet_url(link):
         return await kst.eod("`Input is not valid tweet link!`")
