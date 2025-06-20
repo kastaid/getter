@@ -2,7 +2,7 @@ services:
   getter:
     build: .
     image: getter:latest
-    restart: on-failure
+    restart: unless-stopped
     volumes:
       - ./:/app
     env_file:
