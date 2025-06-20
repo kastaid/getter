@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile.lite
     image: getter:latest
-    restart: on-failure
+    restart: unless-stopped
     volumes:
       - ./:/app
     env_file:
