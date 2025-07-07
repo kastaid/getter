@@ -68,6 +68,7 @@ async def _(kst):
         options=options,
     )
     driver.get(toss)
+    driver.execute_script("document.documentElement.style.overflow = 'hidden';document.body.style.overflow = 'hidden';")
     height = driver.execute_script(
         "return Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);"
     )
