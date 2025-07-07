@@ -34,11 +34,13 @@
 
 - [Requirements](#requirements)
   - [STRING_SESSION](#string_session)
-  - [Deploy](#deploy)
+  - [Config](#config)
+- [Deployment](#deployment)
+  - [Docker Compose](#docker-compose)
+    - [Full version](#full-version)
+    - [Lite version](#lite-version)
   - [Locally](#locally)
-    - [Config](#config)
-    - [Run](#run)
-  - [Example Plugin](#example-plugin)
+- [Example Plugin](#example-plugin)
 - [Supports](#sparkling_heart-supports)
 - [Credits and Thanks](#credits-and-thanks)
 - [Contributing](#contributing)
@@ -56,24 +58,44 @@
 
 Generate `STRING_SESSION` using [@strgen_bot](https://telegram.me/strgen_bot) or [replit](https://replit.com/@notudope/strgen) or run locally `python3 strgen.py`
 
-### Deploy
-
-To deploy please visit our channel at [@kastaid](https://telegram.me/kastaid).
-
-### Locally
-
-#### Config
+### Config
 
 Create and save `config.env` file at main directory and fill with the example config file at [sample_config.env](https://github.com/kastaid/getter/blob/main/sample_config.env).
 
-#### Run
+## Deployment
 
+Deploy getter to your server or locally.
+
+### Docker Compose
+
+Deploy to your server using docker compose.
+
+#### Full version
 ```sh
-# Production
+git pull && \
+  docker compose -f local-compose.yml up --detach --build --force-recreate && \
+  docker compose -f local-compose.yml logs -f
+```
+
+#### Lite version
+```sh
+git pull && \
+  docker compose -f lite-compose.yml up --detach --build --force-recreate && \
+  docker compose -f lite-compose.yml logs -f
+```
+
+### Locally
+
+Run getter as locally eg: termux
+
+#### Production
+```sh
 pip3 install -r requirements.txt
 python3 -m getter
+```
 
-# Development
+#### Development
+```sh
 pip3 install -r requirements.txt
 pip3 install -r requirements-dev.txt
 python3 -m run --watch
@@ -81,7 +103,7 @@ python3 -m run --watch
 
 More commands `python3 -m run -h`
 
-### Example Plugin
+## Example Plugin
 
 Clone the repo, then create and save plugin at `./getter/plugins/plugin_name.py`.
 
@@ -132,14 +154,9 @@ This project is open source and free to use under the [license](#license). Howev
 ## Credits and Thanks
 
 * [LonamiWebs](https://github.com/LonamiWebs/Telethon) - Telethon
-* [MarshalX](https://github.com/MarshalX/tgcalls) - pytgcalls
 * [TeamUltroid](https://github.com/TeamUltroid) - Team Ultroid
-* [UsergeTeam](https://github.com/UsergeTeam) - UsergeTeam
-* [Dragon-Userbot](https://github.com/Dragon-Userbot) - Dragon Userbot
-* [TgCatUB](https://github.com/TgCatUB) - CatUserbot
 * [userbotindo](https://github.com/userbotindo) - Userbot Indonesia Community
 * [illvart](https://github.com/illvart) - Core Developer
-* [notudope](https://github.com/notudope) - Core Developer
 
 and [everyone](https://github.com/kastaid/getter/graphs/contributors) 🦄
 
