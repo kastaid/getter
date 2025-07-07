@@ -154,14 +154,9 @@ This project is open source and free to use under the [license](#license). Howev
 ## Credits and Thanks
 
 * [LonamiWebs](https://github.com/LonamiWebs/Telethon) - Telethon
-* [MarshalX](https://github.com/MarshalX/tgcalls) - pytgcalls
 * [TeamUltroid](https://github.com/TeamUltroid) - Team Ultroid
-* [UsergeTeam](https://github.com/UsergeTeam) - UsergeTeam
-* [Dragon-Userbot](https://github.com/Dragon-Userbot) - Dragon Userbot
-* [TgCatUB](https://github.com/TgCatUB) - CatUserbot
 * [userbotindo](https://github.com/userbotindo) - Userbot Indonesia Community
 * [illvart](https://github.com/illvart) - Core Developer
-* [notudope](https://github.com/notudope) - Core Developer
 
 and [everyone](https://github.com/kastaid/getter/graphs/contributors) 🦄
 
