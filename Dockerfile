@@ -5,6 +5,23 @@
 # Please read the GNU Affero General Public License in
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
+FROM python:3.12-slim-bookworm AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    VIRTUAL_ENV=/opt/venv \
+    PATH=/opt/venv/bin:$PATH
+
+WORKDIR /app
+COPY requirements.txt /tmp/
+
+RUN set -eux && \
+    apt-get -qqy update && \
+    apt-get -qqy install --no-install-recommends \
+        build-essential && \
+    python -m venv $VIRTUAL_ENV && \
+    $VIRTUAL_ENV/bin/pip install --upgrade pip && \
+    $VIRTUAL_ENV/bin/pip install --no-cache-dir --disable-pip-version-check --default-timeout=100 -r /tmp/requirements.txt
+
 FROM python:3.12-slim-bookworm
 
 ENV TZ=Asia/Jakarta \
@@ -17,7 +34,6 @@ ARG LANG=en_US
 ARG CHROME_VERSION=124.0.6367.207
 
 WORKDIR /app
-COPY requirements.txt /tmp/
 COPY .config /app/.config
 
 RUN set -eux && \
@@ -53,8 +69,7 @@ RUN set -eux && \
         libgtk-3-0 \
         xdg-utils \
         ca-certificates \
-        unzip \
-        build-essential && \
+        unzip && \
     localedef --quiet -i ${LANG} -c -f UTF-8 -A /usr/share/locale/locale.alias ${LANG}.UTF-8 && \
     cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
     echo "${TZ}" > /etc/timezone && \
@@ -70,19 +85,14 @@ RUN set -eux && \
     mv /opt/chromedriver-linux64/chromedriver /usr/bin/chromedriver && \
     chmod +x /usr/bin/chromedriver && \
     rm -f /tmp/chromedriver.zip && \
-    command -v chromedriver && \
-    $(command -v chromedriver) --version && \
     cp -rf .config ~/ && \
-    python -m venv $VIRTUAL_ENV && \
-    $VIRTUAL_ENV/bin/pip install --upgrade pip && \
-    $VIRTUAL_ENV/bin/pip install --no-cache-dir --disable-pip-version-check --default-timeout=100 -r /tmp/requirements.txt && \
     apt-get -qqy purge --auto-remove \
         locales \
-        unzip \
-        build-essential && \
+        unzip && \
     apt-get -qqy clean && \
     rm -rf -- /var/lib/apt/lists/* /var/cache/apt/archives/* /usr/share/man/* /usr/share/doc/* /tmp/* /var/tmp/*
 
+COPY --from=builder /opt/venv /opt/venv
 COPY . .
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
