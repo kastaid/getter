@@ -62,7 +62,7 @@ Generate `STRING_SESSION` using [@strgen_bot](https://telegram.me/strgen_bot) or
 
 Create and save `config.env` file at main directory and fill with the example config file at [sample_config.env](https://github.com/kastaid/getter/blob/main/sample_config.env).
 
-## Deployment
+## Deployments
 
 Deploy getter to your server or locally.
 
