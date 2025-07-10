@@ -35,7 +35,7 @@
 - [Requirements](#requirements)
   - [STRING_SESSION](#string_session)
   - [Config](#config)
-- [Deployment](#deployment)
+- [Deployments](#deployments)
   - [Docker Compose](#docker-compose)
     - [Full version](#full-version)
     - [Lite version](#lite-version)
@@ -62,7 +62,7 @@ Generate `STRING_SESSION` using [@strgen_bot](https://telegram.me/strgen_bot) or
 
 Create and save `config.env` file at main directory and fill with the example config file at [sample_config.env](https://github.com/kastaid/getter/blob/main/sample_config.env).
 
-## Deployment
+## Deployments
 
 Deploy getter to your server or locally.
 
@@ -73,8 +73,8 @@ Deploy to your server using docker compose.
 #### Full version
 ```sh
 git pull && \
-  docker compose -f local-compose.yml up --detach --build --force-recreate && \
-  docker compose -f local-compose.yml logs -f
+  docker compose -f full-compose.yml up --detach --build --force-recreate && \
+  docker compose -f full-compose.yml logs -f
 ```
 
 #### Lite version
