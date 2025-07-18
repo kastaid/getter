@@ -48,12 +48,12 @@ class Var:
 
 
 try:
-    tz = ZoneInfo(Var.TZ)
+    TZ = ZoneInfo(Var.TZ)
 except BaseException:
     _ = "Asia/Jakarta"
     print("An error or unknown TZ :", Var.TZ)
     print("Set default TZ as", _)
-    tz = ZoneInfo(_)
+    TZ = ZoneInfo(_)
 
 if not (
     Var.HANDLER.lower().startswith(
@@ -96,4 +96,4 @@ NOCHATS = {
     -1001699144606,
     -1001700971911,
 }
-del Any, b64decode, ascii_lowercase, ZoneInfo, load_dotenv, find_dotenv
+del b64decode, ascii_lowercase, ZoneInfo, load_dotenv, find_dotenv

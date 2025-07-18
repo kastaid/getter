@@ -36,7 +36,7 @@ from getter import (
 )
 from getter.config import (
     Var,
-    tz,
+    TZ,
     hl,
     INVITE_WORKER,
     DEVS,
@@ -198,7 +198,7 @@ class KastaClient(TelegramClient):
             spec = importlib.util.spec_from_file_location(name, path)
             mod = importlib.util.module_from_spec(spec)
             mod.Var = Var
-            mod.tz = tz
+            mod.tz = TZ
             mod.hl = hl
             mod.INVITE_WORKER = INVITE_WORKER
             mod.DEVS = DEVS

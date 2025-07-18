@@ -9,6 +9,7 @@ import asyncio
 from datetime import datetime
 from random import choice
 from . import (
+    TZ,
     kasta_cmd,
     plugins_help,
     SUDO_CMDS,
@@ -88,7 +89,7 @@ async def _(kst):
     userdata = {
         "full_name": full_name,
         "username": "@" + user.username if user.username else "none",
-        "date": datetime.now().timestamp(),
+        "date": datetime.now(TZ).timestamp(),
     }
     sudos = await jdata.sudos()
     sudos[str(user.id)] = userdata

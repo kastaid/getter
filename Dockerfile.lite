@@ -24,11 +24,8 @@ RUN set -eux && \
 
 FROM python:3.12-slim-bookworm
 
-ENV TZ=Asia/Jakarta \
-    DEBIAN_FRONTEND=noninteractive \
-    VIRTUAL_ENV=/opt/venv \
+ENV DEBIAN_FRONTEND=noninteractive \
     PATH=/opt/venv/bin:/app/bin:$PATH
-ARG LANG=en_US
 
 WORKDIR /app
 
@@ -37,16 +34,7 @@ RUN set -eux && \
     apt-get -qqy install --no-install-recommends \
         tini \
         gnupg2 \
-        git \
-        locales \
-        tzdata && \
-    localedef --quiet -i ${LANG} -c -f UTF-8 -A /usr/share/locale/locale.alias ${LANG}.UTF-8 && \
-    cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
-    echo "${TZ}" > /etc/timezone && \
-    dpkg-reconfigure --force -f noninteractive tzdata >/dev/null 2>&1 && \
-    apt-get -qqy purge --auto-remove \
-        locales && \
-    apt-get -qqy clean && \
+        git && \
     rm -rf -- /var/lib/apt/lists/* /var/cache/apt/archives/* /usr/share/man/* /usr/share/doc/* /tmp/* /var/tmp/*
 
 COPY --from=builder /opt/venv /opt/venv
