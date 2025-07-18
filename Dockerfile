@@ -24,13 +24,10 @@ RUN set -eux && \
 
 FROM python:3.12-slim-bookworm
 
-ENV TZ=Asia/Jakarta \
-    DEBIAN_FRONTEND=noninteractive \
-    VIRTUAL_ENV=/opt/venv \
+ENV DEBIAN_FRONTEND=noninteractive \
     PATH=/opt/venv/bin:/app/bin:$PATH \
     CHROME_BIN=/usr/bin/google-chrome \
     DISPLAY=:99
-ARG LANG=en_US
 ARG CHROME_VERSION=124.0.6367.207
 
 WORKDIR /app
@@ -49,8 +46,6 @@ RUN set -eux && \
         fonts-roboto \
         fonts-hack-ttf \
         fonts-noto-color-emoji \
-        locales \
-        tzdata \
         ffmpeg \
         cairosvg \
         libjpeg-dev \
@@ -70,10 +65,6 @@ RUN set -eux && \
         xdg-utils \
         ca-certificates \
         unzip && \
-    localedef --quiet -i ${LANG} -c -f UTF-8 -A /usr/share/locale/locale.alias ${LANG}.UTF-8 && \
-    cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
-    echo "${TZ}" > /etc/timezone && \
-    dpkg-reconfigure --force -f noninteractive tzdata >/dev/null 2>&1 && \
     curl -sS -o /tmp/chrome.zip https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chrome-linux64.zip && \
     unzip -qq /tmp/chrome.zip -d /opt/ && \
     mv /opt/chrome-linux64 /opt/chrome && \
@@ -87,9 +78,7 @@ RUN set -eux && \
     rm -f /tmp/chromedriver.zip && \
     cp -rf .config ~/ && \
     apt-get -qqy purge --auto-remove \
-        locales \
         unzip && \
-    apt-get -qqy clean && \
     rm -rf -- /var/lib/apt/lists/* /var/cache/apt/archives/* /usr/share/man/* /usr/share/doc/* /tmp/* /var/tmp/*
 
 COPY --from=builder /opt/venv /opt/venv

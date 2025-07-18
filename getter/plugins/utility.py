@@ -15,6 +15,7 @@ from PIL import Image
 from telethon.tl import types as typ
 from . import (
     Root,
+    TZ,
     kasta_cmd,
     sendlog,
     plugins_help,
@@ -138,7 +139,7 @@ async def _(kst):
 )
 async def _(kst):
     yy = await kst.eor("`Processing...`")
-    now = datetime.now()
+    now = datetime.now(TZ)
     month = now.strftime("%b")
     url = "https://daysoftheyear.com"
     url += f"/days/{month}/" + now.strftime("%F").split("-")[2]
