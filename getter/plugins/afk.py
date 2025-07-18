@@ -50,10 +50,10 @@ _ON_STOP = (
 async def _(kst):
     if await is_afk():
         return
-    yy = await kst.eor("`Go To AFK...!!`")
+    yy = await kst.eor("`Go To AFK...`")
     start = datetime.now().timestamp()
     reason = await kst.client.get_text(kst, plain=False)
-    text = "<b><u>I`m Going AFK ツ</u></b>"
+    text = "<b><u>I`m now AFK ツ</u></b>"
     if reason:
         reason = escape(reason)
         text += f"\n<b>Reason:</b> <pre>{reason}</pre>"
@@ -95,7 +95,7 @@ async def StopAFK(kst):
         myself = escape(kst.client.full_name)
         text = f"{myself}\n"
         text += f"{choice(OUTS_AFK)}\n"
-        text += f"<i>Was away for</i> ~ {afk_time}"
+        text += f"<i>Was away for</i> – {afk_time}"
         await kst.eod(text, parse_mode="html")
 
 
@@ -123,7 +123,7 @@ async def OnAFK(kst):
         start = datetime.fromtimestamp(afk.start)
         end = datetime.now().replace(microsecond=0)
         afk_time = time_formatter((end - start).seconds * 1000)
-        text = "<b><u>I`m Now AFK ツ</u></b>\n"
+        text = "<b><u>I`m on AFK ツ</u></b>\n"
         text += f"Last seen {afk_time} ago."
         reason = f"<pre>{afk.reason}</pre>" if afk.reason else "No reason."
         text += f"\n<b>Reason:</b> {reason}"

@@ -29,7 +29,7 @@ from . import (
     INVITE_WORKER,
     DEVS,
     NOCHATS,
-    tz,
+    TZ,
     hl,
     kasta_cmd,
     plugins_help,
@@ -200,7 +200,7 @@ async def _(kst):
         else:
             filters = ("none",)
         start_time = monotonic()
-        local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+        local_now = datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S")
         max_success, success, failed, error = 300, 0, 0, "none"
         chat = await kst.get_chat()
         INVITE_WORKER[chat_id] = {
@@ -317,7 +317,7 @@ async def _(kst):
         args = kst.pattern_match.group(1).split(" ")
         is_append = bool(len(args) > 1 and args[1].lower() in {"-a", "a", "append"})
         start_time = monotonic()
-        local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+        local_now = datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S")
         members, admins, bots = 0, 0, 0
         members_file = "members_list.csv"
         admins_file = "admins_list.csv"
@@ -470,7 +470,7 @@ async def _(kst):
             mode = "bots"
         csv_file = mode + "_list.csv"
         start_time = monotonic()
-        local_now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+        local_now = datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S")
         try:
             await yy.eor(f"`Reading {csv_file} file...`")
             async with aiofiles.open(csv_file) as f:

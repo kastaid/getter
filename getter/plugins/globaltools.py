@@ -15,6 +15,7 @@ from time import monotonic
 from telethon.errors import FloodWaitError
 from telethon.tl import functions as fun, types as typ
 from . import (
+    TZ,
     DEVS,
     kasta_cmd,
     sendlog,
@@ -152,7 +153,7 @@ async def _(kst):
             return await yy.eor("`Forbidden to gban our awesome developers.`", time=3)
         if await is_gban(user.id):
             return await yy.eor("`User is already GBanned.`", time=4)
-        start_time, date = monotonic(), datetime.now().timestamp()
+        start_time, date = monotonic(), datetime.now(TZ).timestamp()
         success, failed = 0, 0
         is_reported = False
         await ga.unblock(user.id)
@@ -307,7 +308,7 @@ async def _(kst):
             return await yy.eor("`Forbidden to gmute our awesome developers.`", time=3)
         if await is_gmute(user.id):
             return await yy.eor("`User is already GMuted.`", time=4)
-        start_time, date = monotonic(), datetime.now().timestamp()
+        start_time, date = monotonic(), datetime.now(TZ).timestamp()
         success, failed = 0, 0
         if ga._dialogs:
             dialog = ga._dialogs
@@ -433,7 +434,7 @@ async def _(kst):
             return await yy.eor("`Forbidden to gdel our awesome developers.`", time=3)
         if await is_gdel(user.id):
             return await yy.eor("`User is already GDeleted.`", time=4)
-        date = datetime.now().timestamp()
+        date = datetime.now(TZ).timestamp()
         await add_gdel(user.id, date, reason)
         text = gdel_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
@@ -990,7 +991,7 @@ async def gblacklisted(kst, mode):
             title = "None"
         chatdata = {
             "title": title,
-            "date": datetime.now().timestamp(),
+            "date": datetime.now(TZ).timestamp(),
         }
         gblack[str(chat_id)] = chatdata
         await set_col("gblack", gblack)

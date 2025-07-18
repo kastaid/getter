@@ -10,7 +10,7 @@ import re
 import sys
 from collections.abc import Callable
 from contextlib import suppress
-from datetime import datetime, timezone
+from datetime import datetime
 from functools import wraps
 from inspect import stack
 from io import BytesIO
@@ -174,7 +174,7 @@ def kasta_cmd(
                 raise events.StopPropagation
             except Exception as err:
                 kst.client.log.exception(f"[KASTA_CMD] - {err}")
-                date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")  # noqa: UP017
+                date = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
                 if kst.is_private:
                     chat_type = "private"
                 elif kst.is_group:
