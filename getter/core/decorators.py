@@ -174,7 +174,7 @@ def kasta_cmd(
                 raise events.StopPropagation
             except Exception as err:
                 kst.client.log.exception(f"[KASTA_CMD] - {err}")
-                date = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")  # noqa: UP017
+                date = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
                 if kst.is_private:
                     chat_type = "private"
                 elif kst.is_group:
