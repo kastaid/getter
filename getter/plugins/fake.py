@@ -10,6 +10,7 @@ from datetime import datetime
 from random import choice
 from time import monotonic
 from . import (
+    TZ,
     DEVS,
     kasta_cmd,
     plugins_help,
@@ -63,7 +64,7 @@ async def _(kst):
             return await yy.eor("`Cannot gban to myself.`", time=3)
         if user.id in DEVS:
             return await yy.eor("`Forbidden to gban our awesome developers.`", time=3)
-        start_time, date = monotonic(), datetime.now().timestamp()
+        start_time, date = monotonic(), datetime.now(TZ).timestamp()
         done = 0
         if ga._dialogs:
             dialog = ga._dialogs

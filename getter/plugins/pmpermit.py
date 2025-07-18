@@ -13,6 +13,7 @@ from cachetools import TTLCache
 from telethon import events
 from telethon.tl import functions as fun, types as typ
 from . import (
+    TZ,
     DEVS,
     getter_app,
     kasta_cmd,
@@ -326,7 +327,7 @@ async def _(kst):
         return await yy.eor("`Our devs auto allowed!`", time=3)
     if await is_allow(user.id):
         return await yy.eor("`User is already Allowed.`", time=4)
-    date = datetime.now().timestamp()
+    date = datetime.now(TZ).timestamp()
     await allow_user(user.id, date, reason)
     text = f"<b><u>User {display_name(user)} allowed to PM!</u></b>\n"
     text += "<b>Date:</b> <code>{}</code>\n".format(datetime.fromtimestamp(date).strftime("%Y-%m-%d"))
