@@ -12,7 +12,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 from dotenv import load_dotenv, find_dotenv
 
-load_dotenv(find_dotenv("config.env"))
+load_dotenv(find_dotenv())
 
 
 def tobool(val: str) -> int | None:
