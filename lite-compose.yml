@@ -8,5 +8,5 @@ services:
     volumes:
       - ./:/app
     env_file:
-      - config.env
+      - .env
     network_mode: bridge
