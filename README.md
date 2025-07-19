@@ -56,11 +56,11 @@
 
 ### STRING_SESSION
 
-Generate `STRING_SESSION` using [@strgen_bot](https://telegram.me/strgen_bot) or [replit](https://replit.com/@notudope/strgen) or run locally `python3 strgen.py`
+Generate `STRING_SESSION` using [@strgen_bot](https://telegram.me/strgen_bot) or run locally `python3 strgen.py`
 
 ### Config
 
-Create and save `config.env` file at main directory and fill with the example config file at [sample_config.env](https://github.com/kastaid/getter/blob/main/sample_config.env).
+Create and save `.env` file at main directory and fill with the example config file at [example.env](https://github.com/kastaid/getter/blob/main/example.env).
 
 ## Deployments
 
