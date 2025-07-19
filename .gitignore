@@ -131,7 +131,6 @@ dmypy.json
 .progress
 .vscode/*
 
-config.env
 *.db
 *.db-*
 *.session*
