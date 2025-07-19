@@ -188,7 +188,7 @@ async def _(kst):
     if kst.is_sudo:
         await asyncio.sleep(choice((4, 6, 8)))
     # http://www.timebie.com/std/utc
-    utc_now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")  # noqa: UP017
+    utc_now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
     local_now = datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S")
     yy = await kst.eor("`Processing...`", silent=True, force_reply=True)
     await yy.eor(
