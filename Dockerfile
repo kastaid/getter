@@ -22,7 +22,9 @@ RUN set -eux && \
     $VIRTUAL_ENV/bin/pip install --upgrade pip && \
     $VIRTUAL_ENV/bin/pip install --no-cache-dir --disable-pip-version-check --default-timeout=100 -r /tmp/requirements.txt
 
-FROM debian:bookworm-slim AS chrome_builder
+FROM mwader/static-ffmpeg AS builder_ffmpeg
+
+FROM debian:bookworm-slim AS builder_chrome
 
 ENV DEBIAN_FRONTEND=noninteractive
 ARG CHROME_VERSION=124.0.6367.207
@@ -61,7 +63,6 @@ RUN set -eux && \
         fonts-roboto \
         fonts-hack-ttf \
         fonts-noto-color-emoji \
-        ffmpeg \
         cairosvg \
         libjpeg-dev \
         libpng-dev \
@@ -72,9 +73,11 @@ RUN set -eux && \
     cp -rf .config ~/ && \
     rm -rf -- /var/lib/apt/lists/* /var/cache/apt/archives/* /usr/share/man/* /usr/share/doc/* /tmp/* /var/tmp/*
 
-COPY --from=chrome_builder /opt/google-chrome /usr/bin/google-chrome
-COPY --from=chrome_builder /opt/chromedriver /usr/bin/chromedriver
 COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder_ffmpeg /ffmpeg /usr/bin/ffmpeg
+COPY --from=builder_ffmpeg /ffprobe /usr/bin/ffprobe
+COPY --from=builder_chrome /opt/google-chrome /usr/bin/google-chrome
+COPY --from=builder_chrome /opt/chromedriver /usr/bin/chromedriver
 COPY . .
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
