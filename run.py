@@ -10,6 +10,7 @@ import shlex
 import sys
 from pathlib import Path
 from subprocess import run
+
 from version import __version__
 
 RST = "\x1b[0m"
@@ -25,7 +26,6 @@ app = f"{python} -m getter"
 app_watch = f"{python} -m scripts.autoreload {app}"
 ruff_check = "ruff check ."
 ruff_format = "ruff format ."
-isort = "isort --settings-file=pyproject.toml ."
 prettyjson = f"{nocache} -m scripts.prettyjson"
 
 
@@ -49,8 +49,6 @@ def clean() -> None:
 def lint() -> None:
     print(f"{CYAN}>> {prettyjson}{RST}")
     run_cmd(prettyjson)
-    print(f"{CYAN}>> {isort}{RST}")
-    run_cmd(isort)
     print(f"{CYAN}>> {ruff_check}{RST}")
     run_cmd(ruff_check)
     print(f"{CYAN}>> {ruff_format}{RST}")

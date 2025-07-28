@@ -8,6 +8,7 @@
 import re
 from functools import partial
 from textwrap import shorten
+
 from telethon import hints
 from telethon.helpers import add_surrogate
 from telethon.tl import functions as fun, types as typ

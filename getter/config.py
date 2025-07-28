@@ -10,7 +10,8 @@ from os import getenv
 from string import ascii_lowercase
 from typing import Any
 from zoneinfo import ZoneInfo
-from dotenv import load_dotenv, find_dotenv
+
+from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv())
 

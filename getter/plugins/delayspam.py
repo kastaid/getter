@@ -6,12 +6,14 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-from telethon.errors import RPCError, FloodWaitError, SlowModeWaitError
+
+from telethon.errors import FloodWaitError, RPCError, SlowModeWaitError
+
 from . import (
     hl,
     kasta_cmd,
-    plugins_help,
     normalize_chat_id,
+    plugins_help,
 )
 
 DS_TASKS: dict[int, dict[int, asyncio.Task]] = {i: {} for i in range(10)}

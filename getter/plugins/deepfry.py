@@ -8,17 +8,19 @@
 import asyncio
 from mimetypes import guess_extension
 from random import randint, uniform
+
 from PIL import Image, ImageEnhance, ImageOps
 from telethon import events
 from telethon.errors import YouBlockedUserError
 from telethon.tl import types as typ
+
 from . import (
     Root,
-    kasta_cmd,
-    plugins_help,
-    aioify,
     Runner,
     Screenshot,
+    aioify,
+    kasta_cmd,
+    plugins_help,
 )
 
 FRY_BOT = "image_deepfrybot"

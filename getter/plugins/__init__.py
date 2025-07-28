@@ -7,15 +7,16 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from validators.url import url as is_url
+
 from getter import (
+    Root,
+    StartTime,
+    __copyright__,
     __layer__,
+    __license__,
+    __pyversion__,
     __tlversion__,
     __version__,
-    StartTime,
-    __license__,
-    __copyright__,
-    __pyversion__,
-    Root,
 )
 from getter.config import *
 from getter.core import *

@@ -6,14 +6,16 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from random import choice
+
 from telethon.tl.custom.inlineresult import InlineResult
+
 from . import (
+    LANG_CODES,
+    Fetch,
+    formatx_send,
+    import_lib,
     kasta_cmd,
     plugins_help,
-    formatx_send,
-    Fetch,
-    LANG_CODES,
-    import_lib,
 )
 
 BOT_INLINE = "@gamee"

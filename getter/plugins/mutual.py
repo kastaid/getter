@@ -6,9 +6,9 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from . import (
+    gvar,
     kasta_cmd,
     plugins_help,
-    gvar,
     sgvar,
 )
 
