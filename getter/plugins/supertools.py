@@ -6,7 +6,9 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
+
 from telethon.errors import FloodWaitError
+
 from . import DEVS, kasta_cmd
 
 

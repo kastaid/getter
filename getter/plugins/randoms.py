@@ -6,12 +6,12 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from . import (
+    FUN_APIS,
+    Fetch,
+    deep_get,
+    formatx_send,
     kasta_cmd,
     plugins_help,
-    formatx_send,
-    deep_get,
-    Fetch,
-    FUN_APIS,
 )
 
 

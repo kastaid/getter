@@ -6,16 +6,16 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from . import (
-    __version__,
-    __tlversion__,
     __layer__,
     __pyversion__,
+    __tlversion__,
+    __version__,
+    chunk,
+    gvar,
     hl,
+    humanbool,
     kasta_cmd,
     plugins_help,
-    chunk,
-    humanbool,
-    gvar,
 )
 
 help_text = """

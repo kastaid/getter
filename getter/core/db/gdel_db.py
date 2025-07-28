@@ -6,16 +6,18 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from typing import Any
+
 from cachetools import TTLCache
 from sqlalchemy import (
     Column,
-    String,
     Float,
+    String,
     UnicodeText,
     delete,
     insert,
     select,
 )
+
 from .engine import Model, Session
 
 _GDEL_CACHE = TTLCache(maxsize=100, ttl=30)  # 30 sec

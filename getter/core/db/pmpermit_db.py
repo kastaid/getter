@@ -8,13 +8,14 @@
 from cachetools import LRUCache
 from sqlalchemy import (
     Column,
-    String,
     Float,
+    String,
     UnicodeText,
     delete,
     insert,
     select,
 )
+
 from .engine import Model, Session
 
 _PMPERMIT_CACHE = LRUCache(maxsize=100)

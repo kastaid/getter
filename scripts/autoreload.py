@@ -10,6 +10,7 @@ import sys
 from os import getpid, kill
 from subprocess import CalledProcessError, Popen, check_call
 from time import sleep
+
 from . import (
     BOLD,
     EXTS,
