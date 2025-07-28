@@ -8,15 +8,17 @@
 import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+
 import orjson
 from sqlalchemy.ext.asyncio import (
-    async_sessionmaker,
-    AsyncSession,
-    create_async_engine,
     AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
 )
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.sql.expression import text
+
 from getter.config import Var
 from getter.logger import LOG
 

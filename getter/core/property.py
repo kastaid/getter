@@ -9,10 +9,13 @@ import asyncio
 import sys
 from base64 import b64decode
 from re import findall
+
 from asyncache import cached
 from cachetools import TTLCache
-from getter import __license__, __copyright__
+
+from getter import __copyright__, __license__
 from getter.logger import LOG
+
 from .tools import Fetch
 
 _c, _u, _g = (

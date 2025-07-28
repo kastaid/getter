@@ -31,7 +31,6 @@ select = [
 ]
 # https://docs.astral.sh/ruff/rules/
 ignore=[
-  "I001",
   "B904",
   "RET502",
   "RET503",
@@ -42,23 +41,6 @@ ignore=[
   "SIM105",
 ]
 [tool.ruff.lint.isort]
-force-single-line = true
 combine-as-imports = true
-section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 known-first-party = ["getter"]
-
-[tool.isort]
-# https://github.com/PyCQA/isort
-profile = "black"
-line_length = 120
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 4
-use_parentheses = true
-ensure_newline_before_comments = true
-lines_between_sections = 0
-no_inline_sort = true
-combine_as_imports = true
-default_section = "THIRDPARTY"
-sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
-known_first_party = "getter"
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]

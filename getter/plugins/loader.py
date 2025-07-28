@@ -8,9 +8,11 @@
 import asyncio
 from os.path import dirname, realpath
 from random import choice
+
 import aiofiles.os
 from telethon.utils import get_extension
-from . import kasta_cmd, plugins_help, get_media_type
+
+from . import get_media_type, kasta_cmd, plugins_help
 
 base = dirname(realpath(__file__))
 

@@ -16,7 +16,8 @@ from inspect import stack
 from io import BytesIO
 from pathlib import Path
 from traceback import format_exc
-from telethon import hints, events
+
+from telethon import events, hints
 from telethon.errors import (
     AuthKeyDuplicatedError,
     ChatSendGifsForbiddenError,
@@ -30,27 +31,29 @@ from telethon.errors import (
     MessageNotModifiedError,
 )
 from telethon.tl.types import Message
+
 from getter import (
-    __version__,
-    __tlversion__,
     __layer__,
     __pyversion__,
+    __tlversion__,
+    __version__,
 )
 from getter.config import (
+    DEV_CMDS,
+    DEVS,
+    SUDO_CMDS,
     Var,
     hl,
-    DEV_CMDS,
-    SUDO_CMDS,
-    DEVS,
 )
+
 from .base_client import getter_app
 from .constants import MAX_MESSAGE_LEN
 from .db import gvar
-from .functions import display_name, admin_check, to_privilege
-from .helper import jdata, get_botlogs
+from .functions import admin_check, display_name, to_privilege
+from .helper import get_botlogs, jdata
 from .property import do_not_remove_credit, get_blacklisted
 from .tools import Runner
-from .utils import time_formatter, strip_format, normalize
+from .utils import normalize, strip_format, time_formatter
 
 CommandChats = list[int] | set[int] | tuple[int] | None
 CommandFunc = Callable[[events.NewMessage.Event], bool | None]

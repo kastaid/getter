@@ -9,14 +9,16 @@ import asyncio
 from collections import deque
 from html import escape
 from random import choice
+
 from emoji import emojize
 from telethon.tl import types as typ
+
 from . import (
-    kasta_cmd,
-    plugins_help,
-    parse_pre,
-    UWUS,
     SHRUGS,
+    UWUS,
+    kasta_cmd,
+    parse_pre,
+    plugins_help,
 )
 
 dices = emojize(":game_die: :bullseye: :basketball: :soccer_ball: :bowling: :slot_machine:").split()

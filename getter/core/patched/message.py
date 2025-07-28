@@ -6,21 +6,23 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 import asyncio
-from collections.abc import Sequence, Coroutine
+from collections.abc import Coroutine, Sequence
 from contextlib import suppress
 from io import BytesIO
+
 import telethon.tl.custom
 from telethon import hints
 from telethon.client.chats import _ChatAction
 from telethon.errors import (
-    MessageIdInvalidError,
-    MessageNotModifiedError,
-    MediaCaptionTooLongError,
-    MessageTooLongError,
     ChatSendMediaForbiddenError,
     FloodWaitError,
+    MediaCaptionTooLongError,
+    MessageIdInvalidError,
+    MessageNotModifiedError,
+    MessageTooLongError,
 )
 from telethon.tl import types as typ
+
 from getter.core.patcher import patch, patchable
 
 

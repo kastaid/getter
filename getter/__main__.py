@@ -9,28 +9,31 @@ import asyncio
 import sys
 from importlib import import_module
 from time import monotonic
+
 from requests.packages import urllib3
+
 import getter.core.patched  # noqa
+
 from . import (
-    __license__,
     __copyright__,
-    __version__,
-    __tlversion__,
     __layer__,
+    __license__,
     __pyversion__,
+    __tlversion__,
+    __version__,
 )
 from .config import Var, hl
 from .core.base_client import getter_app
 from .core.db import db_connect
-from .core.helper import plugins_help, jdata
+from .core.helper import jdata, plugins_help
 from .core.property import do_not_remove_credit
 from .core.startup import (
-    trap,
-    migrations,
     autopilot,
-    verify,
     autous,
     finishing,
+    migrations,
+    trap,
+    verify,
 )
 from .core.utils import time_formatter
 from .logger import LOG

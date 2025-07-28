@@ -6,16 +6,18 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from typing import Any
+
 from sqlalchemy import (
-    Column,
     Boolean,
-    UnicodeText,
+    Column,
     Float,
+    UnicodeText,
     delete,
     insert,
     select,
 )
 from sqlalchemy_json import MutableJson
+
 from .engine import Model, Session
 
 

@@ -8,23 +8,25 @@
 from datetime import datetime
 from html import escape
 from random import choice
+
 from telethon import events
+
 from . import (
+    DEFAULT_GUCAST_BLACKLIST,
     DEVS,
     NOCHATS,
-    getter_app,
-    kasta_cmd,
-    plugins_help,
-    DEFAULT_GUCAST_BLACKLIST,
-    get_blacklisted,
-    time_formatter,
     OUTS_AFK,
-    is_afk,
     add_afk,
     del_afk,
-    set_last_afk,
+    get_blacklisted,
+    getter_app,
     gvar,
+    is_afk,
     is_allow,
+    kasta_cmd,
+    plugins_help,
+    set_last_afk,
+    time_formatter,
 )
 
 _ON_STOP = (
