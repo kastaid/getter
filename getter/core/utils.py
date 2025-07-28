@@ -8,11 +8,12 @@
 from functools import reduce
 from math import ceil
 from random import choice
-from re import sub, IGNORECASE
+from re import IGNORECASE, sub
 from string import ascii_letters
 from time import time
 from typing import Any
 from uuid import uuid4
+
 from bs4 import BeautifulSoup
 from cachetools import cached
 from emoji import replace_emoji

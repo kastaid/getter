@@ -8,6 +8,7 @@
 import logging
 import sys
 from datetime import date
+
 from loguru import logger as LOG
 
 LOG.remove(0)

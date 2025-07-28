@@ -6,6 +6,7 @@
 # < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
 
 from typing import Any
+
 from sqlalchemy import (
     Column,
     String,
@@ -16,6 +17,7 @@ from sqlalchemy import (
     update,
 )
 from sqlalchemy_json import MutableJson, NestedMutableJson
+
 from .engine import Model, Session
 
 

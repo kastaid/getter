@@ -8,19 +8,22 @@
 import asyncio
 import signal
 from typing import Any
+
 from telethon.tl import functions as fun, types as typ
-from getter import __version__, LOOP, EXECUTOR
-from getter.config import Var, DEVS
+
+from getter import EXECUTOR, LOOP, __version__
+from getter.config import DEVS, Var
 from getter.logger import LOG
+
 from .base_client import getter_app
 from .db import (
     db_disconnect,
+    dgvar,
     gvar,
     sgvar,
-    dgvar,
 )
-from .helper import hk, get_botlogs
-from .property import _c, _u, _g
+from .helper import get_botlogs, hk
+from .property import _c, _g, _u
 from .utils import humanbool
 
 _about = """GETTER BOTLOGS

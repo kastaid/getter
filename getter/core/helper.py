@@ -8,11 +8,14 @@
 from collections import UserDict
 from html import escape
 from typing import Any
-from cachetools import cached, LRUCache
+
+from cachetools import LRUCache, cached
 from heroku3 import from_key
-from getter.config import Var, BOTLOGS_CACHE
+
+from getter.config import BOTLOGS_CACHE, Var
 from getter.logger import LOG
-from .db import gvar, get_col
+
+from .db import get_col, gvar
 from .utils import get_full_class_name
 
 

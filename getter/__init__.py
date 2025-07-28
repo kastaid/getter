@@ -14,9 +14,11 @@ from pathlib import Path
 from platform import python_version
 from shutil import rmtree
 from time import time
+
 import uvloop
 from telethon.tl.alltlobjects import LAYER as __layer__
 from telethon.version import __version__ as __tlversion__
+
 from version import __version__
 
 StartTime = time()
