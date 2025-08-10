@@ -9,7 +9,7 @@
             "required": true
         },
         "STRING_SESSION": {
-            "description": "Telethon Session from \"t.me/strgen_bot\" or \"replit.com/@notudope/strgen\"",
+            "description": "Telethon Session from \"t.me/strgen_bot\"",
             "required": true
         },
         "BOTLOGS": {
@@ -28,7 +28,7 @@
             "value": "False"
         },
         "TZ": {
-            "description": "Set local timezone: Continent/Country. Get list from \"gist.github.com/notudope/9c3b8a5389293d9fe34c6c1f2484eeb3#file-timezones-txt\". Default: Asia/Jakarta",
+            "description": "Set local timezone: Continent/Country. Get list from \"gist.github.com/illvart/0d2fcba7b8a7b337bfe0ad58c6f4d4dd\". Default: Asia/Jakarta",
             "required": false,
             "value": "Asia/Jakarta"
         },
