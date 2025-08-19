@@ -50,10 +50,10 @@ async def _(kst):
 async def _(kst):
     start = monotonic()
     await kst.client(fun.PingRequest(ping_id=0))
-    speedy = monotonic() - start
+    speed = monotonic() - start
     uptime = kst.client.uptime
     await kst.eor(
-        f"🏓 Pong !!\n├  <b>Speedy</b> – <code>{speedy:.3f}s</code>\n├  <b>Uptime</b> – <code>{uptime}</code>\n└  <b>Version</b> – <code>{__version__}</code>",
+        f"🏓 Pong !!\n├  <b>Speed</b> – {speed:.3f}s\n├  <b>Uptime</b> – {uptime}\n└  <b>Version</b> – {__version__}",
         parse_mode="html",
     )
 
