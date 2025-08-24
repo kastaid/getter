@@ -69,7 +69,7 @@ async def main() -> None:
             import_module(plugin)
             LOG.success("[+] " + p["name"])
         except Exception as err:
-            LOG.exception(f"[-] {p['name']} : {err}")
+            LOG.exception(f"[-] {p['name']}: {err}")
     from .plugins.afk import handle_afk
     from .plugins.pmpermit import handle_pmpermit
 
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     ):
         pass
     except Exception as err:
-        LOG.exception(f"[MAIN_ERROR] : {err}")
+        LOG.exception(f"[MAIN_ERROR]: {err}")
     finally:
         LOG.warning("[MAIN] - Getter Stopped...")
         sys.exit(0)
