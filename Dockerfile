@@ -22,7 +22,7 @@ RUN set -eux && \
     $VIRTUAL_ENV/bin/pip install --upgrade pip && \
     $VIRTUAL_ENV/bin/pip install --no-cache-dir --disable-pip-version-check --default-timeout=100 -r /tmp/requirements.txt
 
-FROM mwader/static-ffmpeg AS builder_ffmpeg
+FROM mwader/static-ffmpeg:7.1.1 AS builder_ffmpeg
 
 FROM debian:bookworm-slim AS builder_chrome
 
