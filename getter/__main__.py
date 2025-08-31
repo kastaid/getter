@@ -100,13 +100,11 @@ if __name__ == "__main__":
     try:
         getter_app.run_in_loop(main())
         getter_app.run()
-    except (
-        KeyboardInterrupt,
-        SystemExit,
-    ):
-        pass
+    except (KeyboardInterrupt, SystemExit):
+        LOG.warning("[MAIN] - Manual stop signal received.")
+        sys.exit(0)
     except Exception as err:
         LOG.exception(f"[MAIN_ERROR]: {err}")
+        sys.exit(1)
     finally:
-        LOG.warning("[MAIN] - Getter Stopped...")
-        sys.exit(0)
+        LOG.warning("[MAIN] - Stopped...")
