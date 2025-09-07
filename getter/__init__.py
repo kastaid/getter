@@ -38,18 +38,19 @@ set_event_loop(LOOP)
 WORKERS = min(32, (cpu_count() or 1) + 4)
 EXECUTOR = ThreadPoolExecutor(max_workers=WORKERS)
 
-for d in (
+DIRS = (
     "logs/",
     "downloads/",
-):
+)
+for d in DIRS:
     if not (Root / d).exists():
         (Root / d).mkdir(parents=True, exist_ok=True)
     else:
-        for _ in (Root / d).rglob("*"):
-            if _.is_dir():
-                rmtree(_, ignore_errors=True)
+        for i in (Root / d).rglob("*"):
+            if i.is_dir():
+                rmtree(i, ignore_errors=True)
             else:
-                _.unlink(missing_ok=True)
-[_.unlink(missing_ok=True) for _ in Root.rglob("*s_list.csv")]
+                i.unlink(missing_ok=True)
+[i.unlink(missing_ok=True) for i in Root.rglob("*s_list.csv")]
 
 del sys, set_event_loop, Path, ThreadPoolExecutor, cpu_count, python_version, rmtree, time, uvloop
