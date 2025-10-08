@@ -113,20 +113,18 @@ async def get_text(
 
 def get_user_status(user: typ.User) -> str:
     if user.bot or user.support:
-        status = "none"
+        return "none"
     if isinstance(user.status, typ.UserStatusOnline):
-        status = "online"
-    elif isinstance(user.status, typ.UserStatusOffline):
-        status = "offline"
-    elif isinstance(user.status, typ.UserStatusRecently):
-        status = "recently"
-    elif isinstance(user.status, typ.UserStatusLastWeek):
-        status = "within_week"
-    elif isinstance(user.status, typ.UserStatusLastMonth):
-        status = "within_month"
-    else:
-        status = "long_time_ago"
-    return status
+        return "online"
+    if isinstance(user.status, typ.UserStatusOffline):
+        return "offline"
+    if isinstance(user.status, typ.UserStatusRecently):
+        return "recently"
+    if isinstance(user.status, typ.UserStatusLastWeek):
+        return "within_week"
+    if isinstance(user.status, typ.UserStatusLastMonth):
+        return "within_month"
+    return "long_time_ago"
 
 
 async def get_user(
