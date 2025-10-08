@@ -203,17 +203,6 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern=r"(spoiler|sp)(?: |$)([\s\S]*)",
-)
-async def _(kst):
-    text = await kst.client.get_text(kst, group=2, plain=False)
-    if not text:
-        return await kst.try_delete()
-    text = f"||{text}||"
-    await kst.eor(text)
-
-
-@kasta_cmd(
     pattern=r"type(?: |$)([\s\S]*)",
 )
 async def _(kst):
@@ -297,7 +286,6 @@ plugins_help["text"] = {
     "{i}nomorse [text]/[reply]": "Decode and convert morse code to text.",
     "{i}roman [text]/[reply]": "Convert any number less than 4000 to roman numerals.",
     "{i}noroman [text]/[reply]": "Convert roman numeral to number.",
-    "{i}spoiler|{i}sp [text]/[reply]": "Create a spoiler message.",
     "{i}type [text]/[reply]": "Edits the message and shows like someone is typing.",
     "{i}flip [text]/[reply]": "Flip text upside down.",
     "{i}small [text]/[reply]": "Make caps text smaller.",
