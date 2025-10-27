@@ -1,11 +1,11 @@
 loguru==0.7.3
-python-dotenv==1.1.1
+python-dotenv==1.2.1
 https://github.com/LonamiWebs/Telethon/archive/v1.tar.gz
-cryptg==0.5.1
-psutil==7.1.0
+cryptg==0.5.2
+psutil==7.1.2
 heroku3==5.2.1
 GitPython==3.1.45
-SQLAlchemy==2.0.43
+SQLAlchemy==2.0.44
 asyncpg==0.30.0
 aiosqlite==0.21.0
 sqlalchemy-json==0.7.0
@@ -13,7 +13,7 @@ cachetools==5.5.2
 asyncache==0.3.1
 aiofiles==24.1.0
 aiocsv==1.4.0
-aiohttp[speedups]==3.13.0
+aiohttp[speedups]==3.13.1
 httpx==0.28.1
 Markdown==3.9
 beautifulsoup4==4.14.2
@@ -25,5 +25,5 @@ requests==2.32.5
 lottie==0.7.2
 Pillow==11.1.0
 CairoSVG==2.8.2
-uvloop==0.21.0
-orjson==3.11.3
+uvloop==0.22.1
+orjson==3.11.4
