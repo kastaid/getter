@@ -8,12 +8,12 @@
 import asyncio
 import importlib.util
 import os
+import random
 import sys
 from collections import UserList
 from collections.abc import Coroutine
 from inspect import getmembers
 from platform import machine, version
-from random import randrange
 from time import time
 from typing import Any, NoReturn
 
@@ -98,7 +98,7 @@ class KastaClient(TelegramClient):
         self.log.info("Trying to login...")
         do_not_remove_credit()
         try:
-            await asyncio.sleep(randrange(3, 6))
+            await asyncio.sleep(random.uniform(3, 6))
             await self.start(**kwargs)
             self._bot = await self.is_bot()
             if not self._bot:
