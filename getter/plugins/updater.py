@@ -7,7 +7,7 @@
 
 import asyncio
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 from random import choice
 from sys import executable
 
@@ -190,7 +190,7 @@ async def _(kst):
     if kst.is_sudo:
         await asyncio.sleep(choice((4, 6, 8)))
     # http://www.timebie.com/std/utc
-    utc_now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    utc_now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
     local_now = datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S")
     yy = await kst.eor("`Processing...`", silent=True, force_reply=True)
     await yy.eor(
