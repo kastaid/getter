@@ -1,6 +1,6 @@
 # `getter`
 
-> Get and put users (scraping) to the target **group/channel** efficiently, correctly and safety.
+> Powerful Telethon userbot (supports custom plugins)
 
 <p align="center">
     <a href="https://github.com/kastaid/getter/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/kastaid/getter/ci.yml?branch=main&logo=github&label=CI" /></a>
