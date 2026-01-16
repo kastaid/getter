@@ -1,36 +1,25 @@
-# `getter`
+# getter
 
-> Powerful Telethon userbot (supports custom plugins)
+**Powerful Telethon userbot with custom plugins**
 
-<p align="center">
-    <a href="https://github.com/kastaid/getter/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/kastaid/getter/ci.yml?branch=main&logo=github&label=CI" /></a>
-    <img alt="Python" src="https://img.shields.io/badge/Python-3.11.x%20%7C%203.12.x-blue?logoColor=white&logo=python" />
-    <img alt="Version" src="https://img.shields.io/github/manifest-json/v/kastaid/getter" />
-    <a href="https://github.com/kastaid/getter/blob/main/LICENSE"><img alt="LICENSE" src="https://img.shields.io/github/license/kastaid/getter" /></a>
-    <a href="https://telegram.me/kastaid"><img alt="Telegram" src="https://img.shields.io/badge/kastaid-blue?logo=telegram" /></a>
-</p>
+[![CI](https://github.com/kastaid/getter/workflows/CI/badge.svg)](https://github.com/kastaid/getter/actions/workflows/ci.yml)
+[![LICENSE](https://img.shields.io/github/license/kastaid/getter)](LICENSE)
+![Version](https://img.shields.io/github/manifest-json/v/kastaid/getter?label=Version)
 
-```
-#include <std/disclaimer.h>
-/*
-*   Your Telegram account may get banned.
-*   We are not responsible for any improper use of this userbot.
-*   This userbot is specific for scraping members with some helpfull commands.
-*
-*   If you ended up spamming groups, getting reported left and right,
-*   and you ended up in being fight with Telegram
-*   and at the end Telegram Team deleted your account. DON'T BLAME US.
-*
-*   No personal support will be provided / We won't spoon feed you.
-*   If you need help ask in our support group 
-*   and we or our friends will try to help you.
-*/
-```
+## Disclaimer
+
+**Important:** Your Telegram account may get banned. We are not responsible for any misuse of this userbot.
+
+If you spam, face issues with Telegram, or get your account deleted, **DON’T BLAME US!**
+- No personal support.
+- We won’t spoon-feed you.
+- If you need help, ask in our support group, and we or others will try to help you.
+
+Review the **[Telegram API Terms of Service](https://core.telegram.org/api/terms)**.
+
+Thank you for trusting and using this userbot!
 
 ## Table of Contents
-
-<details>
-<summary>Details</summary>
 
 - [Requirements](#requirements)
   - [STRING_SESSION](#string_session)
@@ -40,13 +29,11 @@
     - [Full version](#full-version)
     - [Lite version](#lite-version)
   - [Locally](#locally)
+  - [Heroku](#heroku)
 - [Example Plugin](#example-plugin)
-- [Supports](#sparkling_heart-supports)
-- [Credits and Thanks](#credits-and-thanks)
+- [Supports](#supports)
 - [Contributing](#contributing)
 - [License](#license)
-
-</details>
 
 ## Requirements
 
@@ -56,19 +43,19 @@
 
 ### STRING_SESSION
 
-Generate `STRING_SESSION` using [@strgen_bot](https://telegram.me/strgen_bot) or run locally `python3 strgen.py`
+Generate `STRING_SESSION` using [@strgen_bot](https://t.me/strgen_bot) or run locally `python3 strgen.py`
 
 ### Config
 
-Create and save `.env` file at main directory and fill with the example config file at [example.env](https://github.com/kastaid/getter/blob/main/example.env).
+Create a `.env` file in the main directory and fill it with the example from [example.env](example.env).
 
 ## Deployments
 
-Deploy getter to your server or locally.
+Deploy getter locally or on your server.
 
 ### Docker Compose
 
-Deploy to your server using docker compose.
+Deploy using Docker Compose.
 
 #### Full version
 ```sh
@@ -86,7 +73,7 @@ git pull && \
 
 ### Locally
 
-Run getter as locally eg: termux
+Run getter locally (e.g., on Termux).
 
 #### Production
 ```sh
@@ -101,69 +88,66 @@ pip3 install -r requirements-dev.txt
 python3 -m run --watch
 ```
 
-More commands `python3 -m run -h`
+More commands: run `python3 -m run -h`.
+
+### Heroku
+
+One-click deploy:
+
+[![Heroku](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy?template=https://github.com/kastaid/getter)
 
 ## Example Plugin
 
-Clone the repo, then create and save plugin at `./getter/plugins/plugin_name.py`.
+Clone this repo and create a plugin at `./getter/plugins/plugin_name.py`.
 
-<kbd>This Example Works Everywhere. (e.g. Groups, Personal Chats)</kbd>
+Works everywhere (e.g., groups, personal chats):
 ```python
 from . import kasta_cmd
 @kasta_cmd(pattern="hi")
 async def _(event):
-    await event.eor("Hello **World**.")
+    await event.eor("Hello **World**")
 ```
 
-<kbd>This Example Works Only In Personal Chats.</kbd>
+Works only in personal chats:
 ```python
 from . import kasta_cmd
 @kasta_cmd(pattern="hi", func=lambda e: e.is_private)
 async def _(event):
-    await event.eor("Hello **World**.")
+    await event.eor("Hello **World**")
 ```
 
-<kbd>This Example Works Only In Channels.</kbd>
+Works only in channels:
 ```python
 from . import kasta_cmd
 @kasta_cmd(pattern="hi", func=lambda e: e.is_channel and e.chat.broadcast)
 async def _(event):
-    await event.eor("Hello **World**.")
+    await event.eor("Hello **World**")
 ```
 
-<kbd>This Example Works Only In Groups.</kbd>
+Works only in groups:
 ```python
 from . import kasta_cmd
 @kasta_cmd(pattern="hi", func=lambda e: e.is_group)
 async def _(event):
-    await event.eor("Hello **World**.")
+    await event.eor("Hello **World**")
 ```
 
-<kbd>This Example Works Only In Groups or Channels.</kbd>
+Works only in groups or channels:
 ```python
 from . import kasta_cmd
 @kasta_cmd(pattern="hi", func=lambda e: not e.is_private)
 async def _(event):
-    await event.eor("Hello **World**.")
+    await event.eor("Hello **World**")
 ```
 
-## :sparkling_heart: Supports
+## Supports
 
-This project is open source and free to use under the [license](#license). However, if you are using this project and happy with it or just want to encourage me to continue creating stuff please donate!
-
-## Credits and Thanks
-
-* [LonamiWebs](https://github.com/LonamiWebs/Telethon) - Telethon
-* [TeamUltroid](https://github.com/TeamUltroid) - Team Ultroid
-* [userbotindo](https://github.com/userbotindo) - Userbot Indonesia Community
-* [illvart](https://github.com/illvart) - Core Developer
-
-and [everyone](https://github.com/kastaid/getter/graphs/contributors) 🦄
+If you’re enjoying it or want to support development, feel free to donate. Thank you! ❤️
 
 ## Contributing
 
-If you would like to help out with some code, check the [details](https://github.com/kastaid/getter/blob/main/docs/CONTRIBUTING.md).
+Want to contribute? Read the [Contributing](docs/CONTRIBUTING.md).
 
 ## License
 
-This project is licensed under the **GNU Affero General Public License v3.0**. See the [LICENSE](https://github.com/kastaid/getter/blob/main/LICENSE) file for details.
+Released under the [AGPL-3.0 License](LICENSE).
