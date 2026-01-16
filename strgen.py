@@ -29,7 +29,7 @@ finally:
 
 
 usage = """
-Go to "my.telegram.org/apps" (to get API_ID and API_HASH):
+Go to "my.telegram.org" (to get API_ID and API_HASH):
 • Login with your Telegram account.
 • Click on API development tools.
 • Create a new application with the required details.
