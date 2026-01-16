@@ -1,6 +1,6 @@
 # getter
 
-**Powerful Telethon userbot with custom plugins**
+**Telethon userbot with custom plugins**
 
 [![CI](https://github.com/kastaid/getter/workflows/CI/badge.svg)](https://github.com/kastaid/getter/actions/workflows/ci.yml)
 [![LICENSE](https://img.shields.io/github/license/kastaid/getter)](LICENSE)
