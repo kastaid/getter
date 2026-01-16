@@ -8,17 +8,14 @@
 
 ## Disclaimer
 
-> **Important:** Your Telegram account may get banned.
-> We are not responsible for any misuse of this userbot.
-> This userbot includes helpful commands for personal use.
->
-> If you spam, face issues with Telegram, or get your account deleted, **DON’T BLAME US!**
->
-> - No personal support.
-> - We won’t spoon-feed you.
-> - If you need help with this userbot, ask in our support group, and we or others will try to help you.
+**Important:** Your Telegram account may get banned. We are not responsible for any misuse of this userbot.
 
-Review and read the **[Telegram API Terms of Service](https://core.telegram.org/api/terms)**.
+If you spam, face issues with Telegram, or get your account deleted, **DON’T BLAME US!**
+- No personal support.
+- We won’t spoon-feed you.
+- If you need help with this userbot, ask in our support group, and we or others will try to help you.
+
+Please review the **[Telegram API Terms of Service](https://core.telegram.org/api/terms)**.
 
 Thank you for trusting and using this userbot!
 
@@ -91,13 +88,11 @@ pip3 install -r requirements-dev.txt
 python3 -m run --watch
 ```
 
-For more commands, run `python3 -m run -h`.
+More commands: run `python3 -m run -h`.
 
 ### Heroku
 
-Deploy to Heroku with one click:
-
-[![Heroku](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy)
+One-click deploy: [![Heroku](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy?template=https://github.com/kastaid/getter)
 
 ## Example Plugin
 
