@@ -1,6 +1,6 @@
 # getter
 
-**Powerful Telethon userbot (supports custom plugins)**
+**Powerful Telethon userbot with custom plugins**
 
 [![CI](https://github.com/kastaid/getter/workflows/CI/badge.svg)](https://github.com/kastaid/getter/actions/workflows/ci.yml)
 [![LICENSE](https://img.shields.io/github/license/kastaid/getter)](LICENSE)
@@ -13,9 +13,9 @@
 If you spam, face issues with Telegram, or get your account deleted, **DON’T BLAME US!**
 - No personal support.
 - We won’t spoon-feed you.
-- If you need help with this userbot, ask in our support group, and we or others will try to help you.
+- If you need help, ask in our support group, and we or others will try to help you.
 
-Please review the **[Telegram API Terms of Service](https://core.telegram.org/api/terms)**.
+Review the **[Telegram API Terms of Service](https://core.telegram.org/api/terms)**.
 
 Thank you for trusting and using this userbot!
 
@@ -92,7 +92,9 @@ More commands: run `python3 -m run -h`.
 
 ### Heroku
 
-One-click deploy: [![Heroku](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy?template=https://github.com/kastaid/getter)
+One-click deploy:
+
+[![Heroku](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy?template=https://github.com/kastaid/getter)
 
 ## Example Plugin
 
