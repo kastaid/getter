@@ -8,14 +8,15 @@
 
 ## Disclaimer
 
-**Important:** Your Telegram account may get banned. We are not responsible for any misuse of this userbot.
+⚠️ **Important:** Your Telegram account may get banned. We are not responsible for any misuse of this userbot.
 
 If you spam, face issues with Telegram, or get your account deleted, **DON’T BLAME US!**
 - No personal support.
 - We won’t spoon-feed you.
 - If you need help, ask in our support group, and we or others will try to help you.
+- **DWYOR** (Do With Your Own Risk).
 
-Review the **[Telegram API Terms of Service](https://core.telegram.org/api/terms)**.
+Review the [Telegram API Terms of Service](https://core.telegram.org/api/terms).
 
 Thank you for trusting and using this userbot!
 
@@ -38,12 +39,12 @@ Thank you for trusting and using this userbot!
 ## Requirements
 
 - Python 3.11.x
-- Linux (Recommend Debian/Ubuntu)
+- Linux (recommended: Debian/Ubuntu)
 - Telegram `API_ID` and `API_HASH` from [API development tools](https://my.telegram.org)
 
 ### STRING_SESSION
 
-Generate `STRING_SESSION` using [@strgen_bot](https://t.me/strgen_bot) or run locally `python3 strgen.py`
+Generate `STRING_SESSION` by choosing **Telethon** at [@strgen_bot](https://t.me/strgen_bot) or run `python3 strgen.py`.
 
 ### Config
 

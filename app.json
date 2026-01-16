@@ -1,11 +1,11 @@
 {
     "env": {
         "API_ID": {
-            "description": "Get this value from API development tools - \"my.telegram.org/apps\" at App api_id:",
+            "description": "Get this value from the API development tools - \"my.telegram.org\" at App api_id:",
             "required": true
         },
         "API_HASH": {
-            "description": "Get this value from API development tools - \"my.telegram.org/apps\" at App api_hash:",
+            "description": "Get this value from the API development tools - \"my.telegram.org\" at App api_hash:",
             "required": true
         },
         "STRING_SESSION": {
@@ -28,7 +28,7 @@
             "value": "False"
         },
         "TZ": {
-            "description": "Set local timezone: Continent/Country. Get list from \"gist.github.com/illvart/0d2fcba7b8a7b337bfe0ad58c6f4d4dd\". Default: Asia/Jakarta",
+            "description": "Set local timezone: Continent/Country. Get the list from \"gist.github.com/illvart/0d2fcba7b8a7b337bfe0ad58c6f4d4dd\". Default: Asia/Jakarta",
             "required": false,
             "value": "Asia/Jakarta"
         },
