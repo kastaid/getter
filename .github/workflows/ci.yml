@@ -2,42 +2,30 @@ name: CI
 on: [push, pull_request, workflow_dispatch]
 jobs:
   linter:
-    name: Run linting and format code
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.11", "3.12"]
+        python-version: ['3.11', '3.12']
     steps:
-      - uses: actions/checkout@v4
-      - uses: styfle/cancel-workflow-action@0.12.0
-        with:
-          all_but_latest: true
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: actions/cache@v4
-        if: startsWith(runner.os, 'Linux')
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements-dev.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-      - name: Install dependencies
-        run: |
+          cache: 'pip'
+      - run: |
           python3 -m pip install -U pip
           pip3 install -r requirements.txt
           if [ -f requirements-dev.txt ]; then pip3 install -r requirements-dev.txt; fi
-      - name: Linting and format code
-        run: python3 -m run --lint
+      - run: python3 -m run --lint
       - uses: illvart/beautysh-action@latest
         with:
-          args: "*.sh --indent-size 2 &>/dev/null"
-      - uses: stefanzweifel/git-auto-commit-action@v5
+          args: '*.sh --indent-size 2 &>/dev/null'
+      - uses: stefanzweifel/git-auto-commit-action@v7
         with:
-          commit_message: "[action] ci: auto-fixes"
-          commit_options: "--no-verify"
-          commit_user_name: kastaid
-          commit_user_email: ${{ secrets.EMAIL }}
-          commit_author: kastaid <${{ secrets.EMAIL }}>
+          commit_message: 'ci: apply auto-fixes'
+          commit_options: '--no-verify'
+          commit_user_name: ${{ github.repository_owner }}
+          commit_user_email: ${{ github.repository_owner }}@users.noreply.github.com
