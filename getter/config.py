@@ -88,11 +88,8 @@ SUDO_CMDS: dict[str, list[str]] = {}
 INVITE_WORKER: dict[str, Any] = {}
 CALLS: dict[int, Any] = {}
 TESTER = {5215824623}
-# va, vn, en, xl
-DEVS = {
-    *{int(_) for _ in b64decode("MjAwMzM2MTQxMCAxOTk4OTE4MDI0IDE3OTI0ODYxNTAgMTQ0ODQ3NzUwMQ==").split()},
-    *TESTER,
-}
+# va, en
+DEVS = {*{int(_) for _ in b64decode("MjAwMzM2MTQxMCAxNzkyNDg2MTUw").split()}, *TESTER}
 NOCHATS = {
     -1001699144606,
     -1001700971911,
