@@ -124,9 +124,8 @@ def migrations(app: Any = None) -> None:
             [
                 "https://github.com/heroku/heroku-buildpack-python",
                 "https://github.com/heroku/heroku-buildpack-apt",
-                "https://github.com/heroku/heroku-buildpack-google-chrome",
-                "https://github.com/heroku/heroku-buildpack-chromedriver",
-                "https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest",
+                "https://github.com/heroku/heroku-buildpack-chrome-for-testing",
+                "https://github.com/heroku/heroku-buildpack-activestorage-preview",
             ]
         )
 
@@ -137,7 +136,7 @@ async def autopilot() -> None:
     LOG.info(">> Auto-Pilot...")
     photo = None
     try:
-        photo = await getter_app.upload_file("assets/getter_botlogs.png")
+        photo = await getter_app.upload_file("assets/getter.png")
         await asyncio.sleep(3)
     except BaseException:
         pass

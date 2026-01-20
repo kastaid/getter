@@ -1,6 +1,6 @@
 # getter
 
-**Telethon userbot with custom plugins**
+**A powerful and customizable Telegram userbot built with Telethon. Create custom plugins, automate tasks, and enhance your Telegram experience.**
 
 [![CI](https://github.com/kastaid/getter/workflows/CI/badge.svg)](https://github.com/kastaid/getter/actions/workflows/ci.yml)
 [![LICENSE](https://img.shields.io/github/license/kastaid/getter)](LICENSE)
@@ -23,15 +23,18 @@ Thank you for trusting and using this userbot!
 ## Table of Contents
 
 - [Requirements](#requirements)
-  - [STRING_SESSION](#string_session)
-  - [Config](#config)
+- [Quick Start](#quick-start)
+  - [Clone Repository](#clone-repository)
+    - [String Session](#string-session)
+    - [Config](#config)
 - [Deployments](#deployments)
   - [Docker Compose](#docker-compose)
     - [Full version](#full-version)
     - [Lite version](#lite-version)
   - [Locally](#locally)
   - [Heroku](#heroku)
-- [Example Plugin](#example-plugin)
+- [Usage](#usage)
+- [Custom Plugins](#custom-plugins)
 - [Supports](#supports)
 - [Contributing](#contributing)
 - [License](#license)
@@ -42,21 +45,32 @@ Thank you for trusting and using this userbot!
 - Linux (recommended: Debian/Ubuntu)
 - Telegram `API_ID` and `API_HASH` from [API development tools](https://my.telegram.org)
 
-### STRING_SESSION
+## Quick Start
+
+Follow these steps to set up and run **getter** on your system.
+
+### Clone Repository
+
+```sh
+git clone https://github.com/kastaid/getter.git
+cd getter
+```
+
+#### String Session
 
 Generate `STRING_SESSION` by choosing **Telethon** at [@strgen_bot](https://t.me/strgen_bot) or run `python3 strgen.py`.
 
-### Config
+#### Config
 
 Create a `.env` file in the main directory and fill it with the example from [example.env](example.env).
 
 ## Deployments
 
-Deploy getter locally or on your server.
+Choose your preferred deployment method below.
 
 ### Docker Compose
 
-Deploy using Docker Compose.
+Deploy using Docker Compose for easy containerized deployment.
 
 #### Full version
 ```sh
@@ -74,7 +88,7 @@ git pull && \
 
 ### Locally
 
-Run getter locally (e.g., on Termux).
+Run getter locally on your machine or server (e.g., on Termux).
 
 #### Production
 ```sh
@@ -93,53 +107,65 @@ More commands: run `python3 -m run -h`.
 
 ### Heroku
 
-One-click deploy:
+Deploy to Heroku with one click:
 
 [![Heroku](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy?template=https://github.com/kastaid/getter)
 
-## Example Plugin
+## Usage
 
-Clone this repo and create a plugin at `./getter/plugins/plugin_name.py`.
+Once successfully deployed, test your **getter** by sending `.ping` in any chat.
 
-Works everywhere (e.g., groups, personal chats):
+**Command prefix:**
+
+- Default prefix is `.` (dot)
+- If you set a custom `HANDLER` in your [config](#config), use that prefix instead (e.g., `!ping`, `/ping`)
+- If `NO_HANDLER` is set to `True`, send commands without any prefix (e.g., `ping`)
+
+**Get all commands:** `.help` - This will show you all available plugins, commands, and how to use them.
+
+## Custom Plugins
+
+Extend functionality by creating custom plugins at `./getter/plugins/custom/plugin_name.py`.
+
+**Dynamic plugin management:**
+
+- Upload your `plugin_name.py` file anywhere in Telegram (plugin name must be unique)
+- Reply to the file with `.load` to download, activate, or update the plugin
+- Reply to the plugin file with `.unload [plugin_name]` to remove it
+
+**Example plugin:**
+
 ```python
 from . import kasta_cmd
+
+# Works everywhere (e.g., groups, personal chats)
 @kasta_cmd(pattern="hi")
 async def _(event):
     await event.eor("Hello **World**")
-```
 
-Works only in personal chats:
-```python
-from . import kasta_cmd
+# Works only in personal chats
 @kasta_cmd(pattern="hi", func=lambda e: e.is_private)
 async def _(event):
     await event.eor("Hello **World**")
-```
 
-Works only in channels:
-```python
-from . import kasta_cmd
+# Works only in channels
 @kasta_cmd(pattern="hi", func=lambda e: e.is_channel and e.chat.broadcast)
 async def _(event):
     await event.eor("Hello **World**")
-```
 
-Works only in groups:
-```python
-from . import kasta_cmd
+# Works only in groups
 @kasta_cmd(pattern="hi", func=lambda e: e.is_group)
 async def _(event):
     await event.eor("Hello **World**")
-```
 
-Works only in groups or channels:
-```python
-from . import kasta_cmd
+# Works only in groups or channels
 @kasta_cmd(pattern="hi", func=lambda e: not e.is_private)
 async def _(event):
     await event.eor("Hello **World**")
+
 ```
+
+For available modules and advanced usage, check [__init__.py](getter/plugins/__init__.py).
 
 ## Supports
 
