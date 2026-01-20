@@ -113,7 +113,7 @@ Deploy to Heroku with one click:
 
 ## Usage
 
-Once successfully deployed, test your **getter** by sending `.ping` in any chat.
+Once successfully deployed, test your getter by sending `.ping` in any chat.
 
 **Command prefix:**
 
@@ -125,7 +125,7 @@ Once successfully deployed, test your **getter** by sending `.ping` in any chat.
 
 ## Custom Plugins
 
-Extend functionality by creating custom plugins at `./getter/plugins/custom/plugin_name.py`.
+Create custom plugins at `./getter/plugins/custom/plugin_name.py`.
 
 **Dynamic plugin management:**
 
@@ -162,10 +162,9 @@ async def _(event):
 @kasta_cmd(pattern="hi", func=lambda e: not e.is_private)
 async def _(event):
     await event.eor("Hello **World**")
-
 ```
 
-For available modules and advanced usage, check [__init__.py](getter/plugins/__init__.py).
+For available modules, imports, functions, and methods, see [`__init__.py`](getter/plugins/__init__.py).
 
 ## Supports
 
