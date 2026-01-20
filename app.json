@@ -41,7 +41,7 @@
             "required": true
         }
     },
-    "success_url": "https://t.me/kastaot",
+    "success_url": "https://t.me/kastaid",
     "buildpacks": [
         {
             "url": "https://github.com/heroku/heroku-buildpack-python"
