@@ -1,9 +1,6 @@
-# getter < https://t.me/kastaid >
 # Copyright (C) 2022-present kastaid
-#
-# This file is a part of < https://github.com/kastaid/getter/ >
-# Please read the GNU Affero General Public License in
-# < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
+# https://github.com/kastaid/getter
+# AGPL-3.0 License
 
 import asyncio
 import os
@@ -150,10 +147,8 @@ async def _(kst):
 )
 async def _(kst):
     await kst.eor(
-        """
-• **Repo:** [GitHub](https://kasta.vercel.app/repo?c=getter)
-• **Deploy:** [View at @kastaid](https://kasta.vercel.app/getter_deploy)
-""",
+        "https://github.com/kastaid/getter",
+        link_preview=True,
     )
 
 
