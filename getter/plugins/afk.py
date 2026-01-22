@@ -9,13 +9,9 @@ from random import choice
 from telethon import events
 
 from . import (
-    DEFAULT_GUCAST_BLACKLIST,
-    DEVS,
-    NOCHATS,
     OUTS_AFK,
     add_afk,
     del_afk,
-    get_blacklisted,
     getter_app,
     gvar,
     is_afk,
@@ -52,7 +48,7 @@ async def _(kst):
     yy = await kst.eor("`Go To AFK...`")
     start = datetime.now().timestamp()
     reason = await kst.client.get_text(kst, plain=False)
-    text = "<b><u>I`m now AFK ツ</u></b>"
+    text = "<b><u>I’m now AFK!</u></b>"
     if reason:
         reason = escape(reason)
         text += f"\n<b>Reason:</b> <pre>{reason}</pre>"
@@ -77,8 +73,6 @@ async def _(kst):
 
 async def StopAFK(kst):
     if any(_ in kst.raw_text.lower() for _ in _ON_STOP):
-        return
-    if kst.chat_id in NOCHATS and kst.client.uid not in DEVS:
         return
     afk = await is_afk()
     if afk:
@@ -106,23 +100,14 @@ async def OnAFK(kst):
     user = await kst.get_sender()
     if getattr(user, "bot", False) or getattr(user, "support", False) or getattr(user, "verified", False):
         return
-    if kst.chat_id in NOCHATS and user.id not in DEVS:
-        return
     if kst.is_private and await gvar("_pmguard", use_cache=True) and not await is_allow(user.id, use_cache=True):
-        return
-    GUCAST_BLACKLIST = await get_blacklisted(
-        url="https://raw.githubusercontent.com/kastaid/resources/main/gucastblacklist.py",
-        attempts=1,
-        fallbacks=DEFAULT_GUCAST_BLACKLIST,
-    )
-    if user.id in {*DEVS, *GUCAST_BLACKLIST}:
         return
     afk = await is_afk()
     if afk:
         start = datetime.fromtimestamp(afk.start)
         end = datetime.now().replace(microsecond=0)
         afk_time = time_formatter((end - start).seconds * 1000)
-        text = "<b><u>I`m on AFK ツ</u></b>\n"
+        text = "<b><u>I’m on AFK!</u></b>\n"
         text += f"Last seen {afk_time} ago."
         reason = f"<pre>{afk.reason}</pre>" if afk.reason else "No reason."
         text += f"\n<b>Reason:</b> {reason}"
