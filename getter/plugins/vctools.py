@@ -7,13 +7,12 @@ from random import choice
 
 from telethon.errors import UserAlreadyParticipantError
 from telethon.tl import functions as fun
+from telethon.utils import get_peer_id
 
 from . import (
     Var,
     display_name,
-    get_username,
     humanbool,
-    is_telegram_link,
     is_termux,
     kasta_cmd,
     mentionuser,
@@ -299,20 +298,9 @@ async def get_call_id(message, group=1):
         return message.chat_id
     chat_id = target.split(" ")[0]
     if (chat_id.startswith(("-100", "-")) and chat_id[1:].isdecimal()) or chat_id.isdecimal():
-        chat_id = int(chat_id)
-    else:
-        if is_telegram_link(chat_id):
-            chat_id = get_username(chat_id)
-        try:
-            full = await message.client(fun.messages.GetFullChatRequest(chat_id))
-            chat_id = full.full_chat.id
-        except BaseException:
-            try:
-                full = await message.client(fun.channels.GetFullChannelRequest(chat_id))
-                chat_id = full.full_chat.id
-            except BaseException:
-                pass
-    return chat_id
+        return int(chat_id)
+    entity = await message.client.get_entity(chat_id)
+    return get_peer_id(entity)
 
 
 plugins_help["vctools"] = {
