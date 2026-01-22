@@ -14,6 +14,7 @@ from platform import machine, version
 from time import time
 from typing import Any, NoReturn
 
+from pytgcalls import PyTgCalls
 from telethon.client.telegramclient import TelegramClient
 from telethon.errors import (
     AccessTokenExpiredError,
@@ -138,6 +139,15 @@ class KastaClient(TelegramClient):
         except Exception as err:
             self.log.exception(f"[KastaClient] - {err}")
             sys.exit(1)
+
+        try:
+            self.log.info("Start PyTgCalls...")
+            TgCall = PyTgCalls(self)
+            await TgCall.start()
+            Var.TGCALL = TgCall
+            self.log.success("PyTgCalls Started.")
+        except Exception as err:
+            self.log.exception(f"[KastaClient:PyTgCalls] - {err}")
 
     def run_in_loop(self, func: Coroutine[Any, Any, None]) -> Any:
         return self.loop.run_until_complete(func)
