@@ -140,6 +140,7 @@ class KastaClient(TelegramClient):
             self.log.exception(f"[KastaClient] - {err}")
             sys.exit(1)
 
+    async def start_pytgcalls(self) -> None:
         try:
             self.log.info("Start PyTgCalls...")
             TgCall = PyTgCalls(self)
