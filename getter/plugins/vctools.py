@@ -302,7 +302,7 @@ def group_call_instance(chat_id: int) -> None:
             return
         pytgcalls = import_lib(
             lib_name="pytgcalls",
-            pkg_name="pytgcalls==3.0.0.dev24",
+            pkg_name="git+https://github.com/MarshalX/tgcalls@dev",
         )
     try:
         if chat_id not in CALLS:
