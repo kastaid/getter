@@ -33,3 +33,5 @@ python-dotenv==1.2.1
 uvloop==0.20.0
 orjson==3.10.14
 psutil==7.1.2
+
+py-tgcalls==2.2.10

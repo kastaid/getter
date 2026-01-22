@@ -19,6 +19,8 @@ RUN set -eux && \
     $VIRTUAL_ENV/bin/pip install --upgrade pip && \
     $VIRTUAL_ENV/bin/pip install --no-cache-dir --disable-pip-version-check --default-timeout=100 -r /tmp/requirements.txt
 
+FROM mwader/static-ffmpeg:7.1.1 AS builder_ffmpeg
+
 FROM python:3.12-slim-bookworm
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -35,6 +37,8 @@ RUN set -eux && \
     rm -rf -- /var/lib/apt/lists/* /var/cache/apt/archives/* /usr/share/man/* /usr/share/doc/* /tmp/* /var/tmp/*
 
 COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder_ffmpeg /ffmpeg /usr/bin/ffmpeg
+COPY --from=builder_ffmpeg /ffprobe /usr/bin/ffprobe
 COPY . .
 
 ENTRYPOINT ["/usr/bin/tini", "--"]

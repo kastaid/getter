@@ -5,7 +5,7 @@
 from base64 import b64decode
 from os import getenv
 from string import ascii_lowercase
-from typing import Any
+from typing import Any, ClassVar
 from zoneinfo import ZoneInfo
 
 from dotenv import find_dotenv, load_dotenv
@@ -43,6 +43,8 @@ class Var:
     LANG_CODE: str = getenv("LANG_CODE", "id").lower().strip()
     HEROKU_APP_NAME: str = getenv("HEROKU_APP_NAME", "").strip()
     HEROKU_API: str = getenv("HEROKU_API", "").strip()
+    TGCALL: Any = None
+    CALLS: ClassVar[set[int]] = set()
 
 
 try:
@@ -83,7 +85,6 @@ BOTLOGS_CACHE: list[int] = []
 DEV_CMDS: dict[str, list[str]] = {}
 SUDO_CMDS: dict[str, list[str]] = {}
 INVITE_WORKER: dict[str, Any] = {}
-CALLS: dict[int, Any] = {}
 TESTER = {5215824623}
 # va, en
 DEVS = {*{int(_) for _ in b64decode("MjAwMzM2MTQxMCAxNzkyNDg2MTUw").split()}, *TESTER}
