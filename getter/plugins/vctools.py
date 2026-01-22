@@ -11,12 +11,12 @@ from telethon.tl import functions as fun
 from . import (
     Var,
     display_name,
-    getter_app,
+    get_username,
     humanbool,
+    is_telegram_link,
     is_termux,
     kasta_cmd,
     mentionuser,
-    normalize_chat_id,
     plugins_help,
 )
 
@@ -32,8 +32,8 @@ async def _(kst):
     args = kst.pattern_match.group(1).split(" ")
     is_silent = any(_ in args[0].lower() for _ in ("-s", "silent"))
     title = " ".join(args[1:] if is_silent else args).strip()
-    chat_id = normalize_chat_id(kst.chat_id)
-    call = await get_call(chat_id)
+    chat_id = kst.chat_id
+    call = await get_call(ga, chat_id)
     if call:
         return await yy.eor("`Video chat is available.`", time=5)
     try:
@@ -65,8 +65,8 @@ async def _(kst):
     yy = await kst.eor("`Stopping video chat...`")
     args = kst.pattern_match.group(1).split(" ")
     is_silent = any(_ in args[0].lower() for _ in ("-s", "silent"))
-    chat_id = normalize_chat_id(kst.chat_id)
-    call = await get_call(chat_id)
+    chat_id = kst.chat_id
+    call = await get_call(ga, chat_id)
     if not call:
         return await yy.eor("`No video chat!`", time=5)
     try:
@@ -92,8 +92,8 @@ async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Processing...`")
     title = await ga.get_text(kst)
-    chat_id = normalize_chat_id(kst.chat_id)
-    call = await get_call(chat_id)
+    chat_id = kst.chat_id
+    call = await get_call(ga, chat_id)
     if not call:
         return await yy.eor("`No video chat!`", time=5)
     try:
@@ -115,8 +115,8 @@ async def _(kst):
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
         return await yy.eor("`Cannot invite to myself.`", time=3)
-    chat_id = normalize_chat_id(kst.chat_id)
-    call = await get_call(chat_id)
+    chat_id = kst.chat_id
+    call = await get_call(ga, chat_id)
     if not call:
         return await yy.eor("`No video chat!`", time=5)
     try:
@@ -137,7 +137,7 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Inviting members to video chat...`")
-    call = await get_call(kst.chat_id)
+    call = await get_call(ga, kst.chat_id)
     if not call:
         return await yy.eor("`No video chat!`", time=5)
     users, done = [], 0
@@ -173,8 +173,8 @@ async def _(kst):
 async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Processing...`")
-    chat_id = normalize_chat_id(kst.chat_id)
-    call = await get_call(chat_id)
+    chat_id = kst.chat_id
+    call = await get_call(ga, chat_id)
     if not call:
         return await yy.eor("`No video chat!`", time=5)
     try:
@@ -209,22 +209,18 @@ async def _(kst):
         await asyncio.sleep(choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Joining video chat...`")
-    chat_id = await ga.get_chat_id(kst)
+    chat_id = await get_call_id(kst)
     if not chat_id:
         return await yy.try_delete()
-    call = await get_call(chat_id)
+    call = await get_call(ga, chat_id)
     if not call:
         return await yy.eor("`No video chat!`", time=5)
     if chat_id not in Var.CALLS:
         try:
             await Var.TGCALL.play(chat_id)
+            await Var.TGCALL.mute(chat_id)
             Var.CALLS.add(chat_id)
             text = "`Joined video chat.`"
-            try:
-                await asyncio.sleep(3)
-                await Var.TGCALL.mute(chat_id)
-            except BaseException:
-                pass
         except BaseException:
             if is_termux():
                 text = "`This command doesn't not supported Termux. Use proot-distro instantly!`"
@@ -251,10 +247,10 @@ async def _(kst):
         await asyncio.sleep(choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Leaving video chat...`")
-    chat_id = await ga.get_chat_id(kst)
+    chat_id = await get_call_id(kst)
     if not chat_id:
         return await yy.try_delete()
-    call = await get_call(chat_id)
+    call = await get_call(ga, chat_id)
     if not call:
         return await yy.eor("`No video chat!`", time=5)
     if chat_id in Var.CALLS:
@@ -276,18 +272,47 @@ async def _(kst):
     if len(Var.CALLS) > 0:
         text = f"<b><u>{len(Var.CALLS)} Video Chats</u></b>\n"
         for x in Var.CALLS:
-            text += f"<code>-100{x}</code>\n"
+            text += f"<code>{x}</code>\n"
         return await kst.eor(text, parts=True, parse_mode="html")
     text = "`You got no joined video chat!`"
     await kst.eor(text, time=5)
 
 
-async def get_call(chat_id: int):
+async def get_call(client, chat_id):
     try:
-        call = await getter_app(fun.channels.GetFullChannelRequest(chat_id))
-        return call.full_chat.call
+        channel = await client.get_entity(chat_id)
+        full = await client(fun.channels.GetFullChannelRequest(channel))
+        call = await client(
+            fun.phone.GetGroupCallRequest(
+                full.full_chat.call,
+                limit=1,
+            )
+        )
+        return call.call
     except BaseException:
         return None
+
+
+async def get_call_id(message, group=1):
+    target = await message.client.get_text(message, group=group)
+    if not target:
+        return message.chat_id
+    chat_id = target.split(" ")[0]
+    if (chat_id.startswith(("-100", "-")) and chat_id[1:].isdecimal()) or chat_id.isdecimal():
+        chat_id = int(chat_id)
+    else:
+        if is_telegram_link(chat_id):
+            chat_id = get_username(chat_id)
+        try:
+            full = await message.client(fun.messages.GetFullChatRequest(chat_id))
+            chat_id = full.full_chat.id
+        except BaseException:
+            try:
+                full = await message.client(fun.channels.GetFullChannelRequest(chat_id))
+                chat_id = full.full_chat.id
+            except BaseException:
+                pass
+    return chat_id
 
 
 plugins_help["vctools"] = {
