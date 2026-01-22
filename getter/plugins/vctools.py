@@ -9,11 +9,10 @@ from telethon.errors import UserAlreadyParticipantError
 from telethon.tl import functions as fun
 
 from . import (
-    CALLS,
+    Var,
     display_name,
     getter_app,
     humanbool,
-    import_lib,
     is_termux,
     kasta_cmd,
     mentionuser,
@@ -46,8 +45,7 @@ async def _(kst):
         )
     except BaseException:
         return await yy.eor("`An error occurred. Try again now!`", time=5)
-    if CALLS.get(chat_id):
-        CALLS.pop(chat_id, None)
+    Var.CALLS.discard(chat_id)
     if not is_silent:
         return await yy.eor("`Video chat started.`", time=5)
     await yy.try_delete()
@@ -75,8 +73,7 @@ async def _(kst):
         res = await ga(fun.phone.DiscardGroupCallRequest(call))
     except BaseException:
         return await yy.eor("`An error occurred. Try again now!`", time=5)
-    if CALLS.get(chat_id):
-        CALLS.pop(chat_id, None)
+    Var.CALLS.discard(chat_id)
     if not is_silent:
         return await yy.eor("`Video chat stopped.`", time=5)
     await yy.try_delete()
@@ -218,14 +215,14 @@ async def _(kst):
     call = await get_call(chat_id)
     if not call:
         return await yy.eor("`No video chat!`", time=5)
-    in_call = group_call(chat_id)
-    if not (in_call and in_call.is_connected):
+    if chat_id not in Var.CALLS:
         try:
-            await in_call.start(chat_id, enable_action=False)
+            await Var.TGCALL.play(chat_id)
+            Var.CALLS.add(chat_id)
             text = "`Joined video chat.`"
             try:
                 await asyncio.sleep(3)
-                await in_call.set_is_mute(is_muted=True)
+                await Var.TGCALL.mute(chat_id)
             except BaseException:
                 pass
         except BaseException:
@@ -260,16 +257,15 @@ async def _(kst):
     call = await get_call(chat_id)
     if not call:
         return await yy.eor("`No video chat!`", time=5)
-    in_call = group_call(chat_id)
-    if in_call and in_call.is_connected:
+    if chat_id in Var.CALLS:
         try:
-            await in_call.stop()
+            await Var.TGCALL.leave_call(chat_id)
         except BaseException:
             pass
         text = "`Leaved video chat.`"
     else:
         text = "`Not joined video chat!`"
-    CALLS.pop(chat_id, None)
+    Var.CALLS.discard(chat_id)
     await yy.eor(text, time=5)
 
 
@@ -277,9 +273,9 @@ async def _(kst):
     pattern="listvc$",
 )
 async def _(kst):
-    if len(CALLS) > 0:
-        text = f"<b><u>{len(CALLS)} Video Chats</u></b>\n"
-        for x in CALLS:
+    if len(Var.CALLS) > 0:
+        text = f"<b><u>{len(Var.CALLS)} Video Chats</u></b>\n"
+        for x in Var.CALLS:
             text += f"<code>-100{x}</code>\n"
         return await kst.eor(text, parts=True, parse_mode="html")
     text = "`You got no joined video chat!`"
@@ -292,43 +288,6 @@ async def get_call(chat_id: int):
         return call.full_chat.call
     except BaseException:
         return None
-
-
-def group_call_instance(chat_id: int) -> None:
-    try:
-        import pytgcalls
-    except ImportError:
-        if is_termux():
-            return
-        pytgcalls = import_lib(
-            lib_name="pytgcalls",
-            pkg_name="git+https://github.com/MarshalX/tgcalls@dev",
-        )
-    try:
-        if chat_id not in CALLS:
-            CALLS[chat_id] = pytgcalls.GroupCallFactory(
-                getter_app,
-                pytgcalls.GroupCallFactory.MTPROTO_CLIENT_TYPE.TELETHON,
-                enable_logs_to_console=False,
-                path_to_log_file="",
-            ).get_file_group_call(
-                input_filename="",
-                play_on_repeat=False,
-            )
-        call = CALLS.get(chat_id)
-
-        @call.on_network_status_changed
-        async def __(context, is_connected):  # noqa: RUF029
-            if not is_connected:
-                CALLS.pop(chat_id, None)
-
-    except BaseException:
-        pass
-
-
-def group_call(chat_id: int):
-    group_call_instance(chat_id)
-    return CALLS.get(chat_id)
 
 
 plugins_help["vctools"] = {
