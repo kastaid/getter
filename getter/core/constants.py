@@ -1,9 +1,6 @@
-# getter < https://t.me/kastaid >
 # Copyright (C) 2022-present kastaid
-#
-# This file is a part of < https://github.com/kastaid/getter/ >
-# Please read the GNU Affero General Public License in
-# < https://github.com/kastaid/getter/blob/main/LICENSE/ >.
+# https://github.com/kastaid/getter
+# AGPL-3.0 License
 
 MAX_MESSAGE_LEN = 4096
 
@@ -11,15 +8,11 @@ DEFAULT_GCAST_BLACKLIST = (
     -1001699144606,  # @kastaot
     -1001700971911,  # @kastaup
     -1001596433756,  # @MFIChat
-    -1001294181499,  # @userbotindo
-    -1001387666944,  # @PyrogramChat
-    -1001221450384,  # @pyrogramlounge
     -1001109500936,  # @TelethonChat
     -1001235155926,  # @RoseSupportChat
     -1001421589523,  # @tdspya
     -1001360494801,  # @OFIOpenChat
     -1001275084637,  # @OFIChat
-    -1001435671639,  # @xfichat
 )
 
 DEFAULT_GUCAST_BLACKLIST = (
