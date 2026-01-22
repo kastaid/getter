@@ -14,7 +14,6 @@ from platform import machine, version
 from time import time
 from typing import Any, NoReturn
 
-from pytgcalls import PyTgCalls
 from telethon.client.telegramclient import TelegramClient
 from telethon.errors import (
     AccessTokenExpiredError,
@@ -80,6 +79,7 @@ class KastaClient(TelegramClient):
         kwargs["base_logger"] = TelethonLogger
         kwargs["entity_cache_limit"] = 1000
         super().__init__(session, **kwargs)
+        self.__class__.__module__ = "telethon.client.telegramclient"
         self._event_builders = ReverseList()
         self.run_in_loop(self.start_client(bot_token=bot_token))
         self.dc_id = self.session.dc_id
@@ -143,6 +143,8 @@ class KastaClient(TelegramClient):
     async def start_pytgcalls(self) -> None:
         try:
             self.log.info("Start PyTgCalls...")
+            from pytgcalls import PyTgCalls
+
             TgCall = PyTgCalls(self)
             await TgCall.start()
             Var.TGCALL = TgCall
