@@ -53,6 +53,7 @@ async def main() -> None:
     migrations()
     await autopilot()
     await verify()
+    await getter_app.start_pytgcalls()
     LOG.info(">> Load Plugins...")
     load = monotonic()
     plugins = getter_app.all_plugins
