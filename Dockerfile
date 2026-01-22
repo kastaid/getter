@@ -53,6 +53,7 @@ RUN set -eux && \
     apt-get -qqy update && \
     apt-get -qqy install --no-install-recommends \
         tini \
+        build-essential \
         git \
         ca-certificates \
         tree \
