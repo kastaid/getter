@@ -717,7 +717,6 @@ async def get_total_bot(kst, bot: str, command: str) -> int:
             else:
                 total += 1
     _TOTAL_BOT_CACHE[in_cache] = total
-    await resp.try_delete()
     return total
 
 
@@ -756,14 +755,11 @@ async def get_rose_fban(kst, user_id: int) -> bool:
         _ROSE_LANG_CACHE["lang"] = True
     if (not resp) or ("hasn't been banned" in resp.message.lower()):
         _ROSE_STAT_CACHE[user_id] = False
-        await resp.try_delete()
         return False
     if "to be banned" in resp.message.lower():
         _ROSE_STAT_CACHE[user_id] = True
-        await resp.try_delete()
         return True
     _ROSE_STAT_CACHE[user_id] = False
-    await resp.try_delete()
     return False
 
 

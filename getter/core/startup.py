@@ -257,7 +257,6 @@ async def finishing(text: str) -> None:
         await dgvar("_reboot")
     if BOTLOGS:
         try:
-            text = f"<pre>{text}</pre>"
             text += "\n(c) @kastaid #getter #launch"
             await getter_app.send_message(
                 BOTLOGS,
