@@ -47,12 +47,6 @@
             "url": "https://github.com/heroku/heroku-buildpack-python"
         },
         {
-            "url": "https://github.com/heroku/heroku-buildpack-apt"
-        },
-        {
-            "url": "https://github.com/heroku/heroku-buildpack-chrome-for-testing"
-        },
-        {
             "url": "https://github.com/heroku/heroku-buildpack-activestorage-preview"
         }
     ],

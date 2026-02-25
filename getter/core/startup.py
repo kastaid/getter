@@ -120,8 +120,6 @@ def migrations(app: Any = None) -> None:
         app.update_buildpacks(
             [
                 "https://github.com/heroku/heroku-buildpack-python",
-                "https://github.com/heroku/heroku-buildpack-apt",
-                "https://github.com/heroku/heroku-buildpack-chrome-for-testing",
                 "https://github.com/heroku/heroku-buildpack-activestorage-preview",
             ]
         )
