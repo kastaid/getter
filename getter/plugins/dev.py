@@ -6,20 +6,17 @@ import sys
 from io import BytesIO, StringIO
 from json import dumps
 from pathlib import Path
-from random import choice
 from traceback import format_exc
 
 import aiofiles
 from telethon.tl import functions, types
 
 from . import (
-    CARBON_PRESETS,
     DEFAULT_SHELL_BLACKLIST,
     DEV_CMDS,
     DEVS,
     LSFILES_MAP,
     MAX_MESSAGE_LEN,
-    Carbon,
     Root,
     Runner,
     formatx_send,
@@ -55,35 +52,6 @@ async def _(kst):
     else:
         text = msg.stringify()
     await kst.eor(text, parts=True, parse_mode=parse_pre)
-
-
-@kasta_cmd(
-    pattern="sysinfo$",
-)
-async def _(kst):
-    yy = await kst.eor("`Processing...`")
-    file = "downloads/neofetch.txt"
-    _, _, ret, _ = await Runner(f"neofetch|sed 's/\x1b\\[[0-9;\\?]*[a-zA-Z]//g'>>{file}")
-    if ret != 0:
-        return await yy.try_delete()
-    info = (Root / file).read_text()
-    theme = choice(tuple(CARBON_PRESETS))
-    backgroundColor = CARBON_PRESETS[theme]
-    neofetch = await Carbon(
-        info.replace("\n\n", "").strip(),
-        file_name="neofetch",
-        fontFamily="Hack",
-        theme=theme,
-        backgroundColor=backgroundColor,
-        dropShadow=True,
-    )
-    if not neofetch:
-        return await yy.try_delete()
-    await yy.eor(
-        file=neofetch,
-        force_document=False,
-    )
-    (Root / file).unlink(missing_ok=True)
 
 
 @kasta_cmd(
@@ -329,7 +297,6 @@ async def aexec(code, event):
 plugins_help["dev"] = {
     "{i}raw [reply]": "Get the raw data of message object.",
     "{i}json [reply]": "Raw data with json format.",
-    "{i}sysinfo": "Shows System Info.",
     "{i}ls [path]/[reply]": "View all files and folders inside a directory.",
     "{i}eval [code]/[reply]": "Evaluate Python code.",
     "{i}exec [code]/[reply]": """Execute Python code.
@@ -354,7 +321,6 @@ plugins_help["dev"] = {
 `date '+%a, %b %d %Y %T %Z'`
 `date +'%A, %B %-d, %Y'`
 `ls -lAFh`
-`tree`
 `df -h`
 `du -sh * | sort -hr`
 `top -bn1 > output.txt && cat output.txt`

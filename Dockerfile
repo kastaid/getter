@@ -42,8 +42,6 @@ RUN set -eux && \
     apt-get -qqy install --no-install-recommends \
         git \
         ca-certificates \
-        tree \
-        neofetch \
         fonts-roboto \
         fonts-noto-color-emoji \
         cairosvg \
