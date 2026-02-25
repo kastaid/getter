@@ -15,7 +15,7 @@ from sqlalchemy import (
 
 from .engine import Model, Session
 
-_PMPERMIT_CACHE = cachebox.TTLCache(maxsize=100)
+_PMPERMIT_CACHE = cachebox.LRUCache(maxsize=100)
 
 
 class PMPermit(Model):
