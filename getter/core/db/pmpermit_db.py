@@ -2,7 +2,7 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
-from cachetools import LRUCache
+import cachebox
 from sqlalchemy import (
     Column,
     Float,
@@ -15,7 +15,7 @@ from sqlalchemy import (
 
 from .engine import Model, Session
 
-_PMPERMIT_CACHE = LRUCache(maxsize=100)
+_PMPERMIT_CACHE = cachebox.LRUCache(maxsize=100)
 
 
 class PMPermit(Model):

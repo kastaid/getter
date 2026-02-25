@@ -7,7 +7,7 @@ from datetime import datetime
 from html import escape
 from random import choice
 
-from cachetools import TTLCache
+import cachebox
 from telethon import events
 from telethon.tl import functions as fun, types as typ
 
@@ -50,9 +50,9 @@ _TORM = {
     "-": "",
     "~": "",
 }
-_PMBYE_CACHE = TTLCache(maxsize=1, ttl=60)  # 1 mins
-_PMMSG_CACHE = TTLCache(maxsize=1, ttl=60)  # 1 mins
-_PMTOTAL_CACHE = TTLCache(maxsize=1, ttl=60)  # 1 mins
+_PMBYE_CACHE = cachebox.TTLCache(maxsize=1, ttl=60)  # 1 mins
+_PMMSG_CACHE = cachebox.TTLCache(maxsize=1, ttl=60)  # 1 mins
+_PMTOTAL_CACHE = cachebox.TTLCache(maxsize=1, ttl=60)  # 1 mins
 
 
 async def PMLogs(kst):

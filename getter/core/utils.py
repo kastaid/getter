@@ -11,8 +11,8 @@ from time import time
 from typing import Any
 from uuid import uuid4
 
+import cachebox
 from bs4 import BeautifulSoup
-from cachetools import cached
 from emoji import replace_emoji
 from markdown.core import markdown
 from unidecode import unidecode
@@ -193,7 +193,7 @@ def kebab(text: str) -> str:
     )
 
 
-@cached(cache={})
+@cachebox.cached({})
 def normalize(text: str) -> str:
     return unidecode(text)
 

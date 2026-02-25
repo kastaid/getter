@@ -4,7 +4,7 @@
 
 from typing import Any
 
-from cachetools import LRUCache
+import cachebox
 from sqlalchemy import (
     Column,
     String,
@@ -18,7 +18,7 @@ from sqlalchemy import (
 
 from .engine import Model, Session
 
-_GVAR_CACHE = LRUCache(maxsize=float("inf"))
+_GVAR_CACHE = cachebox.LRUCache(maxsize=float("inf"))
 
 
 class Globals(Model):

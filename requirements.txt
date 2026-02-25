@@ -24,8 +24,7 @@ validators==0.35.0
 aiocsv==1.4.0
 aiohttp[speedups]==3.13.3
 httpx==0.28.1
-cachetools==5.5.2
-asyncache==0.3.1
+cachebox==5.2.2
 aiofiles==25.1.0
 
 loguru==0.7.3
