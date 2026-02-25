@@ -2,6 +2,7 @@ services:
   getter:
     build: .
     image: getter:latest
+    init: true
     restart: unless-stopped
     volumes:
       - ./:/app

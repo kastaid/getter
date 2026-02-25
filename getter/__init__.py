@@ -29,7 +29,7 @@ if not sys.platform.startswith("linux"):
 if "/com.termux" in sys.executable:
     print("You are detected using Termux, maybe the functionality will not work normally.")
 
-Root: Path = Path(__file__).parent.parent
+Root = Path(__file__).parent.parent
 LOOP = uvloop.new_event_loop()
 set_event_loop(LOOP)
 WORKERS = min(32, (cpu_count() or 1) + 4)

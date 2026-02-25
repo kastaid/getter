@@ -43,7 +43,7 @@ def import_lib(
     try:
         return import_module(lib_name)
     except ImportError:
-        done = subprocess.run(["python3", "-m", "pip", "install", "-U", pkg_name])
+        done = subprocess.run(["python3", "-m", "pip", "install", "--prefer-binary", "-U", pkg_name])
         if done.returncode != 0:
             raise AssertionError(f"Failed to install library {pkg_name} (pip exited with code {done.returncode})")
         return import_module(lib_name)

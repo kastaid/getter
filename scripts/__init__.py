@@ -4,7 +4,7 @@
 
 from pathlib import Path
 
-Root: Path = Path(__file__).parent.parent
+Root = Path(__file__).parent.parent
 
 EXTS = (".py", ".yml", ".env")
 

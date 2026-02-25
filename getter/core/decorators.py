@@ -277,9 +277,11 @@ def kasta_cmd(
                     outgoing=True if not superuser else None,
                     forwards=None if for_dev or dev else False,
                     from_users=DEVS if for_dev or dev else (jdata.CACHE_DATA.get("sudo") if sudo else users),
-                    func=lambda e: not e.via_bot_id and func(e) and not (e.is_channel and e.chat.broadcast)
-                    if not (func is None)
-                    else not e.via_bot_id and not (e.is_channel and e.chat.broadcast),
+                    func=lambda e: (
+                        not e.via_bot_id and func(e) and not (e.is_channel and e.chat.broadcast)
+                        if not (func is None)
+                        else not e.via_bot_id and not (e.is_channel and e.chat.broadcast)
+                    ),
                 ),
             )
         getter_app.add_event_handler(
