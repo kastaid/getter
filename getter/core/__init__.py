@@ -73,10 +73,3 @@ from .utils import (
     to_dict,
     until_time,
 )
-
-if hk.stack == "container" or not hk.is_heroku:
-    CHROME_BIN = "/usr/bin/google-chrome"
-    CHROME_DRIVER = "/usr/bin/chromedriver"
-else:
-    CHROME_BIN = "/app/.apt/usr/bin/google-chrome"
-    CHROME_DRIVER = "/app/.chromedriver/bin/chromedriver"
