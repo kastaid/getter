@@ -204,7 +204,9 @@ def restart_app() -> None:
     except BaseException:
         pass
     reqs = Root / "requirements.txt"
-    os.system(f"{executable} -m pip install --disable-pip-version-check --default-timeout=100 -r {reqs}")
+    os.system(
+        f"{executable} -m pip install --prefer-binary --disable-pip-version-check --default-timeout=100 -r {reqs}"
+    )
     os.execl(executable, executable, "-m", "getter")
 
 

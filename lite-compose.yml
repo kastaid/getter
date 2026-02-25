@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile.lite
     image: getter:latest
+    init: true
     restart: unless-stopped
     volumes:
       - ./:/app
