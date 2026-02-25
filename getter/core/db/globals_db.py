@@ -18,7 +18,7 @@ from sqlalchemy import (
 
 from .engine import Model, Session
 
-_GVAR_CACHE = cachebox.LRUCache(maxsize=float("inf"))
+_GVAR_CACHE = cachebox.LRUCache(maxsize=0)
 
 
 class Globals(Model):
