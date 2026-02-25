@@ -6,7 +6,7 @@ from collections import UserDict
 from html import escape
 from typing import Any
 
-from cachetools import LRUCache, cached
+import cachebox
 from heroku3 import from_key
 
 from getter.config import BOTLOGS_CACHE, Var
@@ -37,7 +37,7 @@ class PluginsHelp(UserDict):
 
 class JSONData:
     def __init__(self) -> None:
-        self.CACHE_DATA = LRUCache(maxsize=float("inf"))
+        self.CACHE_DATA = cachebox.LRUCache(maxsize=float("inf"))
 
     async def sudos(self) -> dict[str, Any]:
         return getattr(await get_col("sudos"), "json", {})
@@ -80,7 +80,7 @@ class Heroku:
         return conn
 
     @property
-    @cached(LRUCache(maxsize=512))
+    @cachebox.cached(cachebox.LRUCache(maxsize=512))
     def stack(self) -> str:
         try:
             app = self.heroku().app(self.name)

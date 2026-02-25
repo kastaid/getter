@@ -7,8 +7,7 @@ import sys
 from base64 import b64decode
 from re import findall
 
-from asyncache import cached
-from cachetools import TTLCache
+import cachebox
 
 from getter import __copyright__, __license__
 from getter.logger import LOG
@@ -30,12 +29,12 @@ def do_not_remove_credit() -> None:
         sys.exit(1)
 
 
-@cached(TTLCache(maxsize=1000, ttl=(120 * 30)))  # 1 hours
+@cachebox.cached(cachebox.TTLCache(maxsize=1000, ttl=(120 * 30)))
 async def get_blacklisted(
     url: str,
     is_json: bool = False,
     attempts: int = 3,
-    fallbacks: tuple[int | str] | None = None,
+    fallbacks: tuple[int | str, ...] | None = None,
 ) -> set[int | str]:
     count = 0
     is_content = not is_json

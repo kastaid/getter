@@ -4,7 +4,7 @@
 
 from typing import Any
 
-from cachetools import TTLCache
+import cachebox
 from sqlalchemy import (
     Column,
     Float,
@@ -17,7 +17,7 @@ from sqlalchemy import (
 
 from .engine import Model, Session
 
-_GMUTE_CACHE = TTLCache(maxsize=100, ttl=60)  # 1 mins
+_GMUTE_CACHE = cachebox.TTLCache(maxsize=100, ttl=60)  # 1 mins
 
 
 class GMute(Model):

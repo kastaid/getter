@@ -4,7 +4,7 @@
 
 from typing import Any
 
-from cachetools import TTLCache
+import cachebox
 from sqlalchemy import (
     Column,
     Float,
@@ -17,7 +17,7 @@ from sqlalchemy import (
 
 from .engine import Model, Session
 
-_GDEL_CACHE = TTLCache(maxsize=100, ttl=30)  # 30 sec
+_GDEL_CACHE = cachebox.TTLCache(maxsize=100, ttl=30)  # 30 sec
 
 
 class GDel(Model):
