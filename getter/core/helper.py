@@ -37,7 +37,7 @@ class PluginsHelp(UserDict):
 
 class JSONData:
     def __init__(self) -> None:
-        self.CACHE_DATA = cachebox.LRUCache(maxsize=float("inf"))
+        self.CACHE_DATA = cachebox.LRUCache(maxsize=0)
 
     async def sudos(self) -> dict[str, Any]:
         return getattr(await get_col("sudos"), "json", {})
