@@ -31,7 +31,7 @@ if "/com.termux" in sys.executable:
 Root = Path(__file__).parent.parent
 LOOP = uvloop.new_event_loop()
 set_event_loop(LOOP)
-WORKERS = 3
+WORKERS = 2
 EXECUTOR = ThreadPoolExecutor(max_workers=WORKERS)
 
 DIRS = (

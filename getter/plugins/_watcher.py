@@ -2,6 +2,8 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
+import asyncio
+
 from telethon import events
 from telethon.tl import types as typ
 
@@ -26,6 +28,7 @@ gmuted_text = r"""
 \\<b>#GMuted_Watch</b>// User {} joined and quickly muted!
 <b>Reason:</b> {}
 """
+_WATCHER_SEM = asyncio.Semaphore(2)
 
 
 @getter_app.on(
@@ -35,12 +38,13 @@ gmuted_text = r"""
     )
 )
 async def OnNewMessageFunc(kst):
-    try:
-        await DeletedUserHandler(kst)
-    except ConnectionError:
-        pass
-    except Exception as err:
-        kst.client.log.exception(err)
+    async with _WATCHER_SEM:
+        try:
+            await DeletedUserHandler(kst)
+        except ConnectionError:
+            pass
+        except Exception as err:
+            kst.client.log.exception(err)
 
 
 @getter_app.on(
@@ -49,12 +53,13 @@ async def OnNewMessageFunc(kst):
     )
 )
 async def OnChatActionFunc(kst):
-    try:
-        await JoinedHandler(kst)
-    except ConnectionError:
-        pass
-    except Exception as err:
-        kst.client.log.exception(err)
+    async with _WATCHER_SEM:
+        try:
+            await JoinedHandler(kst)
+        except ConnectionError:
+            pass
+        except Exception as err:
+            kst.client.log.exception(err)
 
 
 async def DeletedUserHandler(kst):
