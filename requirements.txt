@@ -1,4 +1,4 @@
-https://github.com/LonamiWebs/Telethon/archive/v1.tar.gz
+https://codeberg.org/Lonami/Telethon/archive/v1.tar.gz
 cryptg==0.5.2
 
 SQLAlchemy==2.0.47
