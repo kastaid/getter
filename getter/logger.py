@@ -43,7 +43,5 @@ class InterceptHandler(logging.Handler):
 logging.basicConfig(handlers=[InterceptHandler()], level=logging.INFO)
 logging.disable(logging.DEBUG)
 logging.getLogger("asyncio").setLevel(logging.ERROR)
-logging.getLogger("urllib3").disabled = True
-logging.getLogger("urllib3.connectionpool").disabled = True
 TelethonLogger = logging.getLogger("telethon")
 TelethonLogger.setLevel(logging.ERROR)

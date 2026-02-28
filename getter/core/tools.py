@@ -84,11 +84,7 @@ async def Fetch(
     statuses = statuses or {}
     if not headers:
         headers = {
-            "User-Agent": "Python/{0[0]}.{0[1]} aiohttp/{1} getter/{2}".format(  # noqa: UP032
-                sys.version_info,
-                aiohttp.__version__,
-                __version__,
-            )
+            "User-Agent": f"Python/{sys.version_info[0]}.{sys.version_info[1]} aiohttp/{aiohttp.__version__} getter/{__version__}"
         }
     async with aiohttp.ClientSession(headers=headers) as session:
         try:
@@ -169,22 +165,12 @@ async def Screenshot(
 
 async def MyIp() -> str:
     ips = (
-        "https://ipinfo.io/ip",
-        "https://ip.seeip.org",
-        "http://ip-api.com/line/?fields=query",
         "https://checkip.amazonaws.com",
-        "https://api.ipify.org",
-        "https://ipaddr.site",
-        "https://icanhazip.com",
-        "https://ident.me",
-        "https://curlmyip.net",
-        "https://ipecho.net/plain",
+        "https://ipinfo.io/ip",
+        "https://4.ident.me",
     )
-    statuses = {
-        405,  # api.ipify.org
-    }
     for url in ips:
-        res = await Fetch(url, re_content=True, statuses=statuses)
+        res = await Fetch(url, re_content=True)
         if res:
             return res.decode("utf-8").strip()
         continue

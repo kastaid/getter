@@ -23,6 +23,7 @@ from telethon.errors import (
     InvalidBufferError,
     PhoneNumberInvalidError,
 )
+from telethon.network.connection import ConnectionTcpAbridged
 from telethon.sessions.abstract import Session
 from telethon.sessions.string import CURRENT_VERSION, StringSession
 from telethon.tl import functions as fun, types as typ
@@ -69,6 +70,7 @@ class KastaClient(TelegramClient):
         self.log = LOG
         kwargs["api_id"] = api_id
         kwargs["api_hash"] = api_hash
+        kwargs["connection"] = ConnectionTcpAbridged
         kwargs["request_retries"] = 3
         kwargs["connection_retries"] = 3
         kwargs["auto_reconnect"] = True
@@ -165,8 +167,8 @@ class KastaClient(TelegramClient):
                 import psutil
 
                 proc = psutil.Process(os.getpid())
-                for _ in proc.open_files() + proc.connections():
-                    os.close(_.fd)
+                for p in proc.open_files() + proc.connections():
+                    os.close(p.fd)
             except BaseException:
                 pass
             os.execl(sys.executable, sys.executable, "-m", "getter")
