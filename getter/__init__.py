@@ -6,7 +6,6 @@
 import sys
 from asyncio import set_event_loop
 from concurrent.futures import ThreadPoolExecutor
-from multiprocessing import cpu_count
 from pathlib import Path
 from platform import python_version
 from shutil import rmtree
@@ -32,7 +31,7 @@ if "/com.termux" in sys.executable:
 Root = Path(__file__).parent.parent
 LOOP = uvloop.new_event_loop()
 set_event_loop(LOOP)
-WORKERS = min(32, (cpu_count() or 1) + 4)
+WORKERS = 3
 EXECUTOR = ThreadPoolExecutor(max_workers=WORKERS)
 
 DIRS = (
@@ -50,4 +49,4 @@ for d in DIRS:
                 i.unlink(missing_ok=True)
 [i.unlink(missing_ok=True) for i in Root.rglob("*s_list.csv")]
 
-del sys, set_event_loop, Path, ThreadPoolExecutor, cpu_count, python_version, rmtree, time, uvloop
+del sys, set_event_loop, Path, ThreadPoolExecutor, python_version, rmtree, time, uvloop
