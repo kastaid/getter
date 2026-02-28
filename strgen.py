@@ -11,14 +11,14 @@ try:
     import telethon as tl
 except ModuleNotFoundError:
     print("Installing Telethon...")
-    # python3 -m pip install https://github.com/LonamiWebs/Telethon/archive/v1.tar.gz
+    # python3 -m pip install https://codeberg.org/Lonami/Telethon/archive/v1.tar.gz
     check_call(
         [
             sys.executable,
             "-m",
             "pip",
             "install",
-            "https://github.com/LonamiWebs/Telethon/archive/v1.tar.gz",
+            "https://codeberg.org/Lonami/Telethon/archive/v1.tar.gz",
         ]
     )
 finally:
