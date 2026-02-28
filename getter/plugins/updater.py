@@ -298,8 +298,8 @@ Wait for a few seconds, then run `{hl}ping` command."""
         import psutil
 
         proc = psutil.Process(os.getpid())
-        for _ in proc.open_files() + proc.connections():
-            os.close(_.fd)
+        for p in proc.open_files() + proc.connections():
+            os.close(p.fd)
     except BaseException:
         pass
     os.execl(executable, executable, "-m", "getter")

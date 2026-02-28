@@ -2,6 +2,7 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
+import asyncio
 from datetime import datetime
 from html import escape
 from random import choice
@@ -33,6 +34,7 @@ _ON_STOP = (
     "#gbanned_watch",
     "#gmuted_watch",
 )
+_AFK_SEM = asyncio.Semaphore(2)
 
 
 @kasta_cmd(
@@ -93,36 +95,37 @@ async def StopAFK(kst):
 
 
 async def OnAFK(kst):
-    if any(_ in kst.raw_text.lower() for _ in ("afk", "brb")):
-        return
-    if not await is_afk():
-        return
-    user = await kst.get_sender()
-    if getattr(user, "bot", False) or getattr(user, "support", False) or getattr(user, "verified", False):
-        return
-    if kst.is_private and await gvar("_pmguard", use_cache=True) and not await is_allow(user.id, use_cache=True):
-        return
-    afk = await is_afk()
-    if afk:
-        start = datetime.fromtimestamp(afk.start)
-        end = datetime.now().replace(microsecond=0)
-        afk_time = time_formatter((end - start).seconds * 1000)
-        text = "<b><u>I’m on AFK!</u></b>\n"
-        text += f"Last seen {afk_time} ago."
-        reason = f"<pre>{afk.reason}</pre>" if afk.reason else "No reason."
-        text += f"\n<b>Reason:</b> {reason}"
-        chat_id = str(kst.chat_id)
-        if chat_id in afk.last:
-            try:
-                await kst.client.delete_messages(int(chat_id), [afk.last[chat_id]])
-            except BaseException:
-                pass
-        last = await kst.reply(
-            text,
-            link_preview=False,
-            parse_mode="html",
-        )
-        await set_last_afk(chat_id, last.id)
+    async with _AFK_SEM:
+        if any(_ in kst.raw_text.lower() for _ in ("afk", "brb")):
+            return
+        if not await is_afk():
+            return
+        user = await kst.get_sender()
+        if getattr(user, "bot", False) or getattr(user, "support", False) or getattr(user, "verified", False):
+            return
+        if kst.is_private and await gvar("_pmguard", use_cache=True) and not await is_allow(user.id, use_cache=True):
+            return
+        afk = await is_afk()
+        if afk:
+            start = datetime.fromtimestamp(afk.start)
+            end = datetime.now().replace(microsecond=0)
+            afk_time = time_formatter((end - start).seconds * 1000)
+            text = "<b><u>I’m on AFK!</u></b>\n"
+            text += f"Last seen {afk_time} ago."
+            reason = f"<pre>{afk.reason}</pre>" if afk.reason else "No reason."
+            text += f"\n<b>Reason:</b> {reason}"
+            chat_id = str(kst.chat_id)
+            if chat_id in afk.last:
+                try:
+                    await kst.client.delete_messages(int(chat_id), [afk.last[chat_id]])
+                except BaseException:
+                    pass
+            last = await kst.reply(
+                text,
+                link_preview=False,
+                parse_mode="html",
+            )
+            await set_last_afk(chat_id, last.id)
 
 
 async def handle_afk() -> None:
