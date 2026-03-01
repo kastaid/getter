@@ -16,8 +16,6 @@ from typing import Any, NoReturn
 
 from telethon.client.telegramclient import TelegramClient
 from telethon.errors import (
-    AccessTokenExpiredError,
-    AccessTokenInvalidError,
     ApiIdInvalidError,
     AuthKeyDuplicatedError,
     InvalidBufferError,
@@ -87,7 +85,7 @@ class KastaClient(TelegramClient):
         self.dc_id = self.session.dc_id
 
     def __repr__(self):
-        return f"<Kasta.Client:\n self: {self.full_name}\n id: {self.uid}\n bot: {self._bot}\n>"
+        return f"<Kasta.Client:\n self: {self.full_name}\n id: {self.uid}\n>"
 
     @property
     def __dict__(self) -> dict | None:
@@ -100,23 +98,23 @@ class KastaClient(TelegramClient):
         try:
             await asyncio.sleep(random.uniform(3, 6))
             await self.start(**kwargs)
-            self._bot = await self.is_bot()
-            if not self._bot:
-                cfg = await self(fun.help.GetConfigRequest())
-                for opt in cfg.dc_options:
-                    if opt.ip_address == self.session.server_address:
-                        if self.session.dc_id != opt.id:
-                            self.log.warning(f"Fixed DC ID in session from {self.session.dc_id} to {opt.id}")
-                        self.session.set_dc(opt.id, opt.ip_address, opt.port)
-                        self.session.save()
-                        break
+            if await self.is_bot():
+                self.log.critical("Bot account detected. Bots are not supported — use a USER account (userbot).")
+                sys.exit(1)
+
+            cfg = await self(fun.help.GetConfigRequest())
+            for opt in cfg.dc_options:
+                if opt.ip_address == self.session.server_address:
+                    if self.session.dc_id != opt.id:
+                        self.log.warning(f"Fixed DC ID in session from {self.session.dc_id} to {opt.id}")
+                    self.session.set_dc(opt.id, opt.ip_address, opt.port)
+                    self.session.save()
+                    break
+
             await asyncio.sleep(3)
             self.me = await self.get_me()
-            if self.me.bot:
-                me = f"@{self.me.username}"
-            else:
-                self.me.phone = None
-                me = self.full_name
+            self.me.phone = None
+            me = self.full_name
             if self.uid not in DEVS:
                 KASTA_BLACKLIST = await get_blacklisted(
                     url="https://raw.githubusercontent.com/kastaid/resources/main/kastablacklist.py",
@@ -132,11 +130,6 @@ class KastaClient(TelegramClient):
             sys.exit(1)
         except (AuthKeyDuplicatedError, PhoneNumberInvalidError, EOFError):
             self.log.critical("STRING_SESSION expired, please create new! Quitting...")
-            sys.exit(1)
-        except (AccessTokenExpiredError, AccessTokenInvalidError):
-            self.log.critical(
-                "Bot Token expired or invalid. Create new from @Botfather and update BOT_TOKEN in Config Vars!"
-            )
             sys.exit(1)
         except Exception as err:
             self.log.exception(f"[KastaClient] - {err}")
