@@ -3,28 +3,21 @@
 # AGPL-3.0 License
 
 FROM mwader/static-ffmpeg:7.1.1 AS builder_ffmpeg
-
 FROM python:3.12-slim-bookworm
+COPY --from=ghcr.io/astral-sh/uv:0.10.7 /uv /uvx /bin/
 ENV TERM=xterm \
-    VIRTUAL_ENV=/opt/venv \
-    PATH=/opt/venv/bin:/root/.local/bin:$PATH
-ARG UV_VERSION=0.10.7
+    PATH=/opt/venv/bin:$PATH \
+    UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1
 WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        git \
+    && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
-RUN set -eux && \
-    apt-get -qqy update && \
-    apt-get -qqy install --no-install-recommends \
-        curl git ca-certificates && \
-    curl -LsSf https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-installer.sh | sh && \
-    python -m venv $VIRTUAL_ENV && \
-    uv pip install --python $VIRTUAL_ENV/bin/python -r requirements.txt && \
-    apt-get -qqy purge \
-        curl && \
-    apt-get -qqy autoremove && \
-    apt-get clean
-
-COPY --from=builder_ffmpeg /ffmpeg /usr/bin/ffmpeg
-COPY --from=builder_ffmpeg /ffprobe /usr/bin/ffprobe
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv venv /opt/venv && \
+    uv pip install -r requirements.txt
+COPY --from=builder_ffmpeg /ffmpeg /usr/local/bin/ffmpeg
+COPY --from=builder_ffmpeg /ffprobe /usr/local/bin/ffprobe
 COPY . .
-
 CMD ["python", "-m", "getter"]

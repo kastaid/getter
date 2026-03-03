@@ -4,8 +4,9 @@
 
 import asyncio
 import os
+import shutil
+import sys
 from random import choice
-from sys import executable
 from time import monotonic, sleep as tsleep
 
 import aiofiles
@@ -194,7 +195,6 @@ async def heroku_logs(kst) -> None:
 
 
 def restart_app() -> None:
-    os.system("clear")
     try:
         import psutil
 
@@ -204,10 +204,13 @@ def restart_app() -> None:
     except BaseException:
         pass
     reqs = Root / "requirements.txt"
-    os.system(
-        f"{executable} -m pip install --prefer-binary --disable-pip-version-check --default-timeout=100 -r {reqs}"
-    )
-    os.execl(executable, executable, "-m", "getter")
+    if shutil.which("uv"):
+        os.system(f"uv pip install -r {reqs}")
+    else:
+        os.system(
+            f"{sys.executable} -m pip install --prefer-binary --disable-pip-version-check --default-timeout=100 -r {reqs}"
+        )
+    os.execl(sys.executable, sys.executable, "-m", "getter")
 
 
 plugins_help["bot"] = {
