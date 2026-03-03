@@ -75,14 +75,14 @@ Deploy using Docker Compose for easy containerized deployment.
 #### Full version
 ```sh
 git pull && \
-  docker compose -f full-compose.yml up --detach --build --force-recreate && \
+  docker compose -f full-compose.yml up -d --build && \
   docker compose -f full-compose.yml logs -f
 ```
 
 #### Lite version
 ```sh
 git pull && \
-  docker compose -f lite-compose.yml up --detach --build --force-recreate && \
+  docker compose -f lite-compose.yml up -d --build && \
   docker compose -f lite-compose.yml logs -f
 ```
 
