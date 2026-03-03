@@ -4,9 +4,10 @@
 
 import asyncio
 import os
+import shutil
+import sys
 from datetime import UTC, datetime
 from random import choice
-from sys import executable
 
 import aiofiles
 from git import Repo
@@ -227,9 +228,12 @@ async def ignores() -> None:
 
 async def update_packages() -> None:
     reqs = Root / "requirements.txt"
-    await Runner(
-        f"{executable} -m pip install --prefer-binary --disable-pip-version-check --default-timeout=100 -r {reqs}"
-    )
+    if shutil.which("uv"):
+        await Runner(f"uv pip install -r {reqs}")
+    else:
+        await Runner(
+            f"{sys.executable} -m pip install --prefer-binary --disable-pip-version-check --default-timeout=100 -r {reqs}"
+        )
 
 
 async def force_pull() -> None:
@@ -302,7 +306,7 @@ Wait for a few seconds, then run `{hl}ping` command."""
             os.close(p.fd)
     except BaseException:
         pass
-    os.execl(executable, executable, "-m", "getter")
+    os.execl(sys.executable, sys.executable, "-m", "getter")
 
 
 async def Pushing(kst, state, repo) -> None:
