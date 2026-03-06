@@ -47,6 +47,9 @@ from .helper import plugins_help
 from .property import do_not_remove_credit, get_blacklisted
 from .utils import time_formatter
 
+PLUGIN_DIR = Root / "getter/plugins"
+CUSTOM_PLUGIN_DIR = Root / "getter/plugins/custom"
+
 
 class ReverseList(UserList):
     def __iter__(self):
@@ -172,7 +175,7 @@ class KastaClient(TelegramClient):
         *args,
         **kwargs,
     ) -> None:
-        if func in [i[0] for i in self.list_event_handlers()]:
+        if any(func is i[0] for i in self.list_event_handlers()):
             return
         self.add_event_handler(func, *args, **kwargs)
 
@@ -200,10 +203,13 @@ class KastaClient(TelegramClient):
         plugin: str,
     ) -> bool:
         try:
-            path = Root / ("getter/plugins/custom/" + plugin)
+            path = CUSTOM_PLUGIN_DIR / plugin
             plug = path.stem
             name = f"getter.plugins.custom.{plug}"
+            sys.modules.pop(name, None)
             spec = importlib.util.spec_from_file_location(name, path)
+            if not spec or not spec.loader:
+                raise ImportError(f"Cannot load plugin spec: {plugin}")
             mod = importlib.util.module_from_spec(spec)
             mod.Var = Var
             mod.tz = TZ
@@ -213,10 +219,8 @@ class KastaClient(TelegramClient):
             mod.plugins_help = plugins_help
             spec.loader.exec_module(mod)
             self._plugins[plug] = mod
-            self.log.success(f"Successfully loaded custom plugin {plug}!")
             return True
         except Exception as err:
-            self.log.warning(f"Failed to load custom plugin {plug}!")
             self.log.exception(err)
             return False
 
@@ -224,23 +228,23 @@ class KastaClient(TelegramClient):
         self,
         plugin: str,
     ) -> None:
-        name = self._plugins[plugin].__name__
-        for x in reversed(range(len(self._event_builders))):
-            _, cb = self._event_builders[x]
-            if cb.__module__ == name:
-                del self._event_builders[x]
+        mod = self._plugins.get(plugin)
+        if not mod:
+            return
+        name = mod.__name__
+        self._event_builders = ReverseList([eb for eb in self._event_builders if eb[1].__module__ != name])
+        sys.modules.pop(name, None)
         del self._plugins[plugin]
-        self.log.success(f"Removed custom plugin {plugin}!")
 
     @property
     def all_plugins(self) -> list[dict[str, str]]:
         return [
             {
-                "path": ".".join(str(i.resolve()).replace(".py", "").split("/")[-2:]),
-                "name": i.stem,
+                "path": ".".join(p.with_suffix("").parts[-2:]),
+                "name": p.stem,
             }
-            for i in (Root / "getter/plugins/").rglob("*.py")
-            if not str(i).endswith(("__.py", "_draft.py"))
+            for p in PLUGIN_DIR.rglob("*.py")
+            if not p.name.endswith(("__.py", "_draft.py"))
         ]
 
     @property

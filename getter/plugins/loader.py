@@ -3,6 +3,7 @@
 # AGPL-3.0 License
 
 import asyncio
+from pathlib import Path
 from random import choice
 
 import aiofiles.os
@@ -31,30 +32,37 @@ async def _(kst):
         await asyncio.sleep(choice((2, 4)))
     ga = kst.client
     reply = await kst.get_reply_message()
-    if not reply or (reply and not reply.media):
-        return await kst.eor("`Please reply a message contains file with plugin_name.py`")
+    if not reply or not reply.media:
+        return await kst.eor("`Reply to a .py plugin file.`")
     mt = get_media_type(reply.media)
     yy = await kst.eor("`Processing...`")
     if mt == "text" and get_extension(reply.media) == ".py":
-        plugin_file = "".join([_.file_name for _ in reply.media.document.attributes])
-        plugin = plugin_file.replace(".py", "")
-        if await aiofiles.os.path.isfile(CUSTOM_DIR / plugin_file):
-            if plugin in ga._plugins:
-                ga.unload_plugin(plugin)
+        plugin_file = "".join(_.file_name for _ in reply.media.document.attributes)
+        plugin = Path(plugin_file).stem
+        plugin_path = CUSTOM_DIR / plugin_file
+        if plugin in ga._plugins:
             try:
-                await aiofiles.os.remove(CUSTOM_DIR / plugin_file)
-            except BaseException:
-                pass
+                ga.unload_plugin(plugin)
+                ga.log.info(f"Unloaded plugin {plugin}.")
+            except Exception as err:
+                ga.log.warning(f"Unload failed {plugin}: {err}")
+                return await yy.eor(f"`Failed to unload plugin {plugin}.`")
+        if await aiofiles.os.path.isfile(plugin_path):
+            try:
+                await aiofiles.os.remove(plugin_path)
+            except Exception as err:
+                ga.log.warning(f"Remove failed {plugin}: {err}")
         file = await reply.download_media(file=str(CUSTOM_DIR))
-        if file:
-            if ga.load_plugin(plugin_file):
-                await yy.eor(f"`The plugin {plugin} is loaded.`")
-            else:
-                await yy.eor(f"`The plugin {plugin} is not loaded.`")
+        if not file:
+            return await yy.eor(f"`Failed to download plugin {plugin}.`")
+        if ga.load_plugin(plugin_file):
+            ga.log.success(f"Loaded plugin {plugin}.")
+            await yy.eor(f"`Loaded plugin {plugin}.`")
         else:
-            await yy.eor(f"`Failed to download the plugin {plugin}.`")
+            ga.log.warning(f"Load failed {plugin}.")
+            await yy.eor(f"`Failed to load plugin {plugin}.`")
     else:
-        await yy.eor("`Is not valid plugin.`")
+        await yy.eor("`Invalid plugin file.`")
 
 
 @kasta_cmd(
@@ -70,26 +78,28 @@ async def _(kst):
     ga = kst.client
     plugin = await ga.get_text(kst, plain=True)
     if not plugin:
-        return await kst.eor("`Please input plugin name.`")
-    plugin = plugin.replace(".py", "")
+        return await kst.eor("`Input plugin name.`")
+    plugin = Path(plugin).stem
     yy = await kst.eor("`Processing...`")
-    if await aiofiles.os.path.isfile(CUSTOM_DIR / f"{plugin}.py") and plugin != "__init__.py":
+    custom_path = CUSTOM_DIR / f"{plugin}.py"
+    builtin_path = PLUGINS_DIR / f"{plugin}.py"
+    if await aiofiles.os.path.isfile(custom_path) and plugin != "__init__":
         try:
             if plugin in ga._plugins:
                 ga.unload_plugin(plugin)
-            await aiofiles.os.remove(CUSTOM_DIR / f"{plugin}.py")
-            ga.log.success(f"Successfully to remove custom plugin {plugin}")
-            await yy.eor(f"`The plugin {plugin} removed.`")
-        except BaseException:
-            ga.log.error(f"Failed to remove custom plugin {plugin}")
-            await yy.eor(f"`The plugin {plugin} can't remove, please try again.`")
-    elif await aiofiles.os.path.isfile(PLUGINS_DIR / f"{plugin}.py"):
-        await yy.eor("`It is forbidden to remove built-in plugins, it will disrupt the updater!`")
+            await aiofiles.os.remove(custom_path)
+            ga.log.success(f"Unloaded plugin {plugin}.")
+            await yy.eor(f"`Unloaded plugin {plugin}.`")
+        except Exception as err:
+            ga.log.warning(f"Unload failed {plugin}: {err}")
+            await yy.eor(f"`Failed to unload plugin {plugin}.`")
+    elif await aiofiles.os.path.isfile(builtin_path):
+        await yy.eor("`Built-in plugins cannot be unloaded.`")
     else:
         await yy.eor(f"`Plugin {plugin} not found.`")
 
 
 plugins_help["loader"] = {
-    "{i}load [reply]": "Download/redownload and load the plugin.",
-    "{i}unload [plugin_name]": "Delete plugin.",
+    "{i}load [reply]": "Download/redownload and load a plugin.",
+    "{i}unload [plugin_name]": "Unload and remove a plugin.",
 }
