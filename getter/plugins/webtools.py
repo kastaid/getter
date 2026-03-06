@@ -59,7 +59,7 @@ async def _(kst):
 )
 async def _(kst):
     text = await kst.client.get_text(kst, group=2)
-    if not text or not (is_url(text) is True):
+    if not text or is_url(text) is not True:
         return await kst.eor("`Provide a valid link!`", time=5)
     yy = await kst.eor("`Processing...`")
     if kst.pattern_match.group(1).strip() == "un":
@@ -95,7 +95,7 @@ async def _(kst):
 )
 async def _(kst):
     ipaddr = await kst.client.get_text(kst)
-    if not ipaddr or not (ipv4(ipaddr) is True):
+    if not ipaddr or ipv4(ipaddr) is not True:
         return await kst.eor("`Provide a valid IP address!`", time=5)
     yy = await kst.eor("`Processing...`")
     url = f"http://ip-api.com/json/{ipaddr}?fields=status,message,continent,country,countryCode,regionName,city,zip,lat,lon,timezone,currency,isp,mobile,query"
@@ -195,10 +195,10 @@ async def _(kst):
         return await kst.eor("`Provide a valid link!`", time=5)
     toget = link
     check_link = is_url(toget)
-    if not (check_link is True):
+    if check_link is not True:
         toget = f"http://{link}"
         check_link = is_url(toget)
-    if not (check_link is True):
+    if check_link is not True:
         return await kst.eod("`Input is not supported link!`")
     yy = await kst.eor("`Processing...`")
     hostname = ".".join(urllib.parse.urlparse(toget).netloc.split(".")[-2:])
@@ -218,10 +218,10 @@ async def _(kst):
         return await kst.eor("`Provide a valid link or IP address!`", time=5)
     toget = link
     check_link = is_url(toget)
-    if not (check_link is True):
+    if check_link is not True:
         toget = f"http://{link}"
         check_link = is_url(toget)
-    if not (check_link is True):
+    if check_link is not True:
         return await kst.eod("`Input is not supported link!`")
     yy = await kst.eor("`Processing...`")
     hostname = link if ipv4(link) is True else ".".join(urllib.parse.urlparse(toget).netloc.split(".")[-2:])
@@ -241,10 +241,10 @@ async def _(kst):
         return await kst.eor("`Provide a valid link!`", time=5)
     toget = link
     check_link = is_url(toget)
-    if not (check_link is True):
+    if check_link is not True:
         toget = f"http://{link}"
         check_link = is_url(toget)
-    if not (check_link is True):
+    if check_link is not True:
         return await kst.eod("`Input is not supported link!`")
     yy = await kst.eor("`Processing...`")
     url = f"https://da.gd/headers?url={toget}"

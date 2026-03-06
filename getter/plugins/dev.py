@@ -2,6 +2,7 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
+import asyncio
 import sys
 from io import BytesIO, StringIO
 from json import dumps
@@ -67,7 +68,7 @@ async def _(kst):
         cat += "/*"
     yy = await kst.eor("`Loading...`")
     try:
-        paths = sorted(Path(".").glob(cat))
+        paths = await asyncio.to_thread(lambda: sorted(Path().glob(cat)))
     except BaseException:
         paths = None
     if not paths:
@@ -254,7 +255,7 @@ async def _(kst):
     pattern="crash$",
     dev=True,
 )
-async def _(kst):  # noqa: RUF029
+async def _(__):
     raise ValueError("not an error, just for testing (>_")
 
 

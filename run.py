@@ -1,13 +1,12 @@
-# getter < https://t.me/kastaid >
 # Copyright (C) 2022-present kastaid
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
 import argparse
 import shlex
+import subprocess
 import sys
 from pathlib import Path
-from subprocess import run
 
 from version import __version__
 
@@ -24,12 +23,13 @@ app = f"{python} -m getter"
 app_watch = f"{python} -m scripts.autoreload {app}"
 ruff_check = "ruff check ."
 ruff_format = "ruff format ."
+ruff_fix = "ruff check --fix --unsafe-fixes ."
 prettyjson = f"{nocache} -m scripts.prettyjson"
 
 
 def run_cmd(cmd: str) -> None:
     try:
-        proc = run(shlex.split(cmd), shell=False)
+        proc = subprocess.run(shlex.split(cmd), shell=False, check=False)
         if proc.returncode != 0:
             print(f"Exit code {proc.returncode}")
             sys.exit(1)
@@ -38,10 +38,10 @@ def run_cmd(cmd: str) -> None:
 
 
 def clean() -> None:
-    for _ in Path(".").rglob("*.py[co]"):
-        _.unlink(missing_ok=True)
-    for _ in Path(".").rglob("__pycache__"):
-        _.rmdir()
+    for i in Path().rglob("*.py[co]"):
+        i.unlink(missing_ok=True)
+    for i in Path().rglob("__pycache__"):
+        i.rmdir()
 
 
 def lint() -> None:
@@ -51,6 +51,11 @@ def lint() -> None:
     run_cmd(ruff_check)
     print(f"{CYAN}>> {ruff_format}{RST}")
     run_cmd(ruff_format)
+
+
+def fix() -> None:
+    print(f"{CYAN}>> {ruff_fix}{RST}")
+    run_cmd(ruff_fix)
 
 
 class CapitalisedHelpFormatter(argparse.HelpFormatter):
@@ -90,6 +95,12 @@ parser.add_argument(
     "-l",
     "--lint",
     help="run linting and format code",
+    action="store_true",
+)
+parser.add_argument(
+    "-f",
+    "--fix",
+    help="run fixed code",
     action="store_true",
 )
 parser.add_argument(
@@ -136,6 +147,10 @@ def main() -> None:
         print(f"{BOLD}{YELLOW}Run linting and format code...{RST}")
         clean()
         lint()
+    elif args.fix:
+        print(f"{BOLD}{YELLOW}Run fixed code...{RST}")
+        clean()
+        fix()
     elif args.clean:
         clean()
     else:

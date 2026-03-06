@@ -78,7 +78,7 @@ class KastaClient(TelegramClient):
         kwargs["loop"] = LOOP
         kwargs["base_logger"] = TelethonLogger
         kwargs["entity_cache_limit"] = 1000
-        super().__init__(session, **kwargs)
+        super().__init__(session, *args, **kwargs)
         self.__class__.__module__ = "telethon.client.telegramclient"
         self._event_builders = ReverseList()
         self.run_in_loop(self.start_client(bot_token=bot_token))

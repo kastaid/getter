@@ -455,10 +455,10 @@ async def _(kst):
         await kst.try_delete()
     if is_unarchive:
         has_unarchive = await ga.unarchive(chat_id)
-        text = "UnArchived!" if not has_unarchive is None else "Cannot UnArchive!"
+        text = "UnArchived!" if has_unarchive is not None else "Cannot UnArchive!"
     else:
         has_archive = await ga.archive(chat_id)
-        text = "Archived!" if not has_archive is None else "Cannot Archive!"
+        text = "Archived!" if has_archive is not None else "Cannot Archive!"
     await kst.eod(f"`{chat_id} {text}`")
 
 

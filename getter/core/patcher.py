@@ -17,9 +17,8 @@ def patch(target: Any):
             old = getattr(target, name, None)
             if old is not None:
                 setattr(target, f"old_{name}", old)
-            if getattr(func, "is_property", False):
-                func = property(func)
-            setattr(target, name, func)
+            patched = property(func) if getattr(func, "is_property", False) else func
+            setattr(target, name, patched)
         return container
 
     return wrapper

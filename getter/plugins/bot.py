@@ -164,7 +164,7 @@ async def _(kst):
     timer = int(sec) if sec.replace(".", "", 1).isdecimal() else 3
     timer = 3 if timer > 30 else timer
     yy = await kst.eor(f"`sleep in {timer} seconds...`")
-    tsleep(timer)
+    tsleep(timer)  # noqa: ASYNC251
     await yy.eod(f"`wake-up from {timer} seconds`")
 
 

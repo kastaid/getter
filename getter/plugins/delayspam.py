@@ -59,7 +59,7 @@ async def _(kst):
         )
     )
     DS_TASKS[ds][chat_id] = task
-    task.add_done_callback(lambda t, k=chat_id: get_task_store(ds).pop(k, None))
+    task.add_done_callback(lambda _, k=chat_id: get_task_store(ds).pop(k, None))
 
 
 @kasta_cmd(

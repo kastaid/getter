@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 from functools import partial
+from importlib import import_module
 from io import BytesIO
 from re import sub
 from typing import Any
@@ -36,20 +37,18 @@ def import_lib(
     lib_name: str,
     pkg_name: str | None = None,
 ) -> Any:
-    from importlib import import_module
-
     if pkg_name is None:
         pkg_name = lib_name
     lib_name = sub(r"(=|>|<|~).*", "", lib_name)
     try:
         return import_module(lib_name)
-    except ImportError:
+    except ImportError as err:
         if shutil.which("uv"):
-            done = subprocess.run(["uv", "pip", "install", "-U", pkg_name])
+            done = subprocess.run(["uv", "pip", "install", "-U", pkg_name], check=False)
         else:
-            done = subprocess.run(["python3", "-m", "pip", "install", "--prefer-binary", "-U", pkg_name])
+            done = subprocess.run(["python3", "-m", "pip", "install", "--prefer-binary", "-U", pkg_name], check=False)
         if done.returncode != 0:
-            raise AssertionError(f"Failed to install library {pkg_name} (pip exited with code {done.returncode})")
+            raise AssertionError(f"Failed to install {pkg_name} (code {done.returncode})") from err
         return import_module(lib_name)
 
 
