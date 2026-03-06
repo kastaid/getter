@@ -171,7 +171,7 @@ def kasta_cmd(
                 kst.client.log.critical("STRING_SESSION expired, please create new! Quitting...")
                 sys.exit(0)
             except events.StopPropagation:
-                raise events.StopPropagation
+                raise
             except Exception as err:
                 kst.client.log.exception(f"[KASTA_CMD] - {err}")
                 date = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
@@ -279,7 +279,7 @@ def kasta_cmd(
                     from_users=DEVS if for_dev or dev else (jdata.CACHE_DATA.get("sudo") if sudo else users),
                     func=lambda e: (
                         not e.via_bot_id and func(e) and not (e.is_channel and e.chat.broadcast)
-                        if not (func is None)
+                        if func is not None
                         else not e.via_bot_id and not (e.is_channel and e.chat.broadcast)
                     ),
                 ),
@@ -294,7 +294,7 @@ def kasta_cmd(
                 outgoing=True if not superuser else None,
                 forwards=None if for_dev or dev else False,
                 from_users=DEVS if for_dev or dev else (jdata.CACHE_DATA.get("sudo") if sudo else users),
-                func=lambda e: not e.via_bot_id and func(e) if not (func is None) else not e.via_bot_id,
+                func=lambda e: not e.via_bot_id and func(e) if func is not None else not e.via_bot_id,
             ),
         )
         if (pattern and for_dev) or dev or sudo:

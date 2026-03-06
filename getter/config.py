@@ -31,11 +31,10 @@ class Var:
     API_ID: int = int(getenv("API_ID", "0").strip())
     API_HASH: str = getenv("API_HASH", "").strip()
     STRING_SESSION: str = getenv("STRING_SESSION", "").strip()
-    DATABASE_URL: str = (
-        lambda c: (
-            c.replace(c.split("://")[0], "postgresql+asyncpg") if c.startswith(("postgres:", "postgresql:")) else c
-        )
-    )(getenv("DATABASE_URL", "sqlite+aiosqlite:///./getter.db").strip())
+    _db = getenv("DATABASE_URL", "sqlite+aiosqlite:///./getter.db").strip()
+    DATABASE_URL = (
+        _db.replace(_db.split("://")[0], "postgresql+asyncpg") if _db.startswith(("postgres:", "postgresql:")) else _db
+    )
     BOTLOGS: int = int(getenv("BOTLOGS", "0").strip())
     HANDLER: str = getenv("HANDLER", ".").strip()
     NO_HANDLER: bool = tobool(getenv("NO_HANDLER", "false").strip())

@@ -1,47 +1,59 @@
+# https://docs.astral.sh/ruff/
 [tool.ruff]
-# https://docs.astral.sh/ruff
 show-fixes = true
 line-length = 120
 indent-width = 4
 target-version = "py312"
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
+
 [tool.ruff.lint]
-preview = true
-select = [
-    "W", # warning
-    "F", # pyflakes
+preview = false
+extend-select = [
+    "W", # pycodestyle warnings
     "I", # isort
     "A", # flake8-builtins
     "SIM", # flake8-simplify
     "C4", # flake8-comprehensions
     "B", # flake8-bugbear
     "PIE", # flake8-pie
+    "PTH", # flake8-use-pathlib
+    "PYI", # flake8-pyi
     "RET", # flake8-return
     "TID", # flake8-tidy-imports
-    "CPY", # flake8-copyright
+    "ASYNC", # flake8-async
+    "ARG", # flake8-unused-arguments
+    "TC", # flake8-type-checking
     "UP", # pyupgrade
     "FURB", # refurb
     "PERF", # perflint
     "RUF", # ruff-specific rules
-    "PLR6201", # Pylint: literal-membership
-    "PLC1901", # Pylint: compare-to-empty-string
+    "PLC", # Pylint convention
+    "PLW", # Pylint warnings
 ]
 # https://docs.astral.sh/ruff/rules/
-ignore=[
-  "B904",
-  "RET502",
-  "RET503",
-  "RUF001",
-  "RUF017",
-  "FURB118",
-  "RUF052",
-  "RUF067",
-  "SIM105",
+ignore = [
+    "RET502",
+    "RET503",
+    "RUF001",
+    "RUF017",
+    "RUF052",
+    "RUF067",
+    "FURB118",
+    "SIM105",
+    "PLC0415",
 ]
+
 [tool.ruff.lint.isort]
 combine-as-imports = true
 known-first-party = ["getter"]
-section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]

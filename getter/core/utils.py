@@ -61,7 +61,7 @@ def strip_ascii(text: str) -> str:
     return text.encode("ascii", "ignore").decode("ascii")
 
 
-def humanbytes(size: int | float) -> str:
+def humanbytes(size: float) -> str:
     if not size:
         return "0 B"
     power = 1024
@@ -73,7 +73,7 @@ def humanbytes(size: int | float) -> str:
     return f"{size:.2f}{power_dict[pos]}B"
 
 
-def time_formatter(ms: int | float) -> str:
+def time_formatter(ms: float) -> str:
     minutes, seconds = divmod(int(ms / 1000), 60)
     hours, minutes = divmod(minutes, 60)
     days, hours = divmod(hours, 24)

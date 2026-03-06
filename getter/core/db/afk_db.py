@@ -29,7 +29,7 @@ class GoAFK(Model):
 async def is_afk() -> GoAFK | None:
     async with Session() as s:
         try:
-            data = (await s.execute(select(GoAFK).filter(GoAFK.state == True))).scalar_one_or_none()
+            data = (await s.execute(select(GoAFK).filter(GoAFK.state))).scalar_one_or_none()
             if data:
                 await s.refresh(data)
                 return data
@@ -58,7 +58,7 @@ async def del_afk():
     if not await is_afk():
         return
     async with Session(True) as s:
-        await s.execute(delete(GoAFK).where(GoAFK.state == True))
+        await s.execute(delete(GoAFK).where(GoAFK.state))
 
 
 async def set_last_afk(

@@ -19,8 +19,6 @@ from sqlalchemy.sql.expression import text
 from getter.config import Var
 from getter.logger import LOG
 
-engine = None
-
 
 class Model(DeclarativeBase):
     """
@@ -51,9 +49,8 @@ class Model(DeclarativeBase):
 
 
 async def db_connect() -> AsyncEngine:
-    global engine
-    if engine is not None:
-        return engine
+    if hasattr(db_connect, "engine"):
+        return db_connect.engine
     db_url = (
         Var.DATABASE_URL.replace("sqlite:", "sqlite+aiosqlite:")
         if Var.DATABASE_URL.startswith("sqlite:")
@@ -75,6 +72,7 @@ async def db_connect() -> AsyncEngine:
         LOG.exception(f"Unable to connect the database : {err}")
         await engine.dispose()
         sys.exit(1)
+    db_connect.engine = engine
     return engine
 
 
@@ -88,7 +86,7 @@ async def db_size() -> int:
     url = str(db.url)
     async with db.connect() as conn:
         if "postgresql" in url:
-            d = url.split("/")[-1].split("?")[0]
+            d = url.rsplit("/", maxsplit=1)[-1].split("?", maxsplit=1)[0]
             q = f"SELECT pg_database_size({d!r})"
         else:
             q = "SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()"

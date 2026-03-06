@@ -2,13 +2,12 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
+from json import loads
+from pathlib import Path
+
 
 def get_version() -> str:
-    import json
-
-    with open("manifest.json") as f:
-        data = json.load(f)
-    return data.get("version", "unknown")
+    return loads(Path("manifest.json").read_text()).get("version", "unknown")
 
 
 __version__ = get_version()

@@ -374,8 +374,8 @@ async def _(kst):
 <pre>{user_bio}</pre>"""
     else:
         is_rose_fban = await get_rose_fban(kst, user_id)
-        is_spamwatch_banned = await get_spamwatch_banned(kst, user_id)
-        is_cas_banned = await get_cas_banned(kst, user_id)
+        is_spamwatch_banned = await get_spamwatch_banned(user_id)
+        is_cas_banned = await get_cas_banned(user_id)
         is_gbanned = bool(await is_gban(user_id))
         is_gmuted = bool(await is_gmute(user_id))
         is_sudo = user_id in await jdata.sudo_users()
@@ -763,7 +763,7 @@ async def get_rose_fban(kst, user_id: int) -> bool:
     return False
 
 
-async def get_spamwatch_banned(kst, user_id: int) -> bool:
+async def get_spamwatch_banned(user_id: int) -> bool:
     if user_id in _SPAMWATCH_CACHE:
         return _SPAMWATCH_CACHE.get(user_id)
     url = f"https://notapi.vercel.app/api/spamwatch?id={user_id}"
@@ -775,7 +775,7 @@ async def get_spamwatch_banned(kst, user_id: int) -> bool:
     return bool(res.get("id"))
 
 
-async def get_cas_banned(kst, user_id: int) -> bool:
+async def get_cas_banned(user_id: int) -> bool:
     if user_id in _CAS_CACHE:
         return _CAS_CACHE.get(user_id)
     url = f"https://api.cas.chat/check?user_id={user_id}"

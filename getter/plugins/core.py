@@ -3,13 +3,12 @@
 # AGPL-3.0 License
 
 import asyncio
-import csv
 from datetime import datetime
 from random import choice
 from time import monotonic
 
 import aiofiles
-from aiocsv import AsyncDictReader, AsyncWriter
+from aiocsv import AsyncDictReader, AsyncReader, AsyncWriter
 from telethon import events
 from telethon.errors import (
     ChannelPrivateError,
@@ -324,8 +323,11 @@ async def _(kst):
         await yy.eor("`Scraping Members...`")
         members_exist = bool(is_append and (Root / members_file).exists())
         if members_exist:
-            with open(members_file) as f:
-                rows = [int(x[0]) for x in csv.reader(f) if str(x[0]).isdecimal()]
+            rows = set()
+            async with aiofiles.open(members_file) as f:
+                async for row in AsyncReader(f):
+                    if row and str(row[0]).isdecimal():
+                        rows.add(int(row[0]))
             members = len(rows)
             async with aiofiles.open(members_file, mode="a") as f:
                 writer = AsyncWriter(f, delimiter=",")

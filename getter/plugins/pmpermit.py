@@ -645,7 +645,7 @@ async def _(kst):
     await ga.mute_chat(user.id)
     await asyncio.sleep(0.4)
     is_archive = await ga.archive(user.id)
-    text = "`Archived!`" if not is_archive is None else "`Cannot Archive!`"
+    text = "`Archived!`" if is_archive is not None else "`Cannot Archive!`"
     towarn, PMWARN = str(user.id), await jdata.pmwarns()
     if towarn in PMWARN:
         del PMWARN[towarn]
@@ -677,7 +677,7 @@ async def _(kst):
     if user.id == ga.uid:
         return await yy.eor("`Cannot unarchive to myself.`", time=3)
     is_unarchive = await ga.unarchive(user.id)
-    text = "`UnArchived!`" if not is_unarchive is None else "`Cannot UnArchive!`"
+    text = "`UnArchived!`" if is_unarchive is not None else "`Cannot UnArchive!`"
     if kst.is_dev or kst.is_sudo:
         return await yy.eor(text)
     await yy.eod(text)
