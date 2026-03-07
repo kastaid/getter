@@ -39,7 +39,7 @@ from getter.config import (
     Var,
     hl,
 )
-from getter.logger import LOG, TelethonLogger
+from getter.logger import LOG
 
 from .db import sgvar
 from .functions import display_name
@@ -79,7 +79,6 @@ class KastaClient(TelegramClient):
         kwargs["system_version"] = " ".join((version(), machine()))
         kwargs["app_version"] = __version__
         kwargs["loop"] = LOOP
-        kwargs["base_logger"] = TelethonLogger
         kwargs["entity_cache_limit"] = 1000
         super().__init__(session, *args, **kwargs)
         self.__class__.__module__ = "telethon.client.telegramclient"

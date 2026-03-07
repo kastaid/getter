@@ -227,7 +227,7 @@ async def ignores() -> None:
 
 
 async def update_packages() -> None:
-    reqs = Root / "requirements.txt"
+    reqs = str(Root / "requirements.txt")
     if shutil.which("uv"):
         await Runner(f"uv pip install -r {reqs}")
     else:
