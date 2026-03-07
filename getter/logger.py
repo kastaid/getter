@@ -4,22 +4,42 @@
 
 import logging
 import sys
-from datetime import date
+from datetime import UTC, datetime
 
 from loguru import logger as LOG
 
-LOG.remove(0)
+LOG.remove()
 LOG.add(
-    "logs/getter-{}.log".format(date.today().strftime("%Y-%m-%d")),
-    format="{time:YY/MM/DD HH:mm:ss} | {level: <8} | {name: ^15} | {function: ^15} | {line: >3} : {message}",
-    rotation="1 MB",
+    f"logs/getter-{datetime.now(UTC):%Y-%m-%d}.log",
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level:<8} | {name}:{function}:{line} | {message}",
+    backtrace=False,
+    diagnose=False,
     enqueue=True,
+    catch=True,
+    rotation="3 MB",
+    retention="7 days",
+    delay=True,
+)
+LOG.add(
+    sys.stdout,
+    level="INFO",
+    format="{time:MM-DD HH:mm:ss} | {level:<8} | {message}",
+    filter=lambda r: r["level"].name != "ERROR",
+    colorize=False,
+    backtrace=False,
+    diagnose=False,
+    enqueue=True,
+    catch=True,
 )
 LOG.add(
     sys.stderr,
-    format="{time:YY/MM/DD HH:mm:ss} | {level} | {name}:{function}:{line} | {message}",
-    level="INFO",
+    level="ERROR",
+    format="{time:MM-DD HH:mm:ss} | {level:<8} | {name}:{function}:{line} | {message}",
     colorize=False,
+    backtrace=False,
+    diagnose=False,
+    enqueue=True,
+    catch=True,
 )
 
 
@@ -29,7 +49,8 @@ class InterceptHandler(logging.Handler):
             level = LOG.level(record.levelname).name
         except ValueError:
             level = record.levelno
-        frame, depth = sys._getframe(6), 6
+        frame = sys._getframe(2)
+        depth = 2
         while frame and frame.f_code.co_filename == logging.__file__:
             frame = frame.f_back
             depth += 1
@@ -40,8 +61,15 @@ class InterceptHandler(logging.Handler):
         ).log(level, record.getMessage())
 
 
-logging.basicConfig(handlers=[InterceptHandler()], level=logging.INFO)
+logging.basicConfig(
+    handlers=[InterceptHandler()],
+    level=logging.INFO,
+    force=True,
+)
 logging.disable(logging.DEBUG)
-logging.getLogger("asyncio").setLevel(logging.ERROR)
-TelethonLogger = logging.getLogger("telethon")
-TelethonLogger.setLevel(logging.ERROR)
+for name in (
+    "asyncio",
+    "telethon",
+    "telethon.network.mtprotosender",
+):
+    logging.getLogger(name).setLevel(logging.ERROR)
