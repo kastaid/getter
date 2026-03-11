@@ -49,23 +49,23 @@ Permanently update as heroku.
 Force temporarily update as locally.
 """
 test_text = """
-├  <b>User:</b> <code>{}</code>
-├  <b>ID:</b> <code>{}</code>
-├  <b>Getter Version:</b> <code>{}</code>
-├  <b>Python Version:</b> <code>{}</code>
-├  <b>Telethon Version:</b> <code>{}</code>
-├  <b>Telegram Layer:</b> <code>{}</code>
-├  <b>Handler:</b> <code>{}</code>
-├  <b>Sudo:</b> <code>{}</code>
-├  <b>PM-Guard:</b> <code>{}</code>
-├  <b>PM-Logs:</b> <code>{}</code>
-├  <b>PM-Block:</b> <code>{}</code>
-├  <b>Anti-PM:</b> <code>{}</code>
-├  <b>Heroku App:</b> <code>{}</code>
-├  <b>Heroku Stack:</b> <code>{}</code>
-├  <b>Uptime:</b> <code>{}</code>
-├  <b>UTC Now:</b> <code>{}</code>
-└  <b>Local Now:</b> <code>{}</code>
+├  <b>User</b>: <code>{}</code>
+├  <b>ID</b>: <code>{}</code>
+├  <b>Getter Version</b>: <code>{}</code>
+├  <b>Python Version</b>: <code>{}</code>
+├  <b>Telethon Version</b>: <code>{}</code>
+├  <b>Telegram Layer</b>: <code>{}</code>
+├  <b>Handler</b>: <code>{}</code>
+├  <b>Sudo</b>: <code>{}</code>
+├  <b>PM-Guard</b>: <code>{}</code>
+├  <b>PM-Logs</b>: <code>{}</code>
+├  <b>PM-Block</b>: <code>{}</code>
+├  <b>Anti-PM</b>: <code>{}</code>
+├  <b>Heroku App</b>: <code>{}</code>
+├  <b>Heroku Stack</b>: <code>{}</code>
+├  <b>Uptime</b>: <code>{}</code>
+├  <b>UTC Now</b>: <code>{}</code>
+└  <b>Local Now</b>: <code>{}</code>
 """
 
 
@@ -256,7 +256,7 @@ def verify(repo, diff) -> bool:
 def generate_changelog(repo, diff) -> str:
     chlog = ""
     rep = UPSTREAM_REPO.replace(".git", "")
-    ch = rf"\\<b>#Getter</b>// <b>v{__version__} New UPDATE available for <a href={rep}/tree/{UPSTREAM_BRANCH}>[{UPSTREAM_BRANCH}]</a>:</b>"
+    ch = rf"\\<b>#Getter</b>// <b>v{__version__} New UPDATE available for <a href={rep}/tree/{UPSTREAM_BRANCH}>[{UPSTREAM_BRANCH}]</a></b>:"
     date = "%Y-%m-%d %H:%M:%S"
     for _ in repo.iter_commits(diff):
         chlog += f"\n\n<b>#{_.count()}</b> [<code>{_.committed_datetime.strftime(date)}</code>]\n<code>{_.hexsha}</code>\n<b><a href={rep.rstrip('/')}/commit/{_}>[{_.summary}]</a></b> ~ <code>{_.author}</code>"
@@ -322,7 +322,7 @@ async def Pushing(kst, state, repo) -> None:
             msg = "HEROKU_API invalid or expired... Please re-check."
         else:
             msg = err
-        up = rf"""\\**#Getter**// **Heroku Error:**
+        up = rf"""\\**#Getter**// **Heroku Error**:
 `{msg}`"""
         return await kst.eor(up)
     await force_pull()

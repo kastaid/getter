@@ -253,7 +253,7 @@ async def _(kst):
     toggle = kst.pattern_match.group(1)
     pmguard = bool(await gvar("_pmguard"))
     if not toggle:
-        text = f"**PM-Guard Status:** `{humanbool(pmguard, toggle=True)}`"
+        text = f"**PM-Guard Status**: `{humanbool(pmguard, toggle=True)}`"
         return await yy.eod(text)
     if toggle in {"yes", "on", "true", "1"}:
         if pmguard:
@@ -282,7 +282,7 @@ async def _(kst):
     toggle, opts = group(1), group(2).lower()
     pmlog = await gvar("_pmlog")
     if not toggle:
-        text = f"**PM-Logs Status:** `{humanbool(pmlog, toggle=True)}`"
+        text = f"**PM-Logs Status**: `{humanbool(pmlog, toggle=True)}`"
         if pmlog and pmlog == "media":
             text += "\n__Only media!__"
         return await yy.eod(text)
@@ -331,8 +331,8 @@ async def _(kst):
     date = datetime.now(TZ).timestamp()
     await allow_user(user.id, date, reason)
     text = f"<b><u>User {display_name(user)} allowed to PM!</u></b>\n"
-    text += "<b>Date:</b> <code>{}</code>\n".format(datetime.fromtimestamp(date).strftime("%Y-%m-%d"))
-    text += "<b>Reason:</b> {}".format(f"<pre>{reason}</pre>" if reason else "None given.")
+    text += "<b>Date</b>: <code>{}</code>\n".format(datetime.fromtimestamp(date).strftime("%Y-%m-%d"))
+    text += "<b>Reason</b>: {}".format(f"<pre>{reason}</pre>" if reason else "None given.")
     done = await yy.eor(text, parse_mode="html")
     towarn, PMWARN = str(user.id), await jdata.pmwarns()
     if towarn in PMWARN:
@@ -403,7 +403,7 @@ async def _(kst):
     toggle = kst.pattern_match.group(1)
     pmblock = bool(await gvar("_pmblock"))
     if not toggle:
-        text = f"**PM-Block Status:** `{humanbool(pmblock, toggle=True)}`"
+        text = f"**PM-Block Status**: `{humanbool(pmblock, toggle=True)}`"
         return await yy.eod(text)
     if toggle in {"yes", "on", "true", "1"}:
         if pmblock:
@@ -432,7 +432,7 @@ async def _(kst):
     toggle, opts = group(1), group(2).lower()
     antipm = await gvar("_antipm")
     if not toggle:
-        text = f"**Anti-PM Status:** `{humanbool(antipm, toggle=True)}`"
+        text = f"**Anti-PM Status**: `{humanbool(antipm, toggle=True)}`"
         if antipm and antipm == "del":
             text += "\n__With delete chat!__"
         return await yy.eod(text)
@@ -474,7 +474,7 @@ async def _(kst):
         mode = "pmbye"
         pmbye = await gvar("_pmbye")
         if not custom:
-            text = "<b>PM-Bye:</b>\n"
+            text = "<b>PM-Bye</b>:\n"
             text += f"<pre>{escape(pmbye or pmbye_default)}</pre>"
             return await yy.eor(text, parse_mode="html")
         if pmbye == custom:
@@ -484,7 +484,7 @@ async def _(kst):
         mode = "pmmsg"
         pmmsg = await gvar("_pmmsg")
         if not custom:
-            text = "<b>PM-Message:</b>\n"
+            text = "<b>PM-Message</b>:\n"
             text += f"<pre>{escape(pmmsg or pmmsg_default)}</pre>"
             return await yy.eor(text, parse_mode="html")
         if pmmsg == custom:
@@ -495,7 +495,7 @@ async def _(kst):
         pmtotal = await gvar("_pmtotal")
         custom = custom.strip()
         if not custom:
-            text = f"**PM-Total:** `{pmtotal or pmtotal_default}`"
+            text = f"**PM-Total**: `{pmtotal or pmtotal_default}`"
             return await yy.eod(text)
         if not custom.isdecimal():
             return await yy.eor("`Provide a valid number!`", time=5)
@@ -741,11 +741,11 @@ plugins_help["pmpermit"] = {
     "{i}unmove [reply]/[in_private]/[username/mention/id]": "Unarchive user but still muted.",
     "{i}delete": """Delete and revoke current PM also for bots but exclude myself. This action cannot be undone!
 
-**Note:**
+**Notes**:
 - The pmguard, allow, deny, denyall, pmblock, and antipm commands are automatically reboot after changes, this to apply changes!
 - The setpmbye, setpmmsg, and setpmtotal commands are not rebooted, but it's cached in 1 minutes.
 
-**Format for pmbye and pmmsg:**
+**Format for pmbye and pmmsg**:
 `{id}`: The user ID.
 `{name}`: The user first name.
 `{fullname}`: The user full name.

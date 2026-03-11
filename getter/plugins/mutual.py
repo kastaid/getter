@@ -55,7 +55,7 @@ async def _(kst):
     forwhat = await gvar(var) or ""
     if not val:
         forwhat = forwhat or "illvart_" if var == "ig" else forwhat or "kastaid"
-        return await kst.eor(f"**{var.upper()}:** `{forwhat}`")
+        return await kst.eor(f"**{var.upper()}**: `{forwhat}`")
     val = val.replace("@", "")
     if var == "ig":
         if val == forwhat:

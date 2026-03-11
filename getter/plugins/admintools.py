@@ -58,7 +58,7 @@ async def _(kst):
         text = "{} banned and {} reported!{}".format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             "was" if is_reported else "not",
-            f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
+            f"\n<b>Reason</b>: <pre>{reason}</pre>" if reason else "",
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
@@ -102,7 +102,7 @@ async def _(kst):
         text = "{} dbanned and {} reported!{}".format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             "was" if is_reported else "not",
-            f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
+            f"\n<b>Reason</b>: <pre>{reason}</pre>" if reason else "",
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
@@ -168,10 +168,10 @@ async def _(kst):
     until_date, duration = until_time(timing[:-1], timing[-1])
     try:
         await ga.edit_permissions(chat_id, user.id, until_date=until_date, view_messages=False)
-        text = "{} temporarily banned!\n<b>Duration:</b> {}{}".format(
+        text = "{} temporarily banned!\n<b>Duration</b>: {}{}".format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             f"{timing[:-1]} {duration}",
-            f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
+            f"\n<b>Reason</b>: <pre>{reason}</pre>" if reason else "",
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
@@ -196,7 +196,7 @@ async def _(kst):
         await ga.edit_permissions(chat_id, user.id)
         text = "{} unbanned!{}".format(
             mentionuser(user.id, display_name(user), width=15, html=True),
-            f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
+            f"\n<b>Reason</b>: <pre>{reason}</pre>" if reason else "",
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
@@ -223,7 +223,7 @@ async def _(kst):
         await ga.edit_permissions(chat_id, user.id, send_messages=False)
         text = "{} muted!{}".format(
             mentionuser(user.id, display_name(user), width=15, html=True),
-            f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
+            f"\n<b>Reason</b>: <pre>{reason}</pre>" if reason else "",
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
@@ -253,7 +253,7 @@ async def _(kst):
         await reply.try_delete()
         text = "{} dmuted!{}".format(
             mentionuser(user.id, display_name(user), width=15, html=True),
-            f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
+            f"\n<b>Reason</b>: <pre>{reason}</pre>" if reason else "",
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
@@ -306,10 +306,10 @@ async def _(kst):
     until_date, duration = until_time(timing[:-1], timing[-1])
     try:
         await ga.edit_permissions(chat_id, user.id, until_date=until_date, send_messages=False)
-        text = "{} temporarily muted!\n<b>Duration:</b> {}{}".format(
+        text = "{} temporarily muted!\n<b>Duration</b>: {}{}".format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             f"{timing[:-1]} {duration}",
-            f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
+            f"\n<b>Reason</b>: <pre>{reason}</pre>" if reason else "",
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
@@ -336,7 +336,7 @@ async def _(kst):
         await ga.edit_permissions(chat_id, user.id, send_messages=True)
         text = "{} unmuted!{}".format(
             mentionuser(user.id, display_name(user), width=15, html=True),
-            f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
+            f"\n<b>Reason</b>: <pre>{reason}</pre>" if reason else "",
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
@@ -363,7 +363,7 @@ async def _(kst):
         await ga.kick_participant(chat_id, user.id)
         text = "{} kicked!{}".format(
             mentionuser(user.id, display_name(user), width=15, html=True),
-            f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
+            f"\n<b>Reason</b>: <pre>{reason}</pre>" if reason else "",
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
@@ -393,7 +393,7 @@ async def _(kst):
         await reply.try_delete()
         text = "{} dkicked!{}".format(
             mentionuser(user.id, display_name(user), width=15, html=True),
-            f"\n<b>Reason:</b> <pre>{reason}</pre>" if reason else "",
+            f"\n<b>Reason</b>: <pre>{reason}</pre>" if reason else "",
         )
         await yy.eor(text, parse_mode="html")
     except Exception as err:
@@ -593,7 +593,7 @@ async def _(kst):
             btn = "Go to message..."
         pinned += f"{count}. <a href=https://t.me/c/{chat_id}/{x.id}>{btn}</a>\n"
         count += 1
-    text = f"<b>Pinned message(s) in {normalize(title).lower()}:</b>\n"
+    text = f"<b>Pinned message(s) in {normalize(title).lower()}</b>:\n"
     if not pinned:
         return await yy.eor("`No Pinned!`", time=5)
     await yy.eor(text + pinned, parts=True, parse_mode="html")
@@ -853,7 +853,7 @@ async def _(kst):
     chat = await kst.get_chat()
     yy = await kst.eor("`Processing...`")
     total = 0
-    text = f"<b>Admins in {normalize(chat.title).lower()}:</b>\n"
+    text = f"<b>Admins in {normalize(chat.title).lower()}</b>:\n"
     async for x in ga.iter_participants(
         chat,
         filter=typ.ChannelParticipantsAdmins,
@@ -876,12 +876,12 @@ plugins_help["admintools"] = {
     "{i}ban [reply]/[username/mention/id] [reason]": "Ban user and report them as spam.",
     "{i}dban [reply] [reason]": "Ban user by reply, delete their message and report them as spam.",
     "{i}sban [reply]/[username/mention/id]": "Silently a ban user, delete my message and report them as spam.",
-    "{i}tban [reply]/[username/mention/id] [timing] [reason]": "Temporarily ban user. **timing:** 4m = 4 minutes, 3h = 3 hours, 6d = 6 days.",
+    "{i}tban [reply]/[username/mention/id] [timing] [reason]": "Temporarily ban user. **timing**: 4m = 4 minutes, 3h = 3 hours, 6d = 6 days.",
     "{i}unban [reply]/[username/mention/id] [reason]": "Unbanned user.",
     "{i}mute [reply]/[username/mention/id] [reason]": "Mute user.",
     "{i}dmute [reply] [reason]": "Mute user by reply, and delete their message.",
     "{i}smute [reply]/[username/mention/id]": "Silently mute user, and delete my message.",
-    "{i}tmute [reply]/[username/mention/id] [timing] [reason]": "Temporarily mute user. **timing:** 4m = 4 minutes, 3h = 3 hours, 6d = 6 days.",
+    "{i}tmute [reply]/[username/mention/id] [timing] [reason]": "Temporarily mute user. **timing**: 4m = 4 minutes, 3h = 3 hours, 6d = 6 days.",
     "{i}unmute [reply]/[username/mention/id] [reason]": "Unmute user.",
     "{i}kick [reply]/[username/mention/id] [reason]": "Kick user.",
     "{i}dkick [reply] [reason]": "Kick user by reply, and delete their message.",
@@ -901,7 +901,7 @@ plugins_help["admintools"] = {
     "{i}unbanall": "Unban all banned users.",
     "{i}adminlist": """Get list all admins by type in current group.
 
-**Examples:**
+**Examples**:
 - Mute user for two hours.
 -> `{i}tmute @username 2h abuse`
 

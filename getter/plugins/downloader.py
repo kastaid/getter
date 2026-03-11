@@ -30,7 +30,7 @@ async def _(kst):
         return await yy.eod(f"`{resp.message.message}`")
     file = resp.message.media
     await yy.eor(
-        f"**Link:** `{link}`",
+        f"**Link**: `{link}`",
         file=file,
         force_document=False,
     )
@@ -54,7 +54,7 @@ async def _(kst):
         return await yy.eod(f"`{resp.message.message}`")
     file = resp.message.media
     await yy.eor(
-        f"**Link:** `{link}`",
+        f"**Link**: `{link}`",
         file=file,
         force_document=False,
     )

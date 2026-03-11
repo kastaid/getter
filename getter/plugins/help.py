@@ -30,19 +30,17 @@ help_text = """
 ┣  <b>Commands</b>  –  <code>{}</code>
 ┣  <b>Sudo</b>  –  <code>{}</code>
 ┗━━━━━━━━━━━━━━━━━━━━━━━━
-<b>~ All plugins name and commands:</b>
+<b>~ All plugins name and commands</b>:
 
 {}
 
-<blockquote><b>Usage:</b> <code>{}help [plugin_name]</code>
-<b>Tips:</b>
+<blockquote><b>Usage</b>: <code>{}help [plugin_name]</code>
+<b>Tips</b>:
 - To check how fast response use <code>{}ping</code>
 - Get details about ur self use <code>{}test</code>
 - Collect ur stats by using <code>{}stats</code>
 - Get users ids use <code>{}id</code>
 - Get users info use <code>{}info</code></blockquote>
-
-(c) @kastaid #getter
 """
 
 
@@ -55,22 +53,15 @@ async def _(kst):
     yy = await kst.eor("`Loading...`")
     plugin_name = (await ga.get_text(kst)).lower()
     if plugin_name:
-        name = None
         if plugin_name in plugins_help:
             name = plugin_name
         else:
-            for _ in plugin_name.split():
-                if _ in plugins_help:
-                    name = _
-                    break
+            name = next((i for i in plugin_name.split() if i in plugins_help), None)
         if name:
             cmds = plugins_help[name]
-            text = f"**{len(cmds)} Help For {name.upper()}**  <`{hl}help {name}`>\n\n"
+            text = f"**{len(cmds)} Help for {name.upper()}**  <`{hl}help {name}`>\n\n"
             for cmd, desc in cmds.items():
-                # cmd --> cmd.split(maxsplit=1)[0]
-                # args --> cmd.split(maxsplit=1)[1]
                 text += "**❯** `{}`\n{}\n\n".format(cmd.replace("{i}", hl), desc.strip().replace("{i}", hl))
-            text += "(c) @kastaid #getter"
             return await yy.sod(text)
         return await yy.sod(
             f"**404 Plugin Not Found  ➞**  `{plugin_name}`\nType  `{hl}help`  to see valid plugins name."

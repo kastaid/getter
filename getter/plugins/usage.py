@@ -25,38 +25,38 @@ from . import (
 
 dyno_text = """
 <b>📦 Heroku App</b>
--> <b>Name:</b> <code>{}</code>
--> <b>Stack:</b> <code>{}</code>
--> <b>Region:</b> <code>{}</code>
--> <b>Created:</b> <code>{}</code>
--> <b>Updated:</b> <code>{}</code>
--> <b>Email:</b> <code>{}</code>
+-> <b>Name</b>: <code>{}</code>
+-> <b>Stack</b>: <code>{}</code>
+-> <b>Region</b>: <code>{}</code>
+-> <b>Created</b>: <code>{}</code>
+-> <b>Updated</b>: <code>{}</code>
+-> <b>Email</b>: <code>{}</code>
 
 <b>⚙️ Heroku Dyno</b>
--> <b>Dyno usage:</b>
+-> <b>Dyno usage</b>:
     •  <code>{}h  {}m  {}%</code>
--> <b>Dyno hours quota remaining this month:</b>
+-> <b>Dyno hours quota remaining this month</b>:
     •  <code>{}h  {}m  {}%</code>
 """
 usage_text = """
 <b>🖥️ Uptime</b>
-<b>App:</b> <code>{}</code>
-<b>System:</b> <code>{}</code>
+<b>App</b>: <code>{}</code>
+<b>System</b>: <code>{}</code>
 
 <b>📊 Data Usage</b>
-<b>Upload:</b> <code>{}</code>
-<b>Download:</b> <code>{}</code>
+<b>Upload</b>: <code>{}</code>
+<b>Download</b>: <code>{}</code>
 
 <b>💾 Disk Space</b>
-<b>Total:</b> <code>{}</code>
-<b>Used:</b> <code>{}</code>
-<b>Free:</b> <code>{}</code>
+<b>Total</b>: <code>{}</code>
+<b>Used</b>: <code>{}</code>
+<b>Free</b>: <code>{}</code>
 
 <b>📈 Memory Usage</b>
-<b>CPU:</b> <code>{}</code>
-<b>RAM:</b> <code>{}</code>
-<b>DISK:</b> <code>{}</code>
-<b>SWAP:</b> <code>{}</code>
+<b>CPU</b>: <code>{}</code>
+<b>RAM</b>: <code>{}</code>
+<b>DISK</b>: <code>{}</code>
+<b>SWAP</b>: <code>{}</code>
 """
 
 
@@ -89,17 +89,17 @@ async def _(kst):
     addons = dumps(to_dict(app.addons()), indent=1, default=str)
     buildpacks = dumps(to_dict(app.buildpacks()), indent=1, default=str)
     configs = dumps(app.config().to_dict(), indent=1, default=str)
-    await sendlog(f"<b>Account:</b>\n<pre>{escape(account)}</pre>", fallback=True, parse_mode="html")
+    await sendlog(f"<b>Account</b>:\n<pre>{escape(account)}</pre>", fallback=True, parse_mode="html")
     await asyncio.sleep(1)
-    await sendlog(f"<b>App:</b>\n<pre>{escape(capp)}</pre>", fallback=True, parse_mode="html")
+    await sendlog(f"<b>App</b>:\n<pre>{escape(capp)}</pre>", fallback=True, parse_mode="html")
     await asyncio.sleep(1)
-    await sendlog(f"<b>Dyno:</b>\n<pre>{escape(dyno)}</pre>", fallback=True, parse_mode="html")
+    await sendlog(f"<b>Dyno</b>:\n<pre>{escape(dyno)}</pre>", fallback=True, parse_mode="html")
     await asyncio.sleep(1)
-    await sendlog(f"<b>Addons:</b>\n<pre>{escape(addons)}</pre>", fallback=True, parse_mode="html")
+    await sendlog(f"<b>Addons</b>:\n<pre>{escape(addons)}</pre>", fallback=True, parse_mode="html")
     await asyncio.sleep(1)
-    await sendlog(f"<b>Buildpacks:</b>\n<pre>{escape(buildpacks)}</pre>", fallback=True, parse_mode="html")
+    await sendlog(f"<b>Buildpacks</b>:\n<pre>{escape(buildpacks)}</pre>", fallback=True, parse_mode="html")
     await asyncio.sleep(1)
-    await sendlog(f"<b>Configs:</b>\n<pre>{escape(configs)}</pre>", fallback=True, parse_mode="html")
+    await sendlog(f"<b>Configs</b>:\n<pre>{escape(configs)}</pre>", fallback=True, parse_mode="html")
     await yy.eor("`Heroku details sent at botlogs.`")
 
 
@@ -166,7 +166,7 @@ async def heroku_usage() -> str:
         user = conn.account().id
         app = conn.app(hk.name)
     except Exception as err:
-        return f"<b>ERROR:</b>\n<code>{err}</code>"
+        return f"<b>ERROR</b>:\n<code>{err}</code>"
     headers = {
         "User-Agent": choice(USERAGENTS),
         "Authorization": f"Bearer {hk.api}",

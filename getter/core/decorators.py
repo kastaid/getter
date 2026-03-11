@@ -182,30 +182,30 @@ def kasta_cmd(
                 else:
                     chat_type = "channel"
                 ftext = r"\\<b>#Getter_Error</b>// Forward this to @kastaot"
-                ftext += "\n\n<b>Getter Version:</b> <code>" + str(__version__)
-                ftext += "</code>\n<b>Python Version:</b> <code>" + str(__pyversion__)
-                ftext += "</code>\n<b>Telethon Version:</b> <code>" + str(__tlversion__)
-                ftext += "</code>\n<b>Telegram Layer:</b> <code>" + str(__layer__) + "</code>\n\n"
+                ftext += "\n\n<b>Getter Version</b>: <code>" + str(__version__)
+                ftext += "</code>\n<b>Python Version</b>: <code>" + str(__pyversion__)
+                ftext += "</code>\n<b>Telethon Version</b>: <code>" + str(__tlversion__)
+                ftext += "</code>\n<b>Telegram Layer</b>: <code>" + str(__layer__) + "</code>\n\n"
                 ftext += "<b><u>START GETTER ERROR LOG</u></b>"
-                ftext += "\n\n<b>Date:</b> <code>" + date
-                ftext += "</code>\n<b>Chat Type:</b> <code>" + chat_type
-                ftext += "</code>\n<b>Chat ID:</b> <code>" + str(chat_id)
-                ftext += "</code>\n<b>Chat Title:</b> <code>" + normalize(display_name(chat)).upper()
-                ftext += "</code>\n<b>User ID:</b> <code>" + str(myself)
-                ftext += "</code>\n<b>Is Dev:</b> <code>" + str(kst.is_dev)
-                ftext += "</code>\n<b>Is Sudo:</b> <code>" + str(kst.is_sudo)
-                ftext += "</code>\n<b>Replied:</b> <code>" + str(kst.is_reply)
-                ftext += "</code>\n<b>Message ID:</b> <code>" + str(kst.reply_to_msg_id or kst.id)
-                ftext += "</code>\n<b>Message Link:</b> " + str(kst.msg_link)
-                ftext += "\n\n<b>Event Trigger:</b>\n<code>"
+                ftext += "\n\n<b>Date</b>: <code>" + date
+                ftext += "</code>\n<b>Chat Type</b>: <code>" + chat_type
+                ftext += "</code>\n<b>Chat ID</b>: <code>" + str(chat_id)
+                ftext += "</code>\n<b>Chat Title</b>: <code>" + normalize(display_name(chat)).upper()
+                ftext += "</code>\n<b>User ID</b>: <code>" + str(myself)
+                ftext += "</code>\n<b>Is Dev</b>: <code>" + str(kst.is_dev)
+                ftext += "</code>\n<b>Is Sudo</b>: <code>" + str(kst.is_sudo)
+                ftext += "</code>\n<b>Replied</b>: <code>" + str(kst.is_reply)
+                ftext += "</code>\n<b>Message ID</b>: <code>" + str(kst.reply_to_msg_id or kst.id)
+                ftext += "</code>\n<b>Message Link</b>: " + str(kst.msg_link)
+                ftext += "\n\n<b>Event Trigger</b>:\n<code>"
                 ftext += str(kst.text)
-                ftext += "</code>\n\n<b>Traceback Info:</b>\n<pre>"
+                ftext += "</code>\n\n<b>Traceback Info</b>:\n<pre>"
                 ftext += str(format_exc()).strip()
-                ftext += "</pre>\n\n<b>Error Text:</b>\n<code>"
+                ftext += "</pre>\n\n<b>Error Text</b>:\n<code>"
                 ftext += str(sys.exc_info()[1]).strip()
                 ftext += "</code>\n\n<b><u>END GETTER ERROR LOG</u></b>"
                 if not Var.DEV_MODE:
-                    ftext += "\n\n<b>Last 5 Commits:</b>\n<pre>"
+                    ftext += "\n\n<b>Last 5 Commits</b>:\n<pre>"
                     stdout, stderr, _, _ = await Runner('git log --pretty=format:"%an: %s" -5')
                     result = stdout + stderr
                     ftext += result + "</pre>"
@@ -234,7 +234,7 @@ def kasta_cmd(
                     )
                 if kst.out and BOTLOGS and error_log:
                     text = r"\\<b>#Getter_Error</b>//"
-                    text += "\n<b>An error details:</b> {}"
+                    text += "\n<b>An error details</b>: {}"
                     if kst.is_private:
                         text = text.format(error_log.msg_link)
                     else:

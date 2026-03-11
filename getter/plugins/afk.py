@@ -53,7 +53,7 @@ async def _(kst):
     text = "<b><u>I’m now AFK!</u></b>"
     if reason:
         reason = escape(reason)
-        text += f"\n<b>Reason:</b> <pre>{reason}</pre>"
+        text += f"\n<b>Reason</b>: <pre>{reason}</pre>"
     await add_afk(reason, start)
     getter_app.add_handler(
         StopAFK,
@@ -113,7 +113,7 @@ async def OnAFK(kst):
             text = "<b><u>I’m on AFK!</u></b>\n"
             text += f"Last seen {afk_time} ago."
             reason = f"<pre>{afk.reason}</pre>" if afk.reason else "No reason."
-            text += f"\n<b>Reason:</b> {reason}"
+            text += f"\n<b>Reason</b>: {reason}"
             chat_id = str(kst.chat_id)
             if chat_id in afk.last:
                 try:
@@ -151,7 +151,7 @@ plugins_help["afk"] = {
     "{i}afk [reason]/[reply]": "When you are in AFK if anyone tags you then will notify them if you're AFK unless if 'afk' or 'brb' words is exists!",
     "brb": """Alias for afk command, without handler!
 
-**Note:**
+**Notes**:
 - AFK is abbreviation for “Away From Keyboard”.
 - BRB also abbreviation for “Be Right Back”.
 - To stopping AFK just typing at anywhere.

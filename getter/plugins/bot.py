@@ -38,7 +38,7 @@ async def _(kst):
     pattern="(uptime|up)$",
 )
 async def _(kst):
-    await kst.eod(f"**Uptime:** {kst.client.uptime}")
+    await kst.eod(f"**Uptime**: {kst.client.uptime}")
 
 
 @kasta_cmd(

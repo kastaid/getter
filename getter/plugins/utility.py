@@ -53,7 +53,7 @@ async def _(kst):
         correct = check.correct()
     except Exception as err:
         return await yy.eor(formatx_send(err), parse_mode="html")
-    text = f"• **Given Phrase:** `{sentence}`\n• **Corrected Phrase:** `{correct.strip()}`"
+    text = f"• **Given Phrase**: `{sentence}`\n• **Corrected Phrase**: `{correct.strip()}`"
     await yy.eor(text)
 
 
@@ -77,8 +77,8 @@ async def _(kst):
     try:
         res = res["list"][0]
     except IndexError:
-        return await yy.eod(f"**No Results for:** `{word}`")
-    text = "• **Given Word:** `{}`\n• **Meaning:** `{}`\n• **Example:** `{}`".format(
+        return await yy.eod(f"**No Results for**: `{word}`")
+    text = "• **Given Word**: `{}`\n• **Meaning**: `{}`\n• **Example**: `{}`".format(
         res.get("word").strip(),
         res.get("definition").strip(),
         res.get("example").strip(),
@@ -98,14 +98,14 @@ async def _(kst):
     url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
     res = await Fetch(url, re_json=True)
     if not res:
-        return await yy.eod(f"**No Results for:** `{word}`")
+        return await yy.eod(f"**No Results for**: `{word}`")
     defi = res[0]["meanings"][0]["definitions"][0]
     exa = defi["example"] if defi.get("example") else ""
-    text = "• **Given Word:** `{}`\n• **Meaning:** `{}`\n• **Example:** `{}`".format(word, defi["definition"], exa)
+    text = "• **Given Word**: `{}`\n• **Meaning**: `{}`\n• **Example**: `{}`".format(word, defi["definition"], exa)
     if defi.get("synonyms"):
-        text += "\n• **Synonyms:**" + "".join(f" {x}," for x in defi["synonyms"])[:-1][:10]
+        text += "\n• **Synonyms**:" + "".join(f" {x}," for x in defi["synonyms"])[:-1][:10]
     if defi.get("antonyms"):
-        text += "\n**Antonyms:**" + "".join(f" {x}," for x in defi["antonyms"])[:-1][:10]
+        text += "\n**Antonyms**:" + "".join(f" {x}," for x in defi["antonyms"])[:-1][:10]
     await yy.eor(text)
 
 
@@ -128,8 +128,8 @@ async def _(kst):
     try:
         mean = await aioify(KBBI, word)
     except BaseException:
-        return await yy.eod(f"**No Results for:** `{word}`")
-    text = f"• **Given Word:** `{word}`\n{mean}"
+        return await yy.eod(f"**No Results for**: `{word}`")
+    text = f"• **Given Word**: `{word}`\n{mean}"
     await yy.eor(text)
 
 
@@ -364,9 +364,9 @@ async def _(kst):
                 tg = await Telegraph()
                 up = await tg.upload_file(res)
                 link = "https://telegra.ph" + next((_ for _ in up), "")
-                push = f"**Telegraph:** [Telegraph Link]({link})"
+                push = f"**Telegraph**: [Telegraph Link]({link})"
             except Exception as err:
-                push = f"**ERROR:**\n`{err}`"
+                push = f"**ERROR**:\n`{err}`"
             (Root / res).unlink(missing_ok=True)
             if file:
                 (Root / file).unlink(missing_ok=True)
@@ -380,7 +380,7 @@ async def _(kst):
     res = push.get("url")
     if not res:
         return await yy.eod("`Try again now!`")
-    await yy.eor(f"**Telegraph:** [Telegraph Link]({res})")
+    await yy.eor(f"**Telegraph**: [Telegraph Link]({res})")
 
 
 @kasta_cmd(
@@ -405,13 +405,13 @@ async def _(kst):
         lat = location.latitude
         lon = location.longitude
         addr = location.address
-        details = f"**Location:** `{locco}`\n**Address:** `{addr}`\n**Coordinates:** `{lat},{lon}`"
+        details = f"**Location**: `{locco}`\n**Address**: `{addr}`\n**Coordinates**: `{lat},{lon}`"
         return await yy.eor(
             details,
             file=typ.InputMediaGeoPoint(typ.InputGeoPoint(lat, lon)),
             force_document=True,
         )
-    await yy.eod(f"**No Location found:** `{locco}`")
+    await yy.eod(f"**No Location found**: `{locco}`")
 
 
 @kasta_cmd(
@@ -435,7 +435,7 @@ async def _(kst):
     chat, msg_id = get_msg_id(link)
     if not is_silent and not (chat and msg_id):
         return await yy.eor(
-            "Provide a valid message link!\n**E.g:** `https://t.me/tldevs/11` or `https://t.me/tldevs/19`"
+            "Provide a valid message link!\n**E.g**: `https://t.me/tldevs/11` or `https://t.me/tldevs/19`"
         )
     try:
         from_msg = await ga.get_messages(chat, ids=msg_id)
@@ -455,7 +455,7 @@ async def _(kst):
             file = "getmsg_" + str(msg_id) + guess_extension(mimetype)
         await ga.download_file(from_msg.media, file=file)
         msg = await yy.eor(
-            f"**Source:** `{link}`",
+            f"**Source**: `{link}`",
             file=file,
             force_document=True,
         )
@@ -491,7 +491,7 @@ async def _(kst):
     ):
         result += f"• [{msg.id}](https://t.me/c/{current}/{msg.id})\n"
         total += 1
-    text = f"**Search Results for:** `{args}`\n{result}" if total > 0 else f"**No Results for:** `{args}`"
+    text = f"**Search Results for**: `{args}`\n{result}" if total > 0 else f"**No Results for**: `{args}`"
     await yy.eor(text)
 
 

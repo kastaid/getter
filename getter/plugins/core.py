@@ -41,19 +41,19 @@ from . import (
 
 invite_text = """
 🔄 <b>INVITING...</b>
-• <b>Invited:</b> <code>{}</code>
-• <b>Failed:</b> <code>{}</code>
-<b>Last Error:</b> <code>{}</code>
+• <b>Invited</b>: <code>{}</code>
+• <b>Failed</b>: <code>{}</code>
+<b>Last Error</b>: <code>{}</code>
 """
 done_text = """
 ✅ <b>DONE INVITING</b>
 
-• <b>Invited:</b> <code>{}</code>
-• <b>Failed:</b> <code>{}</code>
-• <b>Taken:</b> <code>{}</code>
+• <b>Invited</b>: <code>{}</code>
+• <b>Failed</b>: <code>{}</code>
+• <b>Taken</b>: <code>{}</code>
 
-<b>User:</b> <code>{}</code>
-<b>Time:</b> <code>{}</code>
+<b>User</b>: <code>{}</code>
+<b>Time</b>: <code>{}</code>
 """
 done_limit_text = """
 ✅ <b>DONE INVITING GOT LIMIT</b>
@@ -64,12 +64,12 @@ done_limit_text = """
 <b><u>Error</u></b>
 <pre>{}</pre>
 
-• <b>Invited:</b> <code>{}</code>
-• <b>Failed:</b> <code>{}</code>
-• <b>Taken:</b> <code>{}</code>
+• <b>Invited</b>: <code>{}</code>
+• <b>Failed</b>: <code>{}</code>
+• <b>Taken</b>: <code>{}</code>
 
-<b>User:</b> <code>{}</code>
-<b>Time:</b> <code>{}</code>
+<b>User</b>: <code>{}</code>
+<b>Time</b>: <code>{}</code>
 """
 done_error_text = """
 ⚠️ <b>DONE INVITING AN ERROR</b>
@@ -77,31 +77,31 @@ done_error_text = """
 <b><u>Error</u></b>
 <pre>{}</pre>
 
-• <b>Invited:</b> <code>{}</code>
-• <b>Failed:</b> <code>{}</code>
-• <b>Taken:</b> <code>{}</code>
+• <b>Invited</b>: <code>{}</code>
+• <b>Failed</b>: <code>{}</code>
+• <b>Taken</b>: <code>{}</code>
 
-<b>User:</b> <code>{}</code>
-<b>Time:</b> <code>{}</code>
+<b>User</b>: <code>{}</code>
+<b>Time</b>: <code>{}</code>
 """
 getmembers_text = """
 ✅ Scraping {} completed in <code>{}</code>
 
-<b>ID:</b> <code>{}</code>
-<b>Title:</b> <code>{}</code>
-<b>Username:</b> {}
-<b>Total:</b> <code>{}</code>
-<b>Done ({}):</b> <code>{}</code>
-<b>Time:</b> <code>{}</code>
+<b>ID</b>: <code>{}</code>
+<b>Title</b>: <code>{}</code>
+<b>Username</b>: {}
+<b>Total</b>: <code>{}</code>
+<b>Done ({})</b>: <code>{}</code>
+<b>Time</b>: <code>{}</code>
 """
 no_process_text = "`There is no running proccess.`"
 canceled_text = """
 ✅ **The process has been canceled**
 
-**Mode:** `{}`
-**Current:** `{}`
-**{}:** `{}`
-**Time:** `{}`
+**Mode**: `{}`
+**Current**: `{}`
+**{}**: `{}`
+**Time**: `{}`
 """
 _INVITING_LOCK, _SCRAPING_LOCK, _ADDING_LOCK = asyncio.Lock(), asyncio.Lock(), asyncio.Lock()
 
@@ -598,7 +598,7 @@ plugins_help["core"] = {
     "{i}getmembers [username/link/id]/[reply] [append/a]": """Scraping members from the group and then save as csv files (members, admins, bots).
 Run this command in everywhere exclude the target groups.
 
-**Note:**
+**Notes**:
 - You must join the target if you use id, for two commands above.
 - Do not delete running messages if you have running process or the process will be stopped and users can't join.
 - Telethon (Telegram APIs) have a limit to scraping members. If you need to get more members use this command with options 'append' or 'a' example: <`{i}getmembers @username append`>. Repeat it after finished to get more members without duplicated rows. You can also combination with difference groups!

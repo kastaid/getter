@@ -40,28 +40,28 @@ _warn = """<b>⚠️ DO NOT LEAVE OR,
 <b><u>IF IGNORED THIS MESSAGE THE BOT WILL NOT WORK</u></b>
 
 
-<b>Chat ID:</b> <code>{}</code>
-<b>Your ID:</b> <code>{}</code>
+<b>Chat ID</b>: <code>{}</code>
+<b>Your ID</b>: <code>{}</code>
 
-<b>Our Channel:</b> @kastaid
+<b>Our Channel</b>: @kastaid
 """
 _restart_text = r"""
 \\**#Getter**// **is back and alive!**
-├  **Sudo:** `{}`
-├  **PM-Guard:** `{}`
-├  **PM-Logs:** `{}`
-├  **PM-Block:** `{}`
-├  **Anti-PM:** `{}`
-└  **Version:** `{}`
+├  **Sudo**: `{}`
+├  **PM-Guard**: `{}`
+├  **PM-Logs**: `{}`
+├  **PM-Block**: `{}`
+├  **Anti-PM**: `{}`
+└  **Version**: `{}`
 """
 _reboot_text = r"""
 \\**#Getter**// **is rebooted and applied!**
-├  **Sudo:** `{}`
-├  **PM-Guard:** `{}`
-├  **PM-Logs:** `{}`
-├  **PM-Block:** `{}`
-├  **Anti-PM:** `{}`
-└  **Version:** `{}`
+├  **Sudo**: `{}`
+├  **PM-Guard**: `{}`
+├  **PM-Logs**: `{}`
+├  **PM-Block**: `{}`
+├  **Anti-PM**: `{}`
+└  **Version**: `{}`
 """
 
 

@@ -131,8 +131,8 @@ async def _(kst):
     pattern="theme$",
 )
 async def _(kst):
-    carbon = f"**{len(CARBON_PRESETS)} Carbon Themes:**\n" + "\n".join([f"- `{_}`" for _ in CARBON_PRESETS])
-    rayso = f"**{len(RAYSO_THEMES)} Rayso Themes:**\n" + "\n".join([f"- `{_}`" for _ in RAYSO_THEMES])
+    carbon = f"**{len(CARBON_PRESETS)} Carbon Themes**:\n" + "\n".join([f"- `{_}`" for _ in CARBON_PRESETS])
+    rayso = f"**{len(RAYSO_THEMES)} Rayso Themes**:\n" + "\n".join([f"- `{_}`" for _ in RAYSO_THEMES])
     await kst.sod(carbon)
     await kst.sod(rayso)
 

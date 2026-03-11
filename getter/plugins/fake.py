@@ -20,16 +20,16 @@ from . import (
 
 fgban_text = r"""
 \\<b>#GBanned</b>// User {} in {} chats!
-<b>Date:</b> <code>{}</code>
-<b>Taken:</b> <code>{}</code>
-<b>Reported:</b> <code>{}</code>
-<b>Reason:</b> {}
+<b>Date</b>: <code>{}</code>
+<b>Taken</b>: <code>{}</code>
+<b>Reported</b>: <code>{}</code>
+<b>Reason</b>: {}
 
 <i>Added to GBanned_Watch.</i>
 """
 fungban_text = r"""
 \\<b>#UnGBanned</b>// User {} in {} chats!
-<b>Taken:</b> <code>{}</code>
+<b>Taken</b>: <code>{}</code>
 
 <i>Wait for 1 minutes before released.</i>
 """
