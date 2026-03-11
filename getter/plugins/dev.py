@@ -120,9 +120,9 @@ async def _(kst):
         humanbytes(sfolder + sfile),
     )
     directory += f"""
-<b>Folders:</b>  <code>{cfolder}</code>  /  <code>{hfolder}</code>
-<b>Files:</b>  <code>{cfile}</code>  /  <code>{hfile}</code>
-<b>Total:</b>  <code>{cfile + cfolder}</code>  /  <code>{htotal}</code>
+<b>Folders</b>:  <code>{cfolder}</code>  /  <code>{hfolder}</code>
+<b>Files</b>:  <code>{cfile}</code>  /  <code>{hfile}</code>
+<b>Total</b>:  <code>{cfile + cfolder}</code>  /  <code>{htotal}</code>
 """
     if len(directory) > MAX_MESSAGE_LEN:
         directory = strip_format(directory)
@@ -149,7 +149,7 @@ async def _(kst):
     yy = await kst.eor("`Evaluating...`")
     try:
         out = eval(code)
-        result = f"<b>Evaluate:</b>\n<pre>{code}</pre>\n\n"
+        result = f"<b>Evaluate</b>:\n<pre>{code}</pre>\n\n"
         result += f"<b>Result</b>:\n<pre>{out}</pre>"
         await yy.sod(result, parse_mode="html")
     except Exception as err:
@@ -183,8 +183,8 @@ async def _(kst):
     sys.stdout = old_stdout
     sys.stderr = old_stderr
     execute = exc or stderr or stdout or _parse_eval(value) or "Success"
-    result = f"<b>Execute:</b>\n<pre>{code}</pre>\n\n"
-    result += f"<b>Result:</b>\n<pre>{execute}</pre>"
+    result = f"<b>Execute</b>:\n<pre>{code}</pre>\n\n"
+    result += f"<b>Result</b>:\n<pre>{execute}</pre>"
     if len(result) > MAX_MESSAGE_LEN:
         with BytesIO(str.encode(strip_format(result))) as file:
             file.name = "exec.txt"
@@ -219,11 +219,11 @@ async def _(kst):
     result = f"<b>{icon}</b>  <pre>{cmd}</pre>\n\n"
     err, out = "", ""
     if stderr:
-        err = f"<b>Error:</b>\n<pre>{stderr}</pre>\n\n"
+        err = f"<b>Error</b>:\n<pre>{stderr}</pre>\n\n"
     if stdout:
-        out = f"<b>Result:</b>\n<pre>{stdout}</pre>"
+        out = f"<b>Result</b>:\n<pre>{stdout}</pre>"
     if not stderr and not stdout:
-        out = "<b>Result:</b>\n<code>success</code>"
+        out = "<b>Result</b>:\n<code>success</code>"
     result += err + out
     if len(result) > MAX_MESSAGE_LEN:
         with BytesIO(str.encode(strip_format(result))) as file:
@@ -243,7 +243,7 @@ async def _(kst):
     for_dev=True,
 )
 async def _(kst):
-    cmds = "**Developer Commands:**\n" + "\n".join(["- {}: {}".format(x, ", ".join(y)) for x, y in DEV_CMDS.items()])
+    cmds = "**Developer Commands**:\n" + "\n".join(["- {}: {}".format(x, ", ".join(y)) for x, y in DEV_CMDS.items()])
     await kst.sod(cmds)
 
 
@@ -301,7 +301,7 @@ plugins_help["dev"] = {
     "{i}ls [path]/[reply]": "View all files and folders inside a directory.",
     "{i}eval [code]/[reply]": "Evaluate Python code.",
     "{i}exec [code]/[reply]": """Execute Python code.
-**Exec Shortcuts:**
+**Exec Shortcuts**:
 `fun = telethon.tl.functions`
 `typ = telethon.tl.types`
 `client = bot = event.client`
@@ -311,7 +311,7 @@ plugins_help["dev"] = {
 `chat = event.chat_id`
 """,
     "{i}shell|{i}sh [command]/[reply]": """Run the linux commands.
-**Shell Command Snippets:**
+**Shell Command Snippets**:
 `echo Hello, World!`
 `python3 --version`
 `python3 -c 'import time;print(time.ctime())'`

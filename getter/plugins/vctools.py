@@ -181,9 +181,9 @@ async def _(kst):
     except BaseException:
         return await yy.eor("`An error occurred. Try again now!`", time=5)
     text = "<b><u>Video Chat Information</u></b>\n"
-    text += f"<b>Title:</b> <code>{res.call.title or ''}</code>\n"
-    text += f"<b>Join Muted:</b> <code>{humanbool(res.call.join_muted)}</code>\n"
-    text += f"<b>Participants Count:</b> <code>{res.call.participants_count}</code>\n\n"
+    text += f"<b>Title</b>: <code>{res.call.title or ''}</code>\n"
+    text += f"<b>Join Muted</b>: <code>{humanbool(res.call.join_muted)}</code>\n"
+    text += f"<b>Participants Count</b>: <code>{res.call.participants_count}</code>\n\n"
     if res.call.participants_count > 0:
         text += "<b><u>Participants</u></b>\n"
         for x in res.users:

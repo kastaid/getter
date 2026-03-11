@@ -32,7 +32,7 @@ async def _(kst):
             entity=chat,
         )
         games = [getattr(_, "title", "") for _ in res if isinstance(_, InlineResult)]
-        text = f"**{len(games)} Games:**\n" + "\n".join([f"- `{_}`" for _ in games])
+        text = f"**{len(games)} Games**:\n" + "\n".join([f"- `{_}`" for _ in games])
         text += "\n\n__Choose one, tap or copy, then put to 'game' command!__"
         await yy.eor(text, parts=True)
     except Exception as err:
@@ -69,7 +69,7 @@ async def _(kst):
         )
         await yy.try_delete()
     except IndexError:
-        await yy.eod(f"**No Results for:** `{query}`")
+        await yy.eod(f"**No Results for**: `{query}`")
     except Exception as err:
         await yy.eor(formatx_send(err), parse_mode="html")
 

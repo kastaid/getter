@@ -21,12 +21,12 @@ from . import (
 
 gbanned_text = r"""
 \\<b>#GBanned_Watch</b>// User {} joined and quickly banned!
-<b>Reported:</b> <code>{}</code>
-<b>Reason:</b> {}
+<b>Reported</b>: <code>{}</code>
+<b>Reason</b>: {}
 """
 gmuted_text = r"""
 \\<b>#GMuted_Watch</b>// User {} joined and quickly muted!
-<b>Reason:</b> {}
+<b>Reason</b>: {}
 """
 _WATCHER_SEM = asyncio.Semaphore(2)
 
@@ -101,8 +101,8 @@ async def JoinedHandler(kst):
             await ga.edit_permissions(chat.id, user.id, view_messages=False)
         except BaseException:
             pass
-        logs_text += f"<b>Reported:</b> <code>{humanbool(is_reported)}</code>\n"
-        logs_text += "<b>Reason:</b> {}\n".format(f"<pre>{gban.reason}</pre>" if gban.reason else "None given.")
+        logs_text += f"<b>Reported</b>: <code>{humanbool(is_reported)}</code>\n"
+        logs_text += "<b>Reason</b>: {}\n".format(f"<pre>{gban.reason}</pre>" if gban.reason else "None given.")
         await sendlog(logs_text)
 
     gmute = await is_gmute(user.id, use_cache=True)
@@ -122,5 +122,5 @@ async def JoinedHandler(kst):
             await ga.edit_permissions(chat.id, user.id, send_messages=False)
         except BaseException:
             pass
-        logs_text += "<b>Reason:</b> {}\n".format(f"<pre>{gban.reason}</pre>" if gban.reason else "None given.")
+        logs_text += "<b>Reason</b>: {}\n".format(f"<pre>{gban.reason}</pre>" if gban.reason else "None given.")
         await sendlog(logs_text)

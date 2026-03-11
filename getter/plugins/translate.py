@@ -57,7 +57,7 @@ async def _(kst):
         text = strip_format(strip_emoji(words))
         translator = Translator()
         translation = await translator(text, targetlang=lang)
-        tr = f"**Detected:** `{await translator.detect(translation.orig)}`\n**Translated:** `{await translator.detect(translation.text)}`\n\n```{translation.text}```"
+        tr = f"**Detected**: `{await translator.detect(translation.orig)}`\n**Translated**: `{await translator.detect(translation.text)}`\n\n```{translation.text}```"
         await yy.eor(tr, parts=True)
     except Exception as err:
         await yy.eor(formatx_send(err), parse_mode="html")
@@ -167,7 +167,7 @@ async def _(kst):
     pattern="lang$",
 )
 async def _(kst):
-    lang = f"**{len(LANG_CODES)} Language Code:**\n" + "\n".join(
+    lang = f"**{len(LANG_CODES)} Language Code**:\n" + "\n".join(
         [f"- {y}: {x}" for x, y in sort_dict(LANG_CODES).items()]
     )
     await kst.sod(lang, parts=True)
@@ -180,7 +180,7 @@ plugins_help["translate"] = {
     "{i}ts [lang_code] [text]/[reply]": "Translate the message then text to speech.",
     "{i}lang": """List all language code.
 
-**Examples:**
+**Examples**:
 - Use default lang_code.
 -> `{i}tr ready`
 - With choosing lang_code.

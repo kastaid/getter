@@ -51,7 +51,7 @@ async def _(kst):
         url = "https://www.baidu.com/s?wd={}"
     result = url.format(keywords.replace("\n", " ").replace(" ", "+")).strip()
     keywords = keywords.replace("\n", " ").strip()
-    await yy.eor(f"**🔎 {search} Search Result:**\n\n[{keywords}]({result})")
+    await yy.eor(f"**🔎 {search} Search Result**:\n\n[{keywords}]({result})")
 
 
 @kasta_cmd(
@@ -71,13 +71,13 @@ async def _(kst):
         )
         if not res:
             return await yy.eod("`Try again now!`")
-        output = "• **Unshorted Link:** {}\n• **Original Link:** {}".format(res.headers.get("location"), text)
+        output = "• **Unshorted Link**: {}\n• **Original Link**: {}".format(res.headers.get("location"), text)
     else:
         url = f"https://da.gd/s?url={text}"
         res = await Fetch(url)
         if not res:
             return await yy.eod("`Try again now!`")
-        output = f"• **Shorted Link:** {res.strip()}\n• **Original Link:** {text}"
+        output = f"• **Shorted Link**: {res.strip()}\n• **Original Link**: {text}"
     await yy.eor(output)
 
 
@@ -105,18 +105,18 @@ async def _(kst):
     if str(res.get("status")).lower() == "success":
         coordinates = str(res.get("lat") or "") + "," + str(res.get("lon") or "")
         text = """<b><u>IP Address Information</u></b>
-├  <b>IP:</b> <code>{}</code>
-├  <b>City:</b> <code>{}</code>
-├  <b>Region:</b> <code>{}</code>
-├  <b>Country:</b> <code>{}</code>
-├  <b>Country Code:</b> <code>{}</code>
-├  <b>Currency:</b> <code>{}</code>
-├  <b>Continent:</b> <code>{}</code>
-├  <b>Coordinates:</b> <code>{}</code>
-├  <b>Time Zone:</b> <code>{}</code>
-├  <b>ISP:</b> <code>{}</code>
-├  <b>Mobile:</b> <code>{}</code>
-└  <b>Map:</b> <code>{}</code>""".format(
+├  <b>IP</b>: <code>{}</code>
+├  <b>City</b>: <code>{}</code>
+├  <b>Region</b>: <code>{}</code>
+├  <b>Country</b>: <code>{}</code>
+├  <b>Country Code</b>: <code>{}</code>
+├  <b>Currency</b>: <code>{}</code>
+├  <b>Continent</b>: <code>{}</code>
+├  <b>Coordinates</b>: <code>{}</code>
+├  <b>Time Zone</b>: <code>{}</code>
+├  <b>ISP</b>: <code>{}</code>
+├  <b>Mobile</b>: <code>{}</code>
+└  <b>Map</b>: <code>{}</code>""".format(
             res.get("query"),
             res.get("city") or "?",
             res.get("regionName") or "?",
@@ -132,9 +132,9 @@ async def _(kst):
         )
     else:
         text = """<b><u>IP Address Information</u></b>
-├  <b>IP:</b> <code>{}</code>
-├  <b>Status:</b> <code>{}</code>
-└  <b>Message:</b> <code>{}</code>""".format(
+├  <b>IP</b>: <code>{}</code>
+├  <b>Status</b>: <code>{}</code>
+└  <b>Message</b>: <code>{}</code>""".format(
             res.get("query"),
             res.get("status"),
             res.get("message"),
@@ -163,14 +163,14 @@ async def _(kst):
         resp = st.results.dict()
         client = resp.get("client")
         text = """<b><u>SpeedTest completed in {:.3f}s</u></b>
-├  <b>Download:</b> <code>{}</code>
-├  <b>Upload:</b> <code>{}</code>
-├  <b>Ping:</b> <code>{}</code>
-├  <b>Internet Service Provider:</b> <code>{}</code>
-┊  ├  <b>Rating:</b> <code>{}</code>
-┊  ├  <b>IP:</b> <code>{}</code>
-┊  ├  <b>Country:</b> <code>{}</code>
-└  <b>Sponsor:</b> <code>{}</code>""".format(
+├  <b>Download</b>: <code>{}</code>
+├  <b>Upload</b>: <code>{}</code>
+├  <b>Ping</b>: <code>{}</code>
+├  <b>Internet Service Provider</b>: <code>{}</code>
+┊  ├  <b>Rating</b>: <code>{}</code>
+┊  ├  <b>IP</b>: <code>{}</code>
+┊  ├  <b>Country</b>: <code>{}</code>
+└  <b>Sponsor</b>: <code>{}</code>""".format(
             monotonic() - start,
             humanbytes(resp.get("download")),
             humanbytes(resp.get("upload")),
@@ -263,7 +263,7 @@ async def _(kst):
         return await kst.eor("`Provide a valid DNS or IP address!`", time=5)
     yy = await kst.eor("`Processing...`")
     duration = Pinger(dns)
-    await yy.eor(f"• **DNS:** `{dns}`\n• **Ping Speed:** `{duration}`")
+    await yy.eor(f"• **DNS**: `{dns}`\n• **Ping Speed**: `{duration}`")
 
 
 plugins_help["webtools"] = {

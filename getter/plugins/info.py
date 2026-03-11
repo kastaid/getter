@@ -47,9 +47,9 @@ _CAS_CACHE = cachebox.TTLCache(maxsize=100, ttl=120)  # 2 mins
 async def _(kst):
     dc = await kst.client(fun.help.GetNearestDcRequest())
     await kst.eor(
-        f"├  **Country:** `{dc.country}`\n"
-        f"├  **Nearest Datacenter:** `{dc.nearest_dc}`\n"
-        f"└  **This Datacenter:** `{dc.this_dc}`",
+        f"├  **Country**: `{dc.country}`\n"
+        f"├  **Nearest Datacenter**: `{dc.nearest_dc}`\n"
+        f"└  **This Datacenter**: `{dc.this_dc}`",
     )
 
 
@@ -200,30 +200,30 @@ async def _(kst):
     allowed_users = len(await all_allow())
     stop_time = monotonic() - start_time
     graph = """<b>Stats for {}</b>
-├  <b>Private:</b> <code>{}</code>
-┊  ├  <b>Users:</b> <code>{}</code>
-┊  ├  <b>Bots:</b> <code>{}</code>
-├  <b>Groups:</b> <code>{}</code>
-├  <b>Channels:</b> <code>{}</code>
-├  <b>Admin Groups:</b> <code>{}</code>
-┊  ├  <b>Creator:</b> <code>{}</code>
-┊  ├  <b>Admin Rights:</b> <code>{}</code>
-├  <b>Admin Channels:</b> <code>{}</code>
-┊  ├  <b>Creator:</b> <code>{}</code>
-┊  ├  <b>Admin Rights:</b> <code>{}</code>
-├  <b>Unread:</b> <code>{}</code>
-├  <b>Unread Mentions:</b> <code>{}</code>
-├  <b>Archived:</b> <code>{}</code>
-├  <b>Blocked Users:</b> <code>{}</code>
-├  <b>Gifs Saved:</b> <code>{}</code>
-├  <b>Stickers Pack Installed:</b> <code>{}</code>
-├  <b>Stickers Pack Created:</b> <code>{}</code>
-├  <b>Bots Created:</b> <code>{}</code>
-├  <b>Gbanned Users:</b> <code>{}</code>
-├  <b>Gmuted Users:</b> <code>{}</code>
-├  <b>Sudo Users:</b> <code>{}</code>
-├  <b>Allowed Users PM:</b> <code>{}</code>
-└  <b>It Took:</b> <code>{}s</code>""".format(
+├  <b>Private</b>: <code>{}</code>
+┊  ├  <b>Users</b>: <code>{}</code>
+┊  ├  <b>Bots</b>: <code>{}</code>
+├  <b>Groups</b>: <code>{}</code>
+├  <b>Channels</b>: <code>{}</code>
+├  <b>Admin Groups</b>: <code>{}</code>
+┊  ├  <b>Creator</b>: <code>{}</code>
+┊  ├  <b>Admin Rights</b>: <code>{}</code>
+├  <b>Admin Channels</b>: <code>{}</code>
+┊  ├  <b>Creator</b>: <code>{}</code>
+┊  ├  <b>Admin Rights</b>: <code>{}</code>
+├  <b>Unread</b>: <code>{}</code>
+├  <b>Unread Mentions</b>: <code>{}</code>
+├  <b>Archived</b>: <code>{}</code>
+├  <b>Blocked Users</b>: <code>{}</code>
+├  <b>Gifs Saved</b>: <code>{}</code>
+├  <b>Stickers Pack Installed</b>: <code>{}</code>
+├  <b>Stickers Pack Created</b>: <code>{}</code>
+├  <b>Bots Created</b>: <code>{}</code>
+├  <b>Gbanned Users</b>: <code>{}</code>
+├  <b>Gmuted Users</b>: <code>{}</code>
+├  <b>Sudo Users</b>: <code>{}</code>
+├  <b>Allowed Users PM</b>: <code>{}</code>
+└  <b>It Took</b>: <code>{}s</code>""".format(
         ga.full_name,
         private_chats,
         private_chats - bots,
@@ -269,19 +269,19 @@ async def _(kst):
     if kst.is_reply:
         user_id, msg_id = (await kst.get_reply_message()).sender_id, kst.reply_to_msg_id
         if kst.is_private:
-            ids = f"├  **User ID:** `{user_id}`\n"
+            ids = f"├  **User ID**: `{user_id}`\n"
         else:
-            ids = f"├  **Chat ID:** `{chat_id}`\n"
-            ids += f"├  **User ID:** `{user_id}`\n"
-        ids += f"└  **Message ID:** `{msg_id}`"
+            ids = f"├  **Chat ID**: `{chat_id}`\n"
+            ids += f"├  **User ID**: `{user_id}`\n"
+        ids += f"└  **Message ID**: `{msg_id}`"
     else:
         if user_id:
-            ids = f"├  **User ID:** `{user_id}`\n"
-            ids += f"├  **Chat ID:** `{chat_id}`\n"
+            ids = f"├  **User ID**: `{user_id}`\n"
+            ids += f"├  **Chat ID**: `{chat_id}`\n"
         else:
-            ids = "├  **User ID:** " if kst.is_private else "├  **Chat ID:** "
+            ids = "├  **User ID**: " if kst.is_private else "├  **Chat ID**: "
             ids += f"`{chat_id}`\n"
-        ids += f"└  **Message ID:** `{kst.id}`"
+        ids += f"└  **Message ID**: `{kst.id}`"
     await kst.eor(ids)
 
 
@@ -307,9 +307,9 @@ async def _(kst):
         collect = [_.title + "\n" for _ in chat.chats]
         whois = display_name(await ga.get_entity(user.id))
         if collect:
-            text = f"<b>{len(collect)} Groups in common with:</b> <code>{whois}</code>\n" + "".join(collect)
+            text = f"<b>{len(collect)} Groups in common with</b>: <code>{whois}</code>\n" + "".join(collect)
         else:
-            text = f"<b>0 Groups in common with:</b> <code>{whois}</code>"
+            text = f"<b>0 Groups in common with</b>: <code>{whois}</code>"
         await yy.eor(text, parts=True, parse_mode="html")
     except Exception as err:
         await yy.eor(formatx_send(err), parse_mode="html")
@@ -341,36 +341,36 @@ async def _(kst):
     try:
         async with ga.conversation(CREATED_BOT) as conv:
             resp = await conv_created(conv, user_id)
-        created = f"\n├  <b>Created:</b> <code>{resp}</code>"
+        created = f"\n├  <b>Created</b>: <code>{resp}</code>"
         await ga.delete_dialog(CREATED_BOT, revoke=True)
     except BaseException:
         pass
     dc_id = (user.photo and user.photo.dc_id) or 0
     first_name = escape(user.first_name).replace("\u2060", "")
     last_name = (
-        user.last_name and "\n├  <b>Last Name:</b> <code>{}</code>".format(user.last_name.replace("\u2060", ""))
+        user.last_name and "\n├  <b>Last Name</b>: <code>{}</code>".format(user.last_name.replace("\u2060", ""))
     ) or ""
-    username = (user.username and f"\n├  <b>Username:</b> @{user.username}") or ""
+    username = (user.username and f"\n├  <b>Username</b>: @{user.username}") or ""
     user_pictures = (await ga.get_profile_photos(user_id, limit=0)).total or 0
     user_status = get_user_status(user)
     user_bio = escape(full_user.about or "")
     if not is_full:
         caption = f"""<b><u>USER INFORMATION</u></b>
-├  <b>ID:</b> <code>{user_id}</code>{created}
-├  <b>DC ID:</b> <code>{dc_id}</code>
-├  <b>First Name:</b> <code>{first_name}</code>{last_name}{username}
-├  <b>Profile:</b> <a href=tg://user?id={user_id}>Link</a>
-├  <b>Pictures:</b> <code>{user_pictures}</code>
-├  <b>Last Seen:</b> <code>{user_status}</code>
-├  <b>Is Premium:</b> <code>{humanbool(user.premium)}</code>
-├  <b>Is Bot:</b> <code>{humanbool(user.bot)}</code>
-├  <b>Is Blocked:</b> <code>{humanbool(full_user.blocked)}</code>
-├  <b>Is Contact:</b> <code>{humanbool(user.contact)}</code>
-├  <b>Is Deleted:</b> <code>{humanbool(user.deleted)}</code>
-├  <b>Is Private Forward:</b> <code>{humanbool(full_user.private_forward_name)}</code>
-├  <b>Is Scam:</b> <code>{humanbool(user.scam)}</code>
-├  <b>Groups In Common:</b> <code>{full_user.common_chats_count}</code>
-└  <b>Bio:</b>
+├  <b>ID</b>: <code>{user_id}</code>{created}
+├  <b>DC ID</b>: <code>{dc_id}</code>
+├  <b>First Name</b>: <code>{first_name}</code>{last_name}{username}
+├  <b>Profile</b>: <a href=tg://user?id={user_id}>Link</a>
+├  <b>Pictures</b>: <code>{user_pictures}</code>
+├  <b>Last Seen</b>: <code>{user_status}</code>
+├  <b>Is Premium</b>: <code>{humanbool(user.premium)}</code>
+├  <b>Is Bot</b>: <code>{humanbool(user.bot)}</code>
+├  <b>Is Blocked</b>: <code>{humanbool(full_user.blocked)}</code>
+├  <b>Is Contact</b>: <code>{humanbool(user.contact)}</code>
+├  <b>Is Deleted</b>: <code>{humanbool(user.deleted)}</code>
+├  <b>Is Private Forward</b>: <code>{humanbool(full_user.private_forward_name)}</code>
+├  <b>Is Scam</b>: <code>{humanbool(user.scam)}</code>
+├  <b>Groups In Common</b>: <code>{full_user.common_chats_count}</code>
+└  <b>Bio</b>:
 <pre>{user_bio}</pre>"""
     else:
         is_rose_fban = await get_rose_fban(kst, user_id)
@@ -381,35 +381,35 @@ async def _(kst):
         is_sudo = user_id in await jdata.sudo_users()
         is_allowed = bool(await is_allow(user_id))
         caption = """<b><u>USER INFORMATION</u></b>
-├  <b>ID:</b> <code>{}</code>{}
-├  <b>DC ID:</b> <code>{}</code>
-├  <b>First Name:</b> <code>{}</code>{}{}
-├  <b>Language:</b> <code>{}</code>
-├  <b>Profile:</b> <a href=tg://user?id={}>Link</a>
-├  <b>Pictures:</b> <code>{}</code>
-├  <b>Last Seen:</b> <code>{}</code>
-├  <b>Is Premium:</b> <code>{}</code>
-├  <b>Is Bot:</b> <code>{}</code>
-├  <b>Is Blocked:</b> <code>{}</code>
-├  <b>Is Contact:</b> <code>{}</code>
-├  <b>Is Deleted:</b> <code>{}</code>
-├  <b>Is Private Forward:</b> <code>{}</code>
-├  <b>Is Scam:</b> <code>{}</code>
-├  <b>Is Fake:</b> <code>{}</code>
-├  <b>Is Restricted:</b> <code>{}</code>
-├  <b>Is Support:</b> <code>{}</code>
-├  <b>Is Verified:</b> <code>{}</code>
-├  <b>Is Mutual Contact:</b> <code>{}</code>
-├  <b>Is Emoji Status:</b> <code>{}</code>
-├  <b>Is Rose Fban:</b> <code>{}</code>
-├  <b>Is SpamWatch Banned:</b> <code>{}</code>
-├  <b>Is CAS Banned:</b> <code>{}</code>
-├  <b>Is Gbanned:</b> <code>{}</code>
-├  <b>Is Gmuted:</b> <code>{}</code>
-├  <b>Is Sudo:</b> <code>{}</code>
-├  <b>Is Allowed PM:</b> <code>{}</code>
-├  <b>Groups In Common:</b> <code>{}</code>
-└  <b>Bio:</b>
+├  <b>ID</b>: <code>{}</code>{}
+├  <b>DC ID</b>: <code>{}</code>
+├  <b>First Name</b>: <code>{}</code>{}{}
+├  <b>Language</b>: <code>{}</code>
+├  <b>Profile</b>: <a href=tg://user?id={}>Link</a>
+├  <b>Pictures</b>: <code>{}</code>
+├  <b>Last Seen</b>: <code>{}</code>
+├  <b>Is Premium</b>: <code>{}</code>
+├  <b>Is Bot</b>: <code>{}</code>
+├  <b>Is Blocked</b>: <code>{}</code>
+├  <b>Is Contact</b>: <code>{}</code>
+├  <b>Is Deleted</b>: <code>{}</code>
+├  <b>Is Private Forward</b>: <code>{}</code>
+├  <b>Is Scam</b>: <code>{}</code>
+├  <b>Is Fake</b>: <code>{}</code>
+├  <b>Is Restricted</b>: <code>{}</code>
+├  <b>Is Support</b>: <code>{}</code>
+├  <b>Is Verified</b>: <code>{}</code>
+├  <b>Is Mutual Contact</b>: <code>{}</code>
+├  <b>Is Emoji Status</b>: <code>{}</code>
+├  <b>Is Rose Fban</b>: <code>{}</code>
+├  <b>Is SpamWatch Banned</b>: <code>{}</code>
+├  <b>Is CAS Banned</b>: <code>{}</code>
+├  <b>Is Gbanned</b>: <code>{}</code>
+├  <b>Is Gmuted</b>: <code>{}</code>
+├  <b>Is Sudo</b>: <code>{}</code>
+├  <b>Is Allowed PM</b>: <code>{}</code>
+├  <b>Groups In Common</b>: <code>{}</code>
+└  <b>Bio</b>:
 <pre>{}</pre>""".format(
             user_id,
             created,
@@ -481,16 +481,16 @@ async def _(kst):
     maps = (await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterGeo())).total
     contact = (await ga.get_messages(chat_id, limit=0, filter=typ.InputMessagesFilterContacts())).total
     text = f"""<b><u>{total} TOTAL MESSAGES</u></b>
-├  <b>Photo:</b> <code>{photo}</code>
-├  <b>Video:</b> <code>{video}</code>
-├  <b>Music:</b> <code>{music}</code>
-├  <b>Voice Note:</b> <code>{voice_note}</code>
-├  <b>Video Note:</b> <code>{video_note}</code>
-├  <b>Document:</b> <code>{files}</code>
-├  <b>URL:</b> <code>{urls}</code>
-├  <b>Gif:</b> <code>{gifs}</code>
-├  <b>Map:</b> <code>{maps}</code>
-└  <b>Contact:</b> <code>{contact}</code>"""
+├  <b>Photo</b>: <code>{photo}</code>
+├  <b>Video</b>: <code>{video}</code>
+├  <b>Music</b>: <code>{music}</code>
+├  <b>Voice Note</b>: <code>{voice_note}</code>
+├  <b>Video Note</b>: <code>{video_note}</code>
+├  <b>Document</b>: <code>{files}</code>
+├  <b>URL</b>: <code>{urls}</code>
+├  <b>Gif</b>: <code>{gifs}</code>
+├  <b>Map</b>: <code>{maps}</code>
+└  <b>Contact</b>: <code>{contact}</code>"""
     await yy.eor(text, parse_mode="html")
 
 
@@ -590,62 +590,62 @@ async def get_chat_info(kst, chat):
         except BaseException:
             pass
     caption = "<b><u>CHAT INFORMATION</u></b>\n"
-    caption += f"├  <b>ID:</b> <code>{chat.id}</code>\n"
+    caption += f"├  <b>ID</b>: <code>{chat.id}</code>\n"
     if chat_title:
-        caption += f"├  <b>{chat_type} Name:</b> <code>{chat_title}</code>\n"
+        caption += f"├  <b>{chat_type} Name</b>: <code>{chat_title}</code>\n"
     if chat.username:
-        caption += f"├  <b>Username:</b> @{chat.username}\n"
+        caption += f"├  <b>Username</b>: @{chat.username}\n"
     else:
-        caption += f"├  <b>{chat_type} Type:</b> Private\n"
+        caption += f"├  <b>{chat_type} Type</b>: Private\n"
     if creator_username:
-        caption += f"├  <b>Creator:</b> {creator_username}\n"
+        caption += f"├  <b>Creator</b>: {creator_username}\n"
     elif creator_valid:
-        caption += f"├  <b>Creator:</b> <a href=tg://user?id={creator_id}>{creator_firstname}</a>\n"
+        caption += f"├  <b>Creator</b>: <a href=tg://user?id={creator_id}>{creator_firstname}</a>\n"
     if created:
-        caption += f"├  <b>Created:</b> <code>{created.date().strftime('%b %d, %Y')} - {created.time()}</code>\n"
+        caption += f"├  <b>Created</b>: <code>{created.date().strftime('%b %d, %Y')} - {created.time()}</code>\n"
     else:
-        caption += f"├  <b>Created:</b> <code>{chat.date.date().strftime('%b %d, %Y')} - {chat.date.time()}</code>\n"
-    caption += f"├  <b>DC ID:</b> <code>{dc_id}</code>\n"
+        caption += f"├  <b>Created</b>: <code>{chat.date.date().strftime('%b %d, %Y')} - {chat.date.time()}</code>\n"
+    caption += f"├  <b>DC ID</b>: <code>{dc_id}</code>\n"
     if exp_count:
         chat_level = int((1 + sqrt(1 + 7 * exp_count / 14)) / 2)
-        caption += f"├  <b>{chat_type} Level:</b> <code>{chat_level}</code>\n"
+        caption += f"├  <b>{chat_type} Level</b>: <code>{chat_level}</code>\n"
     if msgs_viewable:
-        caption += f"├  <b>Viewable Messages:</b> <code>{msgs_viewable}</code>\n"
+        caption += f"├  <b>Viewable Messages</b>: <code>{msgs_viewable}</code>\n"
     if msgs_sent:
-        caption += f"├  <b>Messages Sent:</b> <code>{msgs_sent}</code>\n"
+        caption += f"├  <b>Messages Sent</b>: <code>{msgs_sent}</code>\n"
     elif msgs_sent_alt:
-        caption += f"├  <b>Messages Sent:</b> <code>{msgs_sent_alt}</code>\n"
+        caption += f"├  <b>Messages Sent</b>: <code>{msgs_sent_alt}</code>\n"
     if members:
-        caption += f"├  <b>Members:</b> <code>{members}</code>\n"
+        caption += f"├  <b>Members</b>: <code>{members}</code>\n"
     if admins:
-        caption += f"├  <b>Administrators:</b> <code>{admins}</code>\n"
+        caption += f"├  <b>Administrators</b>: <code>{admins}</code>\n"
     if full.bot_info:
-        caption += f"├  <b>Bots:</b> <code>{len(full.bot_info)}</code>\n"
+        caption += f"├  <b>Bots</b>: <code>{len(full.bot_info)}</code>\n"
     if members_online:
-        caption += f"├  <b>Currently Online:</b> <code>{members_online}</code>\n"
+        caption += f"├  <b>Currently Online</b>: <code>{members_online}</code>\n"
     if restricted_users:
-        caption += f"├  <b>Restricted Users:</b> <code>{restricted_users}</code>\n"
+        caption += f"├  <b>Restricted Users</b>: <code>{restricted_users}</code>\n"
     if banned_users:
-        caption += f"├  <b>Banned Users:</b> <code>{banned_users}</code>\n"
+        caption += f"├  <b>Banned Users</b>: <code>{banned_users}</code>\n"
     if group_stickers:
-        caption += f"├  <b>{chat_type} Stickers:</b> <a href='t.me/addstickers/{full.stickerset.short_name}'>{group_stickers}</a>\n"
+        caption += f"├  <b>{chat_type} Stickers</b>: <a href='t.me/addstickers/{full.stickerset.short_name}'>{group_stickers}</a>\n"
     if not broadcast:
         if getattr(chat, "slowmode_enabled", None):
-            caption += f"├  <b>Slow Mode:</b> <code>{full.slowmode_seconds}s</code>\n"
+            caption += f"├  <b>Slow Mode</b>: <code>{full.slowmode_seconds}s</code>\n"
         else:
-            caption += f"├  <b>Supergroup:</b> <code>{supergroup}</code>\n"
+            caption += f"├  <b>Supergroup</b>: <code>{supergroup}</code>\n"
     if getattr(chat, "restricted", None):
-        caption += f"├  <b>Restricted:</b> {chat.restricted}\n"
+        caption += f"├  <b>Restricted</b>: {chat.restricted}\n"
         rist = chat.restriction_reason[0]
-        caption += f"┊  ├  <b>Platform:</b> {rist.platform}\n"
-        caption += f"┊  ├  <b>Reason:</b> {rist.reason}\n"
-        caption += f"┊  ├  <b>Text:</b> {rist.text}\n"
+        caption += f"┊  ├  <b>Platform</b>: {rist.platform}\n"
+        caption += f"┊  ├  <b>Reason</b>: {rist.reason}\n"
+        caption += f"┊  ├  <b>Text</b>: {rist.text}\n"
     if getattr(chat, "scam", None):
-        caption += "├  <b>Scam:</b> <code>yes</code>\n"
+        caption += "├  <b>Scam</b>: <code>yes</code>\n"
     if getattr(chat, "verified", None):
-        caption += "├  <b>Verified By Telegram:</b> <code>yes</code>\n"
+        caption += "├  <b>Verified By Telegram</b>: <code>yes</code>\n"
     about = escape(full.about or "")
-    caption += f"└  <b>Description:</b>\n<pre>{about}</pre>"
+    caption += f"└  <b>Description</b>:\n<pre>{about}</pre>"
     return chat_photo, caption
 
 

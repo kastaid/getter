@@ -6,19 +6,10 @@
 [![LICENSE](https://img.shields.io/github/license/kastaid/getter)](LICENSE)
 ![Version](https://img.shields.io/github/manifest-json/v/kastaid/getter?label=Version)
 
-## Disclaimer
-
-⚠️ **Important:** Your Telegram account may get banned. We are not responsible for any misuse of this userbot.
-
-If you spam, face issues with Telegram, or get your account deleted, **DON’T BLAME US!**
-- No personal support.
-- We won’t spoon-feed you.
-- If you need help, ask in our support group, and we or others will try to help you.
-- **DWYOR** (Do With Your Own Risk).
-
-Review the [Telegram API Terms of Service](https://core.telegram.org/api/terms).
-
-Thank you for trusting and using this userbot!
+> [!WARNING]
+> Your Telegram account may get banned if this userbot is misused. We are not responsible for any spam, violations, or account restrictions.
+>
+> Use it at your own risk and review the [Telegram API Terms](https://core.telegram.org/api/terms).
 
 ## Table of Contents
 
@@ -42,7 +33,7 @@ Thank you for trusting and using this userbot!
 ## Requirements
 
 - Python 3.13+
-- Linux (recommended: latest Debian/Ubuntu)
+- Linux (Debian/Ubuntu)
 - Telegram `API_ID` and `API_HASH` from [API development tools](https://my.telegram.org)
 
 ## Quick Start
@@ -115,25 +106,25 @@ Deploy to Heroku with one click:
 
 Once successfully deployed, test your getter by sending `.ping` in any chat.
 
-**Command prefix:**
+**Command prefix**:
 
 - Default prefix is `.` (dot)
 - If you set a custom `HANDLER` in your [config](#config), use that prefix instead (e.g., `!ping`, `/ping`)
 - If `NO_HANDLER` is set to `True`, send commands without any prefix (e.g., `ping`)
 
-**Get all commands:** `.help` - This will show you all available plugins, commands, and how to use them.
+**Get all commands**: `.help` - This will show you all available plugins, commands, and how to use them.
 
 ## Custom Plugins
 
 Create custom plugins at `./getter/plugins/custom/plugin_name.py`.
 
-**Dynamic plugin management:**
+**Dynamic plugin management**:
 
 - Upload your `plugin_name.py` file anywhere in Telegram (plugin name must be unique)
 - Reply to the file with `.load` to download, activate, or update the plugin
 - Reply to the plugin file with `.unload [plugin_name]` to remove it
 
-**Example plugin:**
+**Example plugin**:
 
 ```python
 from . import kasta_cmd

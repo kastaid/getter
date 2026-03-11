@@ -54,37 +54,37 @@ from . import (
 
 gban_text = r"""
 \\<b>#GBanned</b>// User {} in {}-{}={} chats!
-<b>Date:</b> <code>{}</code>
-<b>Taken:</b> <code>{}</code>
-<b>Reported:</b> <code>{}</code>
-<b>Reason:</b> {}
+<b>Date</b>: <code>{}</code>
+<b>Taken</b>: <code>{}</code>
+<b>Reported</b>: <code>{}</code>
+<b>Reason</b>: {}
 
 <i>Added to GBanned_Watch.</i>
 """
 ungban_text = r"""
 \\<b>#UnGBanned</b>// User {} in {}-{}={} chats!
-<b>Taken:</b> <code>{}</code>
+<b>Taken</b>: <code>{}</code>
 
 <i>Wait for 1 minutes before released.</i>
 """
 gmute_text = r"""
 \\<b>#GMuted</b>// User {} in {}-{}={} groups!
-<b>Date:</b> <code>{}</code>
-<b>Taken:</b> <code>{}</code>
-<b>Reason:</b> {}
+<b>Date</b>: <code>{}</code>
+<b>Taken</b>: <code>{}</code>
+<b>Reason</b>: {}
 
 <i>Added to GMuted_Watch.</i>
 """
 ungmute_text = r"""
 \\<b>#UnGMuted</b>// User {} in {}-{}={} groups!
-<b>Taken:</b> <code>{}</code>
+<b>Taken</b>: <code>{}</code>
 
 <i>Wait for 1 minutes before released.</i>
 """
 gdel_text = r"""
 \\<b>#GDeleted</b>// User {} in chats!
-<b>Date:</b> <code>{}</code>
-<b>Reason:</b> {}
+<b>Date</b>: <code>{}</code>
+<b>Reason</b>: {}
 """
 ungdel_text = r"""
 \\<b>#UnGDeleted</b>// User {} in chats!
@@ -93,22 +93,22 @@ ungdel_text = r"""
 """
 reason_text = r"""
 \\<b>#{}</b>// Reason for {} updated!
-<b>Previous Reason:</b> <pre>{}</pre>
-<b>New Reason:</b> <pre>{}</pre>
+<b>Previous Reason</b>: <pre>{}</pre>
+<b>New Reason</b>: <pre>{}</pre>
 """
 gkick_text = r"""
 \\<b>#GKicked</b>// User {} in {}-{}={} chats!
-<b>Taken:</b> <code>{}</code>
-<b>Reason:</b> {}
+<b>Taken</b>: <code>{}</code>
+<b>Reason</b>: {}
 """
 gpromote_text = r"""
 \\<b>#GPromoted</b>// User {} in {}-{}={} {}!
-<b>Title:</b> <code>{}</code>
-<b>Taken:</b> <code>{}</code>
+<b>Title</b>: <code>{}</code>
+<b>Taken</b>: <code>{}</code>
 """
 gdemote_text = r"""
 \\<b>#GDemoted</b>// User {} in {}-{}={} {}!
-<b>Taken:</b> <code>{}</code>
+<b>Taken</b>: <code>{}</code>
 """
 _GBAN_LOCK = asyncio.Lock()
 _UNGBAN_LOCK = asyncio.Lock()

@@ -37,7 +37,7 @@ async def _(kst):
     toggle = kst.pattern_match.group(1)
     sudo = bool(await gvar("_sudo"))
     if not toggle:
-        text = f"**Sudo Status:** `{humanbool(sudo, toggle=True)}`"
+        text = f"**Sudo Status**: `{humanbool(sudo, toggle=True)}`"
         return await yy.eod(text)
     if toggle in {"yes", "on", "true", "1"}:
         if sudo:
@@ -60,7 +60,7 @@ async def _(kst):
     pattern="sudos$",
 )
 async def _(kst):
-    cmds = "**Sudo Commands:**\n" + "\n".join(["- {}: {}".format(x, ", ".join(y)) for x, y in SUDO_CMDS.items()])
+    cmds = "**Sudo Commands**:\n" + "\n".join(["- {}: {}".format(x, ", ".join(y)) for x, y in SUDO_CMDS.items()])
     await kst.sod(cmds, parts=True)
 
 
@@ -163,7 +163,7 @@ plugins_help["sudo"] = {
     "{i}listsudo": "List all sudo users.",
     "{i}delallsudos": """Delete all sudo users.
 
-**Note:**
+**Notes**:
 - Handler for sudo commands is [ , ] comma. E.g: `,test`
 - The sudo, addsudo, delsudo, and delsudos commands are automatically reboot after changes, this to apply changes!
 """,

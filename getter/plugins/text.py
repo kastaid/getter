@@ -91,7 +91,7 @@ async def _(kst):
     if not text:
         return await kst.try_delete()
     count = len(re.findall(r"(\S+)", text))
-    text = f"**Count:** `{count}`"
+    text = f"**Count**: `{count}`"
     await kst.eor(text)
 
 
