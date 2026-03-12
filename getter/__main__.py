@@ -72,7 +72,7 @@ async def main() -> None:
     from .plugins.pmpermit import handle_pmpermit
 
     await asyncio.gather(*[handle_afk(), handle_pmpermit()])
-    loaded_time = time_formatter((monotonic() - load) * 1000)
+    loaded_time = time_formatter(monotonic() - load)
     loaded_msg = ">> Loaded Plugins: {} , Commands: {} (took {}) : {}".format(
         plugins_help.count,
         plugins_help.total,

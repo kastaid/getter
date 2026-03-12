@@ -221,12 +221,12 @@ async def _(kst):
                         if error.lower().startswith(("too many", "a wait of")) or success > max_success:
                             if INVITE_WORKER.get(chat_id):
                                 INVITE_WORKER.pop(chat_id)
-                            taken = time_formatter((monotonic() - start_time) * 1000)
+                            taken = time_formatter(monotonic() - start_time)
                             try:
                                 waitfor = int("".join(filter(str.isdigit, error.lower())))
                             except ValueError:
                                 waitfor = 0
-                            flood = time_formatter(waitfor * 1000)
+                            flood = time_formatter(waitfor)
                             done_limit = done_limit_text.format(
                                 flood,
                                 error,
@@ -266,7 +266,7 @@ async def _(kst):
                     except ChannelPrivateError as err:
                         if INVITE_WORKER.get(chat_id):
                             INVITE_WORKER.pop(chat_id)
-                        taken = time_formatter((monotonic() - start_time) * 1000)
+                        taken = time_formatter(monotonic() - start_time)
                         done_error = done_error_text.format(
                             str(err),
                             success,
@@ -284,7 +284,7 @@ async def _(kst):
             pass
         if INVITE_WORKER.get(chat_id):
             INVITE_WORKER.pop(chat_id)
-        taken = time_formatter((monotonic() - start_time) * 1000)
+        taken = time_formatter(monotonic() - start_time)
         done = done_text.format(
             success,
             failed,
@@ -397,7 +397,7 @@ async def _(kst):
                             pass
             except BaseException:
                 pass
-        taken = time_formatter((monotonic() - start_time) * 1000)
+        taken = time_formatter(monotonic() - start_time)
         await yy.eor("`Uploading CSV Files...`")
         await yy.eor(
             getmembers_text.format(
@@ -531,7 +531,7 @@ async def _(kst):
                 pass
         if INVITE_WORKER.get(chat_id):
             INVITE_WORKER.pop(chat_id)
-        taken = time_formatter((monotonic() - start_time) * 1000)
+        taken = time_formatter(monotonic() - start_time)
         await yy.eor(f"`✅ Completed adding {success} {mode} in {taken}` at `{local_now}`")
 
 

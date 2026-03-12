@@ -3,11 +3,11 @@
 # AGPL-3.0 License
 
 import asyncio
+import random
 from contextlib import suppress
 from datetime import datetime
 from io import BytesIO
 from json import dumps
-from random import choice, randrange
 from time import monotonic
 
 from telethon.errors import FloodWaitError
@@ -136,7 +136,7 @@ _GUCAST_LOCK = asyncio.Lock()
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     if not kst.is_dev and _GBAN_LOCK.locked():
         return await kst.eor("`Please wait until previous •gban• finished...`", time=5, silent=True)
     async with _GBAN_LOCK:
@@ -186,14 +186,14 @@ async def _(kst):
             if gg.is_group or gg.is_channel:
                 try:
                     await ga.edit_permissions(gg.id, user.id, view_messages=False)
-                    await asyncio.sleep(0.5)
                     success += 1
+                    await asyncio.sleep(random.uniform(0.5, 1.5))
                 except FloodWaitError as fw:
                     await asyncio.sleep(fw.seconds + 10)
                     try:
                         await ga.edit_permissions(gg.id, user.id, view_messages=False)
-                        await asyncio.sleep(0.5)
                         success += 1
+                        await asyncio.sleep(random.uniform(0.5, 1.5))
                     except BaseException:
                         failed += 1
                 except BaseException:
@@ -201,7 +201,7 @@ async def _(kst):
         await add_gban(user.id, date, reason)
         await ga.block(user.id)
         await ga.archive(user.id)
-        taken = time_formatter((monotonic() - start_time) * 1000)
+        taken = time_formatter(monotonic() - start_time)
         text = gban_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -228,7 +228,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     if not kst.is_dev and _UNGBAN_LOCK.locked():
         return await kst.eor("`Please wait until previous •ungban• finished...`", time=5, silent=True)
     async with _UNGBAN_LOCK:
@@ -252,21 +252,21 @@ async def _(kst):
             if gg.is_group or gg.is_channel:
                 try:
                     await ga.edit_permissions(gg.id, user.id)
-                    await asyncio.sleep(0.5)
                     success += 1
+                    await asyncio.sleep(random.uniform(0.5, 1.5))
                 except FloodWaitError as fw:
                     await asyncio.sleep(fw.seconds + 10)
                     try:
                         await ga.edit_permissions(gg.id, user.id)
-                        await asyncio.sleep(0.5)
                         success += 1
+                        await asyncio.sleep(random.uniform(0.5, 1.5))
                     except BaseException:
                         failed += 1
                 except BaseException:
                     failed += 1
         await del_gban(user.id)
         await ga.unblock(user.id)
-        taken = time_formatter((monotonic() - start_time) * 1000)
+        taken = time_formatter(monotonic() - start_time)
         text = ungban_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -292,7 +292,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     if not kst.is_dev and _GMUTE_LOCK.locked():
         return await kst.eor("`Please wait until previous •gmute• finished...`", time=5, silent=True)
     async with _GMUTE_LOCK:
@@ -318,20 +318,20 @@ async def _(kst):
             if gg.is_group:
                 try:
                     await ga.edit_permissions(gg.id, user.id, send_messages=False)
-                    await asyncio.sleep(0.5)
                     success += 1
+                    await asyncio.sleep(random.uniform(0.5, 1.5))
                 except FloodWaitError as fw:
                     await asyncio.sleep(fw.seconds + 10)
                     try:
                         await ga.edit_permissions(gg.id, user.id, send_messages=False)
-                        await asyncio.sleep(0.5)
                         success += 1
+                        await asyncio.sleep(random.uniform(0.5, 1.5))
                     except BaseException:
                         failed += 1
                 except BaseException:
                     failed += 1
         await add_gmute(user.id, date, reason)
-        taken = time_formatter((monotonic() - start_time) * 1000)
+        taken = time_formatter(monotonic() - start_time)
         text = gmute_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -357,7 +357,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     if not kst.is_dev and _UNGMUTE_LOCK.locked():
         return await kst.eor("`Please wait until previous •ungmute• finished...`", time=5, silent=True)
     async with _UNGMUTE_LOCK:
@@ -381,20 +381,20 @@ async def _(kst):
             if gg.is_group:
                 try:
                     await ga.edit_permissions(gg.id, user.id, send_messages=True)
-                    await asyncio.sleep(0.5)
                     success += 1
+                    await asyncio.sleep(random.uniform(0.5, 1.5))
                 except FloodWaitError as fw:
                     await asyncio.sleep(fw.seconds + 10)
                     try:
                         await ga.edit_permissions(gg.id, user.id, send_messages=True)
-                        await asyncio.sleep(0.5)
                         success += 1
+                        await asyncio.sleep(random.uniform(0.5, 1.5))
                     except BaseException:
                         failed += 1
                 except BaseException:
                     failed += 1
         await del_gmute(user.id)
-        taken = time_formatter((monotonic() - start_time) * 1000)
+        taken = time_formatter(monotonic() - start_time)
         text = ungmute_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -418,7 +418,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     if not kst.is_dev and _GDEL_LOCK.locked():
         return await kst.eor("`Please wait until previous •gdel• finished...`", time=5, silent=True)
     async with _GDEL_LOCK:
@@ -456,7 +456,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     if not kst.is_dev and _UNGDEL_LOCK.locked():
         return await kst.eor("`Please wait until previous •ungdel• finished...`", time=5, silent=True)
     async with _UNGDEL_LOCK:
@@ -601,7 +601,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     if not kst.is_dev and _GKICK_LOCK.locked():
         return await kst.eor("`Please wait until previous •gkick• finished...`", time=5, silent=True)
     async with _GKICK_LOCK:
@@ -624,19 +624,19 @@ async def _(kst):
             if gg.is_group or gg.is_channel:
                 try:
                     await ga.kick_participant(gg.id, user.id)
-                    await asyncio.sleep(0.5)
                     success += 1
+                    await asyncio.sleep(random.uniform(0.5, 1.5))
                 except FloodWaitError as fw:
                     await asyncio.sleep(fw.seconds + 10)
                     try:
                         await ga.kick_participant(gg.id, user.id)
-                        await asyncio.sleep(0.5)
                         success += 1
+                        await asyncio.sleep(random.uniform(0.5, 1.5))
                     except BaseException:
                         failed += 1
                 except BaseException:
                     failed += 1
-        taken = time_formatter((monotonic() - start_time) * 1000)
+        taken = time_formatter(monotonic() - start_time)
         text = gkick_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -657,7 +657,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     if not kst.is_dev and _GPROMOTE_LOCK.locked():
         return await kst.eor("`Please wait until previous •gpromote• finished...`", time=5, silent=True)
     async with _GPROMOTE_LOCK:
@@ -696,11 +696,11 @@ async def _(kst):
                         anonymous=False,
                         title=title,
                     )
-                    await asyncio.sleep(0.5)
                     success += 1
+                    await asyncio.sleep(random.uniform(0.5, 1.5))
                 except BaseException:
                     failed += 1
-        taken = time_formatter((monotonic() - start_time) * 1000)
+        taken = time_formatter(monotonic() - start_time)
         text = gpromote_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -722,7 +722,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     if not kst.is_dev and _GDEMOTE_LOCK.locked():
         return await kst.eor("`Please wait until previous •gdemote• finished...`", time=5, silent=True)
     async with _GDEMOTE_LOCK:
@@ -757,11 +757,11 @@ async def _(kst):
                         manage_call=False,
                         anonymous=False,
                     )
-                    await asyncio.sleep(0.5)
                     success += 1
+                    await asyncio.sleep(random.uniform(0.5, 1.5))
                 except BaseException:
                     failed += 1
-        taken = time_formatter((monotonic() - start_time) * 1000)
+        taken = time_formatter(monotonic() - start_time)
         text = gdemote_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -782,7 +782,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     if not kst.is_dev and _GCAST_LOCK.locked():
         return await kst.eor("`Please wait until previous •gcast• finished...`", time=5, silent=True)
     async with _GCAST_LOCK:
@@ -826,8 +826,8 @@ async def _(kst):
                             message=message,
                             link_preview=True,
                         )
-                        await asyncio.sleep(randrange(2, 5))
                         success += 1
+                        await asyncio.sleep(random.uniform(2.5, 5.5))
                     except FloodWaitError as fw:
                         await asyncio.sleep(fw.seconds + 10)
                         try:
@@ -836,15 +836,15 @@ async def _(kst):
                                 message=message,
                                 link_preview=True,
                             )
-                            await asyncio.sleep(randrange(2, 5))
                             success += 1
+                            await asyncio.sleep(random.uniform(2.5, 5.5))
                         except Exception as err2:
                             error += "• " + str(err2) + "\n"
                             failed += 1
                     except Exception as err1:
                         error += "• " + str(err1) + "\n"
                         failed += 1
-        taken = time_formatter((monotonic() - start_time) * 1000)
+        taken = time_formatter(monotonic() - start_time)
         text = r"\\**#Gcast**// {} in {}-{}={} {}.".format(
             taken,
             success + failed,
@@ -873,7 +873,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     if not kst.is_dev and _GUCAST_LOCK.locked():
         return await kst.eor("`Please wait until previous •gucast• finished...`", time=5, silent=True)
     async with _GUCAST_LOCK:
@@ -911,8 +911,8 @@ async def _(kst):
                             message=message,
                             link_preview=True,
                         )
-                        await asyncio.sleep(randrange(2, 5))
                         success += 1
+                        await asyncio.sleep(random.uniform(2.5, 5.5))
                     except FloodWaitError as fw:
                         await asyncio.sleep(fw.seconds + 10)
                         try:
@@ -921,13 +921,13 @@ async def _(kst):
                                 message=message,
                                 link_preview=True,
                             )
-                            await asyncio.sleep(randrange(2, 5))
                             success += 1
+                            await asyncio.sleep(random.uniform(2.5, 5.5))
                         except BaseException:
                             failed += 1
                     except BaseException:
                         failed += 1
-        taken = time_formatter((monotonic() - start_time) * 1000)
+        taken = time_formatter(monotonic() - start_time)
         text = rf"\\**#Gucast**// {taken} in {success + failed}-{failed}={success} users."
         await yy.eor(text)
 
@@ -956,7 +956,7 @@ async def _(kst):
 
 async def gblacklisted(kst, mode):
     if kst.is_dev:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Processing...`")
     where = await ga.get_text(kst)

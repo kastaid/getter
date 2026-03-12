@@ -513,7 +513,7 @@ async def _(kst):
     if not (sec or sec.isdecimal()):
         return await kst.eor("`Provide a valid seconds!`", time=5)
     sec = int(sec)
-    pinfor = time_formatter(sec * 1000)
+    pinfor = time_formatter(sec)
     is_notify = any(_ in " ".join(opts[1:]).strip() for _ in ("-n", "notify"))
     msg_id = kst.reply_to_msg_id
     try:

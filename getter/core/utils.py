@@ -66,26 +66,65 @@ def humanbytes(size: float) -> str:
         return "0 B"
     power = 1024
     pos = 0
-    power_dict = {0: "", 1: "K", 2: "M", 3: "G", 4: "T", 5: "P", 6: "E", 7: "Z", 8: "Y"}
+    power_dict = {
+        0: "",
+        1: "K",
+        2: "M",
+        3: "G",
+        4: "T",
+        5: "P",
+        6: "E",
+        7: "Z",
+        8: "Y",
+    }
     while size > power:
         size /= power
         pos += 1
     return f"{size:.2f}{power_dict[pos]}B"
 
 
-def time_formatter(ms: float) -> str:
-    minutes, seconds = divmod(int(ms / 1000), 60)
-    hours, minutes = divmod(minutes, 60)
-    days, hours = divmod(hours, 24)
-    weeks, days = divmod(days, 7)
-    time_units = (
-        f"{weeks}w, " if weeks else "",
-        f"{days}d, " if days else "",
-        f"{hours}h, " if hours else "",
-        f"{minutes}m, " if minutes else "",
-        f"{seconds}s, " if seconds else "",
-    )
-    return "".join(time_units)[:-2] or "0s"
+def time_formatter(
+    dur: float,
+    readable: bool = False,
+) -> str:
+    if dur > 1e10:
+        dur //= 1000
+    total = int(dur)
+    sec = total % 60
+    total //= 60
+    mins = total % 60
+    total //= 60
+    hour = total % 24
+    total //= 24
+    day = total % 7
+    week = total // 7
+    if not (week or day or hour or mins or sec):
+        return "0sec" if readable else "0s"
+    if readable:
+        parts = []
+        if week:
+            parts.append(f"{week}week")
+        if day:
+            parts.append(f"{day}day")
+        if hour:
+            parts.append(f"{hour}hour")
+        if mins:
+            parts.append(f"{mins}min")
+        if sec:
+            parts.append(f"{sec}sec")
+        return ", ".join(parts)
+    parts = []
+    if week:
+        parts.append(f"{week}w")
+    if day:
+        parts.append(f"{day}d")
+    if hour:
+        parts.append(f"{hour}h")
+    if mins:
+        parts.append(f"{mins}m")
+    if sec:
+        parts.append(f"{sec}s")
+    return ", ".join(parts)
 
 
 def until_time(
