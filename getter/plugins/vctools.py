@@ -155,7 +155,7 @@ async def _(kst):
         except FloodWaitError as fw:
             # from telethon.errors import FloodWaitError
             flood = fw.seconds
-            await yy.eor("`Inviting wait in {}...`".format(time_formatter((flood + 5) * 1000)))
+            await yy.eor("`Inviting wait in {}...`".format(time_formatter(flood + 5))
             await asyncio.sleep(flood + 5)
             await ga(InviteToGroupCallRequest(call=call, users=user))
             done += 6

@@ -256,7 +256,7 @@ class KastaClient(TelegramClient):
 
     @property
     def uptime(self) -> str:
-        return time_formatter((time() - StartTime) * 1000)
+        return time_formatter(time() - StartTime)
 
     def to_dict(self) -> dict:
         return dict(getmembers(self))

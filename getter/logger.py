@@ -71,5 +71,6 @@ for name in (
     "asyncio",
     "telethon",
     "telethon.network.mtprotosender",
+    "pytgcalls",
 ):
     logging.getLogger(name).setLevel(logging.ERROR)

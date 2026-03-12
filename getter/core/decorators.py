@@ -148,7 +148,7 @@ def kasta_cmd(
                 await fun(kst)
             except FloodWaitError as fw:
                 FLOOD_WAIT = fw.seconds
-                FLOOD_WAIT_HUMAN = time_formatter((FLOOD_WAIT + 10) * 1000)
+                FLOOD_WAIT_HUMAN = time_formatter(FLOOD_WAIT + 10)
                 kst.client.log.warning(
                     f"A FloodWait Error of {FLOOD_WAIT}. Sleeping for {FLOOD_WAIT_HUMAN} and try again."
                 )

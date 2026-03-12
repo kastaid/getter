@@ -73,7 +73,7 @@ async def _(kst):
             if gg.is_group or gg.is_channel:
                 await asyncio.sleep(0.2)
                 done += 1
-        taken = time_formatter((monotonic() - start_time) * 1000)
+        taken = time_formatter(monotonic() - start_time)
         text = fgban_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             done,
@@ -120,7 +120,7 @@ async def _(kst):
             if gg.is_group or gg.is_channel:
                 await asyncio.sleep(0.2)
                 done += 1
-        taken = time_formatter((monotonic() - start_time) * 1000)
+        taken = time_formatter(monotonic() - start_time)
         text = fungban_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             done,

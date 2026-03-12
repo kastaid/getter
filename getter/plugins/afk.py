@@ -80,7 +80,7 @@ async def StopAFK(kst):
     if afk:
         start = datetime.fromtimestamp(afk.start)
         end = datetime.now().replace(microsecond=0)
-        afk_time = time_formatter((end - start).seconds * 1000)
+        afk_time = time_formatter((end - start).seconds)
         try:
             for x, y in afk.last.items():
                 await kst.client.delete_messages(int(x), [y])
@@ -109,7 +109,7 @@ async def OnAFK(kst):
         if afk:
             start = datetime.fromtimestamp(afk.start)
             end = datetime.now().replace(microsecond=0)
-            afk_time = time_formatter((end - start).seconds * 1000)
+            afk_time = time_formatter((end - start).seconds)
             text = "<b><u>I’m on AFK!</u></b>\n"
             text += f"Last seen {afk_time} ago."
             reason = f"<pre>{afk.reason}</pre>" if afk.reason else "No reason."
