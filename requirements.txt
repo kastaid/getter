@@ -12,7 +12,7 @@ GitPython==3.1.46
 telegraph==2.2.0
 lottie==0.7.2
 Pillow==12.1.1
-CairoSVG==2.8.2
+CairoSVG==2.9.0
 requests==2.32.5
 
 Markdown==3.10.2

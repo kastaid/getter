@@ -85,7 +85,7 @@ async def get_chat_id(
                 full = await message.client(fun.channels.GetFullChannelRequest(chat_id))
                 chat_id = full.full_chat.id
             except BaseException:
-                return None
+                return
     return chat_id
 
 

@@ -2,9 +2,9 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
+import html
 import re
 from datetime import datetime
-from html import escape
 from mimetypes import guess_extension
 
 import aiofiles
@@ -184,13 +184,9 @@ async def _(kst):
     if not res:
         return await yy.eod("`Try again now!`")
     if mode != "p":
-        res = escape(res)
-        await yy.eor(f"<pre>{res}</pre>", parse_mode="html")
+        await yy.eor(f"<pre>{html.escape(res)}</pre>", parse_mode="html")
     else:
-        await yy.eor(
-            file=res,
-            force_document=False,
-        )
+        await yy.eor(file=res, force_document=False)
 
 
 @kasta_cmd(

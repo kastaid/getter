@@ -3,9 +3,9 @@
 # AGPL-3.0 License
 
 import asyncio
+import json
 import sys
 from io import BytesIO, StringIO
-from json import dumps
 from pathlib import Path
 from traceback import format_exc
 
@@ -43,7 +43,7 @@ async def _(kst):
     mode = kst.pattern_match.group(1)
     msg = await kst.get_reply_message() if kst.is_reply else kst
     if mode == "json":
-        text = dumps(
+        text = json.dumps(
             to_dict(msg),
             indent=1,
             default=str,
@@ -269,7 +269,7 @@ def _parse_eval(value=None):
             pass
     elif isinstance(value, dict):
         try:
-            return dumps(value, indent=1, ensure_ascii=False)
+            return json.dumps(value, indent=1, ensure_ascii=False)
         except BaseException:
             pass
     return str(value)

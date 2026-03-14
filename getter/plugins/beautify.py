@@ -2,7 +2,7 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
-from random import choice
+import random
 
 from . import (
     CARBON_PRESETS,
@@ -26,7 +26,7 @@ async def _(kst):
     if args[0] in CARBON_PRESETS:
         is_theme, theme = True, args[0]
     else:
-        is_theme, theme = False, choice(tuple(CARBON_PRESETS))
+        is_theme, theme = False, random.choice(tuple(CARBON_PRESETS))
     if kst.is_reply:
         reply = await kst.get_reply_message()
         if reply.media and get_media_type(reply.media) == "text":
@@ -51,7 +51,7 @@ async def _(kst):
         return await kst.eod("`Reply to text message or readable file.`")
     yy = await kst.eor("`Processing...`")
     backgroundColor = CARBON_PRESETS[theme]
-    windowTheme = choice(("none", "sharp", "bw"))
+    windowTheme = random.choice(("none", "sharp", "bw"))
     carbon = await Carbon(
         code.strip(),
         file_name="carbon",
@@ -83,7 +83,7 @@ async def _(kst):
     if args[0] in RAYSO_THEMES:
         is_theme, theme = True, args[0]
     else:
-        is_theme, theme = False, choice(RAYSO_THEMES)
+        is_theme, theme = False, random.choice(RAYSO_THEMES)
     if kst.is_reply:
         reply = await kst.get_reply_message()
         if reply.media and get_media_type(reply.media) == "text":
@@ -107,7 +107,7 @@ async def _(kst):
     if not code:
         return await kst.eod("`Reply to text message or readable file.`")
     yy = await kst.eor("`Processing...`")
-    darkMode = choice((True, False))
+    darkMode = random.choice((True, False))
     rayso = await Carbon(
         code,
         file_name="rayso",

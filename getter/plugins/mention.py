@@ -3,7 +3,7 @@
 # AGPL-3.0 License
 
 import asyncio
-from random import choice, randrange
+import random
 
 from telethon.tl import types as typ
 
@@ -81,7 +81,7 @@ async def _(kst):
                 parse_mode="html",
             )
             limit += DEFAULT_PERUSER
-            await asyncio.sleep(randrange(5, 7))
+            await asyncio.sleep(random.randrange(5, 7))
         except BaseException:
             pass
     if chat_id in ATAGS:
@@ -110,11 +110,11 @@ async def _(kst):
     async for x in ga.iter_participants(chat):
         if exclude_user(x):
             if not hasattr(x.participant, "admin_rights"):
-                users.append(mentionuser(x.id, choice(EMOJIS), html=True))
+                users.append(mentionuser(x.id, random.choice(EMOJIS), html=True))
             if isinstance(x.participant, typ.ChannelParticipantAdmin):
-                users.append(f"👮 {mentionuser(x.id, choice(EMOJIS), html=True)}")
+                users.append(f"👮 {mentionuser(x.id, random.choice(EMOJIS), html=True)}")
             if isinstance(x.participant, typ.ChannelParticipantCreator):
-                users.append(f"🤴 {mentionuser(x.id, choice(EMOJIS), html=True)}")
+                users.append(f"🤴 {mentionuser(x.id, random.choice(EMOJIS), html=True)}")
     caption = f"{md_to_html(caption)}\n" if caption else caption
     for men in chunk(users, DEFAULT_PERUSER):
         try:
@@ -126,7 +126,7 @@ async def _(kst):
                 parse_mode="html",
             )
             limit += DEFAULT_PERUSER
-            await asyncio.sleep(randrange(5, 7))
+            await asyncio.sleep(random.randrange(5, 7))
         except BaseException:
             pass
     if chat_id in ETAGS:

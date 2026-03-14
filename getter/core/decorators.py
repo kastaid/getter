@@ -3,6 +3,7 @@
 # AGPL-3.0 License
 
 import asyncio
+import random
 import re
 import sys
 from collections.abc import Callable
@@ -147,12 +148,10 @@ def kasta_cmd(
             try:
                 await fun(kst)
             except FloodWaitError as fw:
-                FLOOD_WAIT = fw.seconds
-                FLOOD_WAIT_HUMAN = time_formatter(FLOOD_WAIT + 10)
-                kst.client.log.warning(
-                    f"A FloodWait Error of {FLOOD_WAIT}. Sleeping for {FLOOD_WAIT_HUMAN} and try again."
-                )
-                await asyncio.sleep(FLOOD_WAIT + 10)
+                FLOOD_WAIT = fw.seconds + random.uniform(10, 15)
+                FLOOD_WAIT_HUMAN = time_formatter(FLOOD_WAIT)
+                kst.client.log.warning(f"FloodWait {FLOOD_WAIT}. Sleeping for {FLOOD_WAIT_HUMAN} before retrying.")
+                await asyncio.sleep(FLOOD_WAIT)
                 return  # safety first
             except (
                 MessageIdInvalidError,
@@ -321,7 +320,7 @@ async def sendlog(
     if not BOTLOGS and fallback:
         BOTLOGS = getter_app.uid
     if not BOTLOGS and not fallback:
-        return None
+        return
     try:
         if not forward:
             return await getter_app.send_message(
@@ -335,7 +334,7 @@ async def sendlog(
             **args,
         )
     except FloodWaitError as fw:
-        await asyncio.sleep(fw.seconds + 10)
+        await asyncio.sleep(fw.seconds + random.uniform(10, 15))
         return await sendlog(
             message=message,
             forward=forward,
@@ -344,4 +343,4 @@ async def sendlog(
         )
     except Exception as err:
         getter_app.log.exception(err)
-        return None
+        return

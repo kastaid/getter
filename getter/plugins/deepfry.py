@@ -2,9 +2,8 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
-import asyncio
+import random
 from mimetypes import guess_extension
-from random import randint, uniform
 
 from PIL import Image, ImageEnhance, ImageOps
 from telethon import events
@@ -143,8 +142,8 @@ async def conv_fry(conv, image, level):
             clear_reactions=True,
         )
         return resp
-    except asyncio.exceptions.TimeoutError:
-        return None
+    except TimeoutError:
+        return
     except YouBlockedUserError:
         await conv._client.unblock(conv.chat_id)
         return await conv_fry(conv, image, level)
@@ -153,32 +152,32 @@ async def conv_fry(conv, image, level):
 def uglying(img: Image) -> Image:
     img = Image.open(img)
     colours = (
-        (randint(50, 200), randint(40, 170), randint(40, 190)),
-        (randint(190, 255), randint(170, 240), randint(180, 250)),
+        (random.randint(50, 200), random.randint(40, 170), random.randint(40, 190)),
+        (random.randint(190, 255), random.randint(170, 240), random.randint(180, 250)),
     )
     img = img.copy().convert("RGB")
     img = img.convert("RGB")
     width, height = img.width, img.height
     img = img.resize(
-        (int(width ** uniform(0.8, 0.9)), int(height ** uniform(0.8, 0.9))),
+        (int(width ** random.uniform(0.8, 0.9)), int(height ** random.uniform(0.8, 0.9))),
         resample=Image.LANCZOS,
     )
     img = img.resize(
-        (int(width ** uniform(0.85, 0.95)), int(height ** uniform(0.85, 0.95))),
+        (int(width ** random.uniform(0.85, 0.95)), int(height ** random.uniform(0.85, 0.95))),
         resample=Image.BILINEAR,
     )
     img = img.resize(
-        (int(width ** uniform(0.89, 0.98)), int(height ** uniform(0.89, 0.98))),
+        (int(width ** random.uniform(0.89, 0.98)), int(height ** random.uniform(0.89, 0.98))),
         resample=Image.BICUBIC,
     )
     img = img.resize((width, height), resample=Image.BICUBIC)
-    img = ImageOps.posterize(img, randint(3, 7))
+    img = ImageOps.posterize(img, random.randint(3, 7))
     overlay = img.split()[0]
-    overlay = ImageEnhance.Contrast(overlay).enhance(uniform(1.0, 2.0))
-    overlay = ImageEnhance.Brightness(overlay).enhance(uniform(1.0, 2.0))
+    overlay = ImageEnhance.Contrast(overlay).enhance(random.uniform(1.0, 2.0))
+    overlay = ImageEnhance.Brightness(overlay).enhance(random.uniform(1.0, 2.0))
     overlay = ImageOps.colorize(overlay, colours[0], colours[1])
-    img = Image.blend(img, overlay, uniform(0.1, 0.4))
-    return ImageEnhance.Sharpness(img).enhance(randint(5, 300))
+    img = Image.blend(img, overlay, random.uniform(0.1, 0.4))
+    return ImageEnhance.Sharpness(img).enhance(random.randint(5, 300))
 
 
 def check_media(reply):

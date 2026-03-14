@@ -3,9 +3,9 @@
 # AGPL-3.0 License
 
 import asyncio
+import html
+import random
 from datetime import datetime
-from html import escape
-from random import choice
 
 from telethon import events
 
@@ -52,7 +52,7 @@ async def _(kst):
     reason = await kst.client.get_text(kst, plain=False)
     text = "<b><u>I’m now AFK!</u></b>"
     if reason:
-        reason = escape(reason)
+        reason = html.escape(reason)
         text += f"\n<b>Reason</b>: <pre>{reason}</pre>"
     await add_afk(reason, start)
     getter_app.add_handler(
@@ -87,9 +87,9 @@ async def StopAFK(kst):
         except BaseException:
             pass
         await del_afk()
-        myself = escape(kst.client.full_name)
+        myself = html.escape(kst.client.full_name)
         text = f"{myself}\n"
-        text += f"{choice(OUTS_AFK)}\n"
+        text += f"{random.choice(OUTS_AFK)}\n"
         text += f"<i>Was away for</i> – {afk_time}"
         await kst.eod(text, parse_mode="html")
 

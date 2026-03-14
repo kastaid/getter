@@ -2,10 +2,10 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
+import math
+import random
+import re
 from functools import reduce
-from math import ceil
-from random import choice
-from re import IGNORECASE, sub
 from string import ascii_letters
 from time import time
 from typing import Any
@@ -28,7 +28,7 @@ def replace_all(
     regex: bool = False,
 ) -> str:
     if regex:
-        return reduce(lambda a, kv: sub(*kv, a, flags=IGNORECASE), repls.items(), text)
+        return reduce(lambda a, kv: re.sub(*kv, a, flags=re.IGNORECASE), repls.items(), text)
     return reduce(lambda a, kv: a.replace(*kv), repls.items(), text)
 
 
@@ -164,7 +164,7 @@ def get_random_hex(length: int = 12) -> str:
 
 
 def get_random_alpha(length: int = 12) -> str:
-    return "".join(choice(ascii_letters) for _ in range(length))
+    return "".join(random.choice(ascii_letters) for _ in range(length))
 
 
 def mask_email(email: str) -> str:
@@ -173,7 +173,7 @@ def mask_email(email: str) -> str:
 
 
 def chunk(lst: list, size: int = 2) -> list:
-    return [lst[_ * size : _ * size + size] for _ in list(range(ceil(len(lst) / size)))]
+    return [lst[_ * size : _ * size + size] for _ in list(range(math.ceil(len(lst) / size)))]
 
 
 def sort_dict(dct: dict, reverse: bool = False) -> dict:
@@ -210,20 +210,22 @@ def to_dict(
 
 
 def camel(text: str) -> str:
-    text = sub(r"(_|-)+", " ", text).title().replace(" ", "")
+    text = re.sub(r"(_|-)+", " ", text).title().replace(" ", "")
     return "".join([text[0].lower(), text[1:]])
 
 
 def snake(text: str) -> str:
-    return "_".join(sub(r"([A-Z][a-z]+)", r" \1", sub(r"([A-Z]+)", r" \1", text.replace("-", " "))).split()).lower()
+    return "_".join(
+        re.sub(r"([A-Z][a-z]+)", r" \1", re.sub(r"([A-Z]+)", r" \1", text.replace("-", " "))).split()
+    ).lower()
 
 
 def kebab(text: str) -> str:
     return "-".join(
-        sub(
+        re.sub(
             r"(\s|_|-)+",
             " ",
-            sub(
+            re.sub(
                 r"[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+",
                 lambda x: " " + x.group(0).lower(),
                 text,

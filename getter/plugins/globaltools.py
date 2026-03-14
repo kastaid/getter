@@ -3,11 +3,11 @@
 # AGPL-3.0 License
 
 import asyncio
+import json
 import random
 from contextlib import suppress
 from datetime import datetime
 from io import BytesIO
-from json import dumps
 from time import monotonic
 
 from telethon.errors import FloodWaitError
@@ -566,7 +566,7 @@ async def _(kst):
             lists = await gmute_list()
         else:
             lists = await gdel_list()
-        return await kst.eor(dumps(lists, indent=1, default=str), parse_mode=parse_pre)
+        return await kst.eor(json.dumps(lists, indent=1, default=str), parse_mode=parse_pre)
     if cmd == "gban":
         mode = "GBanned"
         users = await all_gban()

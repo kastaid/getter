@@ -3,7 +3,7 @@
 # AGPL-3.0 License
 
 import asyncio
-from random import choice
+import random
 
 from telethon.errors import UserAlreadyParticipantError
 from telethon.tl import functions as fun
@@ -205,7 +205,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Joining video chat...`")
     chat_id = await get_call_id(kst)
@@ -243,7 +243,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Leaving video chat...`")
     chat_id = await get_call_id(kst)
@@ -289,7 +289,7 @@ async def get_call(client, chat_id):
         )
         return call.call
     except BaseException:
-        return None
+        return
 
 
 async def get_call_id(message, group=1):

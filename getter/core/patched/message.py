@@ -82,7 +82,7 @@ class Message:
                             **args,
                         )
             except MessageIdInvalidError:  # keep functions running
-                return None
+                return
             except MessageNotModifiedError:
                 yy = self
             except MediaCaptionTooLongError:
@@ -95,7 +95,7 @@ class Message:
                         **args,
                     )
                 except BaseException:
-                    return None
+                    return
             except MessageTooLongError:
                 await self.delete()
                 with suppress(BaseException), BytesIO(str.encode(text)) as file:
@@ -108,11 +108,11 @@ class Message:
                         reply_to=reply_to,
                         parse_mode="html",
                     )
-                return None
+                return
             except (ChatSendMediaForbiddenError, FloodWaitError):
                 raise
             except BaseException:
-                return None
+                return
         else:
             try:
                 if is_file:
@@ -151,7 +151,7 @@ class Message:
                         **args,
                     )
                 except BaseException:
-                    return None
+                    return
             except MessageTooLongError:
                 with suppress(BaseException), BytesIO(str.encode(text)) as file:
                     file.name = "message.txt"
@@ -163,11 +163,11 @@ class Message:
                         reply_to=reply_to,
                         parse_mode="html",
                     )
-                return None
+                return
             except (ChatSendMediaForbiddenError, FloodWaitError):
                 raise
             except BaseException:
-                return None
+                return
         if yy and time:
             await asyncio.sleep(time)
             return await yy.delete()
@@ -245,7 +245,7 @@ class Message:
                     **args,
                 )
             except BaseException:
-                return None
+                return
         except MessageTooLongError:
             if self.out:
                 await self.delete()
@@ -259,11 +259,11 @@ class Message:
                     reply_to=reply_to,
                     parse_mode="html",
                 )
-            return None
+            return
         except (ChatSendMediaForbiddenError, FloodWaitError):
             raise
         except BaseException:
-            return None
+            return
         if yy and time:
             await asyncio.sleep(time)
             return await yy.delete()
@@ -274,7 +274,7 @@ class Message:
         try:
             return await self.delete()
         except BaseException:
-            return None
+            return
 
     @patchable()
     async def read(self, **args) -> bool:
@@ -311,7 +311,7 @@ class Message:
             else:
                 chat = self.chat_id
         else:
-            return None
+            return
         if self.is_private:
             return f"tg://openmessage?user_id={chat}&message_id={self.id}"
         return f"https://t.me/c/{chat}/{self.id}"

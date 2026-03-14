@@ -66,14 +66,14 @@ class TelegramClient:
         try:
             return await self.edit_folder(entity, folder=1)
         except BaseException:
-            return None
+            return
 
     @patchable()
     async def unarchive(self, entity: hints.EntityLike) -> typ.Updates | None:
         try:
             return await self.edit_folder(entity, folder=0)
         except BaseException:
-            return None
+            return
 
     @patchable()
     async def delete_chat(
@@ -84,7 +84,7 @@ class TelegramClient:
         try:
             return await self.delete_dialog(entity, revoke=revoke)
         except BaseException:
-            return None
+            return
 
     @patchable()
     async def report_spam(self, entity: hints.EntityLike) -> bool:
@@ -116,7 +116,7 @@ class TelegramClient:
                 )
             )
         except BaseException:
-            return None
+            return
 
     @patchable()
     async def join_to(self, entity: hints.EntityLike) -> typ.Updates | None:
@@ -124,7 +124,7 @@ class TelegramClient:
             entity = await self.get_input_entity(entity)
             return await self(fun.channels.JoinChannelRequest(entity))
         except BaseException:
-            return None
+            return
 
     @patchable()
     async def mute_chat(self, entity: hints.EntityLike) -> bool:
@@ -162,10 +162,10 @@ class TelegramClient:
                 )
             )
             chat_id = created.chats[0].id
-            await asyncio.sleep(6)
+            await asyncio.sleep(random.uniform(6.5, 8.5))
             link = await self(fun.messages.ExportChatInviteRequest(chat_id))
             if users:
-                await asyncio.sleep(6)
+                await asyncio.sleep(random.uniform(6.5, 8.5))
                 await self(
                     fun.channels.InviteToChannelRequest(
                         chat_id,
@@ -173,7 +173,7 @@ class TelegramClient:
                     )
                 )
             if photo:
-                await asyncio.sleep(6)
+                await asyncio.sleep(random.uniform(6.5, 8.5))
                 await self(
                     fun.channels.EditPhotoRequest(
                         chat_id,
@@ -212,6 +212,6 @@ class TelegramClient:
             msg = None
             for part in parts[:-1]:
                 msg = await self.send_message(entity, part, **kwargs)
-                await asyncio.sleep(random.uniform(1, 3))
+                await asyncio.sleep(random.uniform(1.5, 3.5))
             return msg
         return await self.send_message(entity, text, **kwargs)

@@ -3,8 +3,8 @@
 # AGPL-3.0 License
 
 import asyncio
+import random
 from datetime import datetime
-from random import choice
 from time import monotonic
 
 import aiofiles
@@ -119,7 +119,7 @@ _INVITING_LOCK, _SCRAPING_LOCK, _ADDING_LOCK = asyncio.Lock(), asyncio.Lock(), a
 async def _(kst):
     ga = kst.client
     if kst.is_dev:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     yy = await kst.eor("`Checking...`", silent=True)
     resp = None
     bot = "SpamBot"
@@ -136,7 +136,7 @@ async def _(kst):
             await conv.send_message("/start")
             resp = await resp
             await conv.read()
-        except asyncio.exceptions.TimeoutError:
+        except TimeoutError:
             pass
     if not resp:
         return yy.try_delete()
@@ -157,7 +157,7 @@ async def _(kst):
     if kst.is_dev:
         if kst.client.uid in DEVS:
             return
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     if INVITE_WORKER.get(chat_id) or _INVITING_LOCK.locked():
         return await kst.eor("`Please wait until previous •invite• finished...`", time=5, silent=True)
     async with _INVITING_LOCK:
@@ -549,7 +549,7 @@ async def _(kst):
     if kst.is_dev:
         if kst.client.uid in DEVS:
             return
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     if not INVITE_WORKER.get(chat_id):
         return await kst.eod(no_process_text, silent=True)
     worker = INVITE_WORKER.get(chat_id)
@@ -574,7 +574,7 @@ async def get_chat_info(kst, yy, group=1):
     target = await kst.client.get_text(kst, group=group)
     if not target:
         await yy.eod("`Required username/link/id as target.`")
-        return None
+        return
     target = target.split(" ")[0]
     target = normalize_chat_id(target)
     if isinstance(target, str) and is_telegram_link(target):
@@ -586,10 +586,10 @@ async def get_chat_info(kst, yy, group=1):
             info = await kst.client(fun.channels.GetFullChannelRequest(target))
         except ValueError:
             await yy.eod("`You must join the target.`")
-            return None
+            return
         except BaseException:
             await yy.eod("`Invalid username/link/id as target, please re-check.`")
-            return None
+            return
     return info
 
 

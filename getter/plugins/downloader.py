@@ -2,7 +2,6 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
-import asyncio
 
 from telethon import events
 from telethon.errors import YouBlockedUserError
@@ -76,8 +75,8 @@ async def conv_tt(conv, link):
             clear_reactions=True,
         )
         return resp
-    except asyncio.exceptions.TimeoutError:
-        return None
+    except TimeoutError:
+        return
     except YouBlockedUserError:
         await conv._client.unblock(conv.chat_id)
         return await conv_tt(conv, link)
@@ -98,8 +97,8 @@ async def conv_tw(conv, link):
             clear_reactions=True,
         )
         return resp
-    except asyncio.exceptions.TimeoutError:
-        return None
+    except TimeoutError:
+        return
     except YouBlockedUserError:
         await conv._client.unblock(conv.chat_id)
         return await conv_tw(conv, link)

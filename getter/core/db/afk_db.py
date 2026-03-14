@@ -35,7 +35,7 @@ async def is_afk() -> GoAFK | None:
                 return data
         except BaseException:
             pass
-        return None
+        return
 
 
 async def add_afk(

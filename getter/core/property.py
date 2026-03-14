@@ -3,9 +3,9 @@
 # AGPL-3.0 License
 
 import asyncio
+import re
 import sys
 from base64 import b64decode
-from re import findall
 
 import cachebox
 
@@ -53,7 +53,7 @@ async def get_blacklisted(
             break
         if is_content:
             reg = r"[^\s#,\[\]\{\}]+"
-            data = findall(reg, res.decode("utf-8"))
+            data = re.findall(reg, res.decode("utf-8"))
             ids = [int(x) for x in data if x.isdecimal() or (x.startswith("-") and x[1:].isdecimal())]
         else:
             ids = list(res)
