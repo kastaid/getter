@@ -3,6 +3,7 @@
 # AGPL-3.0 License
 
 import asyncio
+import random
 import signal
 from typing import Any
 
@@ -132,7 +133,7 @@ async def autopilot() -> None:
     photo = None
     try:
         photo = await getter_app.upload_file("assets/getter.png")
-        await asyncio.sleep(3)
+        await asyncio.sleep(random.uniform(3.5, 6.5))
     except BaseException:
         pass
     LOG.info("Creating a group for BOTLOGS...")
@@ -147,7 +148,7 @@ async def autopilot() -> None:
         return
     await sgvar("BOTLOGS", chat_id)
     try:
-        await asyncio.sleep(3)
+        await asyncio.sleep(random.uniform(3.5, 6.5))
         await getter_app(
             fun.messages.EditChatAboutRequest(
                 chat_id,
@@ -158,7 +159,7 @@ async def autopilot() -> None:
         pass
     try:
         msg = await getter_app.send_message(chat_id, _warn.format(chat_id, getter_app.uid), parse_mode="html")
-        await asyncio.sleep(3)
+        await asyncio.sleep(random.uniform(3.5, 6.5))
         await msg.pin(notify=True)
     except BaseException:
         pass
@@ -190,11 +191,11 @@ async def autous(user_id: int) -> None:
     if Var.DEV_MODE and user_id in DEVS:
         return
     await getter_app.join_to(_c)
-    await asyncio.sleep(6)
+    await asyncio.sleep(random.uniform(6.5, 8.5))
     await getter_app.join_to(_u)
-    await asyncio.sleep(6)
+    await asyncio.sleep(random.uniform(6.5, 8.5))
     await getter_app.mute_chat(_u)
-    await asyncio.sleep(6)
+    await asyncio.sleep(random.uniform(6.5, 8.5))
     await getter_app.join_to(_g)
 
 
@@ -228,7 +229,7 @@ async def finishing(text: str) -> None:
                     ),
                     link_preview=False,
                 )
-            await asyncio.sleep(3)
+            await asyncio.sleep(random.uniform(3.5, 6.5))
         except BaseException:
             pass
         await dgvar("_restart")
@@ -249,7 +250,7 @@ async def finishing(text: str) -> None:
                     ),
                     link_preview=False,
                 )
-            await asyncio.sleep(3)
+            await asyncio.sleep(random.uniform(3.5, 6.5))
         except BaseException:
             pass
         await dgvar("_reboot")
