@@ -3,8 +3,8 @@
 # AGPL-3.0 License
 
 import asyncio
-from html import escape
-from math import sqrt
+import html
+import math
 from time import monotonic
 
 import cachebox
@@ -71,7 +71,7 @@ async def _(kst):
         while True:
             try:
                 resp = await conv.get_response(timeout=2)
-            except asyncio.exceptions.TimeoutError:
+            except TimeoutError:
                 break
             texts.append(resp.message)
         if resp:
@@ -346,14 +346,14 @@ async def _(kst):
     except BaseException:
         pass
     dc_id = (user.photo and user.photo.dc_id) or 0
-    first_name = escape(user.first_name).replace("\u2060", "")
+    first_name = html.escape(user.first_name).replace("\u2060", "")
     last_name = (
         user.last_name and "\n├  <b>Last Name</b>: <code>{}</code>".format(user.last_name.replace("\u2060", ""))
     ) or ""
     username = (user.username and f"\n├  <b>Username</b>: @{user.username}") or ""
     user_pictures = (await ga.get_profile_photos(user_id, limit=0)).total or 0
     user_status = get_user_status(user)
-    user_bio = escape(full_user.about or "")
+    user_bio = html.escape(full_user.about or "")
     if not is_full:
         caption = f"""<b><u>USER INFORMATION</u></b>
 ├  <b>ID</b>: <code>{user_id}</code>{created}
@@ -607,7 +607,7 @@ async def get_chat_info(kst, chat):
         caption += f"├  <b>Created</b>: <code>{chat.date.date().strftime('%b %d, %Y')} - {chat.date.time()}</code>\n"
     caption += f"├  <b>DC ID</b>: <code>{dc_id}</code>\n"
     if exp_count:
-        chat_level = int((1 + sqrt(1 + 7 * exp_count / 14)) / 2)
+        chat_level = int((1 + math.sqrt(1 + 7 * exp_count / 14)) / 2)
         caption += f"├  <b>{chat_type} Level</b>: <code>{chat_level}</code>\n"
     if msgs_viewable:
         caption += f"├  <b>Viewable Messages</b>: <code>{msgs_viewable}</code>\n"
@@ -644,7 +644,7 @@ async def get_chat_info(kst, chat):
         caption += "├  <b>Scam</b>: <code>yes</code>\n"
     if getattr(chat, "verified", None):
         caption += "├  <b>Verified By Telegram</b>: <code>yes</code>\n"
-    about = escape(full.about or "")
+    about = html.escape(full.about or "")
     caption += f"└  <b>Description</b>:\n<pre>{about}</pre>"
     return chat_photo, caption
 
@@ -669,8 +669,8 @@ async def conv_created(conv, user_id):
         created = getattr(resp.message, "message", None)
         _CREATED_CACHE[user_id] = created
         return created
-    except asyncio.exceptions.TimeoutError:
-        return None
+    except TimeoutError:
+        return
     except YouBlockedUserError:
         await conv._client.unblock(conv.chat_id)
         return await conv_created(conv, user_id)
@@ -692,8 +692,8 @@ async def conv_total_bot(conv, command):
             clear_reactions=True,
         )
         return resp
-    except asyncio.exceptions.TimeoutError:
-        return None
+    except TimeoutError:
+        return
     except YouBlockedUserError:
         await conv._client.unblock(conv.chat_id)
         return await conv_total_bot(conv, command)

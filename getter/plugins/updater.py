@@ -4,10 +4,10 @@
 
 import asyncio
 import os
+import random
 import shutil
 import sys
 from datetime import UTC, datetime
-from random import choice
 
 import aiofiles
 from git import Repo
@@ -105,7 +105,7 @@ async def _(kst):
             if not user_id and version == __version__:
                 return
         if kst.is_dev:
-            await asyncio.sleep(choice((5, 7, 9)))
+            await asyncio.sleep(random.choice((5, 7, 9)))
         yy = await kst.eor(f"`{state}Fetching...`", silent=True)
         try:
             repo = Repo()
@@ -182,9 +182,9 @@ async def _(kst):
                 return
             clean = True
         if not clean:
-            await asyncio.sleep(choice((4, 6, 8)))
+            await asyncio.sleep(random.choice((4, 6, 8)))
     if kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     # http://www.timebie.com/std/utc
     utc_now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
     local_now = datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S")

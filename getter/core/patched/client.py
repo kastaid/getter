@@ -66,14 +66,14 @@ class TelegramClient:
         try:
             return await self.edit_folder(entity, folder=1)
         except BaseException:
-            return None
+            return
 
     @patchable()
     async def unarchive(self, entity: hints.EntityLike) -> typ.Updates | None:
         try:
             return await self.edit_folder(entity, folder=0)
         except BaseException:
-            return None
+            return
 
     @patchable()
     async def delete_chat(
@@ -84,7 +84,7 @@ class TelegramClient:
         try:
             return await self.delete_dialog(entity, revoke=revoke)
         except BaseException:
-            return None
+            return
 
     @patchable()
     async def report_spam(self, entity: hints.EntityLike) -> bool:
@@ -116,7 +116,7 @@ class TelegramClient:
                 )
             )
         except BaseException:
-            return None
+            return
 
     @patchable()
     async def join_to(self, entity: hints.EntityLike) -> typ.Updates | None:
@@ -124,7 +124,7 @@ class TelegramClient:
             entity = await self.get_input_entity(entity)
             return await self(fun.channels.JoinChannelRequest(entity))
         except BaseException:
-            return None
+            return
 
     @patchable()
     async def mute_chat(self, entity: hints.EntityLike) -> bool:

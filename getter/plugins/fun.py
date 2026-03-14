@@ -3,9 +3,9 @@
 # AGPL-3.0 License
 
 import asyncio
+import html
+import random
 from collections import deque
-from html import escape
-from random import choice
 
 from emoji import emojize
 from telethon.tl import types as typ
@@ -30,7 +30,7 @@ async def _(kst):
         chars = range(1, 7)
     elif cmd == "decide":
         chars = ("yes", "no", "maybe")
-    text = choice(chars)
+    text = random.choice(chars)
     await kst.sod(str(text))
 
 
@@ -47,8 +47,8 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
-    text = escape(choice(UWUS))
+        await asyncio.sleep(random.choice((4, 6, 8)))
+    text = html.escape(random.choice(UWUS))
     await kst.sod(f"<code>{text}</code>", parse_mode="html", silent=True)
 
 
@@ -65,8 +65,8 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
-    text = escape(choice(SHRUGS))
+        await asyncio.sleep(random.choice((4, 6, 8)))
+    text = html.escape(random.choice(SHRUGS))
     await kst.sod(f"<code>{text}</code>", parse_mode="html", silent=True)
 
 
@@ -76,7 +76,7 @@ async def _(kst):
 async def _(kst):
     cmd = kst.pattern_match.group(1)
     if cmd == "ran":
-        dice = choice(dices)
+        dice = random.choice(dices)
     if cmd == "bol":
         dice = ":soccer_ball:"
     elif cmd == "bas":

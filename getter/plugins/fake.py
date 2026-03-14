@@ -3,8 +3,8 @@
 # AGPL-3.0 License
 
 import asyncio
+import random
 from datetime import datetime
-from random import choice
 from time import monotonic
 
 from . import (
@@ -49,7 +49,7 @@ _FGBAN_LOCK, _FUNGBAN_LOCK = asyncio.Lock(), asyncio.Lock()
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     if not kst.is_dev and _FGBAN_LOCK.locked():
         return await kst.eor("`Please wait until previous •gban• finished...`", time=5, silent=True)
     async with _FGBAN_LOCK:
@@ -98,7 +98,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     if not kst.is_dev and _FUNGBAN_LOCK.locked():
         return await kst.eor("`Please wait until previous •ungban• finished...`", time=5, silent=True)
     async with _FUNGBAN_LOCK:

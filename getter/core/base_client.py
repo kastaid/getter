@@ -98,7 +98,7 @@ class KastaClient(TelegramClient):
         self.log.info("Trying to login...")
         do_not_remove_credit()
         try:
-            await asyncio.sleep(random.uniform(3, 6))
+            await asyncio.sleep(random.uniform(3.5, 6.5))
             await self.start(**kwargs)
             if await self.is_bot():
                 self.log.critical("Bot account detected. Bots are not supported — use a USER account (userbot).")

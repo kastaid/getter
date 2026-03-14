@@ -3,8 +3,8 @@
 # AGPL-3.0 License
 
 import asyncio
+import random
 from pathlib import Path
-from random import choice
 
 import aiofiles.os
 from telethon.utils import get_extension
@@ -29,7 +29,7 @@ CUSTOM_DIR = PLUGINS_DIR / "custom"
 )
 async def _(kst):
     if kst.is_dev:
-        await asyncio.sleep(choice((2, 4)))
+        await asyncio.sleep(random.choice((2, 4)))
     ga = kst.client
     reply = await kst.get_reply_message()
     if not reply or not reply.media:
@@ -74,7 +74,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev:
-        await asyncio.sleep(choice((2, 4)))
+        await asyncio.sleep(random.choice((2, 4)))
     ga = kst.client
     plugin = await ga.get_text(kst, plain=True)
     if not plugin:

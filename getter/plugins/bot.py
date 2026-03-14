@@ -4,10 +4,10 @@
 
 import asyncio
 import os
+import random
 import shutil
 import subprocess
 import sys
-from random import choice
 from time import monotonic, sleep as tsleep
 
 import aiofiles
@@ -75,12 +75,12 @@ async def _(kst):
             pass
         if user_id and user_id != kst.client.uid:
             return
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     yy = await kst.eor("`Getting...`", silent=True)
     if mode == "heroku":
         return await heroku_logs(yy)
     if mode == "carbon":
-        theme = choice(tuple(CARBON_PRESETS))
+        theme = random.choice(tuple(CARBON_PRESETS))
         backgroundColor = CARBON_PRESETS[theme]
         for file in get_terminal_logs():
             code = (Root / file).read_text()
@@ -137,7 +137,7 @@ async def _(kst):
             pass
         if user_id and user_id != kst.client.uid:
             return
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     yy = await kst.eor("`Restarting...`", silent=True)
     try:
         chat_id = yy.chat_id or yy.from_id

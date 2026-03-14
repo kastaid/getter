@@ -3,8 +3,8 @@
 # AGPL-3.0 License
 
 import asyncio
+import random
 from datetime import datetime
-from random import choice
 
 from . import (
     SUDO_CMDS,
@@ -31,7 +31,7 @@ from . import (
 )
 async def _(kst):
     if kst.is_dev:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Processing...`", silent=True)
     toggle = kst.pattern_match.group(1)
@@ -73,7 +73,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Processing...`", silent=True)
     user, _ = await ga.get_user(kst)

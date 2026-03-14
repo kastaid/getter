@@ -3,13 +3,13 @@
 # AGPL-3.0 License
 
 import asyncio
+import re
 import shutil
 import subprocess
 import sys
 from functools import partial
 from importlib import import_module
 from io import BytesIO
-from re import sub
 from typing import Any
 
 import aiofiles.os
@@ -39,7 +39,7 @@ def import_lib(
 ) -> Any:
     if pkg_name is None:
         pkg_name = lib_name
-    lib_name = sub(r"(=|>|<|~).*", "", lib_name)
+    lib_name = re.sub(r"(=|>|<|~).*", "", lib_name)
     try:
         return import_module(lib_name)
     except ImportError as err:
@@ -109,9 +109,9 @@ async def Fetch(
                     **args,
                 )
         except BaseException:
-            return None
+            return
         if resp.status not in {*{200, 201}, *statuses}:
-            return None
+            return
         if re_json:
             return await resp.json(content_type=None)
         if re_content:
@@ -143,7 +143,7 @@ async def Carbon(
         re_content=True,
     )
     if not res:
-        return None
+        return
     file_name = f"{file_name}_{get_random_hex()}.jpg"
     if not download:
         file = BytesIO(res)
@@ -234,7 +234,7 @@ async def Telegraph(
             author_url="https://t.me/kastaid",
         )
     except BaseException:
-        return None
+        return
     await sgvar("_TELEGRAPH_TOKEN", api.get_access_token())
     _TGH.append(api)
     return api

@@ -321,7 +321,7 @@ async def sendlog(
     if not BOTLOGS and fallback:
         BOTLOGS = getter_app.uid
     if not BOTLOGS and not fallback:
-        return None
+        return
     try:
         if not forward:
             return await getter_app.send_message(
@@ -344,4 +344,4 @@ async def sendlog(
         )
     except Exception as err:
         getter_app.log.exception(err)
-        return None
+        return

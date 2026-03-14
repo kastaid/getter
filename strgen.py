@@ -4,15 +4,15 @@
 # AGPL-3.0 License
 
 import asyncio
+import subprocess
 import sys
-from subprocess import check_call
 
 try:
     import telethon as tl
 except ModuleNotFoundError:
     print("Installing Telethon...")
     # python3 -m pip install https://codeberg.org/Lonami/Telethon/archive/v1.tar.gz
-    check_call(
+    subprocess.check_call(
         [
             sys.executable,
             "-m",

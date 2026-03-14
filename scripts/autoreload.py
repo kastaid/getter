@@ -2,10 +2,10 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
+import os
 import signal
+import subprocess
 import sys
-from os import getpid, kill
-from subprocess import CalledProcessError, Popen, check_call
 from time import sleep
 
 from . import (
@@ -22,7 +22,7 @@ try:
     import psutil
 except ModuleNotFoundError:
     print("Installing psutil...")
-    check_call([sys.executable, "-m", "pip", "install", "-U", "psutil"])
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", "psutil"])
 finally:
     import psutil
 
@@ -31,13 +31,13 @@ def file_time() -> float:
     return max(f.stat().st_mtime for f in Root.rglob("*") if f.suffix in EXTS)
 
 
-def print_stdout(procs) -> None:
+def print_stdout(procs: subprocess.Popen) -> None:
     out = procs.stdout
     if out:
         print(out)
 
 
-def kill_process_tree(procs) -> None:
+def kill_process_tree(procs: subprocess.Popen) -> None:
     try:
         parent = psutil.Process(procs.pid)
         child = parent.children(recursive=True)
@@ -54,7 +54,7 @@ def main() -> None:
         print("python3 -m scripts.autoreload [command]")
         sys.exit(0)
     cmd = " ".join(sys.argv[1:])
-    procs = Popen(cmd, shell=True)
+    procs = subprocess.Popen(cmd, shell=True)
     last_mtime = file_time()
     try:
         while True:
@@ -64,16 +64,16 @@ def main() -> None:
                 last_mtime = max_mtime
                 print(f"{BOLD}{YELLOW}Restarting >> {procs.args}{RST}")
                 kill_process_tree(procs)
-                procs = Popen(cmd, shell=True)
+                procs = subprocess.Popen(cmd, shell=True)
             sleep(WAIT_FOR)
-    except CalledProcessError as err:
+    except subprocess.CalledProcessError as err:
         kill_process_tree(procs)
         sys.exit(err.returncode)
     except KeyboardInterrupt:
         print(f"{BOLD}{RED}Kill process [{procs.pid}]{RST}")
         kill_process_tree(procs)
         signal.signal(signal.SIGINT, signal.SIG_DFL)
-        kill(getpid(), signal.SIGINT)
+        os.kill(os.getpid(), signal.SIGINT)
     except BaseException:
         print(f"{BOLD}{RED}Watch interrupted.{RST}")
 

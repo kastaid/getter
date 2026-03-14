@@ -3,7 +3,7 @@
 # AGPL-3.0 License
 
 import asyncio
-from random import choice
+import random
 
 from . import kasta_cmd, plugins_help, time_formatter
 
@@ -17,7 +17,7 @@ from . import kasta_cmd, plugins_help, time_formatter
 )
 async def _(kst):
     if kst.is_dev:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     action = kst.pattern_match.group(1)
     act = action
     if action in {"audio", "round", "video"}:

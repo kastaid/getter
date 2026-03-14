@@ -2,7 +2,7 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
-from random import choice
+import random
 
 from telethon.tl.custom.inlineresult import InlineResult
 
@@ -62,7 +62,7 @@ async def _(kst):
             if not play:
                 play = res[0]
         else:
-            play = choice(games)
+            play = random.choice(games)
         await play.click(
             reply_to=kst.reply_to_msg_id,
             silent=True,

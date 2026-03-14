@@ -3,9 +3,9 @@
 # AGPL-3.0 License
 
 import asyncio
+import html
+import random
 from datetime import datetime
-from html import escape
-from random import choice
 
 import cachebox
 from telethon import events
@@ -316,7 +316,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Processing...`", silent=True)
     user, reason = await ga.get_user(kst, group=2)
@@ -351,7 +351,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Processing...`", silent=True)
     user, _ = await ga.get_user(kst)
@@ -475,7 +475,7 @@ async def _(kst):
         pmbye = await gvar("_pmbye")
         if not custom:
             text = "<b>PM-Bye</b>:\n"
-            text += f"<pre>{escape(pmbye or pmbye_default)}</pre>"
+            text += f"<pre>{html.escape(pmbye or pmbye_default)}</pre>"
             return await yy.eor(text, parse_mode="html")
         if pmbye == custom:
             return await yy.eor(f"`{mode} is already set.`", time=4)
@@ -485,7 +485,7 @@ async def _(kst):
         pmmsg = await gvar("_pmmsg")
         if not custom:
             text = "<b>PM-Message</b>:\n"
-            text += f"<pre>{escape(pmmsg or pmmsg_default)}</pre>"
+            text += f"<pre>{html.escape(pmmsg or pmmsg_default)}</pre>"
             return await yy.eor(text, parse_mode="html")
         if pmmsg == custom:
             return await yy.eor(f"`{mode} is already set.`", time=4)
@@ -546,7 +546,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     ga = kst.client
     chat_id = kst.chat_id
     yy = await kst.eor("`Processing...`", silent=True)
@@ -604,7 +604,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Processing...`", silent=True)
     user, _ = await ga.get_user(kst)
@@ -632,7 +632,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Processing...`", silent=True)
     user, _ = await ga.get_user(kst)
@@ -668,7 +668,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     ga = kst.client
     yy = await kst.eor("`Processing...`", silent=True)
     user, _ = await ga.get_user(kst)

@@ -3,7 +3,7 @@
 # AGPL-3.0 License
 
 import asyncio
-from random import choice
+import random
 
 from telethon.errors import UserBotError
 from telethon.tl import functions as fun, types as typ
@@ -87,7 +87,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((1, 2, 3)))
+        await asyncio.sleep(random.choice((1, 2, 3)))
     ga = kst.client
     chat = await kst.get_input_chat()
     num = kst.pattern_match.group(2)
@@ -312,7 +312,7 @@ async def _(kst):
 )
 async def _(kst):
     yy = await kst.eor("`Reaction...`")
-    reaction = choice(("👍", "👎", "❤", "🔥", "🥰", "👏", "😁", "🤔", "🤯", "😱", "🤬", "😢", "🎉", "🤩", "🤮", "💩", "🙏"))  # fmt: skip
+    reaction = random.choice(("👍", "👎", "❤", "🔥", "🥰", "👏", "😁", "🤔", "🤯", "😱", "🤬", "😢", "🎉", "🤩", "🤮", "💩", "🙏"))  # fmt: skip
     try:
         await (await kst.get_reply_message()).send_react(big=True, reaction=reaction)
         return await yy.eor(f"`reacted {reaction}`", time=3)
@@ -334,7 +334,7 @@ async def _(kst):
 )
 async def _(kst):
     if kst.is_dev or kst.is_sudo:
-        await asyncio.sleep(choice((4, 6, 8)))
+        await asyncio.sleep(random.choice((4, 6, 8)))
     ga = kst.client
     chat_id = kst.chat_id
     yy = await kst.eor("`Reporting...`", silent=True)

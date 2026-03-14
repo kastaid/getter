@@ -2,8 +2,8 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
+import html
 from collections import UserDict
-from html import escape
 from typing import Any
 
 import cachebox
@@ -105,7 +105,7 @@ async def get_botlogs() -> int:
 
 def formatx_send(err: Exception) -> str:
     text = r"\\<b>#Getter_Error</b>//"
-    text += f"\n<pre>{get_full_class_name(err)}: {escape(str(err))}</pre>"
+    text += f"\n<pre>{get_full_class_name(err)}: {html.escape(str(err))}</pre>"
     return text
 
 
