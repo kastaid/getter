@@ -5,7 +5,7 @@
 
 import sys
 from asyncio import set_event_loop
-from concurrent.futures.thread import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from platform import python_version
 from shutil import rmtree
