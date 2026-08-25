@@ -32,7 +32,7 @@
 
 ## Requirements
 
-- Python 3.13+
+- Python 3.14+
 - Linux (Debian/Ubuntu)
 - Telegram `API_ID` and `API_HASH` from [API development tools](https://my.telegram.org)
 
@@ -49,7 +49,7 @@ cd getter
 
 #### String Session
 
-Generate `STRING_SESSION` by choosing **Telethon** at [@strgen_bot](https://t.me/strgen_bot) or run `python3 strgen.py`.
+Generate `STRING_SESSION` by running `python3 strgen.py`.
 
 #### Config
 
@@ -64,6 +64,7 @@ Choose your preferred deployment method below.
 Deploy using Docker Compose for easy containerized deployment.
 
 #### Full version
+With FFmpeg.
 ```sh
 git pull && \
   docker compose -f full-compose.yml up -d --build && \
@@ -71,6 +72,7 @@ git pull && \
 ```
 
 #### Lite version
+Without FFmpeg.
 ```sh
 git pull && \
   docker compose -f lite-compose.yml up -d --build && \
@@ -129,25 +131,30 @@ Create custom plugins at `./getter/plugins/custom/plugin_name.py`.
 ```python
 from . import kasta_cmd
 
+
 # Works everywhere (e.g., groups, personal chats)
 @kasta_cmd(pattern="hi")
 async def _(event):
     await event.eor("Hello **World**")
+
 
 # Works only in personal chats
 @kasta_cmd(pattern="hi", func=lambda e: e.is_private)
 async def _(event):
     await event.eor("Hello **World**")
 
+
 # Works only in channels
 @kasta_cmd(pattern="hi", func=lambda e: e.is_channel and e.chat.broadcast)
 async def _(event):
     await event.eor("Hello **World**")
 
+
 # Works only in groups
 @kasta_cmd(pattern="hi", func=lambda e: e.is_group)
 async def _(event):
     await event.eor("Hello **World**")
+
 
 # Works only in groups or channels
 @kasta_cmd(pattern="hi", func=lambda e: not e.is_private)

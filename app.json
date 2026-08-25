@@ -9,7 +9,7 @@
             "required": true
         },
         "STRING_SESSION": {
-            "description": "Telethon Session from \"t.me/strgen_bot\"",
+            "description": "Telethon String Session",
             "required": true
         },
         "BOTLOGS": {

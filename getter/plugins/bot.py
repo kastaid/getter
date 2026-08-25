@@ -5,7 +5,6 @@
 import asyncio
 import os
 import random
-import shutil
 import subprocess
 import sys
 from time import monotonic, sleep as tsleep
@@ -205,7 +204,7 @@ def restart_app() -> None:
     except BaseException:
         pass
     reqs = str(Root / "requirements.txt")
-    if shutil.which("uv"):
+    try:
         subprocess.run(
             [
                 "uv",
@@ -216,7 +215,7 @@ def restart_app() -> None:
             ],
             check=True,
         )
-    else:
+    except FileNotFoundError:
         subprocess.run(
             [
                 sys.executable,

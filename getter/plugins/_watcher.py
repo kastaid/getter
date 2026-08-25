@@ -43,8 +43,8 @@ async def OnNewMessageFunc(kst):
             await DeletedUserHandler(kst)
         except ConnectionError:
             pass
-        except Exception as err:
-            kst.client.log.exception(err)
+        except Exception:
+            kst.client.log.exception("New message handler failed.")
 
 
 @getter_app.on(
@@ -58,8 +58,8 @@ async def OnChatActionFunc(kst):
             await JoinedHandler(kst)
         except ConnectionError:
             pass
-        except Exception as err:
-            kst.client.log.exception(err)
+        except Exception:
+            kst.client.log.exception("Chat action handler failed.")
 
 
 async def DeletedUserHandler(kst):

@@ -13,35 +13,35 @@ from dotenv import find_dotenv, load_dotenv
 load_dotenv(find_dotenv())
 
 
-def tobool(val: str) -> int | None:
-    """
-    Convert a string representation of truth to true (1) or false (0).
-    https://github.com/python/cpython/blob/main/Lib/distutils/util.py
-    """
-    val = val.lower()
-    if val in {"y", "yes", "t", "true", "on", "1"}:
-        return 1
-    if val in {"n", "no", "f", "false", "off", "0"}:
-        return 0
-    raise ValueError(f"invalid truth value {val!r}")
+def to_bool(value: str) -> bool:
+    value = value.lower()
+    if value in {"y", "yes", "t", "true", "on", "1", "enable", "enabled"}:
+        return True
+    if value in {"n", "no", "f", "false", "off", "0", "disable", "disabled"}:
+        return False
+    raise ValueError(f"Invalid boolean value: {value!r}")
+
+
+def env(key: str, default: str = "") -> str:
+    return getenv(key, default).strip()
 
 
 class Var:
-    DEV_MODE: bool = tobool(getenv("DEV_MODE", "false").strip())
-    API_ID: int = int(getenv("API_ID", "0").strip())
-    API_HASH: str = getenv("API_HASH", "").strip()
-    STRING_SESSION: str = getenv("STRING_SESSION", "").strip()
-    _db = getenv("DATABASE_URL", "sqlite+aiosqlite:///./getter.db").strip()
+    DEV_MODE: bool = to_bool(env("DEV_MODE", "false"))
+    API_ID: int = int(env("API_ID", "0"))
+    API_HASH: str = env("API_HASH", "")
+    STRING_SESSION: str = env("STRING_SESSION", "")
+    _db = env("DATABASE_URL", "sqlite+aiosqlite:///./getter.db")
     DATABASE_URL = (
         _db.replace(_db.split("://")[0], "postgresql+asyncpg") if _db.startswith(("postgres:", "postgresql:")) else _db
     )
-    BOTLOGS: int = int(getenv("BOTLOGS", "0").strip())
-    HANDLER: str = getenv("HANDLER", ".").strip()
-    NO_HANDLER: bool = tobool(getenv("NO_HANDLER", "false").strip())
-    TZ: str = getenv("TZ", "Asia/Jakarta").strip()
-    LANG_CODE: str = getenv("LANG_CODE", "id").lower().strip()
-    HEROKU_APP_NAME: str = getenv("HEROKU_APP_NAME", "").strip()
-    HEROKU_API: str = getenv("HEROKU_API", "").strip()
+    BOTLOGS: int = int(env("BOTLOGS", "0"))
+    HANDLER: str = env("HANDLER", ".")
+    NO_HANDLER: bool = to_bool(env("NO_HANDLER", "false"))
+    TZ: str = env("TZ", "Asia/Jakarta")
+    LANG_CODE: str = env("LANG_CODE", "id").lower()
+    HEROKU_APP_NAME: str = env("HEROKU_APP_NAME", "")
+    HEROKU_API: str = env("HEROKU_API", "")
     TGCALL: Any = None
     CALLS: ClassVar[set[int]] = set()
 

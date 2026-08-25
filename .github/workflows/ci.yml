@@ -2,23 +2,24 @@ name: CI
 on: [push, pull_request, workflow_dispatch]
 jobs:
   linter:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     permissions:
       contents: write
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        python-version: ['3.13', '3.14']
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
+          python-version: '3.14'
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          version: '0.12.5'
+          enable-cache: true
+          cache-dependency-glob: |
+            requirements.txt
+            requirements-dev.txt
       - run: |
-          python3 -m pip install -U pip
-          pip3 install -r requirements.txt
-          if [ -f requirements-dev.txt ]; then pip3 install -r requirements-dev.txt; fi
+          uv pip install --system -r requirements.txt
+          if [ -f requirements-dev.txt ]; then uv pip install --system -r requirements-dev.txt; fi
       - run: python3 -m run --lint
       - uses: illvart/beautysh-action@latest
         with:

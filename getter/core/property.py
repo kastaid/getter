@@ -29,7 +29,7 @@ def do_not_remove_credit() -> None:
         sys.exit(1)
 
 
-@cachebox.cached(cachebox.TTLCache(maxsize=1000, ttl=(120 * 30)))
+@cachebox.cached(cachebox.TTLCache(maxsize=1000, global_ttl=(120 * 30)))
 async def get_blacklisted(
     url: str,
     is_json: bool = False,

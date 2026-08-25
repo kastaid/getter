@@ -215,13 +215,7 @@ async def _(kst):
 
 
 async def ignores() -> None:
-    rems = " ".join(
-        [
-            ".github",
-            "docs",
-            "README.md",
-        ]
-    )
+    rems = ".github docs README.md"
     backup_dir = Root / "backup/" / get_random_hex()
     await Runner(f"mkdir -p {backup_dir} && mv -f {rems} -t {backup_dir}")
 

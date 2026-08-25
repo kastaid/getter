@@ -5,11 +5,14 @@
 import re
 from functools import partial
 from textwrap import shorten
+from typing import TYPE_CHECKING
 
-from telethon import hints
 from telethon.helpers import add_surrogate
 from telethon.tl import functions as fun, types as typ
 from telethon.utils import get_display_name
+
+if TYPE_CHECKING:
+    from telethon import hints
 
 TELEGRAM_LINK_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog|space)/)([\w-]+)$"
 USERNAME_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog|space)?(?:/)?(.*?))"

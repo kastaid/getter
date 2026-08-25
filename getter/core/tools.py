@@ -4,7 +4,6 @@
 
 import asyncio
 import re
-import shutil
 import subprocess
 import sys
 from functools import partial
@@ -23,6 +22,7 @@ from .db import gvar, sgvar
 from .utils import get_random_hex
 
 _TGH: list[telegraph.aio.Telegraph] = []
+_LIB_NAME_RE = re.compile(r"[=><~].*")
 
 
 def is_termux() -> bool:
@@ -39,14 +39,34 @@ def import_lib(
 ) -> Any:
     if pkg_name is None:
         pkg_name = lib_name
-    lib_name = re.sub(r"(=|>|<|~).*", "", lib_name)
+    lib_name = _LIB_NAME_RE.sub("", lib_name)
     try:
         return import_module(lib_name)
     except ImportError as err:
-        if shutil.which("uv"):
-            done = subprocess.run(["uv", "pip", "install", "-U", pkg_name], check=False)
-        else:
-            done = subprocess.run(["python3", "-m", "pip", "install", "--prefer-binary", "-U", pkg_name], check=False)
+        try:
+            done = subprocess.run(
+                [
+                    "uv",
+                    "pip",
+                    "install",
+                    "-U",
+                    pkg_name,
+                ],
+                check=False,
+            )
+        except FileNotFoundError:
+            done = subprocess.run(
+                [
+                    "python3",
+                    "-m",
+                    "pip",
+                    "install",
+                    "--prefer-binary",
+                    "-U",
+                    pkg_name,
+                ],
+                check=False,
+            )
         if done.returncode != 0:
             raise AssertionError(f"Failed to install {pkg_name} (code {done.returncode})") from err
         return import_module(lib_name)

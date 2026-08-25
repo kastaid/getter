@@ -6,11 +6,16 @@ import json
 
 from . import Root
 
-EXCLUDE = (".mypy_cache", "db")
+EXCLUDE = {
+    ".mypy_cache",
+    "db",
+}
 
 
 def main() -> None:
-    for p in filter(lambda x: not str(x.parent).endswith(EXCLUDE), Root.rglob("*.json")):
+    for p in Root.rglob("*.json"):
+        if any(i in EXCLUDE for i in p.parts):
+            continue
         try:
             with p.open(encoding="utf-8") as f:
                 data = json.load(f)

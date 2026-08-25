@@ -7,8 +7,6 @@ import sys
 from importlib import import_module
 from time import monotonic
 
-from requests.packages import urllib3
-
 import getter.core.patched  # noqa
 
 from . import (
@@ -35,8 +33,6 @@ from .core.startup import (
 from .core.utils import time_formatter
 from .logger import LOG
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 success_msg = ">> Visit @kastaid for Updates !!"
 if Var.DEV_MODE:
     trap()
@@ -53,7 +49,6 @@ async def main() -> None:
     migrations()
     await autopilot()
     await verify()
-    await getter_app.start_pytgcalls()
     LOG.info(">> Load Plugins...")
     load = monotonic()
     plugins = getter_app.all_plugins
@@ -99,9 +94,9 @@ if __name__ == "__main__":
         getter_app.run_in_loop(main())
         getter_app.run()
     except KeyboardInterrupt:
-        LOG.warning("[APP] Shutdown signal received.")
-    except Exception as err:
-        LOG.exception(f"[APP] Unhandled exception: {err}")
+        LOG.info("[APP] shutdown signal received")
+    except Exception:
+        LOG.exception("[APP] unhandled exception")
         sys.exit(1)
     finally:
-        LOG.warning("[APP] Stopped.")
+        LOG.info("[APP] stopped")

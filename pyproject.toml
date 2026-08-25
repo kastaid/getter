@@ -3,7 +3,7 @@
 show-fixes = true
 line-length = 120
 indent-width = 4
-target-version = "py313"
+target-version = "py314"
 
 [tool.ruff.format]
 quote-style = "double"
@@ -44,6 +44,13 @@ ignore = [
     "RUF067",
     "FURB118",
     "SIM105",
+    "ASYNC109",
+    "BLE001",
+    "S102",
+    "S110",
+    "S112",
+    "DTZ001",
+    "DTZ006",
     "PLC0415",
 ]
 

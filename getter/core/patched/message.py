@@ -3,13 +3,12 @@
 # AGPL-3.0 License
 
 import asyncio
-from collections.abc import Coroutine, Sequence
 from contextlib import suppress
 from io import BytesIO
+from typing import TYPE_CHECKING
 
 import telethon.tl.custom
 from telethon import hints
-from telethon.client.chats import _ChatAction
 from telethon.errors import (
     ChatSendMediaForbiddenError,
     FloodWaitError,
@@ -21,6 +20,11 @@ from telethon.errors import (
 from telethon.tl import types as typ
 
 from getter.core.patcher import patch, patchable
+
+if TYPE_CHECKING:
+    from collections.abc import Coroutine, Sequence
+
+    from telethon.client.chats import _ChatAction
 
 
 @patch(telethon.tl.custom.message.Message)
@@ -109,7 +113,10 @@ class Message:
                         parse_mode="html",
                     )
                 return
-            except (ChatSendMediaForbiddenError, FloodWaitError):
+            except (
+                ChatSendMediaForbiddenError,
+                FloodWaitError,
+            ):
                 raise
             except BaseException:
                 return
@@ -164,7 +171,10 @@ class Message:
                         parse_mode="html",
                     )
                 return
-            except (ChatSendMediaForbiddenError, FloodWaitError):
+            except (
+                ChatSendMediaForbiddenError,
+                FloodWaitError,
+            ):
                 raise
             except BaseException:
                 return
@@ -260,7 +270,10 @@ class Message:
                     parse_mode="html",
                 )
             return
-        except (ChatSendMediaForbiddenError, FloodWaitError):
+        except (
+            ChatSendMediaForbiddenError,
+            FloodWaitError,
+        ):
             raise
         except BaseException:
             return

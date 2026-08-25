@@ -8,11 +8,10 @@ import os
 import random
 import sys
 from collections import UserList
-from collections.abc import Coroutine
 from inspect import getmembers
 from platform import machine, version
 from time import time
-from typing import Any, NoReturn
+from typing import TYPE_CHECKING, Any, NoReturn
 
 from telethon.client.telegramclient import TelegramClient
 from telethon.errors import (
@@ -21,8 +20,6 @@ from telethon.errors import (
     InvalidBufferError,
     PhoneNumberInvalidError,
 )
-from telethon.network.connection import ConnectionTcpAbridged
-from telethon.sessions.abstract import Session
 from telethon.sessions.string import CURRENT_VERSION, StringSession
 from telethon.tl import functions as fun, types as typ
 
@@ -41,11 +38,17 @@ from getter.config import (
 )
 from getter.logger import LOG
 
+from .custom_tcp import FastTCP
 from .db import sgvar
 from .functions import display_name
 from .helper import plugins_help
 from .property import do_not_remove_credit, get_blacklisted
 from .utils import time_formatter
+
+if TYPE_CHECKING:
+    from collections.abc import Coroutine
+
+    from telethon.sessions.abstract import Session
 
 PLUGIN_DIR = Root / "getter/plugins"
 CUSTOM_PLUGIN_DIR = Root / "getter/plugins/custom"
@@ -71,12 +74,12 @@ class KastaClient(TelegramClient):
         self.log = LOG
         kwargs["api_id"] = api_id
         kwargs["api_hash"] = api_hash
-        kwargs["connection"] = ConnectionTcpAbridged
+        kwargs["connection"] = FastTCP
         kwargs["request_retries"] = 3
         kwargs["connection_retries"] = 3
         kwargs["auto_reconnect"] = True
         kwargs["device_model"] = "Getter"
-        kwargs["system_version"] = " ".join((version(), machine()))
+        kwargs["system_version"] = f"{version()} {machine()}"
         kwargs["app_version"] = __version__
         kwargs["loop"] = LOOP
         kwargs["entity_cache_limit"] = 1000
@@ -127,27 +130,22 @@ class KastaClient(TelegramClient):
                     self.log.error(f"({me} - {self.uid}) YOU ARE BLACKLISTED !!")
                     sys.exit(1)
             self.log.success(f"Logged in as {me} [{self.uid}]")
-        except (ValueError, ApiIdInvalidError):
+        except (
+            ValueError,
+            ApiIdInvalidError,
+        ):
             self.log.critical("API_ID and API_HASH combination does not match, please re-check! Quitting...")
             sys.exit(1)
-        except (AuthKeyDuplicatedError, PhoneNumberInvalidError, EOFError):
+        except (
+            AuthKeyDuplicatedError,
+            PhoneNumberInvalidError,
+            EOFError,
+        ):
             self.log.critical("STRING_SESSION expired, please create new! Quitting...")
             sys.exit(1)
-        except Exception as err:
-            self.log.exception(f"[KastaClient] - {err}")
+        except Exception:
+            self.log.exception("[KastaClient] failed to start.")
             sys.exit(1)
-
-    async def start_pytgcalls(self) -> None:
-        try:
-            self.log.info("Start PyTgCalls...")
-            from pytgcalls import PyTgCalls
-
-            TgCall = PyTgCalls(self)
-            await TgCall.start()
-            Var.TGCALL = TgCall
-            self.log.success("PyTgCalls Started.")
-        except Exception as err:
-            self.log.exception(f"[KastaClient:PyTgCalls] - {err}")
 
     def run_in_loop(self, func: Coroutine[Any, Any, None]) -> Any:
         return self.loop.run_until_complete(func)
@@ -155,8 +153,8 @@ class KastaClient(TelegramClient):
     def run(self) -> NoReturn:
         try:
             self.run_until_disconnected()
-        except InvalidBufferError as err:
-            self.log.exception(err)
+        except InvalidBufferError:
+            self.log.exception("InvalidBufferError occurred.")
             self.log.error("Client was stopped, restarting...")
             try:
                 import psutil
@@ -219,8 +217,8 @@ class KastaClient(TelegramClient):
             spec.loader.exec_module(mod)
             self._plugins[plug] = mod
             return True
-        except Exception as err:
-            self.log.exception(err)
+        except Exception:
+            self.log.exception("Failed to load plugin.")
             return False
 
     def unload_plugin(
