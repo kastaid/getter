@@ -131,25 +131,30 @@ Create custom plugins at `./getter/plugins/custom/plugin_name.py`.
 ```python
 from . import kasta_cmd
 
+
 # Works everywhere (e.g., groups, personal chats)
 @kasta_cmd(pattern="hi")
 async def _(event):
     await event.eor("Hello **World**")
+
 
 # Works only in personal chats
 @kasta_cmd(pattern="hi", func=lambda e: e.is_private)
 async def _(event):
     await event.eor("Hello **World**")
 
+
 # Works only in channels
 @kasta_cmd(pattern="hi", func=lambda e: e.is_channel and e.chat.broadcast)
 async def _(event):
     await event.eor("Hello **World**")
 
+
 # Works only in groups
 @kasta_cmd(pattern="hi", func=lambda e: e.is_group)
 async def _(event):
     await event.eor("Hello **World**")
+
 
 # Works only in groups or channels
 @kasta_cmd(pattern="hi", func=lambda e: not e.is_private)

@@ -79,7 +79,7 @@ class KastaClient(TelegramClient):
         kwargs["connection_retries"] = 3
         kwargs["auto_reconnect"] = True
         kwargs["device_model"] = "Getter"
-        kwargs["system_version"] = " ".join((version(), machine()))
+        kwargs["system_version"] = f"{version()} {machine()}"
         kwargs["app_version"] = __version__
         kwargs["loop"] = LOOP
         kwargs["entity_cache_limit"] = 1000

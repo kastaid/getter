@@ -5,7 +5,7 @@
 import asyncio
 import html
 import random
-from datetime import datetime
+from time import time
 
 from telethon import events
 
@@ -48,7 +48,7 @@ async def _(kst):
     if await is_afk():
         return
     yy = await kst.eor("`Go To AFK...`")
-    start = datetime.now().timestamp()
+    start = time()
     reason = await kst.client.get_text(kst, plain=False)
     text = "<b><u>I’m now AFK!</u></b>"
     if reason:
@@ -78,9 +78,7 @@ async def StopAFK(kst):
         return
     afk = await is_afk()
     if afk:
-        start = datetime.fromtimestamp(afk.start)
-        end = datetime.now().replace(microsecond=0)
-        afk_time = time_formatter((end - start).seconds)
+        afk_time = time_formatter(int(time() - afk.start))
         try:
             for x, y in afk.last.items():
                 await kst.client.delete_messages(int(x), [y])
@@ -107,9 +105,7 @@ async def OnAFK(kst):
             return
         afk = await is_afk()
         if afk:
-            start = datetime.fromtimestamp(afk.start)
-            end = datetime.now().replace(microsecond=0)
-            afk_time = time_formatter((end - start).seconds)
+            afk_time = time_formatter(int(time() - afk.start))
             text = "<b><u>I’m on AFK!</u></b>\n"
             text += f"Last seen {afk_time} ago."
             reason = f"<pre>{afk.reason}</pre>" if afk.reason else "No reason."
