@@ -51,9 +51,9 @@ _TORM = {
     "~": "",
 }
 _PMPERMIT_SEM = asyncio.Semaphore(2)
-_PMBYE_CACHE = cachebox.TTLCache(maxsize=1, ttl=60)  # 1 mins
-_PMMSG_CACHE = cachebox.TTLCache(maxsize=1, ttl=60)  # 1 mins
-_PMTOTAL_CACHE = cachebox.TTLCache(maxsize=1, ttl=60)  # 1 mins
+_PMBYE_CACHE = cachebox.TTLCache(maxsize=1, global_ttl=60)  # 1 mins
+_PMMSG_CACHE = cachebox.TTLCache(maxsize=1, global_ttl=60)  # 1 mins
+_PMTOTAL_CACHE = cachebox.TTLCache(maxsize=1, global_ttl=60)  # 1 mins
 
 
 async def PMLogs(kst):

@@ -3,8 +3,8 @@
 # AGPL-3.0 License
 
 import sys
-from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from typing import TYPE_CHECKING
 
 import orjson
 from sqlalchemy.ext.asyncio import (
@@ -18,6 +18,9 @@ from sqlalchemy.sql.expression import text
 
 from getter.config import Var
 from getter.logger import LOG
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 
 class Model(DeclarativeBase):

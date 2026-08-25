@@ -14,6 +14,7 @@ from inspect import stack
 from io import BytesIO
 from pathlib import Path
 from traceback import format_exc
+from typing import TYPE_CHECKING
 
 from telethon import events, hints
 from telethon.errors import (
@@ -28,7 +29,6 @@ from telethon.errors import (
     MessageIdInvalidError,
     MessageNotModifiedError,
 )
-from telethon.tl.types import Message
 
 from getter import (
     __layer__,
@@ -52,6 +52,9 @@ from .helper import get_botlogs, jdata
 from .property import do_not_remove_credit, get_blacklisted
 from .tools import Runner
 from .utils import normalize, strip_format, time_formatter
+
+if TYPE_CHECKING:
+    from telethon.tl.types import Message
 
 CommandChats = list[int] | set[int] | tuple[int] | None
 CommandFunc = Callable[[events.NewMessage.Event], bool | None]
@@ -171,8 +174,8 @@ def kasta_cmd(
                 sys.exit(0)
             except events.StopPropagation:
                 raise
-            except Exception as err:
-                kst.client.log.exception(f"[KASTA_CMD] - {err}")
+            except Exception:
+                kst.client.log.exception("[KASTA_CMD] Error")
                 date = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
                 if kst.is_private:
                     chat_type = "private"
@@ -341,6 +344,6 @@ async def sendlog(
             fallback=fallback,
             **args,
         )
-    except Exception as err:
-        getter_app.log.exception(err)
+    except Exception:
+        getter_app.log.exception("Failed to send log.")
         return

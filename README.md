@@ -32,7 +32,7 @@
 
 ## Requirements
 
-- Python 3.13+
+- Python 3.14+
 - Linux (Debian/Ubuntu)
 - Telegram `API_ID` and `API_HASH` from [API development tools](https://my.telegram.org)
 
@@ -49,7 +49,7 @@ cd getter
 
 #### String Session
 
-Generate `STRING_SESSION` by choosing **Telethon** at [@strgen_bot](https://t.me/strgen_bot) or run `python3 strgen.py`.
+Generate `STRING_SESSION` by running `python3 strgen.py`.
 
 #### Config
 
@@ -64,6 +64,7 @@ Choose your preferred deployment method below.
 Deploy using Docker Compose for easy containerized deployment.
 
 #### Full version
+With FFmpeg.
 ```sh
 git pull && \
   docker compose -f full-compose.yml up -d --build && \
@@ -71,6 +72,7 @@ git pull && \
 ```
 
 #### Lite version
+Without FFmpeg.
 ```sh
 git pull && \
   docker compose -f lite-compose.yml up -d --build && \

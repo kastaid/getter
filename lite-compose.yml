@@ -4,8 +4,10 @@ services:
       context: .
       dockerfile: Dockerfile.lite
     image: getter:latest
+    container_name: getter-${COMPOSE_PROJECT_NAME}
     init: true
     restart: unless-stopped
+    
     volumes:
       - ./:/app
     env_file:

@@ -17,7 +17,7 @@ from sqlalchemy import (
 
 from .engine import Model, Session
 
-_GBAN_CACHE = cachebox.TTLCache(maxsize=100, ttl=60)  # 1 mins
+_GBAN_CACHE = cachebox.TTLCache(maxsize=100, global_ttl=60)  # 1 mins
 
 
 class GBan(Model):

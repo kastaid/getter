@@ -13,6 +13,7 @@ from . import (
     Var,
     display_name,
     humanbool,
+    import_lib,
     is_termux,
     kasta_cmd,
     mentionuser,
@@ -193,14 +194,14 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="joinvc(?: |$)(.*)",
+    pattern="(?:joinvc|jvc)(?: |$)(.*)",
 )
 @kasta_cmd(
-    pattern="joinvc(?: |$)(.*)",
+    pattern="(?:joinvc|jvc)(?: |$)(.*)",
     sudo=True,
 )
 @kasta_cmd(
-    pattern="gjoinvc(?: |$)(.*)",
+    pattern="g(?:joinvc|jvc)(?: |$)(.*)",
     dev=True,
 )
 async def _(kst):
@@ -216,8 +217,11 @@ async def _(kst):
         return await yy.eor("`No video chat!`", time=5)
     if chat_id not in Var.CALLS:
         try:
-            await Var.TGCALL.play(chat_id)
-            await Var.TGCALL.mute(chat_id)
+            tgcall = await get_tgcall(ga)
+            if not tgcall:
+                return await yy.eor("`Cannot initialize PyTgCalls!`", time=5)
+            await tgcall.play(chat_id)
+            await tgcall.mute(chat_id)
             Var.CALLS.add(chat_id)
             text = "`Joined video chat.`"
         except BaseException:
@@ -231,14 +235,14 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="leavevc(?: |$)(.*)",
+    pattern="(?:leavevc|lvc)(?: |$)(.*)",
 )
 @kasta_cmd(
-    pattern="leavevc(?: |$)(.*)",
+    pattern="(?:leavevc|lvc)(?: |$)(.*)",
     sudo=True,
 )
 @kasta_cmd(
-    pattern="gleavevc(?: |$)(.*)",
+    pattern="g(?:leavevc|lvc)(?: |$)(.*)",
     dev=True,
 )
 async def _(kst):
@@ -303,6 +307,33 @@ async def get_call_id(message, group=1):
     return get_peer_id(entity)
 
 
+async def get_tgcall(client):
+    if Var.TGCALL:
+        return Var.TGCALL
+    try:
+        from pytgcalls import PyTgCalls
+    except ImportError:
+        try:
+            client.log.info("Installing PyTgCalls...")
+            PyTgCalls = import_lib(
+                lib_name="pytgcalls",
+                pkg_name="py-tgcalls==2.3.3",
+            ).PyTgCalls
+            client.log.success("PyTgCalls installed.")
+        except Exception:
+            client.log.exception("PyTgCalls installation failed.")
+            return
+    try:
+        client.log.info("Start PyTgCalls...")
+        tgcall = PyTgCalls(client)
+        await tgcall.start()
+        Var.TGCALL = tgcall
+        client.log.success("PyTgCalls Started.")
+        return tgcall
+    except Exception:
+        client.log.exception("PyTgCalls failed to start.")
+
+
 plugins_help["vctools"] = {
     "{i}startvc [-s/silent] [title]": "Start or restart the video chat in current group/channel. Add '-s' to started silently.",
     "{i}stopvc [-s/silent]": "Stop the video chat in current group/channel. Add '-s' to stopped silently.",
@@ -310,7 +341,7 @@ plugins_help["vctools"] = {
     "{i}invitevc [reply]/[username/mention/id]": "Invite user to current video chat.",
     # "{i}vcinviteall": "Invite all members to current video chat. **(YOU MUST BE JOINED)**",
     "{i}vcinfo": "Get information of current video chat.",
-    "{i}joinvc [current/chat_id/username]/[reply]": "Join the video chat in group/channel.",
-    "{i}leavevc [current/chat_id/username]/[reply]": "Leave the video chat in group/channel.",
+    "{i}joinvc [current/chat_id/username]/[reply]": "Join the video chat in group/channel. Alias: jvc.",
+    "{i}leavevc [current/chat_id/username]/[reply]": "Leave the video chat in group/channel. Alias: lvc.",
     "{i}listvc": "List all joined video chats.",
 }

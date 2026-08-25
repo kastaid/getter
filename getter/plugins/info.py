@@ -33,12 +33,12 @@ from . import (
 SG_BOT = "SangMata_BOT"
 CREATED_BOT = "creationdatebot"
 ROSE_BOT = "MissRose_bot"
-_TOTAL_BOT_CACHE = cachebox.TTLCache(maxsize=100, ttl=120)  # 2 mins
-_CREATED_CACHE = cachebox.TTLCache(maxsize=100, ttl=120)  # 2 mins
+_TOTAL_BOT_CACHE = cachebox.TTLCache(maxsize=100, global_ttl=120)  # 2 mins
+_CREATED_CACHE = cachebox.TTLCache(maxsize=100, global_ttl=120)  # 2 mins
 _ROSE_LANG_CACHE = cachebox.LRUCache(maxsize=100)
-_ROSE_STAT_CACHE = cachebox.TTLCache(maxsize=100, ttl=120)  # 2 mins
-_SPAMWATCH_CACHE = cachebox.TTLCache(maxsize=100, ttl=120)  # 2 mins
-_CAS_CACHE = cachebox.TTLCache(maxsize=100, ttl=120)  # 2 mins
+_ROSE_STAT_CACHE = cachebox.TTLCache(maxsize=100, global_ttl=120)  # 2 mins
+_SPAMWATCH_CACHE = cachebox.TTLCache(maxsize=100, global_ttl=120)  # 2 mins
+_CAS_CACHE = cachebox.TTLCache(maxsize=100, global_ttl=120)  # 2 mins
 
 
 @kasta_cmd(
