@@ -3,51 +3,67 @@
 # AGPL-3.0 License
 
 import asyncio
+import random
+import re
 
-from telethon.errors import FloodWaitError, RPCError, SlowModeWaitError
+from telethon.errors import (
+    FloodPremiumWaitError,
+    FloodWaitError,
+    SlowModeWaitError,
+)
 
 from . import (
+    Var,
+    get_username,
     hl,
+    is_telegram_link,
     kasta_cmd,
     normalize_chat_id,
     plugins_help,
 )
 
-DS_TASKS: dict[int, dict[int, asyncio.Task]] = {i: {} for i in range(10)}
-
-
-def get_task_store(ds: int) -> dict[int, asyncio.Task]:
-    return DS_TASKS.get(ds)
+PREFIX = "" if Var.NO_HANDLER else hl
+DS_RANGE = range(10)
+DS_PATTERN = rf"ds({'|'.join(map(str, DS_RANGE[1:]))}|)"
+DS_DELAY_MIN = 2
+DS_RANDOM_THRESHOLD = 60
+DS_RANDOM_DELAY = (3.5, 6.5)
+DS_TASKS: dict[int, dict[int, asyncio.Task]] = {i: {} for i in DS_RANGE}
+DS_ERROR_MAX = 3
+TARGET_RE = re.compile(r"(?:^|\s+)to=(\S+)(?=\s|$)", re.IGNORECASE)
 
 
 @kasta_cmd(
-    pattern=r"ds(1|2|3|4|5|6|7|8|9|)(?: |$)([\s\S]*)",
+    pattern=rf"{DS_PATTERN}(?: |$)([\s\S]*)",
 )
 async def _(kst):
-    chat_id = normalize_chat_id(kst.chat_id)
+    chat_id, text = await parse_target(kst, kst.text)
+    if not chat_id:
+        return await kst.eor("Invalid target chat.", time=2)
     ds = int(kst.pattern_match.group(1) or 0)
+    ds_name = get_ds_name(ds)
     task_store = get_task_store(ds)
     if chat_id in task_store:
-        return await kst.eor(f"Please wait until previous •ds{ds}• is finished or cancel it.", time=2)
+        return await kst.eor(f"Please wait, {ds_name} is running or cancel it.", time=2)
     if kst.is_reply:
         try:
-            args = kst.text.split(" ", 2)
+            args = text.split(" ", 2)
             delay = int(args[1])
             count = int(args[2])
             message = await kst.get_reply_message()
             await kst.try_delete()
         except BaseException:
-            return await kst.eor(f"`{hl}ds{ds} [delay] [count] [reply]`", time=4)
+            return await kst.eor(f"`{PREFIX}{ds_name} [delay] [count] [reply] [to=chat]`", time=4)
     else:
         try:
-            args = kst.text.split(" ", 3)
+            args = text.split(" ", 3)
             delay = int(args[1])
             count = int(args[2])
             message = str(args[3])
             await kst.try_delete()
         except BaseException:
-            return await kst.eor(f"`{hl}ds{ds} [delay] [count] [text]`", time=4)
-    delay = max(2, delay)
+            return await kst.eor(f"`{PREFIX}{ds_name} [delay] [count] [text] [to=chat]`", time=4)
+    delay = max(DS_DELAY_MIN, delay)
     task = asyncio.create_task(
         run_delayspam(
             kst,
@@ -63,31 +79,35 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="ds(1|2|3|4|5|6|7|8|9|)cancel$",
+    pattern=rf"{DS_PATTERN}cancel(?: |$)([\s\S]*)",
 )
 async def _(kst):
-    chat_id = normalize_chat_id(kst.chat_id)
+    chat_id, _ = await parse_target(kst, kst.pattern_match.group(2))
+    if not chat_id:
+        return await kst.eor("Invalid target chat.", time=2)
     ds = int(kst.pattern_match.group(1) or 0)
+    ds_name = get_ds_name(ds)
     task_store = get_task_store(ds)
     if chat_id not in task_store:
-        return await kst.eor(f"No running •ds{ds}• in current chat.", time=2)
+        return await kst.eor(f"No {ds_name} is running in target chat.", time=2)
     task = task_store.pop(chat_id)
     if not task.done():
         task.cancel()
-    await kst.eor(f"`canceled ds{ds} in current chat`", time=2)
+    await kst.eor(f"`canceled {ds_name} in target chat`", time=2)
 
 
 @kasta_cmd(
-    pattern="ds(1|2|3|4|5|6|7|8|9|)stop$",
+    pattern=rf"{DS_PATTERN}stop$",
 )
 async def _(kst):
     ds = int(kst.pattern_match.group(1) or 0)
+    ds_name = get_ds_name(ds)
     task_store = get_task_store(ds)
     for task in list(task_store.values()):
         if not task.done():
             task.cancel()
     task_store.clear()
-    await kst.eor(f"`stopped ds{ds} in all chats`", time=4)
+    await kst.eor(f"`stopped {ds_name} in all chats`", time=4)
 
 
 @kasta_cmd(
@@ -102,6 +122,14 @@ async def _(kst):
     await kst.eor("`clear all ds*`", time=4)
 
 
+def get_ds_name(ds: int) -> str:
+    return f"ds{ds}" if ds else "ds"
+
+
+def get_task_store(ds: int) -> dict[int, asyncio.Task]:
+    return DS_TASKS.get(ds)
+
+
 async def run_delayspam(
     kst,
     ds: int,
@@ -110,62 +138,76 @@ async def run_delayspam(
     delay: int,
     count: int,
 ) -> None:
+    error_count = 0
     for _ in range(count):
         if chat_id not in get_task_store(ds):
             break
         try:
+            if delay > DS_RANDOM_THRESHOLD:
+                await asyncio.sleep(random.uniform(*DS_RANDOM_DELAY))
             await kst.client.send_message(
                 chat_id,
                 message=message,
                 parse_mode="markdown",
+                link_preview=True,
                 silent=True,
             )
+            error_count = 0
             await asyncio.sleep(delay)
-        except FloodWaitError as fw:
-            await asyncio.sleep(fw.seconds)
-            await kst.client.send_message(
-                chat_id,
-                message=message,
-                parse_mode="markdown",
-                silent=True,
-            )
-            await asyncio.sleep(delay)
-        except SlowModeWaitError:
-            pass
-        except RPCError:
-            break
+        except (
+            FloodWaitError,
+            FloodPremiumWaitError,
+            SlowModeWaitError,
+        ) as err:
+            await asyncio.sleep(err.seconds + 15)
+        except Exception as err:
+            error_count += 1
+            if error_count > DS_ERROR_MAX:
+                kst.client.log.warning(err)
+                break
+
+
+async def parse_target(
+    kst,
+    text: str,
+) -> tuple[int | None, str]:
+    match = TARGET_RE.search(text)
+    target = match.group(1) if match else None
+    if match:
+        text = text[: match.start()] + text[match.end() :]
+    if not target:
+        return normalize_chat_id(kst.chat_id), text
+    chat_id = normalize_chat_id(target)
+    if isinstance(chat_id, int):
+        return chat_id, text
+    if is_telegram_link(chat_id):
+        chat_id = get_username(chat_id)
+    try:
+        entity = await kst.client.get_entity(chat_id)
+        return normalize_chat_id(entity.id), text
+    except BaseException:
+        return None, text
 
 
 plugins_help["delayspam"] = {
-    "{i}ds [delay] [count] [text]/[reply]": "Spam current chat in seconds (min 2 seconds).",
-    "{i}ds1 [delay] [count] [text]/[reply]": "Same as above, different message as 1.",
-    "{i}ds2 [delay] [count] [text]/[reply]": "Same as above, different message as 2.",
-    "{i}ds3 [delay] [count] [text]/[reply]": "Same as above, different message as 3.",
-    "{i}ds4 [delay] [count] [text]/[reply]": "Same as above, different message as 4.",
-    "{i}ds5 [delay] [count] [text]/[reply]": "Same as above, different message as 5.",
-    "{i}ds6 [delay] [count] [text]/[reply]": "Same as above, different message as 6.",
-    "{i}ds7 [delay] [count] [text]/[reply]": "Same as above, different message as 7.",
-    "{i}ds8 [delay] [count] [text]/[reply]": "Same as above, different message as 8.",
-    "{i}ds9 [delay] [count] [text]/[reply]": "Same as above, different message as 9.",
-    "{i}dscancel": "To cancel `{i}ds` in current chat.",
-    "{i}ds1cancel": "To cancel `{i}ds1` in current chat.",
-    "{i}ds2cancel": "To cancel `{i}ds2` in current chat.",
-    "{i}ds3cancel": "To cancel `{i}ds3` in current chat.",
-    "{i}ds4cancel": "To cancel `{i}ds4` in current chat.",
-    "{i}ds5cancel": "To cancel `{i}ds5` in current chat.",
-    "{i}ds6cancel": "To cancel `{i}ds6` in current chat.",
-    "{i}ds7cancel": "To cancel `{i}ds7` in current chat.",
-    "{i}ds8cancel": "To cancel `{i}ds8` in current chat.",
-    "{i}ds9cancel": "To cancel `{i}ds9` in current chat.",
-    "{i}dsstop": "To stop `{i}ds` in all chats.",
-    "{i}ds1stop": "To stop `{i}ds1` in all chats.",
-    "{i}ds2stop": "To stop `{i}ds2` in all chats.",
-    "{i}ds3stop": "To stop `{i}ds3` in all chats.",
-    "{i}ds4stop": "To stop `{i}ds4` in all chats.",
-    "{i}ds5stop": "To stop `{i}ds5` in all chats.",
-    "{i}ds6stop": "To stop `{i}ds6` in all chats.",
-    "{i}ds7stop": "To stop `{i}ds7` in all chats.",
-    "{i}ds8stop": "To stop `{i}ds8` in all chats.",
-    "{i}ds9stop": "To stop `{i}ds9` in all chats.",
-    "{i}dsclear": "To clear and stop all ds*.",
+    f"{PREFIX}ds [delay] [count] [text] [to=chat]": f"Spam a chat in seconds (min {DS_DELAY_MIN} seconds).",
+    f"{PREFIX}ds [delay] [count] [reply] [to=chat]": "Spam a replied message to a chat.",
+    **{
+        f"{PREFIX}ds{x} [delay] [count] [text/reply] [to=chat]": f"Same as above, different message as {x}."
+        for x in DS_RANGE[1:]
+    },
+    f"{PREFIX}dscancel [to=chat]": "To cancel `{PREFIX}ds` in a chat.",
+    **{f"{PREFIX}ds{x}cancel [to=chat]": f"To cancel `{PREFIX}ds{x}` in a chat." for x in DS_RANGE[1:]},
+    f"{PREFIX}dsstop": "To stop `{PREFIX}ds` in all chats.",
+    **{f"{PREFIX}ds{x}stop": f"To stop `{PREFIX}ds{x}` in all chats." for x in DS_RANGE[1:]},
+    f"{PREFIX}dsclear": f"""To clear and stop all ds*.
+
+**Notes**:
+- `[to=chat]` is optional and can be placed anywhere.
+- Without `[to=chat]`, commands use the current chat.
+- With `[to=chat]`, commands use the target chat.
+- `chat` can be a chat ID, username, or Telegram link.
+- Examples: `{PREFIX}ds 5 10 hello`, `{PREFIX}ds 5 10 hello to=username`
+- Chat examples: `to=-1001234567890`, `to=username`, `to=https://t.me/username`
+""",
 }

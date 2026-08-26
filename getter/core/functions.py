@@ -14,30 +14,31 @@ from telethon.utils import get_display_name
 if TYPE_CHECKING:
     from telethon import hints
 
-TELEGRAM_LINK_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog|space)/)([\w-]+)$"
-USERNAME_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog|space)?(?:/)?(.*?))"
-MSG_ID_RE = r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog|space)/)(?:c\/|)(.*)\/(.*)|(?:tg//openmessage\?)?(?:user_id=(.*))?(?:\&message_id=(.*))"
+TELEGRAM_LINK_RE = r"^(?:https?://)?(?:(?:www\.)?t(?:elegram)?\.(?:org|me|dog)/([\w-]+)|([\w-]+)\.t\.me(?:/.*)?)$"
+USERNAME_RE = r"^(?:https?://)?(?:(?:www\.)?t(?:elegram)?\.(?:org|me|dog)/([\w-]+)|([\w-]+)\.t\.me)(?:/.*)?$"
+MSG_ID_RE = r"^(?:https?://)?(?:(?:www\.)?t(?:elegram)?\.(?:org|me|dog)/|([\w-]+)\.t\.me/)((?:c/)?[\w-]+)/(\d+)$|^(?:tg://openmessage\?)?(?:user_id=(\d+))?&?(?:message_id=(\d+))?$"
 
 
 def is_telegram_link(url: str) -> bool:
-    # TODO: support for username.t.me
     return bool(re.match(TELEGRAM_LINK_RE, url, flags=re.IGNORECASE))
 
 
 def get_username(url: str) -> str:
-    # TODO: support for username.t.me
-    return "".join(re.sub(USERNAME_RE, "@", url, flags=re.IGNORECASE).split("/")[:1])
+    if match := re.match(USERNAME_RE, url, flags=re.IGNORECASE):
+        return f"@{match.group(1) or match.group(2)}"
+    return url
 
 
-def get_msg_id(link: str) -> tuple[str | None, int | None]:
-    # TODO: support for username.t.me
-    idx = [tuple(filter(None, _)) for _ in re.findall(MSG_ID_RE, link, flags=re.IGNORECASE)]
-    ids = next((_ for _ in idx), None)
-    if not ids:
+def get_msg_id(link: str) -> tuple[str | int | None, int | None]:
+    match = re.match(MSG_ID_RE, link, flags=re.IGNORECASE)
+    if not match:
         return None, None
-    chat, msg_id = ids
-    if chat.isdecimal():
-        chat = int("-100" + chat)
+    username, chat, msg_id, user_id, open_msg_id = match.groups()
+    if user_id and open_msg_id:
+        return user_id, int(open_msg_id)
+    chat = username or chat
+    if chat.startswith("c/"):
+        chat = int("-100" + chat[2:])
     return chat, int(msg_id)
 
 

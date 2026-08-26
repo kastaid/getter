@@ -3,7 +3,7 @@
 # AGPL-3.0 License
 
 ARG PYTHON_IMAGE=python3.14-trixie-slim
-ARG UV_VERSION=0.12.5
+ARG UV_VERSION=0.12.6
 FROM ghcr.io/astral-sh/uv:${UV_VERSION}-${PYTHON_IMAGE}
 ENV TERM=xterm \
     DEBIAN_FRONTEND=noninteractive \
