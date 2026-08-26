@@ -70,6 +70,13 @@ git pull && \
   docker compose -f full-compose.yml up -d --build && \
   docker compose -f full-compose.yml logs -f
 ```
+##### Stop or Restart
+```sh
+# stop
+docker compose -f full-compose.yml down
+# restart
+docker compose -f full-compose.yml restart
+```
 
 #### Lite version
 Without FFmpeg.
@@ -77,6 +84,13 @@ Without FFmpeg.
 git pull && \
   docker compose -f lite-compose.yml up -d --build && \
   docker compose -f lite-compose.yml logs -f
+```
+##### Stop or Restart
+```sh
+# stop
+docker compose -f lite-compose.yml down
+# restart
+docker compose -f lite-compose.yml restart
 ```
 
 ### Locally
