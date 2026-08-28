@@ -4,9 +4,9 @@
 
 ARG PYTHON_IMAGE=python3.14-trixie-slim
 ARG UV_VERSION=0.12.7
-ARG FFMPEG_TAG=autobuild-2026-08-14-13-16
-ARG FFMPEG_BUILD=n7.1.5-12-g1fdbca85aa
-ARG FFMPEG_VARIANT=linux64-gpl-7.1
+ARG FFMPEG_TAG=latest
+ARG FFMPEG_BUILD=n8.1-latest
+ARG FFMPEG_VARIANT=linux64-gpl-8.1
 FROM debian:trixie-slim AS builder_ffmpeg
 ARG FFMPEG_TAG
 ARG FFMPEG_BUILD
