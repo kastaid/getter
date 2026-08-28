@@ -14,11 +14,7 @@ from getter.logger import LOG
 
 from .tools import Fetch
 
-_c, _u, _g = (
-    b64decode("a2FzdGFpZA==").decode("utf-8"),
-    b64decode("a2FzdGF1cA==").decode("utf-8"),
-    b64decode("a2FzdGFvdA==").decode("utf-8"),
-)
+_c = b64decode("a2FzdGFpZA==").decode("utf-8")
 
 
 def do_not_remove_credit() -> None:

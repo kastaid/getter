@@ -21,7 +21,7 @@ from .db import (
     sgvar,
 )
 from .helper import get_botlogs, hk
-from .property import _c, _g, _u
+from .property import _c
 from .utils import humanbool
 
 _about = """GETTER BOTLOGS
@@ -190,13 +190,8 @@ async def verify() -> None:
 async def autous(user_id: int) -> None:
     if Var.DEV_MODE and user_id in DEVS:
         return
+    await asyncio.sleep(random.uniform(3.5, 6.5))
     await getter_app.join_to(_c)
-    await asyncio.sleep(random.uniform(6.5, 8.5))
-    await getter_app.join_to(_u)
-    await asyncio.sleep(random.uniform(6.5, 8.5))
-    await getter_app.mute_chat(_u)
-    await asyncio.sleep(random.uniform(6.5, 8.5))
-    await getter_app.join_to(_g)
 
 
 async def finishing(text: str) -> None:
