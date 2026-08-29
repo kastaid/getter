@@ -39,12 +39,12 @@ TARGET_RE = re.compile(r"(?:^|\s+)to=(\S+)(?=\s|$)", re.IGNORECASE)
 async def _(kst):
     chat_id, text = await parse_target(kst, kst.text)
     if not chat_id:
-        return await kst.eor("Invalid target chat.", time=2)
+        return await kst.eor("Invalid target chat.", time=3)
     ds = int(kst.pattern_match.group(1) or 0)
     ds_name = get_ds_name(ds)
     task_store = get_task_store(ds)
     if chat_id in task_store:
-        return await kst.eor(f"Please wait, {ds_name} is running or cancel it.", time=2)
+        return await kst.eor(f"Please wait, {ds_name} is running or cancel it.", time=3)
     if kst.is_reply:
         try:
             args = text.split(" ", 2)
@@ -53,7 +53,7 @@ async def _(kst):
             message = await kst.get_reply_message()
             await kst.try_delete()
         except BaseException:
-            return await kst.eor(f"`{PREFIX}{ds_name} [delay] [count] [reply] [to=chat]`", time=4)
+            return await kst.eor(f"`{PREFIX}{ds_name} [delay] [count] [reply] [to=chat]`", time=6)
     else:
         try:
             args = text.split(" ", 3)
@@ -62,10 +62,10 @@ async def _(kst):
             message = str(args[3])
             await kst.try_delete()
         except BaseException:
-            return await kst.eor(f"`{PREFIX}{ds_name} [delay] [count] [text] [to=chat]`", time=4)
+            return await kst.eor(f"`{PREFIX}{ds_name} [delay] [count] [text] [to=chat]`", time=6)
     delay = max(DS_DELAY_MIN, delay)
     task = asyncio.create_task(
-        run_delayspam(
+        run_ds(
             kst,
             ds,
             chat_id,
@@ -84,16 +84,16 @@ async def _(kst):
 async def _(kst):
     chat_id, _ = await parse_target(kst, kst.pattern_match.group(2))
     if not chat_id:
-        return await kst.eor("Invalid target chat.", time=2)
+        return await kst.eor("Invalid target chat.", time=3)
     ds = int(kst.pattern_match.group(1) or 0)
     ds_name = get_ds_name(ds)
     task_store = get_task_store(ds)
     if chat_id not in task_store:
-        return await kst.eor(f"No {ds_name} is running in target chat.", time=2)
+        return await kst.eor(f"No {ds_name} is running in target chat.", time=3)
     task = task_store.pop(chat_id)
     if not task.done():
         task.cancel()
-    await kst.eor(f"`canceled {ds_name} in target chat`", time=2)
+    await kst.eor(f"`canceled {ds_name} in target chat`", time=6)
 
 
 @kasta_cmd(
@@ -107,7 +107,7 @@ async def _(kst):
         if not task.done():
             task.cancel()
     task_store.clear()
-    await kst.eor(f"`stopped {ds_name} in all chats`", time=4)
+    await kst.eor(f"`stopped {ds_name} in all chats`", time=0)
 
 
 @kasta_cmd(
@@ -119,7 +119,7 @@ async def _(kst):
             if not task.done():
                 task.cancel()
         store.clear()
-    await kst.eor("`clear all ds*`", time=4)
+    await kst.eor("`clear all ds*`", time=0)
 
 
 def get_ds_name(ds: int) -> str:
@@ -130,7 +130,7 @@ def get_task_store(ds: int) -> dict[int, asyncio.Task]:
     return DS_TASKS.get(ds)
 
 
-async def run_delayspam(
+async def run_ds(
     kst,
     ds: int,
     chat_id: int,
@@ -154,16 +154,20 @@ async def run_delayspam(
             )
             error_count = 0
             await asyncio.sleep(delay)
+        except SlowModeWaitError as err:
+            kst.client.log.warning(f"Delayspam {ds} slowmode wait: {err.seconds}s")
+            await asyncio.sleep(err.seconds + 5)
         except (
             FloodWaitError,
             FloodPremiumWaitError,
-            SlowModeWaitError,
         ) as err:
-            await asyncio.sleep(err.seconds + 15)
+            wait = err.seconds + random.uniform(15, 30)
+            kst.client.log.warning(f"Delayspam {ds} flood wait: {err.seconds}s, sleeping {wait:.1f}s")
+            await asyncio.sleep(wait)
         except Exception as err:
             error_count += 1
             if error_count > DS_ERROR_MAX:
-                kst.client.log.warning(err)
+                kst.client.log.warning(f"Delayspam {ds} stopped after {error_count} errors in chat {chat_id}: {err}")
                 break
 
 

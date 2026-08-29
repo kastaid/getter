@@ -33,7 +33,7 @@ from .core.startup import (
 from .core.utils import time_formatter
 from .logger import LOG
 
-success_msg = ">> Visit @kastaid for Updates !!"
+success_msg = "> Visit @kastaid for Updates !!"
 if Var.DEV_MODE:
     trap()
     print(
@@ -49,7 +49,7 @@ async def main() -> None:
     migrations()
     await autopilot()
     await verify()
-    LOG.info(">> Load Plugins...")
+    LOG.info("> Load Plugins...")
     load = monotonic()
     plugins = getter_app.all_plugins
     for p in plugins:
@@ -68,7 +68,7 @@ async def main() -> None:
 
     await asyncio.gather(*[handle_afk(), handle_pmpermit()])
     loaded_time = time_formatter(monotonic() - load)
-    loaded_msg = ">> Loaded Plugins: {} , Commands: {} (took {}) : {}".format(
+    loaded_msg = "> Loaded Plugins: {} , Commands: {} (took {}) : {}".format(
         plugins_help.count,
         plugins_help.total,
         loaded_time,
@@ -76,9 +76,9 @@ async def main() -> None:
     )
     LOG.info(loaded_msg)
     do_not_remove_credit()
-    python_msg = f">> Python Version - {__pyversion__}"
-    telethon_msg = f">> Telethon Version - {__tlversion__} [Layer: {__layer__}]"
-    launch_msg = f">> 🚀 Getter v{__version__} launch ({getter_app.full_name} - {getter_app.uid}) in {getter_app.uptime} with handler [ {hl}ping ]"
+    python_msg = f"> Python Version - {__pyversion__}"
+    telethon_msg = f"> Telethon Version - {__tlversion__} [Layer: {__layer__}]"
+    launch_msg = f"> 🚀 Getter v{__version__} launch ({getter_app.full_name} - {getter_app.uid}) in {getter_app.uptime} with handler [ {hl}ping ]"
     LOG.info(python_msg)
     LOG.info(telethon_msg)
     LOG.info(launch_msg)

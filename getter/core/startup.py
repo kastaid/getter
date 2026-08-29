@@ -93,7 +93,7 @@ def trap() -> None:
 def migrations(app: Any = None) -> None:
     if Var.DEV_MODE or not hk.is_heroku:
         return
-    LOG.info(">> Migrations...")
+    LOG.info("> Migrations...")
     try:
         if not app:
             app = hk.heroku().app(hk.name)
@@ -129,7 +129,7 @@ def migrations(app: Any = None) -> None:
 async def autopilot() -> None:
     if Var.BOTLOGS or await gvar("BOTLOGS"):
         return
-    LOG.info(">> Auto-Pilot...")
+    LOG.info("> Auto-Pilot...")
     photo = None
     try:
         photo = await getter_app.upload_file("assets/getter.png")
