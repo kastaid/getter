@@ -13,6 +13,7 @@ from . import (
     OUTS_AFK,
     add_afk,
     del_afk,
+    format_time,
     getter_app,
     gvar,
     is_afk,
@@ -20,7 +21,6 @@ from . import (
     kasta_cmd,
     plugins_help,
     set_last_afk,
-    time_formatter,
 )
 
 _ON_STOP = (
@@ -78,7 +78,7 @@ async def StopAFK(kst):
         return
     afk = await is_afk()
     if afk:
-        afk_time = time_formatter(int(time() - afk.start))
+        afk_time = format_time(int(time() - afk.start))
         try:
             for x, y in afk.last.items():
                 await kst.client.delete_messages(int(x), [y])
@@ -105,7 +105,7 @@ async def OnAFK(kst):
             return
         afk = await is_afk()
         if afk:
-            afk_time = time_formatter(int(time() - afk.start))
+            afk_time = format_time(int(time() - afk.start))
             text = "<b><u>I’m on AFK!</u></b>\n"
             text += f"Last seen {afk_time} ago."
             reason = f"<pre>{afk.reason}</pre>" if afk.reason else "No reason."

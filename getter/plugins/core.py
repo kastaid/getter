@@ -3,12 +3,12 @@
 # AGPL-3.0 License
 
 import asyncio
+import csv
 import random
 from datetime import datetime
+from io import StringIO
 from time import monotonic
 
-import aiofiles
-from aiocsv import AsyncDictReader, AsyncReader, AsyncWriter
 from telethon import events
 from telethon.errors import (
     ChannelPrivateError,
@@ -24,10 +24,11 @@ from telethon.tl import functions as fun, types as typ
 
 from . import (
     DEVS,
+    DOWNLOAD_DIR,
     INVITE_WORKER,
     NOCHATS,
     TZ,
-    Root,
+    format_time,
     get_user_status,
     get_username,
     hl,
@@ -36,7 +37,6 @@ from . import (
     normalize_chat_id,
     plugins_help,
     sendlog,
-    time_formatter,
 )
 
 invite_text = """
@@ -221,12 +221,18 @@ async def _(kst):
                         if error.lower().startswith(("too many", "a wait of")) or success > max_success:
                             if INVITE_WORKER.get(chat_id):
                                 INVITE_WORKER.pop(chat_id)
-                            taken = time_formatter(monotonic() - start_time)
+                            taken = format_time(
+                                monotonic() - start_time,
+                                readable=True,
+                            )
                             try:
                                 waitfor = int("".join(filter(str.isdigit, error.lower())))
                             except ValueError:
                                 waitfor = 0
-                            flood = time_formatter(waitfor)
+                            flood = format_time(
+                                waitfor,
+                                readable=True,
+                            )
                             done_limit = done_limit_text.format(
                                 flood,
                                 error,
@@ -266,7 +272,10 @@ async def _(kst):
                     except ChannelPrivateError as err:
                         if INVITE_WORKER.get(chat_id):
                             INVITE_WORKER.pop(chat_id)
-                        taken = time_formatter(monotonic() - start_time)
+                        taken = format_time(
+                            monotonic() - start_time,
+                            readable=True,
+                        )
                         done_error = done_error_text.format(
                             str(err),
                             success,
@@ -284,7 +293,10 @@ async def _(kst):
             pass
         if INVITE_WORKER.get(chat_id):
             INVITE_WORKER.pop(chat_id)
-        taken = time_formatter(monotonic() - start_time)
+        taken = format_time(
+            monotonic() - start_time,
+            readable=True,
+        )
         done = done_text.format(
             success,
             failed,
@@ -317,87 +329,146 @@ async def _(kst):
         start_time = monotonic()
         local_now = datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S")
         members, admins, bots = 0, 0, 0
-        members_file = "members_list.csv"
-        admins_file = "admins_list.csv"
-        bots_file = "bots_list.csv"
+        members_file = DOWNLOAD_DIR / "members_list.csv"
+        admins_file = DOWNLOAD_DIR / "admins_list.csv"
+        bots_file = DOWNLOAD_DIR / "bots_list.csv"
+
         await yy.eor("`Scraping Members...`")
-        members_exist = bool(is_append and (Root / members_file).exists())
+        members_exist = is_append and members_file.exists()
         if members_exist:
-            rows = set()
-            async with aiofiles.open(members_file) as f:
-                async for row in AsyncReader(f):
-                    if row and str(row[0]).isdecimal():
-                        rows.add(int(row[0]))
+            data = await asyncio.to_thread(
+                members_file.read_text,
+                encoding="utf-8",
+            )
+            rows = {int(i[0]) for i in csv.reader(data.splitlines()) if i and i[0].isdecimal()}
             members = len(rows)
-            async with aiofiles.open(members_file, mode="a") as f:
-                writer = AsyncWriter(f, delimiter=",")
-                # aggressive=True : telethon.errors.common.MultiError: ([None, None, None, FloodWaitError('A wait of 11 seconds is required (caused by GetParticipantsRequest)'),
-                try:
-                    async for x in ga.iter_participants(target_id):
-                        if (
-                            not (x.deleted or x.bot or x.is_self or hasattr(x.participant, "admin_rights"))
-                            and get_user_status(x) != "long_time_ago"
-                            and x.id not in rows
-                        ):
-                            try:
-                                await writer.writerow([x.id, x.access_hash, x.username])
-                                members += 1
-                            except BaseException:
-                                pass
-                except BaseException:
-                    pass
+            buffer = StringIO()
+            writer = csv.writer(buffer)
+            try:
+                async for x in ga.iter_participants(target_id):
+                    if (
+                        not (x.deleted or x.bot or x.is_self or hasattr(x.participant, "admin_rights"))
+                        and get_user_status(x) != "long_time_ago"
+                        and x.id not in rows
+                    ):
+                        try:
+                            writer.writerow(
+                                [
+                                    x.id,
+                                    x.access_hash,
+                                    x.username,
+                                ]
+                            )
+                            members += 1
+                        except BaseException:
+                            pass
+            except BaseException:
+                pass
+            new_data = buffer.getvalue()
+            buffer.close()
+            if new_data:
+                await asyncio.to_thread(
+                    members_file.write_text,
+                    data + new_data,
+                    encoding="utf-8",
+                )
         else:
-            async with aiofiles.open(members_file, mode="w") as f:
-                writer = AsyncWriter(f, delimiter=",")
-                await writer.writerow(["user_id", "hash", "username"])
-                try:
-                    async for x in ga.iter_participants(target_id):
-                        if (
-                            not (x.deleted or x.bot or x.is_self or hasattr(x.participant, "admin_rights"))
-                            and get_user_status(x) != "long_time_ago"
-                        ):
-                            try:
-                                await writer.writerow([x.id, x.access_hash, x.username])
-                                members += 1
-                            except BaseException:
-                                pass
-                except BaseException:
-                    pass
+            buffer = StringIO()
+            writer = csv.writer(buffer)
+            writer.writerow(["user_id", "hash", "username"])
+            try:
+                async for x in ga.iter_participants(target_id):
+                    if (
+                        not (x.deleted or x.bot or x.is_self or hasattr(x.participant, "admin_rights"))
+                        and get_user_status(x) != "long_time_ago"
+                    ):
+                        try:
+                            writer.writerow(
+                                [
+                                    x.id,
+                                    x.access_hash,
+                                    x.username,
+                                ]
+                            )
+                            members += 1
+                        except BaseException:
+                            pass
+            except BaseException:
+                pass
+            data = buffer.getvalue()
+            buffer.close()
+            await asyncio.to_thread(
+                members_file.write_text,
+                data,
+                encoding="utf-8",
+            )
+
         await yy.eor("`Scraping Admins...`")
-        async with aiofiles.open(admins_file, mode="w") as f:
-            writer = AsyncWriter(f, delimiter=",")
-            await writer.writerow(["user_id", "hash", "username"])
-            try:
-                async for x in ga.iter_participants(
-                    target_id,
-                    filter=typ.ChannelParticipantsAdmins,
-                ):
-                    if not (x.deleted or x.bot or x.is_self):
-                        try:
-                            await writer.writerow([x.id, x.access_hash, x.username])
-                            admins += 1
-                        except BaseException:
-                            pass
-            except BaseException:
-                pass
+        buffer = StringIO()
+        writer = csv.writer(buffer)
+        writer.writerow(["user_id", "hash", "username"])
+        try:
+            async for x in ga.iter_participants(
+                target_id,
+                filter=typ.ChannelParticipantsAdmins,
+            ):
+                if not (x.deleted or x.bot or x.is_self):
+                    try:
+                        writer.writerow(
+                            [
+                                x.id,
+                                x.access_hash,
+                                x.username,
+                            ]
+                        )
+                        admins += 1
+                    except BaseException:
+                        pass
+        except BaseException:
+            pass
+        data = buffer.getvalue()
+        buffer.close()
+        await asyncio.to_thread(
+            admins_file.write_text,
+            data,
+            encoding="utf-8",
+        )
+
         await yy.eor("`Scraping Bots...`")
-        async with aiofiles.open(bots_file, mode="w") as f:
-            writer = AsyncWriter(f, delimiter=",")
-            await writer.writerow(["user_id", "hash", "username"])
-            try:
-                async for x in ga.iter_participants(
-                    target_id,
-                    filter=typ.ChannelParticipantsBots,
-                ):
-                    if not x.deleted:
-                        try:
-                            await writer.writerow([x.id, x.access_hash, x.username])
-                            bots += 1
-                        except BaseException:
-                            pass
-            except BaseException:
-                pass
-        taken = time_formatter(monotonic() - start_time)
+        buffer = StringIO()
+        writer = csv.writer(buffer)
+        writer.writerow(["user_id", "hash", "username"])
+        try:
+            async for x in ga.iter_participants(
+                target_id,
+                filter=typ.ChannelParticipantsBots,
+            ):
+                if not x.deleted:
+                    try:
+                        writer.writerow(
+                            [
+                                x.id,
+                                x.access_hash,
+                                x.username,
+                            ]
+                        )
+                        bots += 1
+                    except BaseException:
+                        pass
+        except BaseException:
+            pass
+        data = buffer.getvalue()
+        buffer.close()
+        await asyncio.to_thread(
+            bots_file.write_text,
+            data,
+            encoding="utf-8",
+        )
+
+        taken = format_time(
+            monotonic() - start_time,
+            readable=True,
+        )
         await yy.eor("`Uploading CSV Files...`")
         await yy.eor(
             getmembers_text.format(
@@ -469,18 +540,22 @@ async def _(kst):
             mode = "admins"
         elif args.startswith("bot"):
             mode = "bots"
-        csv_file = mode + "_list.csv"
+        csv_file = DOWNLOAD_DIR / f"{mode}_list.csv"
         start_time = monotonic()
         local_now = datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S")
         try:
-            await yy.eor(f"`Reading {csv_file} file...`")
-            async with aiofiles.open(csv_file) as f:
-                async for row in AsyncDictReader(f, delimiter=","):
-                    user = {"user_id": int(row["user_id"]), "hash": int(row["hash"])}
-                    users.append(user)
+            await yy.eor(f"`Reading {csv_file.name} file...`")
+            data = await asyncio.to_thread(
+                csv_file.read_text,
+                encoding="utf-8",
+            )
+            users.extend(
+                {"user_id": int(i["user_id"]), "hash": int(i["hash"])}
+                for i in csv.DictReader(data.splitlines(), delimiter=",")
+            )
         except FileNotFoundError:
             return await yy.eor(
-                f"File `{csv_file}` not found.\nPlease run `{hl}getmembers [username/link/id]/[reply]` and try again!"
+                f"File `{csv_file.name}` not found.\nPlease run `{hl}getmembers [username/link/id]/[reply]` and try again!"
             )
         success = 0
         chat = await kst.get_chat()
@@ -511,7 +586,10 @@ async def _(kst):
             except FloodWaitError as fw:
                 await asyncio.sleep(fw.seconds + 10)
                 try:
-                    adding = typ.InputPeerUser(user["user_id"], user["hash"])
+                    adding = typ.InputPeerUser(
+                        user["user_id"],
+                        user["hash"],
+                    )
                     await ga(
                         fun.channels.InviteToChannelRequest(
                             chat_id,
@@ -531,7 +609,10 @@ async def _(kst):
                 pass
         if INVITE_WORKER.get(chat_id):
             INVITE_WORKER.pop(chat_id)
-        taken = time_formatter(monotonic() - start_time)
+        taken = format_time(
+            monotonic() - start_time,
+            readable=True,
+        )
         await yy.eor(f"`✅ Completed adding {success} {mode} in {taken}` at `{local_now}`")
 
 

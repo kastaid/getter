@@ -98,7 +98,7 @@ async def _(kst):
 )
 async def _(kst):
     group = kst.pattern_match.group
-    cmd, lang, lang_code, text = group(1), group(2), None, ""
+    cmd, lang, lang_code, text = group(1), group(2).strip(), None, ""
     yy = await kst.eor("`Getting question...`")
     if lang in LANG_CODES:
         lang_code = lang
@@ -116,12 +116,12 @@ async def _(kst):
     except ImportError:
         Translator = import_lib(
             lib_name="gpytranslate",
-            pkg_name="gpytranslate==1.5.1",
+            pkg_name="gpytranslate==2.1.0",
         ).Translator
     try:
         tod = str(res.get("question"))
         if lang_code:
-            tod = (await Translator()(tod, targetlang=lang_code)).text
+            tod = (await Translator().translate(tod, targetlang=lang_code)).text
         text += tod
         await yy.sod(text, parse_mode="html")
     except Exception as err:

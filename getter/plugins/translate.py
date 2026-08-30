@@ -2,11 +2,13 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
+import asyncio
+from io import BytesIO
+
 from . import (
+    DOWNLOAD_DIR,
     LANG_CODES,
-    Root,
     Var,
-    aioify,
     formatx_send,
     import_lib,
     kasta_cmd,
@@ -47,16 +49,9 @@ async def _(kst):
         return await kst.eor("`Reply to text message or provide a text!`", time=5)
     yy = await kst.eor("`...`")
     try:
-        from gpytranslate import Translator
-    except ImportError:
-        Translator = import_lib(
-            lib_name="gpytranslate",
-            pkg_name="gpytranslate==1.5.1",
-        ).Translator
-    try:
         text = strip_format(strip_emoji(words))
-        translator = Translator()
-        translation = await translator(text, targetlang=lang)
+        translator = get_translator()
+        translation = await translator.translate(text, targetlang=lang)
         tr = f"**Detected**: `{await translator.detect(translation.orig)}`\n**Translated**: `{await translator.detect(translation.text)}`\n\n```{translation.text}```"
         await yy.eor(tr, parts=True)
     except Exception as err:
@@ -91,15 +86,9 @@ async def _(kst):
     if not words:
         return await kst.eor("`Reply to text message or provide a text!`", time=5)
     try:
-        from gpytranslate import Translator
-    except ImportError:
-        Translator = import_lib(
-            lib_name="gpytranslate",
-            pkg_name="gpytranslate==1.5.1",
-        ).Translator
-    try:
         text = strip_format(strip_emoji(words))
-        translation = await Translator()(text, targetlang=lang)
+        translator = get_translator()
+        translation = await translator.translate(text, targetlang=lang)
         await kst.sod(translation.text, parts=True)
     except Exception as err:
         await kst.eor(formatx_send(err), parse_mode="html")
@@ -134,31 +123,19 @@ async def _(kst):
         return await kst.eor("`Reply to text message or provide a text!`", time=5)
     yy = await kst.eor("`...`")
     try:
-        from gtts import gTTS
-    except ImportError:
-        gTTS = import_lib(
-            lib_name="gtts",
-            pkg_name="gTTS==2.5.1",
-        ).gTTS
-    try:
-        from gpytranslate import Translator
-    except ImportError:
-        Translator = import_lib(
-            lib_name="gpytranslate",
-            pkg_name="gpytranslate==1.5.1",
-        ).Translator
-    try:
         text = strip_ascii(strip_format(strip_emoji(words)))
+        translator = get_translator()
         if kst.pattern_match.group(1).strip() != "t":
-            text = (await Translator()(text, targetlang=lang)).text
-        file = Root / "downloads/voice.mp3"
-        voice = await aioify(gTTS, text, lang=lang, slow=False)
-        voice.save(file)
+            text = (await translator.translate(text, targetlang=lang)).text
+        file = DOWNLOAD_DIR / "voice.mp3"
+        voice = BytesIO()
+        await translator.tts(text, file=voice)
+        await asyncio.to_thread(file.write_bytes, voice.getvalue())
         await yy.eor(
             file=file,
             voice_note=True,
         )
-        (file).unlink(missing_ok=True)
+        await asyncio.to_thread(file.unlink, missing_ok=True)
     except Exception as err:
         await yy.eor(formatx_send(err), parse_mode="html")
 
@@ -168,9 +145,24 @@ async def _(kst):
 )
 async def _(kst):
     lang = f"**{len(LANG_CODES)} Language Code**:\n" + "\n".join(
-        [f"- {y}: {x}" for x, y in sort_dict(LANG_CODES).items()]
+        [f"- {k}: {v}" for k, v in sort_dict(LANG_CODES).items()]
     )
     await kst.sod(lang, parts=True)
+
+
+def get_translator():
+    try:
+        return get_translator.translator
+    except AttributeError:
+        try:
+            from gpytranslate import Translator
+        except ImportError:
+            Translator = import_lib(
+                lib_name="gpytranslate",
+                pkg_name="gpytranslate==2.1.0",
+            ).Translator
+        get_translator.translator = Translator()
+        return get_translator.translator
 
 
 plugins_help["translate"] = {

@@ -44,14 +44,14 @@ from getter.config import (
     hl,
 )
 
-from .base_client import getter_app
 from .constants import MAX_MESSAGE_LEN
 from .db import gvar
 from .functions import admin_check, display_name, to_privilege
 from .helper import get_botlogs, jdata
+from .kasta import getter_app
 from .property import do_not_remove_credit, get_blacklisted
 from .tools import Runner
-from .utils import normalize, strip_format, time_formatter
+from .utils import format_time, normalize, strip_format
 
 if TYPE_CHECKING:
     from telethon.tl.types import Message
@@ -152,7 +152,7 @@ def kasta_cmd(
                 await fun(kst)
             except FloodWaitError as fw:
                 FLOOD_WAIT = fw.seconds + random.uniform(10, 15)
-                FLOOD_WAIT_HUMAN = time_formatter(FLOOD_WAIT)
+                FLOOD_WAIT_HUMAN = format_time(FLOOD_WAIT)
                 kst.client.log.warning(f"FloodWait {FLOOD_WAIT}. Sleeping for {FLOOD_WAIT_HUMAN} before retrying.")
                 await asyncio.sleep(FLOOD_WAIT)
                 return  # safety first

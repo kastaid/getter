@@ -5,21 +5,125 @@
 import math
 import random
 import re
+import unicodedata
 from functools import reduce
 from string import ascii_letters
 from time import time
 from typing import Any
+from urllib.parse import urlsplit
 from uuid import uuid4
 
 import cachebox
-from bs4 import BeautifulSoup
 from emoji import replace_emoji
-from markdown.core import markdown
-from unidecode import unidecode
+from telethon.extensions import html, markdown
+
+_BYTE_UNITS = ("", "K", "M", "G", "T")
+_TIME_UNITS = {
+    "s": (1, "seconds"),
+    "m": (60, "minutes"),
+    "h": (3600, "hours"),
+    "d": (86400, "days"),
+    "w": (604800, "weeks"),
+}
 
 
-def humanbool(b: Any, toggle: bool = False) -> str:
-    return ("off" if toggle else "no") if str(b).lower() in {"false", "none", "0", ""} else ("on" if toggle else "yes")
+def format_bytes(size: float) -> str:
+    if size <= 0:
+        return "0 B"
+    mag = min(int(math.log(size, 1024)), len(_BYTE_UNITS) - 1)
+    unit = _BYTE_UNITS[mag]
+    scaled = round(size / (1024**mag), 1)
+    if scaled.is_integer():
+        scaled = int(scaled)
+    return f"{scaled} {unit}B"
+
+
+def format_time(
+    elapsed: float,
+    readable: bool = False,
+    short: bool = False,
+) -> str:
+    total = int(elapsed)
+    ms = int((elapsed - total) * 1000)
+    sec = total % 60
+    total //= 60
+    mins = total % 60
+    total //= 60
+    hour = total % 24
+    total //= 24
+    day = total % 30
+    total //= 30
+    month = total % 12
+    year = total // 12
+    week = day // 7
+    day %= 7
+    if short:
+        if year:
+            day = hour = mins = sec = ms = 0
+        elif week:
+            mins = sec = ms = 0
+        elif day:
+            sec = ms = 0
+        elif hour or sec:
+            ms = 0
+    if not (year or month or week or day or hour or mins or sec or ms):
+        return "0 seconds" if readable else "0s"
+    p = []
+    if readable:
+        if year:
+            p.append(f"{year} year{'s' if year > 1 else ''}")
+        if month:
+            p.append(f"{month} month{'s' if month > 1 else ''}")
+        if week:
+            p.append(f"{week} week{'s' if week > 1 else ''}")
+        if day:
+            p.append(f"{day} day{'s' if day > 1 else ''}")
+        if hour:
+            p.append(f"{hour} hour{'s' if hour > 1 else ''}")
+        if mins:
+            p.append(f"{mins} minute{'s' if mins > 1 else ''}")
+        if sec:
+            p.append(f"{sec} second{'s' if sec > 1 else ''}")
+        if ms:
+            p.append(f"{ms} millisecond{'s' if ms > 1 else ''}")
+    else:
+        if year:
+            p.append(f"{year}y")
+        if month:
+            p.append(f"{month}mo")
+        if week:
+            p.append(f"{week}w")
+        if day:
+            p.append(f"{day}d")
+        if hour:
+            p.append(f"{hour}h")
+        if mins:
+            p.append(f"{mins}m")
+        if sec:
+            p.append(f"{sec}s")
+        if ms:
+            p.append(f"{ms}ms")
+    return ", ".join(p)
+
+
+def format_latency(elapsed: float) -> str:
+    return f"{elapsed * 1000:.0f}ms" if elapsed < 0.1 else f"{elapsed:.2f}s"
+
+
+def until_time(
+    timing: str | int,
+    unit: str = "m",
+) -> tuple[int, str]:
+    if not str(timing).isdecimal():
+        raise TypeError("'timing' must be an integer or digit string")
+    multiplier, duration = _TIME_UNITS.get(unit.lower(), _TIME_UNITS["m"])
+    return int(time() + int(timing) * multiplier), duration
+
+
+def humanbool(key: Any, toggle: bool = False) -> str:
+    return (
+        ("Off" if toggle else "No") if str(key).lower() in {"false", "none", "0", ""} else ("On" if toggle else "Yes")
+    )
 
 
 def replace_all(
@@ -33,24 +137,12 @@ def replace_all(
 
 
 def md_to_html(text: str) -> str:
-    repls = {
-        "<p>(.*)</p>": "\\1",
-        r"\~\~(.*)\~\~": "<del>\\1</del>",
-        r"\-\-(.*)\-\-": "<u>\\1</u>",
-        r"\_\_(.*)\_\_": "<em>\\1</em>",
-        r"\|\|(.*)\|\|": "<spoiler>\\1</spoiler>",
-    }
-    return replace_all(markdown(text), repls, regex=True)
+    text, entities = markdown.parse(text)
+    return html.unparse(text, entities)
 
 
 def strip_format(text: str) -> str:
-    repls = {
-        "~~": "",
-        "--": "",
-        "__": "",
-        "||": "",
-    }
-    return replace_all(BeautifulSoup(markdown(text), features="html.parser").get_text(), repls).strip()
+    return markdown.parse(text)[0].strip()
 
 
 def strip_emoji(text: str) -> str:
@@ -59,104 +151,6 @@ def strip_emoji(text: str) -> str:
 
 def strip_ascii(text: str) -> str:
     return text.encode("ascii", "ignore").decode("ascii")
-
-
-def humanbytes(size: float) -> str:
-    if not size:
-        return "0 B"
-    power = 1024
-    pos = 0
-    power_dict = {
-        0: "",
-        1: "K",
-        2: "M",
-        3: "G",
-        4: "T",
-        5: "P",
-        6: "E",
-        7: "Z",
-        8: "Y",
-    }
-    while size > power:
-        size /= power
-        pos += 1
-    return f"{size:.2f}{power_dict[pos]}B"
-
-
-def time_formatter(
-    dur: float,
-    readable: bool = False,
-) -> str:
-    if dur > 1e10:
-        dur //= 1000
-    total = int(dur)
-    sec = total % 60
-    total //= 60
-    mins = total % 60
-    total //= 60
-    hour = total % 24
-    total //= 24
-    day = total % 7
-    week = total // 7
-    if not (week or day or hour or mins or sec):
-        return "0sec" if readable else "0s"
-    if readable:
-        parts = []
-        if week:
-            parts.append(f"{week}week")
-        if day:
-            parts.append(f"{day}day")
-        if hour:
-            parts.append(f"{hour}hour")
-        if mins:
-            parts.append(f"{mins}min")
-        if sec:
-            parts.append(f"{sec}sec")
-        return ", ".join(parts)
-    parts = []
-    if week:
-        parts.append(f"{week}w")
-    if day:
-        parts.append(f"{day}d")
-    if hour:
-        parts.append(f"{hour}h")
-    if mins:
-        parts.append(f"{mins}m")
-    if sec:
-        parts.append(f"{sec}s")
-    return ", ".join(parts)
-
-
-def until_time(
-    timing: str | int,
-    unit: str = "m",
-) -> tuple[float, str]:
-    if unit.lower() not in {
-        "s",
-        "m",
-        "h",
-        "d",
-        "w",
-    }:
-        unit = "m"
-    if not str(timing).isdecimal():
-        raise TypeError("'timing' must be integers or str digits")
-    if unit == "s":
-        until = int(time() + int(timing) * 1)
-        dur = "seconds"
-    elif unit == "m":
-        until = int(time() + int(timing) * 60)
-        dur = "minutes"
-    elif unit == "h":
-        until = int(time() + int(timing) * 60 * 60)
-        dur = "hours"
-    elif unit == "d":
-        until = int(time() + int(timing) * 24 * 60 * 60)
-        dur = "days"
-    else:
-        until = int(time() + int(timing) * 7 * 24 * 60 * 60)
-        dur = "weeks"
-    return until, dur
 
 
 def get_random_hex(length: int = 12) -> str:
@@ -172,8 +166,8 @@ def mask_email(email: str) -> str:
     return email[0] + "*" * int(at - 2) + email[at - 1 :]
 
 
-def chunk(lst: list, size: int = 2) -> list:
-    return [lst[_ * size : _ * size + size] for _ in list(range(math.ceil(len(lst) / size)))]
+def chunk(items: list, limit: int = 2) -> list:
+    return [items[i * limit : (i + 1) * limit] for i in range(len(items) // limit + (len(items) % limit > 0))]
 
 
 def sort_dict(dct: dict, reverse: bool = False) -> dict:
@@ -210,37 +204,41 @@ def to_dict(
 
 
 def camel(text: str) -> str:
-    text = re.sub(r"(_|-)+", " ", text).title().replace(" ", "")
-    return "".join([text[0].lower(), text[1:]])
+    text = re.sub(r"[_-]+", " ", text).title().replace(" ", "")
+    return "".join([text[:1].lower(), text[1:]])
 
 
 def snake(text: str) -> str:
-    return "_".join(
-        re.sub(r"([A-Z][a-z]+)", r" \1", re.sub(r"([A-Z]+)", r" \1", text.replace("-", " "))).split()
-    ).lower()
+    text = text.replace("-", " ")
+    text = re.sub(r"([A-Z]+)", r" \1", text)
+    text = re.sub(r"([A-Z][a-z]+)", r" \1", text)
+    return "_".join(text.split()).lower()
 
 
 def kebab(text: str) -> str:
-    return "-".join(
-        re.sub(
-            r"(\s|_|-)+",
-            " ",
-            re.sub(
-                r"[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+",
-                lambda x: " " + x.group(0).lower(),
-                text,
-            ),
-        ).split()
+    text = re.sub(
+        r"[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+", lambda i: " " + i.group(0).lower(), text
     )
+    text = re.sub(r"[\s_-]+", " ", text)
+    return "-".join(text.split())
 
 
 @cachebox.cached({})
 def normalize(text: str) -> str:
-    return unidecode(text)
+    return "".join(i for i in unicodedata.normalize("NFKD", text) if not unicodedata.combining(i))
 
 
-def get_full_class_name(obj: Any) -> str:
-    module = obj.__class__.__module__
-    if module is None or module == str.__class__.__module__:
-        return obj.__class__.__name__
-    return module + "." + obj.__class__.__name__
+def is_url(value: str) -> bool:
+    if not isinstance(value, str) or not value or any(i.isspace() for i in value):
+        return False
+    try:
+        parsed = urlsplit(value if "://" in value else f"//{value}")
+    except ValueError:
+        return False
+    return bool(parsed.netloc)
+
+
+def get_full_class_name(value: Any) -> str:
+    cls = type(value)
+    module = cls.__module__
+    return cls.__name__ if module in {None, "builtins"} else f"{module}.{cls.__name__}"

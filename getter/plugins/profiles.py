@@ -3,11 +3,12 @@
 # AGPL-3.0 License
 
 import asyncio
+from pathlib import Path
 
 from telethon.tl import functions as fun, types as typ
 
 from . import (
-    Root,
+    DOWNLOAD_DIR,
     formatx_send,
     get_media_type,
     kasta_cmd,
@@ -76,18 +77,18 @@ async def _(kst):
     ga = kst.client
     yy = await kst.eor("`Processing...`")
     reply = await kst.get_reply_message()
-    pull = await reply.download_media(file="downloads")
+    pull = Path(await reply.download_media(file=DOWNLOAD_DIR))
     file = await ga.upload_file(pull)
     try:
         if "pic" in get_media_type(reply.media):
             await ga(fun.photos.UploadProfilePhotoRequest(file))
         else:
             await ga(fun.photos.UploadProfilePhotoRequest(video=file))
-        (Root / pull).unlink(missing_ok=True)
         await yy.eod("`Successfully change my profile picture.`")
     except Exception as err:
-        (Root / pull).unlink(missing_ok=True)
         await yy.eor(formatx_send(err), parse_mode="html")
+    finally:
+        await asyncio.to_thread(pull.unlink, missing_ok=True)
 
 
 @kasta_cmd(

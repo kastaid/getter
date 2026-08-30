@@ -2,77 +2,24 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
+import asyncio
 import random
 from mimetypes import guess_extension
 
-from PIL import Image, ImageEnhance, ImageOps
-from telethon import events
-from telethon.errors import YouBlockedUserError
+from PIL import (
+    Image,
+    ImageEnhance,
+    ImageOps,
+)
 from telethon.tl import types as typ
 
 from . import (
-    Root,
-    Runner,
+    DOWNLOAD_DIR,
     Screenshot,
-    aioify,
+    import_lib,
     kasta_cmd,
     plugins_help,
 )
-
-FRY_BOT = "image_deepfrybot"
-
-
-@kasta_cmd(
-    pattern="fry(?: |$)([1-8])?",
-    func=lambda e: e.is_reply,
-)
-async def _(kst):
-    ga = kst.client
-    match = kst.pattern_match.group(1)
-    level = int(match) if match else 3
-    reply = await kst.get_reply_message()
-    data = check_media(reply)
-    if isinstance(data, bool):
-        return await kst.eor("`Cannot frying that!`", time=5)
-    yy = await kst.eor("`...`")
-    ext = None
-    fry_img = Root / "downloads/fry.jpeg"
-    if isinstance(reply.media, typ.MessageMediaPhoto):
-        file = fry_img
-    else:
-        mim = reply.media.document.mime_type
-        ext = guess_extension(mim)
-        file = Root / ("downloads/" + f"fry{ext}")
-    await reply.download_media(file=file)
-    if ext and ext in {".mp4", ".gif", ".webm"}:
-        ss = await Screenshot(file, 0, fry_img)
-        if not ss:
-            (file).unlink(missing_ok=True)
-            return await yy.try_delete()
-    else:
-        try:
-            if ext and ext == ".tgs":
-                fry_img = Root / "downloads/fry.png"
-                await Runner(f"lottie_convert.py {file} {fry_img}")
-                (file).unlink(missing_ok=True)
-                file = fry_img
-            img = Image.open(file)
-            img.convert("RGB").save(fry_img, format="JPEG")
-        except BaseException:
-            (file).unlink(missing_ok=True)
-            return await yy.try_delete()
-    async with ga.conversation(FRY_BOT) as conv:
-        resp = await conv_fry(conv, fry_img, level)
-    if not resp:
-        return await yy.eod("`Bot did not respond.`")
-    if not getattr(resp.message.media, "photo", None):
-        return await yy.eod(f"`{resp.message.message}`")
-    await yy.eor(
-        file=resp.message.media,
-        force_document=False,
-    )
-    (file).unlink(missing_ok=True)
-    (fry_img).unlink(missing_ok=True)
 
 
 @kasta_cmd(
@@ -88,65 +35,71 @@ async def _(kst):
         return await kst.eor("`Cannot uglying that!`", time=5)
     yy = await kst.eor("`...`")
     ext = None
-    ugly_img = Root / "downloads/ugly.jpeg"
+    ugly_img = DOWNLOAD_DIR / "ugly.jpeg"
     if isinstance(reply.media, typ.MessageMediaPhoto):
         file = ugly_img
     else:
         mim = reply.media.document.mime_type
         ext = guess_extension(mim)
-        file = Root / ("downloads/" + f"ugly{ext}")
+        file = DOWNLOAD_DIR / f"ugly{ext}"
     await reply.download_media(file=file)
     if ext and ext in {".mp4", ".gif", ".webm"}:
         to_ugly = ugly_img
         ss = await Screenshot(file, 0, ugly_img)
         if not ss:
-            (file).unlink(missing_ok=True)
+            await asyncio.to_thread(file.unlink, missing_ok=True)
             return await yy.try_delete()
     else:
         if ext and ext == ".tgs":
-            ugly_img = Root / "downloads/ugly.png"
-            await Runner(f"lottie_convert.py {file} {ugly_img}")
-            (file).unlink(missing_ok=True)
+            ugly_img = DOWNLOAD_DIR / "ugly.png"
+            await asyncio.to_thread(tgs_to_png, file, ugly_img)
+            await asyncio.to_thread(file.unlink, missing_ok=True)
             file = ugly_img
         to_ugly = file
     try:
         for _ in range(level):
-            img = await aioify(uglying, to_ugly)
+            img = await asyncio.to_thread(uglying, to_ugly)
         img.save(ugly_img, format="JPEG")
     except BaseException:
-        (to_ugly).unlink(missing_ok=True)
+        await asyncio.to_thread(to_ugly.unlink, missing_ok=True)
         return await yy.try_delete()
     await yy.eor(
         file=ugly_img,
         force_document=False,
     )
-    (file).unlink(missing_ok=True)
-    (ugly_img).unlink(missing_ok=True)
+    await asyncio.to_thread(file.unlink, missing_ok=True)
+    await asyncio.to_thread(ugly_img.unlink, missing_ok=True)
 
 
-async def conv_fry(conv, image, level):
+def get_lottie():
     try:
-        resp = conv.wait_event(events.NewMessage(incoming=True, from_users=conv.chat_id))
-        media = await conv.send_file(
-            image,
-            force_document=False,
-        )
-        resp = await resp
-        await resp.try_delete()
-        yy = await conv.send_message(f"/deepfry {level}", reply_to=media.id)
-        resp = conv.wait_event(events.NewMessage(incoming=True, from_users=conv.chat_id))
-        resp = await resp
-        await yy.try_delete()
-        await resp.read(
-            clear_mentions=True,
-            clear_reactions=True,
-        )
-        return resp
-    except TimeoutError:
-        return
-    except YouBlockedUserError:
-        await conv._client.unblock(conv.chat_id)
-        return await conv_fry(conv, image, level)
+        return get_lottie.modules
+    except AttributeError:
+        try:
+            import cairosvg  # noqa
+            from lottie.exporters import exporters
+            from lottie.importers import importers
+        except ImportError:
+            import_lib(
+                lib_name="lottie",
+                pkg_name="lottie==0.7.2",
+            )
+            import_lib(
+                lib_name="cairosvg",
+                pkg_name="CairoSVG==2.9.0",
+            )
+            from lottie.exporters import exporters
+            from lottie.importers import importers
+        get_lottie.modules = importers, exporters
+        return get_lottie.modules
+
+
+def tgs_to_png(source, output):
+    importers, exporters = get_lottie()
+    importer = next(i for i in importers if "tgs" in i.extensions)
+    exporter = exporters.get_from_filename(str(output))
+    animation = importer.process(str(source))
+    exporter.process(animation, str(output))
 
 
 def uglying(img: Image) -> Image:
@@ -197,6 +150,5 @@ def check_media(reply):
 
 
 plugins_help["deepfry"] = {
-    "{i}fry [1-8] [reply]": "Frying any image/sticker/animation/gif/video use image_deepfrybot (default level 3).",
     "{i}ugly [1-9] [reply]": "Uglying any image/sticker/animation/gif/video and make it look ugly (default level 1).",
 }

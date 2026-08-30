@@ -6,7 +6,6 @@ import asyncio
 import random
 from pathlib import Path
 
-import aiofiles.os
 from telethon.utils import get_extension
 
 from . import (
@@ -47,9 +46,9 @@ async def _(kst):
             except Exception as err:
                 ga.log.warning(f"Unload failed {plugin}: {err}")
                 return await yy.eor(f"`Failed to unload plugin {plugin}.`")
-        if await aiofiles.os.path.isfile(plugin_path):
+        if await asyncio.to_thread(plugin_path.is_file):
             try:
-                await aiofiles.os.remove(plugin_path)
+                await asyncio.to_thread(plugin_path.unlink)
             except Exception as err:
                 ga.log.warning(f"Remove failed {plugin}: {err}")
         file = await reply.download_media(file=str(CUSTOM_DIR))
@@ -83,17 +82,17 @@ async def _(kst):
     yy = await kst.eor("`Processing...`")
     custom_path = CUSTOM_DIR / f"{plugin}.py"
     builtin_path = PLUGINS_DIR / f"{plugin}.py"
-    if await aiofiles.os.path.isfile(custom_path) and plugin != "__init__":
+    if await asyncio.to_thread(custom_path.is_file) and plugin != "__init__":
         try:
             if plugin in ga._plugins:
                 ga.unload_plugin(plugin)
-            await aiofiles.os.remove(custom_path)
+            await asyncio.to_thread(custom_path.unlink)
             ga.log.success(f"Unloaded plugin {plugin}.")
             await yy.eor(f"`Unloaded plugin {plugin}.`")
         except Exception as err:
             ga.log.warning(f"Unload failed {plugin}: {err}")
             await yy.eor(f"`Failed to unload plugin {plugin}.`")
-    elif await aiofiles.os.path.isfile(builtin_path):
+    elif await asyncio.to_thread(builtin_path.is_file):
         await yy.eor("`Built-in plugins cannot be unloaded.`")
     else:
         await yy.eor(f"`Plugin {plugin} not found.`")

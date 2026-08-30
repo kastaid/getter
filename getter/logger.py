@@ -4,22 +4,22 @@
 
 import logging
 import sys
-from datetime import UTC, datetime
 
 from loguru import logger as LOG
 
+from . import LOG_DIR
 from .config import Var
 
 LOG.remove()
 LOG.add(
-    f"logs/getter-{datetime.now(UTC):%Y-%m-%d}.log",
+    LOG_DIR / "getter.log",
     format="{time:YYYY-MM-DD HH:mm:ss} | {level:<8} | {name}:{function}:{line} | {message}",
     backtrace=Var.DEV_MODE,
     diagnose=Var.DEV_MODE,
     enqueue=True,
     catch=True,
     rotation="3 MB",
-    retention="7 days",
+    retention=5,
     delay=True,
 )
 LOG.add(

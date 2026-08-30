@@ -9,21 +9,20 @@ from io import BytesIO, StringIO
 from pathlib import Path
 from traceback import format_exc
 
-import aiofiles
 from telethon.tl import functions, types
 
 from . import (
     DEFAULT_SHELL_BLACKLIST,
     DEV_CMDS,
     DEVS,
+    DOWNLOAD_DIR,
     LSFILES_MAP,
     MAX_MESSAGE_LEN,
-    Root,
     Runner,
+    format_bytes,
     formatx_send,
     get_blacklisted,
     getter_app,
-    humanbytes,
     kasta_cmd,
     parse_pre,
     plugins_help,
@@ -105,19 +104,19 @@ async def _(kst):
                 size = 0
                 for p in path.rglob("*"):
                     size += p.stat().st_size
-                directory += emoji + f" <code>{path.name}</code>  <code>{humanbytes(size)}</code>\n"
+                directory += emoji + f" <code>{path.name}</code>  <code>{format_bytes(size)}</code>\n"
                 sfolder += size
                 cfolder += 1
             else:
-                directory += emoji + f" <code>{path.name}</code>  <code>{humanbytes(path.stat().st_size)}</code>\n"
+                directory += emoji + f" <code>{path.name}</code>  <code>{format_bytes(path.stat().st_size)}</code>\n"
                 sfile += path.stat().st_size
                 cfile += 1
         except BaseException:
             pass
     hfolder, hfile, htotal = (
-        humanbytes(sfolder),
-        humanbytes(sfile),
-        humanbytes(sfolder + sfile),
+        format_bytes(sfolder),
+        format_bytes(sfile),
+        format_bytes(sfolder + sfile),
     )
     directory += f"""
 <b>Folders</b>:  <code>{cfolder}</code>  /  <code>{hfolder}</code>
@@ -126,15 +125,14 @@ async def _(kst):
 """
     if len(directory) > MAX_MESSAGE_LEN:
         directory = strip_format(directory)
-        file = Root / "downloads/ls.txt"
-        async with aiofiles.open(file, mode="w") as f:
-            await f.write(directory)
+        file = DOWNLOAD_DIR / "ls.txt"
+        await asyncio.to_thread(file.write_text, directory, encoding="utf-8")
         await yy.eor(
             rf"\\**#Getter**// Directory {cat}",
             file=file,
             force_document=True,
         )
-        (file).unlink(missing_ok=True)
+        await asyncio.to_thread(file.unlink, missing_ok=True)
     else:
         await yy.eor(directory, parse_mode="html")
 

@@ -6,31 +6,23 @@ import asyncio
 import re
 import subprocess
 import sys
-from functools import partial
 from importlib import import_module
 from io import BytesIO
+from pathlib import Path
 from typing import Any
 
-import aiofiles.os
 import aiohttp
-import telegraph.aio
 
-from getter import EXECUTOR, LOOP, __version__
+from getter import DOWNLOAD_DIR, __version__
 from getter.logger import LOG
 
-from .db import gvar, sgvar
 from .utils import get_random_hex
 
-_TGH: list[telegraph.aio.Telegraph] = []
 _LIB_NAME_RE = re.compile(r"[=><~].*")
 
 
 def is_termux() -> bool:
     return "/com.termux" in sys.executable
-
-
-async def aioify(func, *args, **kwargs):
-    return await LOOP.run_in_executor(executor=EXECUTOR, func=partial(func, *args, **kwargs))
 
 
 def import_lib(
@@ -169,9 +161,8 @@ async def Carbon(
         file = BytesIO(res)
         file.name = file_name
     else:
-        file = "downloads/" + file_name
-        async with aiofiles.open(file, mode="wb") as f:
-            await f.write(res)
+        file = DOWNLOAD_DIR / file_name
+        await asyncio.to_thread(file.write_bytes, res)
     return file
 
 
@@ -183,7 +174,7 @@ async def Screenshot(
     ttl = duration // 2
     cmd = f"ffmpeg -v quiet -ss {ttl} -i {video} -vframes 1 {output}"
     await Runner(cmd)
-    return output if await aiofiles.os.path.isfile(output) else None
+    return output if await asyncio.to_thread(Path(output).is_file) else None
 
 
 async def MyIp() -> str:
@@ -206,7 +197,7 @@ def Pinger(addr: str) -> str:
     except ImportError:
         icmplib = import_lib(
             lib_name="icmplib",
-            pkg_name="icmplib==3.0.3",
+            pkg_name="icmplib==3.0.4",
         )
     try:
         res = icmplib.ping(
@@ -233,28 +224,3 @@ def Pinger(addr: str) -> str:
         except Exception as err:
             LOG.warning(err)
     return "--ms"
-
-
-async def Telegraph(
-    author: str | None = None,
-) -> telegraph.aio.Telegraph:
-    if _TGH:
-        return next(reversed(_TGH), None)
-    token = await gvar("_TELEGRAPH_TOKEN")
-    api = telegraph.aio.Telegraph(token)
-    if token:
-        _TGH.append(api)
-        return api
-    if author is None:
-        return api
-    try:
-        await api.create_account(
-            short_name="getteruser",
-            author_name=author[:128],
-            author_url="https://t.me/kastaid",
-        )
-    except BaseException:
-        return
-    await sgvar("_TELEGRAPH_TOKEN", api.get_access_token())
-    _TGH.append(api)
-    return api

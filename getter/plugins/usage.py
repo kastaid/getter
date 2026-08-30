@@ -12,10 +12,10 @@ from datetime import datetime
 from . import (
     USERAGENTS,
     Fetch,
+    format_bytes,
     formatx_send,
     getter_app,
     hk,
-    humanbytes,
     kasta_cmd,
     mask_email,
     plugins_help,
@@ -107,18 +107,18 @@ def default_usage() -> str:
     import psutil
 
     try:
-        UPLOAD = humanbytes(psutil.net_io_counters().bytes_sent)
+        UPLOAD = format_bytes(psutil.net_io_counters().bytes_sent)
     except BaseException:
         UPLOAD = 0
     try:
-        DOWN = humanbytes(psutil.net_io_counters().bytes_recv)
+        DOWN = format_bytes(psutil.net_io_counters().bytes_recv)
     except BaseException:
         DOWN = 0
     try:
         workdir = psutil.disk_usage(".")
-        TOTAL = humanbytes(workdir.total)
-        USED = humanbytes(workdir.used)
-        FREE = humanbytes(workdir.free)
+        TOTAL = format_bytes(workdir.total)
+        USED = format_bytes(workdir.used)
+        FREE = format_bytes(workdir.free)
     except BaseException:
         TOTAL = 0
         USED = 0
@@ -142,7 +142,7 @@ def default_usage() -> str:
         DISK = "0%"
     try:
         swap = psutil.swap_memory()
-        SWAP = f"{humanbytes(swap.total)} | {swap.percent or 0}%"
+        SWAP = f"{format_bytes(swap.total)} | {swap.percent or 0}%"
     except BaseException:
         SWAP = "0 | 0%"
     return usage_text.format(

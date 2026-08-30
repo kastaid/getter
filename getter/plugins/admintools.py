@@ -10,6 +10,7 @@ from telethon.tl import functions as fun, types as typ
 from . import (
     DEVS,
     display_name,
+    format_time,
     formatx_send,
     hl,
     kasta_cmd,
@@ -18,7 +19,6 @@ from . import (
     normalize_chat_id,
     plugins_help,
     strip_emoji,
-    time_formatter,
     until_time,
 )
 
@@ -513,7 +513,7 @@ async def _(kst):
     if not (sec or sec.isdecimal()):
         return await kst.eor("`Provide a valid seconds!`", time=5)
     sec = int(sec)
-    pinfor = time_formatter(sec)
+    pinfor = format_time(sec)
     is_notify = any(_ in " ".join(opts[1:]).strip() for _ in ("-n", "notify"))
     msg_id = kst.reply_to_msg_id
     try:

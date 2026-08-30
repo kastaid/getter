@@ -9,22 +9,19 @@ import random
 import sys
 from collections import UserList
 from inspect import getmembers
-from platform import machine, version
 from time import time
-from typing import TYPE_CHECKING, Any, NoReturn
+from typing import TYPE_CHECKING, NoReturn
 
-from telethon.client.telegramclient import TelegramClient
+from telethon.client.telegramclient import TelegramClient as BaseClient
 from telethon.errors import (
     ApiIdInvalidError,
     AuthKeyDuplicatedError,
-    InvalidBufferError,
     PhoneNumberInvalidError,
 )
 from telethon.sessions.string import CURRENT_VERSION, StringSession
 from telethon.tl import functions as fun, types as typ
 
 from getter import (
-    LOOP,
     Root,
     StartTime,
     __version__,
@@ -43,12 +40,10 @@ from .db import sgvar
 from .functions import display_name
 from .helper import plugins_help
 from .property import do_not_remove_credit, get_blacklisted
-from .utils import time_formatter
+from .utils import format_time
 
 if TYPE_CHECKING:
-    from collections.abc import Coroutine
-
-    from telethon.sessions.abstract import Session
+    from loguru._logger import Logger
 
 PLUGIN_DIR = Root / "getter/plugins"
 CUSTOM_PLUGIN_DIR = Root / "getter/plugins/custom"
@@ -59,34 +54,26 @@ class ReverseList(UserList):
         return reversed(self)
 
 
-class KastaClient(TelegramClient):
-    def __init__(
-        self,
-        session: str | Session,
-        api_id: int | None = None,
-        api_hash: str | None = None,
-        bot_token: str | None = None,
-        *args,
-        **kwargs,
-    ):
+class KastaClient(BaseClient):
+    __module__ = "telethon.client.telegramclient"
+    log: Logger = LOG
+
+    def __init__(self) -> None:
         self._dialogs = []
         self._plugins = {}
-        self.log = LOG
-        kwargs["api_id"] = api_id
-        kwargs["api_hash"] = api_hash
-        kwargs["connection"] = FastTCP
-        kwargs["request_retries"] = 3
-        kwargs["connection_retries"] = 3
-        kwargs["auto_reconnect"] = True
-        kwargs["device_model"] = "Getter"
-        kwargs["system_version"] = f"{version()} {machine()}"
-        kwargs["app_version"] = __version__
-        kwargs["loop"] = LOOP
-        kwargs["entity_cache_limit"] = 1000
-        super().__init__(session, *args, **kwargs)
-        self.__class__.__module__ = "telethon.client.telegramclient"
+        super().__init__(
+            StringSession(Var.STRING_SESSION),
+            api_id=Var.API_ID,
+            api_hash=Var.API_HASH,
+            connection=FastTCP,
+            use_ipv6=False,
+            request_retries=3,
+            connection_retries=3,
+            auto_reconnect=True,
+            app_version=__version__,
+            entity_cache_limit=1000,
+        )
         self._event_builders = ReverseList()
-        self.run_in_loop(self.start_client(bot_token=bot_token))
         self.dc_id = self.session.dc_id
 
     def __repr__(self):
@@ -97,12 +84,12 @@ class KastaClient(TelegramClient):
         if self.me:
             return self.me.to_dict()
 
-    async def start_client(self, **kwargs) -> None:
+    async def start_client(self) -> None:
         self.log.info("Trying to login...")
         do_not_remove_credit()
         try:
             await asyncio.sleep(random.uniform(3.5, 6.5))
-            await self.start(**kwargs)
+            await self.start()
             if await self.is_bot():
                 self.log.critical("Bot account detected. Bots are not supported — use a USER account (userbot).")
                 sys.exit(1)
@@ -147,25 +134,6 @@ class KastaClient(TelegramClient):
             self.log.exception("[KastaClient] failed to start.")
             sys.exit(1)
 
-    def run_in_loop(self, func: Coroutine[Any, Any, None]) -> Any:
-        return self.loop.run_until_complete(func)
-
-    def run(self) -> NoReturn:
-        try:
-            self.run_until_disconnected()
-        except InvalidBufferError:
-            self.log.exception("InvalidBufferError occurred.")
-            self.log.error("Client was stopped, restarting...")
-            try:
-                import psutil
-
-                proc = psutil.Process(os.getpid())
-                for p in proc.open_files() + proc.connections():
-                    os.close(p.fd)
-            except BaseException:
-                pass
-            os.execl(sys.executable, sys.executable, "-m", "getter")
-
     def add_handler(
         self,
         func: asyncio.Future,
@@ -176,10 +144,7 @@ class KastaClient(TelegramClient):
             return
         self.add_event_handler(func, *args, **kwargs)
 
-    async def reboot(
-        self,
-        message: typ.Message,
-    ) -> NoReturn:
+    async def reboot(self, message: typ.Message) -> NoReturn:
         try:
             chat_id = message.chat_id or message.from_id
             await sgvar("_reboot", f"{chat_id}|{message.id}")
@@ -195,10 +160,7 @@ class KastaClient(TelegramClient):
             pass
         os.execl(sys.executable, sys.executable, "-m", "getter")
 
-    def load_plugin(
-        self,
-        plugin: str,
-    ) -> bool:
+    def load_plugin(self, plugin: str) -> bool:
         try:
             path = CUSTOM_PLUGIN_DIR / plugin
             plug = path.stem
@@ -221,10 +183,7 @@ class KastaClient(TelegramClient):
             self.log.exception("Failed to load plugin.")
             return False
 
-    def unload_plugin(
-        self,
-        plugin: str,
-    ) -> None:
+    def unload_plugin(self, plugin: str) -> None:
         mod = self._plugins.get(plugin)
         if not mod:
             return
@@ -254,7 +213,7 @@ class KastaClient(TelegramClient):
 
     @property
     def uptime(self) -> str:
-        return time_formatter(time() - StartTime)
+        return format_time(time() - StartTime)
 
     def to_dict(self) -> dict:
         return dict(getmembers(self))
@@ -265,13 +224,8 @@ if _ssn:
     if _ssn.startswith(CURRENT_VERSION) and len(_ssn) != 353:
         LOG.critical("STRING_SESSION wrong. Copy paste correctly! Quitting...")
         sys.exit(1)
-    session = StringSession(_ssn)
 else:
     LOG.critical("STRING_SESSION empty. Please filling! Quitting...")
     sys.exit(1)
 
-getter_app = KastaClient(
-    session=session,
-    api_id=Var.API_ID,
-    api_hash=Var.API_HASH,
-)
+getter_app = KastaClient()

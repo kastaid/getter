@@ -9,7 +9,9 @@ services:
     restart: unless-stopped
     
     volumes:
-      - ./:/app
+      - ./logs:/app/logs
+      - ./db:/app/db
+      - ./getter/plugins/custom:/app/getter/plugins/custom
     env_file:
       - .env
     network_mode: bridge
