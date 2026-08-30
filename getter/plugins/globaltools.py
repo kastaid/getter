@@ -29,6 +29,7 @@ from . import (
     del_gdel,
     del_gmute,
     display_name,
+    format_time,
     formatx_send,
     gban_list,
     gdel_list,
@@ -49,7 +50,6 @@ from . import (
     set_gdel_reason,
     set_gmute_reason,
     strip_emoji,
-    time_formatter,
 )
 
 gban_text = r"""
@@ -201,7 +201,7 @@ async def _(kst):
         await add_gban(user.id, date, reason)
         await ga.block(user.id)
         await ga.archive(user.id)
-        taken = time_formatter(monotonic() - start_time)
+        taken = format_time(monotonic() - start_time)
         text = gban_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -266,7 +266,7 @@ async def _(kst):
                     failed += 1
         await del_gban(user.id)
         await ga.unblock(user.id)
-        taken = time_formatter(monotonic() - start_time)
+        taken = format_time(monotonic() - start_time)
         text = ungban_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -331,7 +331,7 @@ async def _(kst):
                 except BaseException:
                     failed += 1
         await add_gmute(user.id, date, reason)
-        taken = time_formatter(monotonic() - start_time)
+        taken = format_time(monotonic() - start_time)
         text = gmute_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -394,7 +394,7 @@ async def _(kst):
                 except BaseException:
                     failed += 1
         await del_gmute(user.id)
-        taken = time_formatter(monotonic() - start_time)
+        taken = format_time(monotonic() - start_time)
         text = ungmute_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -636,7 +636,7 @@ async def _(kst):
                         failed += 1
                 except BaseException:
                     failed += 1
-        taken = time_formatter(monotonic() - start_time)
+        taken = format_time(monotonic() - start_time)
         text = gkick_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -700,7 +700,7 @@ async def _(kst):
                     await asyncio.sleep(random.uniform(0.5, 1.5))
                 except BaseException:
                     failed += 1
-        taken = time_formatter(monotonic() - start_time)
+        taken = format_time(monotonic() - start_time)
         text = gpromote_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -761,7 +761,7 @@ async def _(kst):
                     await asyncio.sleep(random.uniform(0.5, 1.5))
                 except BaseException:
                     failed += 1
-        taken = time_formatter(monotonic() - start_time)
+        taken = format_time(monotonic() - start_time)
         text = gdemote_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
             success + failed,
@@ -844,7 +844,7 @@ async def _(kst):
                     except Exception as err1:
                         error += "• " + str(err1) + "\n"
                         failed += 1
-        taken = time_formatter(monotonic() - start_time)
+        taken = format_time(monotonic() - start_time)
         text = r"\\**#Gcast**// {} in {}-{}={} {}.".format(
             taken,
             success + failed,
@@ -927,7 +927,7 @@ async def _(kst):
                             failed += 1
                     except BaseException:
                         failed += 1
-        taken = time_formatter(monotonic() - start_time)
+        taken = format_time(monotonic() - start_time)
         text = rf"\\**#Gucast**// {taken} in {success + failed}-{failed}={success} users."
         await yy.eor(text)
 

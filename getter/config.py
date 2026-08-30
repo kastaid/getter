@@ -31,10 +31,7 @@ class Var:
     API_ID: int = int(env("API_ID", "0"))
     API_HASH: str = env("API_HASH", "")
     STRING_SESSION: str = env("STRING_SESSION", "")
-    _db = env("DATABASE_URL", "sqlite+aiosqlite:///./getter.db")
-    DATABASE_URL = (
-        _db.replace(_db.split("://")[0], "postgresql+asyncpg") if _db.startswith(("postgres:", "postgresql:")) else _db
-    )
+    DATABASE_URL: str = env("DATABASE_URL", "sqlite+aiosqlite:///./getter.db")
     BOTLOGS: int = int(env("BOTLOGS", "0"))
     HANDLER: str = env("HANDLER", ".")
     NO_HANDLER: bool = to_bool(env("NO_HANDLER", "false"))

@@ -4,6 +4,7 @@
 
 import sys
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import orjson
@@ -16,6 +17,7 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.sql.expression import text
 
+from getter import DB_DIR
 from getter.config import Var
 from getter.logger import LOG
 
@@ -24,17 +26,6 @@ if TYPE_CHECKING:
 
 
 class Model(DeclarativeBase):
-    """
-    Model is an abstract base class for all SQLAlchemy ORM models ,
-    providing common columns and functionality.
-
-    Methods:
-        to_dict: Converts the current object to a dictionary.
-        to_json: Converts the current object to a JSON string.
-        from_json: Creates a new object of the class using the provided JSON data.
-        __repr__: Returns a string representation of the current object.
-    """
-
     __abstract__ = True
 
     def to_dict(self):
@@ -54,11 +45,12 @@ class Model(DeclarativeBase):
 async def db_connect() -> AsyncEngine:
     if hasattr(db_connect, "engine"):
         return db_connect.engine
-    db_url = (
-        Var.DATABASE_URL.replace("sqlite:", "sqlite+aiosqlite:")
-        if Var.DATABASE_URL.startswith("sqlite:")
-        else Var.DATABASE_URL
-    )
+    db_url = Var.DATABASE_URL
+    if db_url.startswith("sqlite"):
+        name = Path(db_url.rsplit("/", 1)[-1]).name
+        db_url = f"sqlite+aiosqlite:///{DB_DIR / name}"
+    elif db_url.startswith(("postgres:", "postgresql:")):
+        db_url = db_url.replace(db_url.split("://")[0], "postgresql+asyncpg")
     engine = create_async_engine(
         db_url,
         echo=False,
@@ -71,8 +63,8 @@ async def db_connect() -> AsyncEngine:
         async with engine.begin() as conn:
             await conn.run_sync(Model.metadata.create_all, checkfirst=True)
             LOG.success("Tables created.")
-    except Exception as err:
-        LOG.exception(f"Unable to connect the database : {err}")
+    except Exception:
+        LOG.exception("Unable to connect the database.")
         await engine.dispose()
         sys.exit(1)
     db_connect.engine = engine

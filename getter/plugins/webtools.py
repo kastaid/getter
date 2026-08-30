@@ -3,17 +3,16 @@
 # AGPL-3.0 License
 
 import urllib.parse
+from ipaddress import IPv4Address
 from time import monotonic
-
-from validators.ip_address import ipv4
 
 from . import (
     Fetch,
     MyIp,
     Pinger,
+    format_bytes,
     formatx_send,
     humanbool,
-    humanbytes,
     import_lib,
     is_url,
     kasta_cmd,
@@ -23,7 +22,7 @@ from . import (
 
 
 @kasta_cmd(
-    pattern="(google|duck|yandex|bing|yahoo|baidu|ecosia)(?: |$)(.*)",
+    pattern="(google|bing|yahoo|duck|yandex|startpage|brave|baidu)(?: |$)(.*)",
 )
 async def _(kst):
     engine = kst.pattern_match.group(1)
@@ -34,18 +33,24 @@ async def _(kst):
     if engine == "google":
         search = "Google"
         url = "https://www.google.com/search?q={}"
-    elif engine == "duck":
-        search = "DuckDuckGo"
-        url = "https://duckduckgo.com/?q={}&kp=-2&kac=1"
-    elif engine == "yandex":
-        search = "Yandex"
-        url = "https://yandex.com/search/?text={}"
     elif engine == "bing":
         search = "Bing"
         url = "https://www.bing.com/search?q={}"
     elif engine == "yahoo":
         search = "Yahoo"
         url = "https://search.yahoo.com/search?p={}"
+    elif engine == "duck":
+        search = "DuckDuckGo"
+        url = "https://duckduckgo.com/?q={}"
+    elif engine == "yandex":
+        search = "Yandex"
+        url = "https://yandex.com/search/?text={}"
+    elif engine == "startpage":
+        search = "Startpage"
+        url = "https://www.startpage.com/sp/search?query={}"
+    elif engine == "brave":
+        search = "Brave"
+        url = "https://search.brave.com/search?q={}"
     elif engine == "baidu":
         search = "Baidu"
         url = "https://www.baidu.com/s?wd={}"
@@ -95,7 +100,7 @@ async def _(kst):
 )
 async def _(kst):
     ipaddr = await kst.client.get_text(kst)
-    if not ipaddr or ipv4(ipaddr) is not True:
+    if not ipaddr or not is_ipv4(ipaddr):
         return await kst.eor("`Provide a valid IP address!`", time=5)
     yy = await kst.eor("`Processing...`")
     url = f"http://ip-api.com/json/{ipaddr}?fields=status,message,continent,country,countryCode,regionName,city,zip,lat,lon,timezone,currency,isp,mobile,query"
@@ -172,8 +177,8 @@ async def _(kst):
 ┊  ├  <b>Country</b>: <code>{}</code>
 └  <b>Sponsor</b>: <code>{}</code>""".format(
             monotonic() - start,
-            humanbytes(resp.get("download")),
-            humanbytes(resp.get("upload")),
+            format_bytes(resp.get("download")),
+            format_bytes(resp.get("upload")),
             resp.get("ping"),
             client.get("isp"),
             client.get("isprating"),
@@ -224,7 +229,7 @@ async def _(kst):
     if check_link is not True:
         return await kst.eod("`Input is not supported link!`")
     yy = await kst.eor("`Processing...`")
-    hostname = link if ipv4(link) is True else ".".join(urllib.parse.urlparse(toget).netloc.split(".")[-2:])
+    hostname = link if is_ipv4(link) else ".".join(urllib.parse.urlparse(toget).netloc.split(".")[-2:])
     url = f"https://da.gd/w/{hostname}"
     res = await Fetch(url)
     if res:
@@ -266,13 +271,26 @@ async def _(kst):
     await yy.eor(f"• **DNS**: `{dns}`\n• **Ping Speed**: `{duration}`")
 
 
+def is_ipv4(value: str) -> bool:
+    try:
+        IPv4Address(value)
+        return True
+    except (
+        ValueError,
+        TypeError,
+    ):
+        return False
+
+
 plugins_help["webtools"] = {
-    "{i}google [keywords]/[reply]": "How to Google...",
-    "{i}duck [keywords]/[reply]": "How to DuckDuckGo...",
-    "{i}yandex [keywords]/[reply]": "How to Yandex...",
-    "{i}bing [keywords]/[reply]": "How to Bing...",
-    "{i}yahoo [keywords]/[reply]": "How to Yahoo...",
-    "{i}baidu [keywords]/[reply]": "How to Baidu...",
+    "{i}google [keywords]/[reply]": "Search with Google.",
+    "{i}bing [keywords]/[reply]": "Search with Bing.",
+    "{i}yahoo [keywords]/[reply]": "Search with Yahoo.",
+    "{i}duck [keywords]/[reply]": "Search with DuckDuckGo.",
+    "{i}yandex [keywords]/[reply]": "Search with Yandex.",
+    "{i}startpage [keywords]/[reply]": "Search with Startpage.",
+    "{i}brave [keywords]/[reply]": "Search with Brave.",
+    "{i}baidu [keywords]/[reply]": "Search with Baidu.",
     "{i}short [link]/[reply]": "Shorten a link into `da.gd` link.",
     "{i}unshort [short_link]/[reply]": "Reverse the shortened link to real link.",
     "{i}ip": "Get my current public IP address.",

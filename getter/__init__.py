@@ -4,14 +4,10 @@
 # AGPL-3.0 License
 
 import sys
-from asyncio import set_event_loop
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from platform import python_version
-from shutil import rmtree
 from time import time
 
-import uvloop
 from telethon.tl.alltlobjects import LAYER as __layer__
 from telethon.version import __version__ as __tlversion__
 
@@ -26,27 +22,31 @@ if not sys.platform.startswith("linux"):
     print(f"You must use Linux platform, currently {sys.platform}. Quitting...")
     sys.exit(1)
 if "/com.termux" in sys.executable:
-    print("You are detected using Termux, maybe the functionality will not work normally.")
+    print("Termux detected. Some functionality may not work properly.")
 
 Root = Path(__file__).parent.parent
-LOOP = uvloop.new_event_loop()
-set_event_loop(LOOP)
-WORKERS = 2
-EXECUTOR = ThreadPoolExecutor(max_workers=WORKERS)
+LOG_DIR = Root / "logs"
+DB_DIR = Root / "db"
+DOWNLOAD_DIR = Root / "downloads"
 
-DIRS = (
-    "logs/",
-    "downloads/",
-)
-for d in DIRS:
-    if not (Root / d).exists():
-        (Root / d).mkdir(parents=True, exist_ok=True)
-    else:
-        for i in (Root / d).rglob("*"):
-            if i.is_dir():
-                rmtree(i, ignore_errors=True)
-            else:
-                i.unlink(missing_ok=True)
-[i.unlink(missing_ok=True) for i in Root.rglob("*s_list.csv")]
 
-del sys, set_event_loop, Path, ThreadPoolExecutor, python_version, rmtree, time, uvloop
+def ensure_dir(path: Path) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+
+
+def clean_files(path: Path) -> None:
+    if not path.exists():
+        return
+    for i in path.rglob("*"):
+        if i.is_file():
+            i.unlink(missing_ok=True)
+
+
+for path in (
+    LOG_DIR,
+    DB_DIR,
+    DOWNLOAD_DIR,
+):
+    ensure_dir(path)
+
+clean_files(DOWNLOAD_DIR)

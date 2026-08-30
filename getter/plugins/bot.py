@@ -8,15 +8,19 @@ import random
 import subprocess
 import sys
 from time import monotonic, sleep as tsleep
+from typing import TYPE_CHECKING
 
-import aiofiles
 from telethon.tl import functions as fun
 
 from . import (
     CARBON_PRESETS,
+    DOWNLOAD_DIR,
+    LOG_DIR,
     Carbon,
     Root,
-    __version__,
+    StartTime,
+    format_latency,
+    format_time,
     formatx_send,
     hk,
     kasta_cmd,
@@ -24,6 +28,9 @@ from . import (
     plugins_help,
     sgvar,
 )
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @kasta_cmd(
@@ -47,13 +54,23 @@ async def _(kst):
 )
 async def _(kst):
     start = monotonic()
-    await kst.client(fun.PingRequest(ping_id=0))
-    speed = monotonic() - start
-    uptime = kst.client.uptime
-    await kst.eor(
-        f"🏓 Pong !!\n├  <b>Speed</b> – {speed:.3f}s\n├  <b>Uptime</b> – {uptime}\n└  <b>Version</b> – {__version__}",
-        parse_mode="html",
+    task = asyncio.ensure_future(kst.client(fun.PingRequest(ping_id=0)))
+    _done, pending = await asyncio.wait({task}, timeout=8.0)
+    if task in pending:
+        pass
+    else:
+        try:
+            task.result()
+        except Exception:
+            pass
+    text = f"Speed – {format_latency(monotonic() - start)}\n"
+    text += "Uptime – {}".format(
+        format_time(
+            monotonic() - StartTime,
+            short=True,
+        )
     )
+    await kst.eor(text)
 
 
 @kasta_cmd(
@@ -82,7 +99,7 @@ async def _(kst):
         theme = random.choice(tuple(CARBON_PRESETS))
         backgroundColor = CARBON_PRESETS[theme]
         for file in get_terminal_logs():
-            code = (Root / file).read_text()
+            code = await asyncio.to_thread(file.read_text)
             logs = await Carbon(
                 code.strip()[-2500:],
                 file_name="carbon-getter-log",
@@ -102,10 +119,10 @@ async def _(kst):
                 )
             except BaseException:
                 pass
-            (Root / logs).unlink(missing_ok=True)
+            await asyncio.to_thread(logs.unlink, missing_ok=True)
     elif mode == "open":
         for file in get_terminal_logs():
-            logs = (Root / file).read_text()
+            logs = await asyncio.to_thread(file.read_text)
             await yy.sod(logs, parts=True, parse_mode=parse_pre)
     else:
         try:
@@ -168,8 +185,8 @@ async def _(kst):
     await yy.eod(f"`wake-up from {timer} seconds`")
 
 
-def get_terminal_logs() -> list[Root]:
-    return sorted((Root / "logs").rglob("getter-*.log"))
+def get_terminal_logs() -> list[Path]:
+    return sorted(LOG_DIR.glob("*.log"))
 
 
 async def heroku_logs(kst) -> None:
@@ -183,15 +200,14 @@ async def heroku_logs(kst) -> None:
     except Exception as err:
         return await kst.eor(formatx_send(err), parse_mode="html")
     await kst.eor("`Downloading Logs...`")
-    file = Root / "downloads/getter-heroku.log"
-    async with aiofiles.open(file, mode="w") as f:
-        await f.write(logs)
+    file = DOWNLOAD_DIR / "getter-heroku.log"
+    await asyncio.to_thread(file.write_text, logs, encoding="utf-8")
     await kst.eor(
         r"\\**#Getter**// Heroku Logs",
         file=file,
         force_document=True,
     )
-    (file).unlink(missing_ok=True)
+    await asyncio.to_thread(file.unlink, missing_ok=True)
 
 
 def restart_app() -> None:

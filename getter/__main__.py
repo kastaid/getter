@@ -7,6 +7,8 @@ import sys
 from importlib import import_module
 from time import monotonic
 
+import uvloop
+
 import getter.core.patched  # noqa
 
 from . import (
@@ -18,24 +20,22 @@ from . import (
     __version__,
 )
 from .config import Var, hl
-from .core.base_client import getter_app
 from .core.db import db_connect
 from .core.helper import jdata, plugins_help
+from .core.kasta import getter_app
 from .core.property import do_not_remove_credit
 from .core.startup import (
     autopilot,
     autous,
     finishing,
     migrations,
-    trap,
     verify,
 )
-from .core.utils import time_formatter
+from .core.utils import format_time
 from .logger import LOG
 
 success_msg = "> Visit @kastaid for Updates !!"
 if Var.DEV_MODE:
-    trap()
     print(
         "\nDEV_MODE config enabled.\n"
         + "Some codes and functionality will not work normally.\n"
@@ -67,7 +67,7 @@ async def main() -> None:
     from .plugins.pmpermit import handle_pmpermit
 
     await asyncio.gather(*[handle_afk(), handle_pmpermit()])
-    loaded_time = time_formatter(monotonic() - load)
+    loaded_time = format_time(monotonic() - load)
     loaded_msg = "> Loaded Plugins: {} , Commands: {} (took {}) : {}".format(
         plugins_help.count,
         plugins_help.total,
@@ -89,10 +89,22 @@ async def main() -> None:
     LOG.success(success_msg)
 
 
+async def run() -> None:
+    try:
+        await getter_app.start_client()
+        await main()
+        await getter_app.run_until_disconnected()
+    finally:
+        if getter_app.is_connected():
+            await getter_app.disconnect()
+
+
 if __name__ == "__main__":
     try:
-        getter_app.run_in_loop(main())
-        getter_app.run()
+        asyncio.run(
+            run(),
+            loop_factory=uvloop.new_event_loop,
+        )
     except KeyboardInterrupt:
         LOG.info("[APP] shutdown signal received")
     except Exception:

@@ -3,9 +3,9 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
-from validators.url import url as is_url
-
 from getter import (
+    DOWNLOAD_DIR,
+    LOG_DIR,
     Root,
     StartTime,
     __copyright__,

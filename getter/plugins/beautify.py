@@ -2,13 +2,15 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
+import asyncio
 import random
+from pathlib import Path
 
 from . import (
     CARBON_PRESETS,
+    DOWNLOAD_DIR,
     RAYSO_THEMES,
     Carbon,
-    Root,
     get_media_type,
     kasta_cmd,
     mentionuser,
@@ -30,9 +32,9 @@ async def _(kst):
     if kst.is_reply:
         reply = await kst.get_reply_message()
         if reply.media and get_media_type(reply.media) == "text":
-            file = await reply.download_media()
-            code = (Root / file).read_text()
-            (Root / file).unlink(missing_ok=True)
+            file = Path(await reply.download_media(file=DOWNLOAD_DIR))
+            code = await asyncio.to_thread(file.read_text)
+            await asyncio.to_thread(file.unlink, missing_ok=True)
         else:
             code = reply.message
         if is_theme:
@@ -70,7 +72,7 @@ async def _(kst):
         parse_mode="html",
         force_document=False,
     )
-    (Root / carbon).unlink(missing_ok=True)
+    await asyncio.to_thread(carbon.unlink, missing_ok=True)
 
 
 @kasta_cmd(
@@ -87,9 +89,9 @@ async def _(kst):
     if kst.is_reply:
         reply = await kst.get_reply_message()
         if reply.media and get_media_type(reply.media) == "text":
-            file = await reply.download_media()
-            code = (Root / file).read_text()
-            (Root / file).unlink(missing_ok=True)
+            file = Path(await reply.download_media(file=DOWNLOAD_DIR))
+            code = await asyncio.to_thread(file.read_text)
+            await asyncio.to_thread(file.unlink, missing_ok=True)
         else:
             code = reply.message
         if is_theme:
@@ -124,7 +126,7 @@ async def _(kst):
         parse_mode="html",
         force_document=False,
     )
-    (Root / rayso).unlink(missing_ok=True)
+    await asyncio.to_thread(rayso.unlink, missing_ok=True)
 
 
 @kasta_cmd(

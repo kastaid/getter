@@ -2,23 +2,20 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
+import asyncio
 import html
 import re
 from datetime import datetime
 from mimetypes import guess_extension
+from pathlib import Path
 
-import aiofiles
-from bs4 import BeautifulSoup
-from PIL import Image
 from telethon.tl import types as typ
 
 from . import (
+    DOWNLOAD_DIR,
     TZ,
     Fetch,
-    Root,
     Runner,
-    Telegraph,
-    aioify,
     formatx_send,
     get_media_type,
     get_msg_id,
@@ -46,7 +43,7 @@ async def _(kst):
     except ImportError:
         TextBlob = import_lib(
             lib_name="textblob",
-            pkg_name="TextBlob==0.17.1",
+            pkg_name="TextBlob==0.20.1",
         ).TextBlob
     try:
         check = TextBlob(sentence)
@@ -109,28 +106,13 @@ async def _(kst):
     await yy.eor(text)
 
 
-@kasta_cmd(
-    pattern="kbbi(?: |$)(.*)",
+_EOD_LINK_RE = re.compile(
+    rb'<a\b(?=[^>]*\bclass=["\'][^"\']*\bjs-link-target\b[^"\']*["\'])'
+    rb'(?=[^>]*\bhref=["\']([^"\']*daysoftheyear\.com/days[^"\']*)["\'])[^>]*>'
+    rb"(.*?)</a>",
+    re.DOTALL | re.IGNORECASE,
 )
-async def _(kst):
-    ga = kst.client
-    word = await ga.get_text(kst)
-    if not word:
-        return await kst.eor("`Provide a word!`", time=5)
-    yy = await kst.eor("`Processing...`")
-    try:
-        from kbbi import KBBI
-    except ImportError:
-        KBBI = import_lib(
-            lib_name="kbbi",
-            pkg_name="kbbi==0.4.3",
-        ).KBBI
-    try:
-        mean = await aioify(KBBI, word)
-    except BaseException:
-        return await yy.eod(f"**No Results for**: `{word}`")
-    text = f"• **Given Word**: `{word}`\n{mean}"
-    await yy.eor(text)
+_EOD_TAG_RE = re.compile(rb"<[^>]+>")
 
 
 @kasta_cmd(
@@ -145,11 +127,11 @@ async def _(kst):
     res = await Fetch(url, re_content=True)
     if not res:
         return await yy.eod("`Try again now!`")
-    soup = BeautifulSoup(res, "html.parser", from_encoding="utf-8")
-    days = soup.find_all("a", "js-link-target", href=re.compile(r"daysoftheyear.com/days"))
     text = "🎊 **Events of the Day**\n"
-    for x in days[:5]:
-        text += "• [{}]({})\n".format(x.text, x["href"])
+    for raw_href, raw_title in _EOD_LINK_RE.findall(res)[:5]:
+        title = html.unescape(_EOD_TAG_RE.sub(b"", raw_title).decode(errors="replace")).strip()
+        href = raw_href.decode(errors="replace")
+        text += f"• [{title}]({href})\n"
     await yy.eor(text)
 
 
@@ -216,7 +198,7 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern=r"haste(?: |$)([\s\S]*)",
+    pattern=r"paste(?: |$)([\s\S]*)",
 )
 async def _(kst):
     ga = kst.client
@@ -224,16 +206,15 @@ async def _(kst):
     if not text:
         return await kst.eor("`Provide a text!`", time=5)
     yy = await kst.eor("`Processing...`")
-    url = "https://hastebin.com"
+    url = "https://paste.rs"
     res = await Fetch(
-        f"{url}/documents",
+        url,
         post=True,
         data=text.encode("utf-8"),
-        re_json=True,
     )
     if not res:
         return await yy.eod("`Try again now!`")
-    await yy.eor("{}/{}.txt".format(url, res.get("key")))
+    await yy.eor(res.strip())
 
 
 @kasta_cmd(
@@ -289,9 +270,8 @@ async def _(kst):
         file = None
         avatar = await Fetch(gavatar, re_content=True)
         if avatar:
-            file = Root / "downloads/avatar.jpeg"
-            async with aiofiles.open(file, mode="wb") as f:
-                await f.write(avatar)
+            file = DOWNLOAD_DIR / "avatar.jpeg"
+            await asyncio.to_thread(file.write_bytes, avatar)
             gavatar = file
         await yy.eor(
             text,
@@ -300,7 +280,7 @@ async def _(kst):
             parse_mode="html",
         )
         if file:
-            (file).unlink(missing_ok=True)
+            await asyncio.to_thread(file.unlink, missing_ok=True)
     except BaseException:
         await yy.eor(text, parse_mode="html")
 
@@ -317,10 +297,10 @@ async def _(kst):
     mt = get_media_type(reply.media)
     if not mt.startswith(("audio", "video")):
         return await yy.eor("`Is not audio/video files!`", time=5)
-    file = await reply.download_media(file="downloads")
-    voice = "downloads/voice.opus"
+    file = Path(await reply.download_media(file=DOWNLOAD_DIR))
+    voice = DOWNLOAD_DIR / "voice.opus"
     await Runner(f"ffmpeg -i {file} -map 0:a -codec:a libopus -b:a 100k -vbr on {voice}")
-    (Root / file).unlink(missing_ok=True)
+    await asyncio.to_thread(file.unlink, missing_ok=True)
     try:
         await yy.eor(
             file=voice,
@@ -329,54 +309,7 @@ async def _(kst):
         )
     except Exception as err:
         await yy.eor(formatx_send(err), parse_mode="html")
-    (Root / voice).unlink(missing_ok=True)
-
-
-@kasta_cmd(
-    pattern=r"tgh(?: |$)([\s\S]*)",
-)
-async def _(kst):
-    ga = kst.client
-    text = await ga.get_text(kst)
-    if not text and not kst.is_reply:
-        return await kst.eor("`Provide a text or reply!`", time=5)
-    yy = await kst.eor("`Processing...`")
-    reply = await kst.get_reply_message()
-    if kst.is_reply and reply.media:
-        res, file = await reply.download_media(file="downloads"), ""
-        mt = get_media_type(reply.media)
-        if mt == "sticker":
-            file = "downloads/sticker.png"
-            Image.open(res).save(file)
-            (Root / res).unlink(missing_ok=True)
-            res = file
-        elif mt == "sticker_anim":
-            file = "downloads/sticker.gif"
-            await Runner(f"lottie_convert.py {res} {file}")
-            (Root / res).unlink(missing_ok=True)
-            res = file
-        if mt not in {"document", "text"}:
-            try:
-                tg = await Telegraph()
-                up = await tg.upload_file(res)
-                link = "https://telegra.ph" + next((_ for _ in up), "")
-                push = f"**Telegraph**: [Telegraph Link]({link})"
-            except Exception as err:
-                push = f"**ERROR**:\n`{err}`"
-            (Root / res).unlink(missing_ok=True)
-            if file:
-                (Root / file).unlink(missing_ok=True)
-            return await yy.eor(push)
-        text = (Root / res).read_text()
-        (Root / res).unlink(missing_ok=True)
-    tg = await Telegraph(ga.full_name)
-    if not tg:
-        return await yy.eod("`Try again now!`")
-    push = await tg.create_page(title=text[:256], content=[text])
-    res = push.get("url")
-    if not res:
-        return await yy.eod("`Try again now!`")
-    await yy.eor(f"**Telegraph**: [Telegraph Link]({res})")
+    await asyncio.to_thread(voice.unlink, missing_ok=True)
 
 
 @kasta_cmd(
@@ -393,7 +326,7 @@ async def _(kst):
     except ImportError:
         Nominatim = import_lib(
             lib_name="geopy.geocoders",
-            pkg_name="geopy==2.4.1",
+            pkg_name="geopy==2.5.0",
         ).Nominatim
     geolocator = Nominatim(user_agent="getter")
     location = geolocator.geocode(locco)
@@ -445,10 +378,10 @@ async def _(kst):
         if not is_silent:
             await yy.eor("`Downloading...`")
         if isinstance(from_msg.media, typ.MessageMediaPhoto):
-            file = "getmsg_" + str(msg_id) + ".jpg"
+            file = DOWNLOAD_DIR / f"getmsg_{msg_id}.jpg"
         else:
             mimetype = from_msg.media.document.mime_type
-            file = "getmsg_" + str(msg_id) + guess_extension(mimetype)
+            file = DOWNLOAD_DIR / f"getmsg_{msg_id}{guess_extension(mimetype)}"
         await ga.download_file(from_msg.media, file=file)
         msg = await yy.eor(
             f"**Source**: `{link}`",
@@ -458,7 +391,7 @@ async def _(kst):
         await sendlog(msg, forward=True)
         if is_silent:
             await msg.try_delete()
-        (Root / file).unlink(missing_ok=True)
+        await asyncio.to_thread(file.unlink, missing_ok=True)
 
 
 @kasta_cmd(
@@ -495,17 +428,15 @@ plugins_help["utility"] = {
     "{i}spcheck [text]/[reply]": "Check spelling of the text/sentence.",
     "{i}ud [word]/[reply]": "Fetch the word defenition from urbandictionary.",
     "{i}mean [word]/[reply]": "Get the meaning of the word.",
-    "{i}kbbi [word]/[reply]": "Get the meaning of the word/phrase with KBBI Daring.",
     "{i}eod": "Get event of the today.",
     "{i}lorem": "Get lorem ipsum.",
     "{i}wtr [city]/[reply]": "Get ASCII-Art of current weather by city.",
     "{i}wtrs [city]/[reply]": "Get a simple weather.",
     "{i}wtrp [city]/[reply]": "Get a weather pictures.",
     "{i}calc [math]/[reply]": "Simpler calculator supported ( : ÷ × x ). E.g: 2 x 2",
-    "{i}haste [text]/[reply]": "Upload text to hastebin.",
+    "{i}paste [text]/[reply]": "Upload text to a paste service.",
     "{i}github [username]/[reply]": "Get full information about an user on GitHub of given username.",
     "{i}tovn [reply]": "Convert replied audio/video file to voice note.",
-    "{i}tgh [text]/[reply]": "Upload text or media to Telegraph.",
     "{i}gps [location/coordinates]/[reply]": "Send the map a given location.",
     "{i}getmsg [-s/silent] [link]/[reply]": "Get any media from messages forward/copy restrictions or replied message.",
     "{i}search [-r/revert] [text]/[reply] : [number]": "Search messages in current chat. Add '-r' to reverse order. Limit number of result is 99.",

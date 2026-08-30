@@ -5,7 +5,7 @@
 import asyncio
 import random
 
-from . import kasta_cmd, plugins_help, time_formatter
+from . import format_time, kasta_cmd, plugins_help
 
 
 @kasta_cmd(
@@ -24,7 +24,7 @@ async def _(kst):
         action = "record-" + action
     sec = await kst.client.get_text(kst, group=2)
     sec = int(60 if not sec.replace(".", "", 1).isdecimal() else sec)
-    typefor = time_formatter(sec)
+    typefor = format_time(sec)
     await kst.eor(f"`Starting fake {act} for {typefor}...`", time=3, silent=True)
     async with await kst.send_action(action=action):
         await asyncio.sleep(sec)

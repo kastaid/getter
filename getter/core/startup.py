@@ -4,23 +4,21 @@
 
 import asyncio
 import random
-import signal
 from typing import Any
 
 from telethon.tl import functions as fun, types as typ
 
-from getter import EXECUTOR, LOOP, __version__
+from getter import __version__
 from getter.config import DEVS, Var
 from getter.logger import LOG
 
-from .base_client import getter_app
 from .db import (
-    db_disconnect,
     dgvar,
     gvar,
     sgvar,
 )
 from .helper import get_botlogs, hk
+from .kasta import getter_app
 from .property import _c
 from .utils import humanbool
 
@@ -64,30 +62,6 @@ _reboot_text = r"""
 ├  **Anti-PM**: `{}`
 └  **Version**: `{}`
 """
-
-
-async def shutdown(signum: str) -> None:
-    LOG.warning(f"Stop signal received : {signum}")
-    try:
-        await db_disconnect()
-    except BaseException:
-        pass
-    try:
-        await getter_app.disconnect()
-    except BaseException:
-        pass
-    tasks = [i for i in asyncio.all_tasks() if i is not asyncio.current_task()]
-    [task.cancel() for task in tasks]
-    await asyncio.gather(*tasks, return_exceptions=True)
-    EXECUTOR.shutdown(wait=False)
-    await LOOP.shutdown_asyncgens()
-    LOOP.stop()
-
-
-def trap() -> None:
-    for signame in ("SIGINT", "SIGTERM", "SIGABRT"):
-        sig = getattr(signal, signame)
-        LOOP.add_signal_handler(sig, lambda s=sig: asyncio.create_task(shutdown(s.name)))
 
 
 def migrations(app: Any = None) -> None:

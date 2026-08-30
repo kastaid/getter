@@ -9,11 +9,11 @@ import shutil
 import sys
 from datetime import UTC, datetime
 
-import aiofiles
 from git import Repo
 from git.exc import GitCommandError, InvalidGitRepositoryError, NoSuchPathError
 
 from . import (
+    DOWNLOAD_DIR,
     MAX_MESSAGE_LEN,
     TZ,
     Root,
@@ -24,7 +24,6 @@ from . import (
     __tlversion__,
     __version__,
     formatx_send,
-    get_random_hex,
     gvar,
     hk,
     hl,
@@ -214,12 +213,6 @@ async def _(kst):
     )
 
 
-async def ignores() -> None:
-    rems = ".github docs README.md"
-    backup_dir = Root / "backup/" / get_random_hex()
-    await Runner(f"mkdir -p {backup_dir} && mv -f {rems} -t {backup_dir}")
-
-
 async def update_packages() -> None:
     reqs = str(Root / "requirements.txt")
     if shutil.which("uv"):
@@ -262,9 +255,8 @@ def generate_changelog(repo, diff) -> str:
 async def show_changelog(kst, changelog) -> None:
     if len(changelog) > MAX_MESSAGE_LEN:
         changelog = strip_format(changelog)
-        file = Root / "downloads/changelog.txt"
-        async with aiofiles.open(file, mode="w") as f:
-            await f.write(changelog)
+        file = DOWNLOAD_DIR / "changelog.txt"
+        await asyncio.to_thread(file.write_text, changelog, encoding="utf-8")
         try:
             chlog = await kst.eor(
                 r"\\**#Getter**// View this file to see changelog.",
@@ -273,7 +265,7 @@ async def show_changelog(kst, changelog) -> None:
             )
         except Exception as err:
             chlog = await kst.eor(formatx_send(err), parse_mode="html")
-        (file).unlink(missing_ok=True)
+        await asyncio.to_thread(file.unlink, missing_ok=True)
     else:
         chlog = await kst.eor(changelog, parse_mode="html")
     await chlog.reply(help_text, silent=True)
@@ -282,7 +274,6 @@ async def show_changelog(kst, changelog) -> None:
 async def Pulling(kst, state) -> None:
     if not Var.DEV_MODE:
         await force_pull()
-        # await ignores()
         await update_packages()
     up = rf"""\\**#Getter**// `{state}Updated Successfully...`
 Wait for a few seconds, then run `{hl}ping` command."""
