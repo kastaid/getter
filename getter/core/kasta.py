@@ -9,7 +9,7 @@ import random
 import sys
 from collections import UserList
 from inspect import getmembers
-from time import time
+from time import monotonic
 from typing import TYPE_CHECKING, NoReturn
 
 from telethon.client.telegramclient import TelegramClient as BaseClient
@@ -213,7 +213,7 @@ class KastaClient(BaseClient):
 
     @property
     def uptime(self) -> str:
-        return format_time(time() - StartTime)
+        return format_time(monotonic() - StartTime)
 
     def to_dict(self) -> dict:
         return dict(getmembers(self))

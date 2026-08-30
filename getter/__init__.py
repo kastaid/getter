@@ -6,14 +6,14 @@
 import sys
 from pathlib import Path
 from platform import python_version
-from time import time
+from time import monotonic
 
 from telethon.tl.alltlobjects import LAYER as __layer__
 from telethon.version import __version__ as __tlversion__
 
 from version import __version__
 
-StartTime = time()
+StartTime = monotonic()
 __license__ = "GNU Affero General Public License v3.0"
 __copyright__ = "Getter Copyright (C) 2022-present kastaid"
 __pyversion__ = python_version()
