@@ -107,10 +107,10 @@ async def OnAFK(kst):
         afk = await is_afk()
         if afk:
             afk_time = format_time(int(time() - afk.start))
-            text = "<b><u>I’m on AFK!</u></b>\n"
+            text = "<b><u>I’m now AFK!</u></b>\n"
             text += f"Last seen {afk_time} ago."
-            reason = f"<pre>{afk.reason}</pre>" if afk.reason else "No reason."
-            text += f"\n<b>Reason</b>: {reason}"
+            if afk.reason:
+                text += f"\n<b>Reason</b>: {afk.reason}"
             chat_id = str(kst.chat_id)
             if chat_id in afk.last:
                 try:

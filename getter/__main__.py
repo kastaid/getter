@@ -20,7 +20,10 @@ from . import (
     __version__,
 )
 from .config import Var
-from .core.db import db_connect
+from .core.db import (
+    database_connect,
+    database_disconnect,
+)
 from .core.helper import jdata, plugins_help
 from .core.kasta import getter_app
 from .core.property import do_not_remove_credit
@@ -44,7 +47,7 @@ if Var.DEV_MODE:
 
 
 async def main() -> None:
-    await db_connect()
+    await database_connect()
     await jdata.sudo_users()
     migrations()
     await autopilot()
@@ -95,6 +98,7 @@ async def run() -> None:
         await main()
         await getter_app.run_until_disconnected()
     finally:
+        await database_disconnect()
         if getter_app.is_connected():
             await getter_app.disconnect()
 

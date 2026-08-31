@@ -5,6 +5,7 @@
 from typing import Any
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     Column,
     Float,
@@ -13,9 +14,9 @@ from sqlalchemy import (
     insert,
     select,
 )
-from sqlalchemy_json import MutableJson
+from sqlalchemy.dialects.postgresql import JSONB
 
-from .engine import Model, Session
+from .connector import Model, Session
 
 
 class GoAFK(Model):
@@ -23,19 +24,15 @@ class GoAFK(Model):
     state = Column(Boolean, primary_key=True)
     reason = Column(UnicodeText)
     start = Column(Float)
-    last = Column(MutableJson)
+    last = Column(JSON().with_variant(JSONB, "postgresql"))
 
 
 async def is_afk() -> GoAFK | None:
     async with Session() as s:
         try:
-            data = (await s.execute(select(GoAFK).filter(GoAFK.state))).scalar_one_or_none()
-            if data:
-                await s.refresh(data)
-                return data
+            return (await s.execute(select(GoAFK).filter(GoAFK.state))).scalar_one_or_none()
         except BaseException:
             pass
-        return
 
 
 async def add_afk(
@@ -70,6 +67,6 @@ async def set_last_afk(
         return {}
     async with Session(True) as s:
         old_last = afk.last
-        afk.last[chat_id] = msg_id
+        afk.last = {**old_last, chat_id: msg_id}
         await s.merge(afk)
         return old_last
