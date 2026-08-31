@@ -232,10 +232,10 @@ def is_url(value: str) -> bool:
     if not isinstance(value, str) or not value or any(i.isspace() for i in value):
         return False
     try:
-        parsed = urlsplit(value if "://" in value else f"//{value}")
+        parsed = urlsplit(value)
     except ValueError:
         return False
-    return bool(parsed.netloc)
+    return parsed.scheme in ("http", "https") and bool(parsed.hostname) and "." in parsed.hostname
 
 
 def get_full_class_name(value: Any) -> str:

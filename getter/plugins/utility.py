@@ -13,9 +13,9 @@ from telethon.tl import types as typ
 
 from . import (
     DOWNLOAD_DIR,
-    TZ,
     Fetch,
     Runner,
+    Var,
     formatx_send,
     get_media_type,
     get_msg_id,
@@ -120,7 +120,7 @@ _EOD_TAG_RE = re.compile(rb"<[^>]+>")
 )
 async def _(kst):
     yy = await kst.eor("`Processing...`")
-    now = datetime.now(TZ)
+    now = datetime.now(Var.TZ)
     month = now.strftime("%b")
     url = "https://daysoftheyear.com"
     url += f"/days/{month}/" + now.strftime("%F").split("-")[2]
@@ -425,19 +425,19 @@ async def _(kst):
 
 
 plugins_help["utility"] = {
-    "{i}spcheck [text]/[reply]": "Check spelling of the text/sentence.",
-    "{i}ud [word]/[reply]": "Fetch the word defenition from urbandictionary.",
-    "{i}mean [word]/[reply]": "Get the meaning of the word.",
-    "{i}eod": "Get event of the today.",
-    "{i}lorem": "Get lorem ipsum.",
-    "{i}wtr [city]/[reply]": "Get ASCII-Art of current weather by city.",
-    "{i}wtrs [city]/[reply]": "Get a simple weather.",
-    "{i}wtrp [city]/[reply]": "Get a weather pictures.",
-    "{i}calc [math]/[reply]": "Simpler calculator supported ( : ÷ × x ). E.g: 2 x 2",
-    "{i}paste [text]/[reply]": "Upload text to a paste service.",
-    "{i}github [username]/[reply]": "Get full information about an user on GitHub of given username.",
-    "{i}tovn [reply]": "Convert replied audio/video file to voice note.",
-    "{i}gps [location/coordinates]/[reply]": "Send the map a given location.",
-    "{i}getmsg [-s/silent] [link]/[reply]": "Get any media from messages forward/copy restrictions or replied message.",
-    "{i}search [-r/revert] [text]/[reply] : [number]": "Search messages in current chat. Add '-r' to reverse order. Limit number of result is 99.",
+    "{pfx}spcheck [text]/[reply]": "Check spelling of the text/sentence.",
+    "{pfx}ud [word]/[reply]": "Fetch the word definition from urbandictionary.",
+    "{pfx}mean [word]/[reply]": "Get the meaning of the word.",
+    "{pfx}eod": "Get event of the day.",
+    "{pfx}lorem": "Get lorem ipsum.",
+    "{pfx}wtr [city]/[reply]": "Get ASCII-Art of current weather by city.",
+    "{pfx}wtrs [city]/[reply]": "Get a simple weather.",
+    "{pfx}wtrp [city]/[reply]": "Get a weather pictures.",
+    "{pfx}calc [math]/[reply]": "Simpler calculator supported ( : ÷ × x ). E.g: 2 x 2",
+    "{pfx}paste [text]/[reply]": "Upload text to a paste service.",
+    "{pfx}github [username]/[reply]": "Get full information about a user on GitHub of given username.",
+    "{pfx}tovn [reply]": "Convert replied audio/video file to voice note.",
+    "{pfx}gps [location/coordinates]/[reply]": "Send the map a given location.",
+    "{pfx}getmsg [-s/silent] [link]/[reply]": "Get any media from messages forward/copy restrictions or replied message.",
+    "{pfx}search [-r/revert] [text]/[reply] : [number]": "Search messages in current chat. Add '-r' to reverse order. Limit number of result is 99.",
 }

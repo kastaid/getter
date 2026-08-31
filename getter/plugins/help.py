@@ -3,13 +3,13 @@
 # AGPL-3.0 License
 
 from . import (
+    Var,
     __layer__,
     __pyversion__,
     __tlversion__,
     __version__,
     chunk,
     gvar,
-    hl,
     humanbool,
     kasta_cmd,
     plugins_help,
@@ -59,18 +59,20 @@ async def _(kst):
             name = next((i for i in plugin_name.split() if i in plugins_help), None)
         if name:
             cmds = plugins_help[name]
-            text = f"**{len(cmds)} Help for {name.upper()}**  <`{hl}help {name}`>\n\n"
+            text = f"**{len(cmds)} Help for {name.upper()}**  <`{Var.PREFIX}help {name}`>\n\n"
             for cmd, desc in cmds.items():
-                text += "**❯** `{}`\n{}\n\n".format(cmd.replace("{i}", hl), desc.strip().replace("{i}", hl))
+                text += "**❯** `{}`\n{}\n\n".format(
+                    cmd.replace("{pfx}", Var.PREFIX), desc.strip().replace("{pfx}", Var.PREFIX)
+                )
             return await yy.sod(text)
         return await yy.sod(
-            f"**404 Plugin Not Found  ➞**  `{plugin_name}`\nType  `{hl}help`  to see valid plugins name."
+            f"**404 Plugin Not Found  ➞**  `{plugin_name}`\nType  `{Var.PREFIX}help`  to see valid plugins name."
         )
     plugins = ""
     for plug in chunk(sorted(plugins_help), 3):
         pr = ""
-        for _ in plug:
-            pr += f"<code>{_}</code> • "
+        for i in plug:
+            pr += f"<code>{i}</code> • "
         pr = pr[:-3]
         plugins += f"\n{pr}"
     await yy.sod(
@@ -86,17 +88,17 @@ async def _(kst):
             plugins_help.total,
             humanbool(await gvar("_sudo", use_cache=True), toggle=True),
             plugins.strip(),
-            hl,
-            hl,
-            hl,
-            hl,
-            hl,
-            hl,
+            Var.PREFIX,
+            Var.PREFIX,
+            Var.PREFIX,
+            Var.PREFIX,
+            Var.PREFIX,
+            Var.PREFIX,
         ),
         parse_mode="html",
     )
 
 
 plugins_help["help"] = {
-    "{i}help [plugin_name]/[reply]": "Get common/plugin/command help by filling the plugin name or reply single word or message that contains plugin name.",
+    "{pfx}help [plugin_name]/[reply]": "Show help for all plugins or a specific plugin.",
 }

@@ -99,6 +99,6 @@ async def _(kst):
 
 
 plugins_help["loader"] = {
-    "{i}load [reply]": "Download/redownload and load a plugin.",
-    "{i}unload [plugin_name]": "Unload and remove a plugin.",
+    "{pfx}load [reply]": "Download/redownload and load a plugin.",
+    "{pfx}unload [plugin_name]": "Unload and remove a plugin.",
 }

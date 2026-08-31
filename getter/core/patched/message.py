@@ -105,7 +105,7 @@ class Message:
                 with suppress(BaseException), BytesIO(str.encode(text)) as file:
                     file.name = "message.txt"
                     return await self.respond(
-                        r"\\<b>#Getter</b>// Message Too Long",
+                        "<b>#Getter</b> Message Too Long",
                         file=file,
                         force_document=True,
                         silent=True,
@@ -163,7 +163,7 @@ class Message:
                 with suppress(BaseException), BytesIO(str.encode(text)) as file:
                     file.name = "message.txt"
                     return await self.respond(
-                        r"\\<b>#Getter</b>// Message Too Long",
+                        "<b>#Getter</b> Message Too Long",
                         file=file,
                         force_document=True,
                         silent=True,
@@ -262,7 +262,7 @@ class Message:
             with suppress(BaseException), BytesIO(str.encode(text)) as file:
                 file.name = "message.txt"
                 return await self.respond(
-                    r"\\<b>#Getter</b>// Message Too Long",
+                    "<b>#Getter</b> Message Too Long",
                     file=file,
                     force_document=True,
                     silent=True,

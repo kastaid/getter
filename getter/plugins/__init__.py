@@ -15,6 +15,6 @@ from getter import (
     __tlversion__,
     __version__,
 )
-from getter.config import *
+from getter.config import Var
 from getter.core import *
 from getter.logger import LOG

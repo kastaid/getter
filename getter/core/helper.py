@@ -9,7 +9,7 @@ from typing import Any
 import cachebox
 from heroku3 import from_key
 
-from getter.config import BOTLOGS_CACHE, Var
+from getter.config import Var
 from getter.logger import LOG
 
 from .db import get_col, gvar
@@ -95,16 +95,15 @@ class Heroku:
 
 
 async def get_botlogs() -> int:
-    if BOTLOGS_CACHE:
-        return next(reversed(BOTLOGS_CACHE), 0)
-    b = await gvar("BOTLOGS", use_cache=True)
-    i = int(Var.BOTLOGS or b or 0)
-    BOTLOGS_CACHE.append(i)
-    return i
+    if hasattr(get_botlogs, "cache"):
+        return get_botlogs.cache
+    botlogs = await gvar("BOTLOGS", use_cache=True)
+    get_botlogs.cache = int(Var.BOTLOGS or botlogs or 0)
+    return get_botlogs.cache
 
 
 def formatx_send(err: Exception) -> str:
-    text = r"\\<b>#Getter_Error</b>//"
+    text = "<b>#Getter_Error</b>"
     text += f"\n<pre>{get_full_class_name(err)}: {html.escape(str(err))}</pre>"
     return text
 

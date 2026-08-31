@@ -8,11 +8,10 @@ from telethon.errors import FloodWaitError
 from telethon.tl import functions as fun, types as typ
 
 from . import (
-    DEVS,
+    Var,
     display_name,
     format_time,
     formatx_send,
-    hl,
     kasta_cmd,
     mentionuser,
     normalize,
@@ -37,7 +36,7 @@ async def _(kst):
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
         return await yy.eor("`Cannot ban to myself.`", time=3)
-    if user.id in DEVS:
+    if user.id in Var.DEVS:
         return await yy.eor("`Forbidden to ban our awesome developers.`", time=3)
     is_reported = False
     try:
@@ -80,7 +79,7 @@ async def _(kst):
         return await yy.eor("`Reply to user message.`", time=5)
     if user.id == ga.uid:
         return await yy.eor("`Cannot dban to myself.`", time=3)
-    if user.id in DEVS:
+    if user.id in Var.DEVS:
         return await yy.eor("`Forbidden to dban our awesome developers.`", time=3)
     is_reported = False
     try:
@@ -123,7 +122,7 @@ async def _(kst):
         return
     if user.id == ga.uid:
         return
-    if user.id in DEVS:
+    if user.id in Var.DEVS:
         return
     try:
         if kst.is_group and kst.is_reply:
@@ -158,7 +157,7 @@ async def _(kst):
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
         return await yy.eor("`Cannot tban to myself.`", time=3)
-    if user.id in DEVS:
+    if user.id in Var.DEVS:
         return await yy.eor("`Forbidden to tban our awesome developers.`", time=3)
     opts = args.split(" ")
     timing = opts[0].lower()
@@ -217,7 +216,7 @@ async def _(kst):
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
         return await yy.eor("`Cannot mute to myself.`", time=3)
-    if user.id in DEVS:
+    if user.id in Var.DEVS:
         return await yy.eor("`Forbidden to mute our awesome developers.`", time=3)
     try:
         await ga.edit_permissions(chat_id, user.id, send_messages=False)
@@ -245,7 +244,7 @@ async def _(kst):
         return await yy.eor("`Reply to user message.`", time=5)
     if user.id == ga.uid:
         return await yy.eor("`Cannot dmute to myself.`", time=3)
-    if user.id in DEVS:
+    if user.id in Var.DEVS:
         return await yy.eor("`Forbidden to dmute our awesome developers.`", time=3)
     reply = await kst.get_reply_message()
     try:
@@ -274,7 +273,7 @@ async def _(kst):
         return
     if user.id == ga.uid:
         return
-    if user.id in DEVS:
+    if user.id in Var.DEVS:
         return
     try:
         await ga.edit_permissions(chat_id, user.id, send_messages=False)
@@ -296,7 +295,7 @@ async def _(kst):
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
         return await yy.eor("`Cannot tmute to myself.`", time=3)
-    if user.id in DEVS:
+    if user.id in Var.DEVS:
         return await yy.eor("`Forbidden to tmute our awesome developers.`", time=3)
     opts = args.split(" ")
     timing = opts[0].lower()
@@ -330,7 +329,7 @@ async def _(kst):
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
         return await yy.eor("`Cannot unmute to myself.`", time=3)
-    if user.id in DEVS:
+    if user.id in Var.DEVS:
         return await yy.eor("`Forbidden to unmute our awesome developers.`", time=3)
     try:
         await ga.edit_permissions(chat_id, user.id, send_messages=True)
@@ -357,7 +356,7 @@ async def _(kst):
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
         return await yy.eor("`Cannot kick to myself.`", time=3)
-    if user.id in DEVS:
+    if user.id in Var.DEVS:
         return await yy.eor("`Forbidden to kick our awesome developers.`", time=3)
     try:
         await ga.kick_participant(chat_id, user.id)
@@ -385,7 +384,7 @@ async def _(kst):
         return await yy.eor("`Reply to user message.`", time=5)
     if user.id == ga.uid:
         return await yy.eor("`Cannot dkick to myself.`", time=3)
-    if user.id in DEVS:
+    if user.id in Var.DEVS:
         return await yy.eor("`Forbidden to dkick our awesome developers.`", time=3)
     reply = await kst.get_reply_message()
     try:
@@ -413,7 +412,7 @@ async def _(kst):
         return
     if user.id == ga.uid:
         return
-    if user.id in DEVS:
+    if user.id in Var.DEVS:
         return
     try:
         await ga.kick_participant(kst.chat_id, user.id)
@@ -779,15 +778,15 @@ async def _(kst):
             else:
                 none += 1
     text = f"**Kicked {kicked} / {total} Users**\n" if user else f"**Total {total} Users**\n"
-    text += f"`{hl}kickusers deleted`  •  `{deleted}`\n"
-    text += f"`{hl}kickusers empty`  •  `{empty}`\n"
-    text += f"`{hl}kickusers month`  •  `{month}`\n"
-    text += f"`{hl}kickusers week`  •  `{week}`\n"
-    text += f"`{hl}kickusers offline`  •  `{offline}`\n"
-    text += f"`{hl}kickusers online`  •  `{online}`\n"
-    text += f"`{hl}kickusers recently`  •  `{recently}`\n"
-    text += f"`{hl}kickusers bot`  •  `{bot}`\n"
-    text += f"`{hl}kickusers none`  •  `{none}`"
+    text += f"`{Var.PREFIX}kickusers deleted`  •  `{deleted}`\n"
+    text += f"`{Var.PREFIX}kickusers empty`  •  `{empty}`\n"
+    text += f"`{Var.PREFIX}kickusers month`  •  `{month}`\n"
+    text += f"`{Var.PREFIX}kickusers week`  •  `{week}`\n"
+    text += f"`{Var.PREFIX}kickusers offline`  •  `{offline}`\n"
+    text += f"`{Var.PREFIX}kickusers online`  •  `{online}`\n"
+    text += f"`{Var.PREFIX}kickusers recently`  •  `{recently}`\n"
+    text += f"`{Var.PREFIX}kickusers bot`  •  `{bot}`\n"
+    text += f"`{Var.PREFIX}kickusers none`  •  `{none}`"
     await yy.eor(text)
 
 
@@ -873,39 +872,39 @@ async def _(kst):
 
 
 plugins_help["admintools"] = {
-    "{i}ban [reply]/[username/mention/id] [reason]": "Ban user and report them as spam.",
-    "{i}dban [reply] [reason]": "Ban user by reply, delete their message and report them as spam.",
-    "{i}sban [reply]/[username/mention/id]": "Silently a ban user, delete my message and report them as spam.",
-    "{i}tban [reply]/[username/mention/id] [timing] [reason]": "Temporarily ban user. **timing**: 4m = 4 minutes, 3h = 3 hours, 6d = 6 days.",
-    "{i}unban [reply]/[username/mention/id] [reason]": "Unbanned user.",
-    "{i}mute [reply]/[username/mention/id] [reason]": "Mute user.",
-    "{i}dmute [reply] [reason]": "Mute user by reply, and delete their message.",
-    "{i}smute [reply]/[username/mention/id]": "Silently mute user, and delete my message.",
-    "{i}tmute [reply]/[username/mention/id] [timing] [reason]": "Temporarily mute user. **timing**: 4m = 4 minutes, 3h = 3 hours, 6d = 6 days.",
-    "{i}unmute [reply]/[username/mention/id] [reason]": "Unmute user.",
-    "{i}kick [reply]/[username/mention/id] [reason]": "Kick user.",
-    "{i}dkick [reply] [reason]": "Kick user by reply, and delete their message.",
-    "{i}skick [reply]/[username/mention/id]": "Silently a kick user, and delete my message.",
-    "{i}lock": "Lock current group, allowing read only for non-admins.",
-    "{i}unlock [-s/safety]": "Unlock current group, allowing read/write for non-admins (excludes: change_info, pin_messages). Add '-s' to allowing just for typing.",
-    "{i}pin [reply] [-n/notify]": "Pin the replied message. Add '-n' to send a notification.",
-    "{i}tpin [reply] [seconds] [-n/notify]": "Temporarily pin the replied message. Add '-n' to send a notification.",
-    "{i}unpin [reply]": "Unpin the replied message.",
-    "{i}unpinall": "Unpins all pinned messages.",
-    "{i}pinned": "Get the current pinned message.",
-    "{i}listpinned": "Get all pinned messages.",
-    "{i}promote [reply]/[username/mention/id] [-f/full] [title]": "Promote user as admin. To full permissions add '-f'. The title must be less than 16 characters and emoji are not allowed, or use the default localized title.",
-    "{i}demote [reply]/[username/mention/id]": "Demote user from admin.",
-    "{i}kickusers": "Kick users specifically.",
-    "{i}kickdel": "Kick all deleted accounts.",
-    "{i}unbanall": "Unban all banned users.",
-    "{i}adminlist": """Get list all admins by type in current group.
+    "{pfx}ban [reply]/[username/mention/id] [reason]": "Ban user and report them as spam.",
+    "{pfx}dban [reply] [reason]": "Ban user by reply, delete their message and report them as spam.",
+    "{pfx}sban [reply]/[username/mention/id]": "Silently a ban user, delete my message and report them as spam.",
+    "{pfx}tban [reply]/[username/mention/id] [timing] [reason]": "Temporarily ban user. **timing**: 4m = 4 minutes, 3h = 3 hours, 6d = 6 days.",
+    "{pfx}unban [reply]/[username/mention/id] [reason]": "Unbanned user.",
+    "{pfx}mute [reply]/[username/mention/id] [reason]": "Mute user.",
+    "{pfx}dmute [reply] [reason]": "Mute user by reply, and delete their message.",
+    "{pfx}smute [reply]/[username/mention/id]": "Silently mute user, and delete my message.",
+    "{pfx}tmute [reply]/[username/mention/id] [timing] [reason]": "Temporarily mute user. **timing**: 4m = 4 minutes, 3h = 3 hours, 6d = 6 days.",
+    "{pfx}unmute [reply]/[username/mention/id] [reason]": "Unmute user.",
+    "{pfx}kick [reply]/[username/mention/id] [reason]": "Kick user.",
+    "{pfx}dkick [reply] [reason]": "Kick user by reply, and delete their message.",
+    "{pfx}skick [reply]/[username/mention/id]": "Silently a kick user, and delete my message.",
+    "{pfx}lock": "Lock current group, allowing read only for non-admins.",
+    "{pfx}unlock [-s/safety]": "Unlock current group, allowing read/write for non-admins (excludes: change_info, pin_messages). Add '-s' to allowing just for typing.",
+    "{pfx}pin [reply] [-n/notify]": "Pin the replied message. Add '-n' to send a notification.",
+    "{pfx}tpin [reply] [seconds] [-n/notify]": "Temporarily pin the replied message. Add '-n' to send a notification.",
+    "{pfx}unpin [reply]": "Unpin the replied message.",
+    "{pfx}unpinall": "Unpins all pinned messages.",
+    "{pfx}pinned": "Get the current pinned message.",
+    "{pfx}listpinned": "Get all pinned messages.",
+    "{pfx}promote [reply]/[username/mention/id] [-f/full] [title]": "Promote user as admin. To full permissions add '-f'. The title must be less than 16 characters and emoji are not allowed, or use the default localized title.",
+    "{pfx}demote [reply]/[username/mention/id]": "Demote user from admin.",
+    "{pfx}kickusers": "Kick users specifically.",
+    "{pfx}kickdel": "Kick all deleted accounts.",
+    "{pfx}unbanall": "Unban all banned users.",
+    "{pfx}adminlist": """Get list all admins by type in current group.
 
 **Examples**:
 - Mute user for two hours.
--> `{i}tmute @username 2h abuse`
+-> `{pfx}tmute @username 2h abuse`
 
 - Promote user as co-founder with blank title.
--> `{i}promote @username -f ㅤ`
+-> `{pfx}promote @username -f ㅤ`
 """,
 }

@@ -5,14 +5,8 @@
 MAX_MESSAGE_LEN = 4096
 
 DEFAULT_GCAST_BLACKLIST = (
-    -1001699144606,  # @kastaot
-    -1001700971911,  # @kastaup
-    -1001596433756,  # @MFIChat
+    -1004429397890,  # @kastaot
     -1001109500936,  # @TelethonChat
-    -1001235155926,  # @RoseSupportChat
-    -1001421589523,  # @tdspya
-    -1001360494801,  # @OFIOpenChat
-    -1001275084637,  # @OFIChat
 )
 
 DEFAULT_GUCAST_BLACKLIST = (
@@ -20,6 +14,10 @@ DEFAULT_GUCAST_BLACKLIST = (
     4247000,  # @notoscam
     431415000,  # @BotSupport
     454000,  # @dmcatelegram
+    460000,  # Volunteer Support
+    4245000,  # @AbuseNotifications
+    42435000,  # @AdSupport
+    7308887716,  # @monk
 )
 
 DEFAULT_SHELL_BLACKLIST = (
@@ -58,35 +56,6 @@ USERAGENTS = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.127 Safari/537.36",  # windows
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_7_8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.132 Safari/537.36",  # macos
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.127 Safari/537.36",  # linux
-)
-
-CARBON_PRESETS = {
-    "blackboard": "#6676be",
-    "material": "#829faf",
-    "monokai": "#9e9e9e",
-    "night-owl": "#b96bff",
-    "nord": "#9ac5ef",
-    "oceanic-next": "#8db1c0",
-    "one-light": "#2b66df",
-    "seti": "#abb8c3",
-    "shades-of-purple": "#736fca",
-    "synthwave-84": "#9c77d9",
-    "solarized-light": "#bbbbbb",
-    "twilight": "#f9edd4",
-    "verminal": "#bd10e0",
-    "vscode": "#e1962f",
-    "zenburn": "#b6a291",
-}
-
-RAYSO_THEMES = (
-    "breeze",
-    "candy",
-    "crimson",
-    "falcon",
-    "meadow",
-    "midnight",
-    "raindrop",
-    "sunset",
 )
 
 LSFILES_MAP = {

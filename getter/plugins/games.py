@@ -129,9 +129,9 @@ async def _(kst):
 
 
 plugins_help["games"] = {
-    "{i}listgame": "List all game name.",
-    "{i}game [game_name]": "Play an inline games by `@gamee`. Add 'game_name' or leave blank to get random games. E.g: `{i}game Karate Kido`",
-    "{i}xo": "Play the Tic Tac Toe game.",
-    "{i}truth [lang_code]": "Get a random truth task. Add 'lang_code' to translate question. E.g: `{i}truth id`",
-    "{i}dare [lang_code]": "Get a random dare task.",
+    "{pfx}listgame": "List all game name.",
+    "{pfx}game [game_name]": "Play an inline games by `@gamee`. Add 'game_name' or leave blank to get random games. E.g: `{pfx}game Karate Kido`",
+    "{pfx}xo": "Play the Tic Tac Toe game.",
+    "{pfx}truth [lang_code]": "Get a random truth task. Add 'lang_code' to translate question. E.g: `{pfx}truth id`",
+    "{pfx}dare [lang_code]": "Get a random dare task.",
 }

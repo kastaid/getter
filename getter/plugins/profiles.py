@@ -162,12 +162,12 @@ async def _(kst):
 
 
 plugins_help["profiles"] = {
-    "{i}pbio [bio]": "Change my profile bio. If empty the current bio removed.",
-    "{i}pname [first_name] ; [last_name]": "Change my profile name. If empty the current name set to blank `ㅤ`.",
-    "{i}puname [username]": "Change my profile username. If empty the current username removed.",
-    "{i}ppic [reply_media]": "Change my profile picture.",
-    "{i}delpp [number]/[-a/all]": "Delete my profile picture by given number or delete one if empty or add '-a' to delete all profile pictures.",
-    "{i}hidepp": "Hidden my profile pictures for everyone (change privacy).",
-    "{i}showpp": "Showing my profile pictures.",
-    "{i}getpp [reply]/[username/mention/id] [-a/all]": "Get profile pictures of user. Add '-a' to get all pictures.",
+    "{pfx}pbio [bio]": "Change my profile bio. If empty the current bio removed.",
+    "{pfx}pname [first_name] ; [last_name]": "Change my profile name. If empty the current name set to blank `ㅤ`.",
+    "{pfx}puname [username]": "Change my profile username. If empty the current username removed.",
+    "{pfx}ppic [reply_media]": "Change my profile picture.",
+    "{pfx}delpp [number]/[-a/all]": "Delete my profile picture by given number or delete one if empty or add '-a' to delete all profile pictures.",
+    "{pfx}hidepp": "Hidden my profile pictures for everyone (change privacy).",
+    "{pfx}showpp": "Showing my profile pictures.",
+    "{pfx}getpp [reply]/[username/mention/id] [-a/all]": "Get profile pictures of user. Add '-a' to get all pictures.",
 }

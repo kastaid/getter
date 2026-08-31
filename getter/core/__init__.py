@@ -39,10 +39,8 @@ from .patched import *
 from .patcher import patch, patchable
 from .property import do_not_remove_credit, get_blacklisted
 from .tools import (
-    Carbon,
+    CodeImage,
     Fetch,
-    MyIp,
-    Pinger,
     Runner,
     Screenshot,
     import_lib,

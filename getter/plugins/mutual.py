@@ -69,12 +69,12 @@ async def _(kst):
 
 
 plugins_help["mutual"] = {
-    "{i}deak|{i}deac": "Get a link Deactivate Telegram Account.",
-    "{i}ig": "My Instagram link.",
-    "{i}igu": "My Instagram username.",
-    "{i}sfs": "Do “subs for subs” to my Channel link.",
-    "{i}sfsu": "My Channel username.",
-    "{i}sfsp": "My Channel private link.",
-    "{i}setig [username]": "Set or update my Instagram username without @.",
-    "{i}setsfs [username]": "Set or update my Channel username without @. For a private link just put example `+Cfq2dypcEoQxN2U9`.",
+    "{pfx}deak|{pfx}deac": "Get a link Deactivate Telegram Account.",
+    "{pfx}ig": "My Instagram link.",
+    "{pfx}igu": "My Instagram username.",
+    "{pfx}sfs": "Do “subs for subs” to my Channel link.",
+    "{pfx}sfsu": "My Channel username.",
+    "{pfx}sfsp": "My Channel private link.",
+    "{pfx}setig [username]": "Set or update my Instagram username without @.",
+    "{pfx}setsfs [username]": "Set or update my Channel username without @. For a private link just put example `+Cfq2dypcEoQxN2U9`.",
 }

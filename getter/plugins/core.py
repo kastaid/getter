@@ -23,21 +23,20 @@ from telethon.errors import (
 from telethon.tl import functions as fun, types as typ
 
 from . import (
-    DEVS,
     DOWNLOAD_DIR,
-    INVITE_WORKER,
-    NOCHATS,
-    TZ,
+    Var,
     format_time,
     get_user_status,
     get_username,
-    hl,
     is_telegram_link,
     kasta_cmd,
     normalize_chat_id,
     plugins_help,
     sendlog,
 )
+
+INVITE_WORKER: dict[int, dict[str, str | int]] = {}
+_INVITING_LOCK, _SCRAPING_LOCK, _ADDING_LOCK = asyncio.Lock(), asyncio.Lock(), asyncio.Lock()
 
 invite_text = """
 🔄 <b>INVITING...</b>
@@ -103,14 +102,13 @@ canceled_text = """
 **{}**: `{}`
 **Time**: `{}`
 """
-_INVITING_LOCK, _SCRAPING_LOCK, _ADDING_LOCK = asyncio.Lock(), asyncio.Lock(), asyncio.Lock()
 
 
 @kasta_cmd(
     pattern="limit$",
     edited=True,
     no_chats=True,
-    chats=NOCHATS,
+    chats=Var.NOCHATS,
 )
 @kasta_cmd(
     pattern="glimit$",
@@ -155,7 +153,7 @@ async def _(kst):
 async def _(kst):
     chat_id = normalize_chat_id(kst.chat_id)
     if kst.is_dev:
-        if kst.client.uid in DEVS:
+        if kst.client.uid in Var.DEVS:
             return
         await asyncio.sleep(random.choice((4, 6, 8)))
     if INVITE_WORKER.get(chat_id) or _INVITING_LOCK.locked():
@@ -198,7 +196,7 @@ async def _(kst):
         else:
             filters = ("none",)
         start_time = monotonic()
-        local_now = datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S")
+        local_now = datetime.now(Var.TZ).strftime("%Y-%m-%d %H:%M:%S")
         max_success, success, failed, error = 300, 0, 0, "none"
         chat = await kst.get_chat()
         INVITE_WORKER[chat_id] = {
@@ -327,7 +325,7 @@ async def _(kst):
         args = kst.pattern_match.group(1).split(" ")
         is_append = bool(len(args) > 1 and args[1].lower() in {"-a", "a", "append"})
         start_time = monotonic()
-        local_now = datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S")
+        local_now = datetime.now(Var.TZ).strftime("%Y-%m-%d %H:%M:%S")
         members, admins, bots = 0, 0, 0
         members_file = DOWNLOAD_DIR / "members_list.csv"
         admins_file = DOWNLOAD_DIR / "admins_list.csv"
@@ -542,7 +540,7 @@ async def _(kst):
             mode = "bots"
         csv_file = DOWNLOAD_DIR / f"{mode}_list.csv"
         start_time = monotonic()
-        local_now = datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S")
+        local_now = datetime.now(Var.TZ).strftime("%Y-%m-%d %H:%M:%S")
         try:
             await yy.eor(f"`Reading {csv_file.name} file...`")
             data = await asyncio.to_thread(
@@ -555,7 +553,7 @@ async def _(kst):
             )
         except FileNotFoundError:
             return await yy.eor(
-                f"File `{csv_file.name}` not found.\nPlease run `{hl}getmembers [username/link/id]/[reply]` and try again!"
+                f"File `{csv_file.name}` not found.\nPlease run `{Var.PREFIX}getmembers [username/link/id]/[reply]` and try again!"
             )
         success = 0
         chat = await kst.get_chat()
@@ -628,7 +626,7 @@ async def _(kst):
 async def _(kst):
     chat_id = normalize_chat_id(kst.chat_id)
     if kst.is_dev:
-        if kst.client.uid in DEVS:
+        if kst.client.uid in Var.DEVS:
             return
         await asyncio.sleep(random.choice((4, 6, 8)))
     if not INVITE_WORKER.get(chat_id):
@@ -675,18 +673,18 @@ async def get_chat_info(kst, yy, group=1):
 
 
 plugins_help["core"] = {
-    "{i}inviteall [username/link/id]/[reply]": "Invite people's (exclude self, bots, admins, deleted accounts, status long_time_ago) to current group/channel.",
-    "{i}getmembers [username/link/id]/[reply] [append/a]": """Scraping members from the group and then save as csv files (members, admins, bots).
+    "{pfx}inviteall [username/link/id]/[reply]": "Invite people's (exclude self, bots, admins, deleted accounts, status long_time_ago) to current group/channel.",
+    "{pfx}getmembers [username/link/id]/[reply] [append/a]": """Scraping members from the group and then save as csv files (members, admins, bots).
 Run this command in everywhere exclude the target groups.
 
 **Notes**:
 - You must join the target if you use id, for two commands above.
 - Do not delete running messages if you have running process or the process will be stopped and users can't join.
-- Telethon (Telegram APIs) have a limit to scraping members. If you need to get more members use this command with options 'append' or 'a' example: <`{i}getmembers @username append`>. Repeat it after finished to get more members without duplicated rows. You can also combination with difference groups!
+- Telethon (Telegram APIs) have a limit to scraping members. If you need to get more members use this command with options 'append' or 'a' example: <`{pfx}getmembers @username append`>. Repeat it after finished to get more members without duplicated rows. You can also combination with difference groups!
 - Files members_list.csv, admins_list.csv and bot_list.csv saved at main directory and not removed, will replaced if you run the command above again. But if the app restarted files will be destroyed, so keep downloading latest files.""",
-    "{i}addmembers|{i}addadmins|{i}addbots": "Adding members to current group/channel from saved csv files generate by command above as members or admins or bots (there's a limit).",
-    "{i}cancel": "Cancel the running process, both for invite and add.",
-    "{i}limit": """Check my account limit or not.
+    "{pfx}addmembers|{pfx}addadmins|{pfx}addbots": "Adding members to current group/channel from saved csv files generate by command above as members or admins or bots (there's a limit).",
+    "{pfx}cancel": "Cancel the running process, both for invite and add.",
+    "{pfx}limit": """Check my account limit or not.
 
 **DWYOR ~ Do With Your Own Risk**""",
 }

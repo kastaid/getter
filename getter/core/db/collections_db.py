@@ -5,6 +5,7 @@
 from typing import Any
 
 from sqlalchemy import (
+    JSON,
     Column,
     String,
     delete,
@@ -13,16 +14,16 @@ from sqlalchemy import (
     select,
     update,
 )
-from sqlalchemy_json import MutableJson, NestedMutableJson
+from sqlalchemy.dialects.postgresql import JSONB
 
-from .engine import Model, Session
+from .connector import Model, Session
 
 
 class Collections(Model):
     __tablename__ = "collections"
     keyword = Column(String, primary_key=True)
-    json = Column(MutableJson)
-    njson = Column(NestedMutableJson)
+    json = Column(JSON().with_variant(JSONB, "postgresql"))
+    njson = Column(JSON().with_variant(JSONB, "postgresql"))
 
 
 async def get_cols() -> list[Collections]:
@@ -42,7 +43,6 @@ async def get_col(keyword: str) -> Collections:
         try:
             data = (await s.execute(select(Collections).filter(Collections.keyword == keyword))).scalar_one_or_none()
             if data:
-                await s.refresh(data)
                 return data
         except BaseException:
             pass

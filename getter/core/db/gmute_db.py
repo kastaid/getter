@@ -15,7 +15,7 @@ from sqlalchemy import (
     select,
 )
 
-from .engine import Model, Session
+from .connector import Model, Session
 
 _GMUTE_CACHE = cachebox.TTLCache(maxsize=100, global_ttl=60)  # 1 mins
 
@@ -44,13 +44,12 @@ async def is_gmute(
     use_cache: bool = False,
 ) -> GMute | None:
     user_id, value = str(user_id), None
-    if use_cache and user_id in _GMUTE_CACHE:
-        return _GMUTE_CACHE.get(user_id)
+    if use_cache and (value := _GMUTE_CACHE.get(user_id)) is not None:
+        return value
     async with Session() as s:
         try:
             data = (await s.execute(select(GMute).filter(GMute.user_id == user_id))).scalar_one_or_none()
             if data:
-                await s.refresh(data)
                 value = data
                 if use_cache and not _GMUTE_CACHE.get(user_id):
                     _GMUTE_CACHE[user_id] = value

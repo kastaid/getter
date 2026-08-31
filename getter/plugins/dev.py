@@ -13,15 +13,16 @@ from telethon.tl import functions, types
 
 from . import (
     DEFAULT_SHELL_BLACKLIST,
-    DEV_CMDS,
-    DEVS,
     DOWNLOAD_DIR,
     LSFILES_MAP,
     MAX_MESSAGE_LEN,
+    CodeImage,
     Runner,
+    Var,
     format_bytes,
     formatx_send,
     get_blacklisted,
+    get_media_type,
     getter_app,
     kasta_cmd,
     parse_pre,
@@ -128,7 +129,7 @@ async def _(kst):
         file = DOWNLOAD_DIR / "ls.txt"
         await asyncio.to_thread(file.write_text, directory, encoding="utf-8")
         await yy.eor(
-            rf"\\**#Getter**// Directory {cat}",
+            f"**#Getter** Directory {cat}",
             file=file,
             force_document=True,
         )
@@ -210,7 +211,7 @@ async def _(kst):
         attempts=6,
         fallbacks=DEFAULT_SHELL_BLACKLIST,
     )
-    if any(_.startswith(tuple(SHELL_BLACKLIST)) for _ in cmd.lower().split()) and kst.client.uid not in DEVS:
+    if any(_.startswith(tuple(SHELL_BLACKLIST)) for _ in cmd.lower().split()) and kst.client.uid not in Var.DEVS:
         return await yy.eod("`Command not allowed.`")
     stdout, stderr, ret, _ = await Runner(cmd)
     icon = "❯" if ret == 0 else "❮"
@@ -237,11 +238,42 @@ async def _(kst):
 
 
 @kasta_cmd(
+    pattern=r"code(?:\s|$)([\s\S]*)",
+)
+async def _(kst):
+    match = kst.pattern_match.group(1)
+    if kst.is_reply:
+        reply = await kst.get_reply_message()
+        if reply.media and get_media_type(reply.media) == "text":
+            file = Path(await reply.download_media(file=DOWNLOAD_DIR))
+            code = await asyncio.to_thread(file.read_text)
+            await asyncio.to_thread(file.unlink, missing_ok=True)
+        else:
+            code = reply.message
+        if match:
+            code = match
+    else:
+        code = match
+    if not code:
+        return await kst.eod("`Reply to text message or readable file.`")
+    yy = await kst.eor("`Processing...`")
+    image = await CodeImage(code.strip())
+    if not image:
+        return await yy.eod("`Code Image API not responding.`")
+    await yy.eor(
+        file=image,
+        force_document=False,
+    )
+
+
+@kasta_cmd(
     pattern="devs$",
     for_dev=True,
 )
 async def _(kst):
-    cmds = "**Developer Commands**:\n" + "\n".join(["- {}: {}".format(x, ", ".join(y)) for x, y in DEV_CMDS.items()])
+    cmds = "**Developer Commands**:\n" + "\n".join(
+        ["- {}: {}".format(k, ", ".join(v)) for k, v in Var.DEV_CMDS.items()]
+    )
     await kst.sod(cmds)
 
 
@@ -294,11 +326,11 @@ async def aexec(code, event):
 
 
 plugins_help["dev"] = {
-    "{i}raw [reply]": "Get the raw data of message object.",
-    "{i}json [reply]": "Raw data with json format.",
-    "{i}ls [path]/[reply]": "View all files and folders inside a directory.",
-    "{i}eval [code]/[reply]": "Evaluate Python code.",
-    "{i}exec [code]/[reply]": """Execute Python code.
+    "{pfx}raw [reply]": "Get the raw data of message object.",
+    "{pfx}json [reply]": "Raw data with json format.",
+    "{pfx}ls [path]/[reply]": "View all files and folders inside a directory.",
+    "{pfx}eval [code]/[reply]": "Evaluate Python code.",
+    "{pfx}exec [code]/[reply]": """Execute Python code.
 **Exec Shortcuts**:
 `fun = telethon.tl.functions`
 `typ = telethon.tl.types`
@@ -308,7 +340,7 @@ plugins_help["dev"] = {
 `reply = await event.get_reply_message()`
 `chat = event.chat_id`
 """,
-    "{i}shell|{i}sh [command]/[reply]": """Run the linux commands.
+    "{pfx}shell|{pfx}sh [command]/[reply]": """Run the linux commands.
 **Shell Command Snippets**:
 `echo Hello, World!`
 `python3 --version`
@@ -328,4 +360,5 @@ plugins_help["dev"] = {
 `grep -rnliF --color=auto kasta_cmd`
 `cat LICENSE`
 """,
+    "{pfx}code [code]/[reply (text or readable file)]": "Convert code into an image.",
 }

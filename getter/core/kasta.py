@@ -26,13 +26,7 @@ from getter import (
     StartTime,
     __version__,
 )
-from getter.config import (
-    DEVS,
-    INVITE_WORKER,
-    TZ,
-    Var,
-    hl,
-)
+from getter.config import Var
 from getter.logger import LOG
 
 from .custom_tcp import FastTCP
@@ -107,7 +101,7 @@ class KastaClient(BaseClient):
             self.me = await self.get_me()
             self.me.phone = None
             me = self.full_name
-            if self.uid not in DEVS:
+            if self.uid not in Var.DEVS:
                 KASTA_BLACKLIST = await get_blacklisted(
                     url="https://raw.githubusercontent.com/kastaid/resources/main/kastablacklist.py",
                     attempts=6,
@@ -171,10 +165,6 @@ class KastaClient(BaseClient):
                 raise ImportError(f"Cannot load plugin spec: {plugin}")
             mod = importlib.util.module_from_spec(spec)
             mod.Var = Var
-            mod.tz = TZ
-            mod.hl = hl
-            mod.INVITE_WORKER = INVITE_WORKER
-            mod.DEVS = DEVS
             mod.plugins_help = plugins_help
             spec.loader.exec_module(mod)
             self._plugins[plug] = mod

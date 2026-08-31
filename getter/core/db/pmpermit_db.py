@@ -13,7 +13,7 @@ from sqlalchemy import (
     select,
 )
 
-from .engine import Model, Session
+from .connector import Model, Session
 
 _PMPERMIT_CACHE = cachebox.LRUCache(maxsize=100)
 
@@ -38,13 +38,12 @@ async def is_allow(
     use_cache: bool = False,
 ) -> PMPermit | None:
     user_id, value = str(user_id), None
-    if use_cache and user_id in _PMPERMIT_CACHE:
-        return _PMPERMIT_CACHE.get(user_id)
+    if use_cache and (value := _PMPERMIT_CACHE.get(user_id)) is not None:
+        return value
     async with Session() as s:
         try:
             data = (await s.execute(select(PMPermit).filter(PMPermit.user_id == user_id))).scalar_one_or_none()
             if data:
-                await s.refresh(data)
                 value = data
                 if use_cache and not _PMPERMIT_CACHE.get(user_id):
                     _PMPERMIT_CACHE[user_id] = value

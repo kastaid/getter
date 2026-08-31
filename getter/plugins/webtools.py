@@ -2,14 +2,13 @@
 # https://github.com/kastaid/getter
 # AGPL-3.0 License
 
-import urllib.parse
-from ipaddress import IPv4Address
+import asyncio
+import ipaddress
 from time import monotonic
+from urllib.parse import urlparse
 
 from . import (
     Fetch,
-    MyIp,
-    Pinger,
     format_bytes,
     formatx_send,
     humanbool,
@@ -19,6 +18,17 @@ from . import (
     parse_pre,
     plugins_help,
 )
+
+_DNS_RECORD_TYPES = {
+    1: "A",
+    2: "NS",
+    5: "CNAME",
+    6: "SOA",
+    15: "MX",
+    16: "TXT",
+    28: "AAAA",
+    257: "CAA",
+}
 
 
 @kasta_cmd(
@@ -64,7 +74,7 @@ async def _(kst):
 )
 async def _(kst):
     text = await kst.client.get_text(kst, group=2)
-    if not text or is_url(text) is not True:
+    if not text or not is_url(text):
         return await kst.eor("`Provide a valid link!`", time=5)
     yy = await kst.eor("`Processing...`")
     if kst.pattern_match.group(1).strip() == "un":
@@ -91,7 +101,7 @@ async def _(kst):
 )
 async def _(kst):
     yy = await kst.eor("`Processing...`")
-    ip = await MyIp()
+    ip = await myip()
     await yy.eor(ip, parse_mode=parse_pre)
 
 
@@ -192,49 +202,15 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="dns(?: |$)(.*)",
+    pattern="pinger(?: |$)(.*)",
 )
 async def _(kst):
-    link = await kst.client.get_text(kst)
-    if not link:
-        return await kst.eor("`Provide a valid link!`", time=5)
-    toget = link
-    check_link = is_url(toget)
-    if check_link is not True:
-        toget = f"http://{link}"
-        check_link = is_url(toget)
-    if check_link is not True:
-        return await kst.eod("`Input is not supported link!`")
+    dns = await kst.client.get_text(kst)
+    if not dns:
+        return await kst.eor("`Provide a valid DNS or IP address!`", time=5)
     yy = await kst.eor("`Processing...`")
-    hostname = ".".join(urllib.parse.urlparse(toget).netloc.split(".")[-2:])
-    url = f"https://da.gd/dns/{hostname}"
-    res = await Fetch(url)
-    if res:
-        return await yy.eor(f"<b>DNS Records {hostname}</b>\n<pre>{res.strip()}</pre>", parts=True, parse_mode="html")
-    await yy.eor(f"`Cannot resolve {hostname} dns.`")
-
-
-@kasta_cmd(
-    pattern="whois(?: |$)(.*)",
-)
-async def _(kst):
-    link = await kst.client.get_text(kst)
-    if not link:
-        return await kst.eor("`Provide a valid link or IP address!`", time=5)
-    toget = link
-    check_link = is_url(toget)
-    if check_link is not True:
-        toget = f"http://{link}"
-        check_link = is_url(toget)
-    if check_link is not True:
-        return await kst.eod("`Input is not supported link!`")
-    yy = await kst.eor("`Processing...`")
-    hostname = link if is_ipv4(link) else ".".join(urllib.parse.urlparse(toget).netloc.split(".")[-2:])
-    url = f"https://da.gd/w/{hostname}"
-    res = await Fetch(url)
-    if res:
-        return await yy.eor(f"<b>WHOIS For {hostname}</b>\n<pre>{res.strip()}</pre>", parts=True, parse_mode="html")
-    await yy.eod(f"`Cannot resolve {hostname} whois.`")
+    duration = await pinger(dns)
+    await yy.eor(f"• **DNS**: `{dns}`\n• **Ping Speed**: `{duration}`")
 
 
 @kasta_cmd(
@@ -243,37 +219,388 @@ async def _(kst):
 async def _(kst):
     link = await kst.client.get_text(kst)
     if not link:
-        return await kst.eor("`Provide a valid link!`", time=5)
-    toget = link
-    check_link = is_url(toget)
-    if check_link is not True:
-        toget = f"http://{link}"
-        check_link = is_url(toget)
-    if check_link is not True:
-        return await kst.eod("`Input is not supported link!`")
+        return await kst.eor("`Provide a valid URL!`", time=5)
+    if not is_url(link):
+        return await kst.eod("`URL must start with http:// or https://`")
     yy = await kst.eor("`Processing...`")
-    url = f"https://da.gd/headers?url={toget}"
-    res = await Fetch(url)
+    res = await Fetch(link, head=True, real=True)
     if res:
-        return await yy.eor(f"<b>HTTP Headers {toget}</b>\n<pre>{res.strip()}</pre>", parts=True, parse_mode="html")
-    await yy.eod(f"`Cannot resolve {toget} headers.`")
+        headers = "\n".join(f"{k}: {v}" for k, v in res.headers.items())
+        res.close()
+        return await yy.eor(
+            f"<b>HTTP Headers {link}</b>\n<pre>{headers}</pre>",
+            parts=True,
+            parse_mode="html",
+        )
+    await yy.eod(f"`Cannot fetch HTTP headers for {link}.`")
 
 
 @kasta_cmd(
-    pattern="pinger(?: |$)(.*)",
+    pattern="dns(?: |$)(.*)",
 )
 async def _(kst):
-    dns = await kst.client.get_text(kst)
-    if not dns:
-        return await kst.eor("`Provide a valid DNS or IP address!`", time=5)
+    link = await kst.client.get_text(kst)
+    if not link:
+        return await kst.eor("`Provide a valid URL!`", time=5)
+    if not is_url(link):
+        return await kst.eod("`URL must start with http:// or https://`")
     yy = await kst.eor("`Processing...`")
-    duration = Pinger(dns)
-    await yy.eor(f"• **DNS**: `{dns}`\n• **Ping Speed**: `{duration}`")
+    hostname = urlparse(link).hostname
+    if not hostname:
+        return await yy.eod("`Cannot extract hostname from URL.`")
+
+    async def resolve(record_type: str):
+        return await Fetch(
+            "https://cloudflare-dns.com/dns-query",
+            headers={"Accept": "application/dns-json"},
+            params={"name": hostname, "type": record_type},
+            re_json=True,
+        )
+
+    results = await asyncio.gather(*(resolve(i) for i in _DNS_RECORD_TYPES.values()), return_exceptions=True)
+    records = format_dns_records(results)
+    if records:
+        return await yy.eor(
+            f"<b>DNS Records {hostname}</b>\n{records}",
+            parts=True,
+            parse_mode="html",
+        )
+    await yy.eod(f"`No DNS records found for {hostname}.`")
+
+
+@kasta_cmd(
+    pattern="whois(?: |$)(.*)",
+)
+async def _(kst):
+    link = await kst.client.get_text(kst)
+    if not link:
+        return await kst.eor("`Provide a valid URL or IP address!`", time=5)
+    if not is_url(link) and not is_ipv4(link):
+        return await kst.eod("`URL must start with http:// or https://, or provide a valid IP address.`")
+    yy = await kst.eor("`Processing...`")
+    target = link if is_ipv4(link) else urlparse(link).hostname
+    if not target:
+        return await yy.eod("`Invalid URL or IP address!`")
+    res = await rdap(target)
+    if res:
+        return await yy.eor(
+            f"<b>WHOIS For {target}</b>\n{res}",
+            parts=True,
+            parse_mode="html",
+        )
+    await yy.eod(f"`Cannot resolve WHOIS information for {target}.`")
+
+
+async def rdap(target: str) -> str | None:
+    try:
+        ip = ipaddress.ip_address(target)
+    except ValueError:
+        ip = None
+    if ip:
+        bootstrap = f"https://data.iana.org/rdap/ipv{ip.version}.json"
+        key = "ip"
+    else:
+        bootstrap = "https://data.iana.org/rdap/dns.json"
+        key = "domain"
+    data = await Fetch(bootstrap, re_json=True)
+    if not data:
+        return
+    if ip:
+        base = next(
+            (
+                service[1][0]
+                for service in data.get("services", [])
+                if any(ip in ipaddress.ip_network(cidr) for cidr in service[0])
+            ),
+            None,
+        )
+    else:
+        tld = target.rsplit(".", 1)[-1].lower()
+        base = next(
+            (service[1][0] for service in data.get("services", []) if tld in service[0]),
+            None,
+        )
+    if not base:
+        return
+    res = await Fetch(
+        f"{base.rstrip('/')}/{key}/{target}",
+        re_json=True,
+    )
+    if not res:
+        return
+
+    def entities(value: dict) -> list[dict]:
+        result = []
+        for entity in value.get("entities", []):
+            result.append(entity)
+            result.extend(entities(entity))
+        return result
+
+    def vcard_value(entity: dict, field: str) -> str | None:
+        vcard = entity.get("vcardArray")
+        if not isinstance(vcard, list) or len(vcard) < 2:
+            return
+        for item in vcard[1]:
+            if not isinstance(item, list) or len(item) < 4:
+                continue
+            if item[0] != field:
+                continue
+            value = item[3]
+            if isinstance(value, list):
+                value = ", ".join(str(i) for i in value if i)
+            elif item[2] == "uri":
+                value = str(value)
+            if value:
+                return value
+
+    def entity_value(
+        roles: tuple[str, ...],
+        field: str,
+    ) -> str:
+        for entity in entities(res):
+            if set(roles) & set(entity.get("roles", [])):
+                value = vcard_value(entity, field)
+                if value:
+                    return value
+        return "?"
+
+    def entity_port43(roles: tuple[str, ...]) -> str:
+        for entity in entities(res):
+            if set(roles) & set(entity.get("roles", [])):
+                value = entity.get("port43")
+                if value:
+                    return str(value)
+        return "?"
+
+    def event_date(action: str) -> str:
+        for event in res.get("events", []):
+            if event.get("eventAction") == action:
+                value = event.get("eventDate")
+                if value:
+                    return str(value).split("T")[0]
+        return "?"
+
+    def add(label: str, value: object, code: bool = False) -> None:
+        if value is None:
+            return
+        value = str(value).strip()
+        if not value or value == "?":
+            return
+        if code:
+            value = f"<code>{value}</code>"
+        lines.append(f"<b>{label}</b>: {value}")
+
+    lines = []
+    if ip:
+        cidrs = res.get("cidr0_cidrs", [])
+        network = "?"
+        if cidrs:
+            cidr = cidrs[0]
+            prefix = cidr.get(f"v{ip.version}prefix")
+            length = cidr.get("length")
+            if prefix is not None and length is not None:
+                network = f"{prefix}/{length}"
+        add("IP", target, True)
+        add("Network", network, True)
+        start = res.get("startAddress")
+        end = res.get("endAddress")
+        if start and end:
+            add("Range", f"{start} - {end}", True)
+        add("Name", res.get("name"), True)
+        add("Country", res.get("country"), True)
+        add(
+            "Organization",
+            entity_value(
+                ("registrant", "administrative", "technical"),
+                "org",
+            ),
+        )
+        add("Type", res.get("type"), True)
+        add("Status", ", ".join(res.get("status", [])))
+        add(
+            "Email",
+            entity_value(
+                ("registrant", "administrative", "technical"),
+                "email",
+            ),
+            True,
+        )
+        add(
+            "Phone",
+            entity_value(
+                ("registrant", "administrative", "technical"),
+                "tel",
+            ),
+            True,
+        )
+        add(
+            "Address",
+            entity_value(
+                ("registrant", "administrative", "technical"),
+                "adr",
+            ),
+            True,
+        )
+        add("Abuse Email", entity_value(("abuse",), "email"), True)
+        add(
+            "WHOIS Server",
+            entity_port43(("registrant", "administrative", "technical", "abuse")),
+            True,
+        )
+    else:
+        registrar = entity_value(("registrar",), "fn")
+        registrar_id = "?"
+        for entity in entities(res):
+            if "registrar" not in entity.get("roles", []):
+                continue
+            for public_id in entity.get("publicIds", []):
+                if public_id.get("identifier"):
+                    registrar_id = str(public_id["identifier"])
+                    break
+            if registrar_id != "?":
+                break
+        add(
+            "Domain",
+            res.get("ldhName") or res.get("unicodeName") or target,
+            True,
+        )
+        add("ID", res.get("handle"), True)
+        add("Registrar", registrar)
+        add("Registrar ID", registrar_id, True)
+        add("Created", event_date("registration"), True)
+        add("Updated", event_date("last changed"), True)
+        add("Expires", event_date("expiration"), True)
+        add("Status", ", ".join(res.get("status", [])))
+        add(
+            "Email",
+            entity_value(
+                ("registrant", "administrative", "technical"),
+                "email",
+            ),
+            True,
+        )
+        add(
+            "Phone",
+            entity_value(
+                ("registrant", "administrative", "technical"),
+                "tel",
+            ),
+            True,
+        )
+        add(
+            "Address",
+            entity_value(
+                ("registrant", "administrative", "technical"),
+                "adr",
+            ),
+            True,
+        )
+        add("Abuse Email", entity_value(("abuse",), "email"), True)
+        add(
+            "WHOIS Server",
+            entity_port43(
+                (
+                    "registrant",
+                    "administrative",
+                    "technical",
+                    "registrar",
+                    "abuse",
+                )
+            ),
+            True,
+        )
+        nameservers = [
+            ns.get("ldhName") or ns.get("unicodeName")
+            for ns in res.get("nameservers", [])
+            if ns.get("ldhName") or ns.get("unicodeName")
+        ]
+        if nameservers:
+            lines.append("<b>Nameservers</b>:")
+            lines.extend(f"• <code>{ns}</code>" for ns in nameservers)
+
+        dnssec = res.get("secureDNS", {}).get("delegationSigned")
+        if dnssec is not None:
+            add("DNSSEC", "Yes" if dnssec else "No")
+    return "\n".join(lines)
+
+
+async def pinger(addr: str) -> str:
+    try:
+        import icmplib
+    except ImportError:
+        icmplib = import_lib(
+            lib_name="icmplib",
+            pkg_name="icmplib==3.0.4",
+        )
+    try:
+        res = await icmplib.async_ping(
+            addr,
+            count=1,
+            interval=0.1,
+            timeout=2,
+            privileged=False,
+        )
+        if res.is_alive:
+            return f"{res.avg_rtt}ms"
+    except BaseException:
+        pass
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "ping",
+            "-c",
+            "1",
+            addr,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        out, _ = await proc.communicate()
+        if proc.returncode == 0:
+            for i in out.decode().splitlines():
+                if "min/avg/max" in i:
+                    rtt = i.replace(" ", "").split("=")[-1].split("/")[1]
+                    return f"{rtt}ms"
+    except BaseException:
+        pass
+    return "--ms"
+
+
+async def myip() -> str:
+    ips = (
+        "https://checkip.amazonaws.com",
+        "https://ipinfo.io/ip",
+        "https://4.ident.me",
+    )
+    for url in ips:
+        res = await Fetch(url, re_content=True)
+        if res:
+            return res.decode("utf-8").strip()
+        continue
+    return "null"
+
+
+def format_dns_records(results: list) -> str:
+    records = []
+    seen = set()
+    for res in results:
+        if not isinstance(res, dict):
+            continue
+        for record in res.get("Answer", []):
+            record_type = record.get("type")
+            value = record.get("data")
+            if not record_type or not value:
+                continue
+            name = _DNS_RECORD_TYPES.get(record_type, str(record_type))
+            item = (name, value)
+            if item in seen:
+                continue
+            seen.add(item)
+            records.append(f"<b>{name}</b>: <code>{value}</code>")
+    return "\n".join(records)
 
 
 def is_ipv4(value: str) -> bool:
     try:
-        IPv4Address(value)
+        ipaddress.IPv4Address(value)
         return True
     except (
         ValueError,
@@ -283,21 +610,21 @@ def is_ipv4(value: str) -> bool:
 
 
 plugins_help["webtools"] = {
-    "{i}google [keywords]/[reply]": "Search with Google.",
-    "{i}bing [keywords]/[reply]": "Search with Bing.",
-    "{i}yahoo [keywords]/[reply]": "Search with Yahoo.",
-    "{i}duck [keywords]/[reply]": "Search with DuckDuckGo.",
-    "{i}yandex [keywords]/[reply]": "Search with Yandex.",
-    "{i}startpage [keywords]/[reply]": "Search with Startpage.",
-    "{i}brave [keywords]/[reply]": "Search with Brave.",
-    "{i}baidu [keywords]/[reply]": "Search with Baidu.",
-    "{i}short [link]/[reply]": "Shorten a link into `da.gd` link.",
-    "{i}unshort [short_link]/[reply]": "Reverse the shortened link to real link.",
-    "{i}ip": "Get my current public IP address.",
-    "{i}ipinfo [ip_address]/[reply]": "Get information a given IP address.",
-    "{i}speedtest": "Test my server speed by ookla.",
-    "{i}dns [link]/[reply]": "Fetch and return all DNS records for a given link.",
-    "{i}whois [link/ip]/[reply]": "Whois a given link or IP address.",
-    "{i}http [link]/[reply]": "Show HTTP Headers a given link.",
-    "{i}pinger [dns/ip]/[reply]": "Pings a specific DNS or IP address.",
+    "{pfx}google [keywords]/[reply]": "Search with Google.",
+    "{pfx}bing [keywords]/[reply]": "Search with Bing.",
+    "{pfx}yahoo [keywords]/[reply]": "Search with Yahoo.",
+    "{pfx}duck [keywords]/[reply]": "Search with DuckDuckGo.",
+    "{pfx}yandex [keywords]/[reply]": "Search with Yandex.",
+    "{pfx}startpage [keywords]/[reply]": "Search with Startpage.",
+    "{pfx}brave [keywords]/[reply]": "Search with Brave.",
+    "{pfx}baidu [keywords]/[reply]": "Search with Baidu.",
+    "{pfx}short [link]/[reply]": "Shorten a link.",
+    "{pfx}unshort [short_link]/[reply]": "Get the original link.",
+    "{pfx}ip": "Get my current public IP address.",
+    "{pfx}ipinfo [ip_address]/[reply]": "Get information about an IP address.",
+    "{pfx}speedtest": "Test my server speed with Ookla.",
+    "{pfx}pinger [dns/ip]/[reply]": "Ping a DNS or IP address.",
+    "{pfx}http [url]/[reply]": "Show HTTP headers for a URL.",
+    "{pfx}dns [url]/[reply]": "Get DNS records for a URL.",
+    "{pfx}whois [url/ip]/[reply]": "Get WHOIS information for a URL or IP address.",
 }

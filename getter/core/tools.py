@@ -14,7 +14,6 @@ from typing import Any
 import aiohttp
 
 from getter import DOWNLOAD_DIR, __version__
-from getter.logger import LOG
 
 from .utils import get_random_hex
 
@@ -84,7 +83,9 @@ async def Runner(cmd: str) -> tuple[str, str, int, int]:
 
 async def Fetch(
     url: str,
-    post: bool | None = None,
+    *,
+    head: bool = False,
+    post: bool = False,
     headers: dict | None = None,
     params: dict | None = None,
     json: dict | None = None,
@@ -103,7 +104,15 @@ async def Fetch(
         }
     async with aiohttp.ClientSession(headers=headers) as session:
         try:
-            if post:
+            if head:
+                resp = await session.head(
+                    url=url,
+                    params=params,
+                    ssl=ssl,
+                    raise_for_status=False,
+                    **args,
+                )
+            elif post:
                 resp = await session.post(
                     url=url,
                     json=json,
@@ -133,39 +142,6 @@ async def Fetch(
         return await resp.text()
 
 
-async def Carbon(
-    code: str,
-    url: str = "carbon/api/cook",
-    file_name: str = "carbon",
-    download: bool = False,
-    rayso: bool = False,
-    **kwargs: Any | None,
-) -> Any:
-    kwargs["code"] = code
-    if rayso:
-        url = "rayso/api"
-        kwargs["title"] = kwargs.get("title", "getter")
-        kwargs["theme"] = kwargs.get("theme", "raindrop")
-        kwargs["darkMode"] = kwargs.get("darkMode", True)
-        kwargs["background"] = kwargs.get("background", True)
-    res = await Fetch(
-        url,
-        post=True,
-        json=kwargs,
-        re_content=True,
-    )
-    if not res:
-        return
-    file_name = f"{file_name}_{get_random_hex()}.jpg"
-    if not download:
-        file = BytesIO(res)
-        file.name = file_name
-    else:
-        file = DOWNLOAD_DIR / file_name
-        await asyncio.to_thread(file.write_bytes, res)
-    return file
-
-
 async def Screenshot(
     video: str,
     duration: int,
@@ -177,50 +153,33 @@ async def Screenshot(
     return output if await asyncio.to_thread(Path(output).is_file) else None
 
 
-async def MyIp() -> str:
-    ips = (
-        "https://checkip.amazonaws.com",
-        "https://ipinfo.io/ip",
-        "https://4.ident.me",
+async def CodeImage(
+    code: str,
+    download: bool = False,
+) -> BytesIO | Path | None:
+    url = "https://ray.tinte.dev/api/v1/screenshot"
+    data = {
+        "code": code,
+        "theme": "one-hunter",
+        "mode": "dark",
+        "background": "sunset",
+        "fontSize": 24,
+        "padding": 24,
+        "scale": 1,
+    }
+    r = await Fetch(
+        url,
+        post=True,
+        json=data,
+        re_content=True,
     )
-    for url in ips:
-        res = await Fetch(url, re_content=True)
-        if res:
-            return res.decode("utf-8").strip()
-        continue
-    return "null"
-
-
-def Pinger(addr: str) -> str:
-    try:
-        import icmplib
-    except ImportError:
-        icmplib = import_lib(
-            lib_name="icmplib",
-            pkg_name="icmplib==3.0.4",
-        )
-    try:
-        res = icmplib.ping(
-            addr,
-            count=1,
-            interval=0.1,
-            timeout=2,
-            privileged=False,
-        )
-        return f"{res.avg_rtt}ms"
-    except BaseException:
-        try:
-            out = subprocess.check_output(["ping", "-c", "1", addr]).decode()
-            out = out.split("\n")
-            rtt_line = ""
-            for _ in out:
-                if "min/avg/max" in _:
-                    rtt_line = _
-                    break
-            rtt_line = rtt_line.replace(" ", "")
-            rtt_line = rtt_line.split("=")[-1]
-            rtt_line = rtt_line.split("/")[0]
-            return f"{rtt_line}ms"
-        except Exception as err:
-            LOG.warning(err)
-    return "--ms"
+    if not r:
+        return
+    file_name = f"code_{get_random_hex()}.png"
+    if not download:
+        file = BytesIO(r)
+        file.name = file_name
+    else:
+        file = DOWNLOAD_DIR / file_name
+        await asyncio.to_thread(file.write_bytes, r)
+    return file

@@ -16,7 +16,7 @@ from sqlalchemy import (
     update,
 )
 
-from .engine import Model, Session
+from .connector import Model, Session
 
 _GVAR_CACHE = cachebox.LRUCache(maxsize=0)
 
@@ -44,13 +44,12 @@ async def gvar(
     use_cache: bool = False,
 ) -> str | None:
     value = None
-    if use_cache and var in _GVAR_CACHE:
-        return _GVAR_CACHE.get(var)
+    if use_cache and (value := _GVAR_CACHE.get(var)) is not None:
+        return value
     async with Session() as s:
         try:
             data = (await s.execute(select(Globals).filter(Globals.var == var))).scalar_one_or_none()
             if data:
-                await s.refresh(data)
                 value = data.value
                 if use_cache and not _GVAR_CACHE.get(var):
                     _GVAR_CACHE[var] = value

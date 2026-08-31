@@ -30,15 +30,16 @@ from . import (
     plugins_help,
 )
 
-SG_BOT = "SangMata_BOT"
-CREATED_BOT = "creationdatebot"
-ROSE_BOT = "MissRose_bot"
 _TOTAL_BOT_CACHE = cachebox.TTLCache(maxsize=100, global_ttl=120)  # 2 mins
 _CREATED_CACHE = cachebox.TTLCache(maxsize=100, global_ttl=120)  # 2 mins
 _ROSE_LANG_CACHE = cachebox.LRUCache(maxsize=100)
 _ROSE_STAT_CACHE = cachebox.TTLCache(maxsize=100, global_ttl=120)  # 2 mins
 _SPAMWATCH_CACHE = cachebox.TTLCache(maxsize=100, global_ttl=120)  # 2 mins
 _CAS_CACHE = cachebox.TTLCache(maxsize=100, global_ttl=120)  # 2 mins
+
+SG_BOT = "SangMata_BOT"
+CREATED_BOT = "creationdatebot"
+ROSE_BOT = "MissRose_bot"
 
 
 @kasta_cmd(
@@ -788,14 +789,14 @@ async def get_cas_banned(user_id: int) -> bool:
 
 
 plugins_help["info"] = {
-    "{i}dc": "Finds the nearest datacenter from my server.",
-    "{i}sg [reply]/[in_private]/[username/mention/id]": "Get names and usernames by sangmata.",
-    "{i}created [reply]/[in_private]/[username/mention/id]": "Get account creation date. Per-id is cached in 2 minutes.",
-    "{i}total [reply]/[username/mention/id]": "Get total user messages.",
-    "{i}stats": "Show my profile stats. Total stickers and bots is cached in 2 minutes.",
-    "{i}id [reply]/[current/username]": "Get current chat/user/message id.",
-    "{i}cc [reply]/[in_private]/[username/mention/id]": "Get groups in common with user.",
-    "{i}info [reply]/[in_private]/[username/mention/id] [-f/full]": "Get information about user. Add '-f' to get full information including Rose Fban, SpamWatch, CAS Banned, GBanned, etc. Per-id is cached in 2 minutes.",
-    "{i}chatstats [reply]/[current/username]": "Get total messages by types.",
-    "{i}chatinfo [reply]/[current/username]": "Get details information about group/channel.",
+    "{pfx}dc": "Finds the nearest datacenter from my server.",
+    "{pfx}sg [reply]/[in_private]/[username/mention/id]": "Get names and usernames by sangmata.",
+    "{pfx}created [reply]/[in_private]/[username/mention/id]": "Get account creation date. Per-id is cached in 2 minutes.",
+    "{pfx}total [reply]/[username/mention/id]": "Get total user messages.",
+    "{pfx}stats": "Show my profile stats. Total stickers and bots is cached in 2 minutes.",
+    "{pfx}id [reply]/[current/username]": "Get current chat/user/message id.",
+    "{pfx}cc [reply]/[in_private]/[username/mention/id]": "Get groups in common with user.",
+    "{pfx}info [reply]/[in_private]/[username/mention/id] [-f/full]": "Get information about user. Add '-f' to get full information including Rose Fban, SpamWatch, CAS Banned, GBanned, etc. Per-id is cached in 2 minutes.",
+    "{pfx}chatstats [reply]/[current/username]": "Get total messages by types.",
+    "{pfx}chatinfo [reply]/[current/username]": "Get details information about group/channel.",
 }

@@ -9,12 +9,10 @@ from telethon.errors import UserBotError
 from telethon.tl import functions as fun, types as typ
 
 from . import (
-    DEVS,
-    NOCHATS,
+    Var,
     display_name,
     formatx_send,
     get_botlogs,
-    hl,
     kasta_cmd,
     mentionuser,
     normalize_chat_id,
@@ -23,7 +21,7 @@ from . import (
 
 
 @kasta_cmd(
-    pattern="(read|r)$",  # (read|r)$|([rR])$
+    pattern="(read|r)$",
     edited=True,
 )
 async def _(kst):
@@ -121,7 +119,7 @@ async def _(kst):
             return
         await kst.sod(f"`Purged {total}`", time=3, silent=True)
     else:
-        await kst.eod(f"Reply my message to purgeme or use like `{hl}purgeme [number]`")
+        await kst.eod(f"Reply my message to purgeme or use like `{Var.PREFIX}purgeme [number]`")
 
 
 @kasta_cmd(
@@ -206,7 +204,7 @@ async def _(kst):
     yy = await kst.eor("`Processing...`")
     async for x in ga.iter_dialogs(ignore_pinned=True):
         if x.is_user and not x.entity.bot:
-            if x.entity.is_self or x.id in DEVS:
+            if x.entity.is_self or x.id in Var.DEVS:
                 continue
             try:
                 await ga.delete_dialog(x.id, revoke=True)
@@ -236,7 +234,7 @@ async def _(kst):
                 or isinstance(x.entity, typ.Chat)
             )
         ):
-            if x.id in DEVS:
+            if x.id in Var.DEVS:
                 continue
             if await ga.mute_chat(x.id):
                 await asyncio.sleep(0.4)
@@ -343,7 +341,7 @@ async def _(kst):
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
         return await yy.eor("`Cannot report to myself.`", time=3)
-    if user.id in DEVS:
+    if user.id in Var.DEVS:
         return await yy.eor("`Forbidden to report our awesome developers.`", time=3)
     is_reported = False
     try:
@@ -419,7 +417,7 @@ async def _(kst):
 @kasta_cmd(
     pattern="kickme(?: |$)(.*)",
     no_chats=True,
-    chats=NOCHATS,
+    chats=Var.NOCHATS,
 )
 @kasta_cmd(
     pattern="gkickme(?: |$)(.*)",
@@ -486,29 +484,29 @@ async def _(kst):
 
 
 plugins_help["chat"] = {
-    "{i}read|{i}r": "Marks messages as read in current chat also clear mentions and reactions.",
-    "{i}del|{i}d|d|D|del|Del": "Delete the replied message.",
-    "{i}purge|{i}pg [reply]": "Purge messages from the replied message. This action cannot be undone!",
-    "{i}purgeme|{i}pgm [number]/[reply]": "Purge my messages from given number or from replied message.",
-    "{i}purgeall [reply]": "Delete all messages from replied user. This cannot be undone!",
-    "{i}copy [reply]": "Copy the replied message.",
-    "{i}nodraft": "Clear all drafts.",
-    "{i}noghost": "Delete all chats with deleted account users/bots.",
-    "{i}cleanuser": "Delete all user chats.",
-    "{i}nouser": "Archive all chats with users.",
-    "{i}nobot": "Archive all chats with bots.",
-    "{i}nochannel": "Archive all channels.",
-    "{i}nogroup": "Archive all groups.",
-    "{i}sd [seconds] [text]/[reply]": "Make self-destructible messages after particular time.",
-    "{i}sdm [seconds] [text]/[reply]": "Same as sd command above but showing a note “self-destruct message in ? seconds”.",
-    "{i}send|{i}dm [username/id] [text]/[reply]": "Send message to user or chat.",
-    "{i}saved [reply]": "Save that replied message to Saved Messages or BOTLOGS for savedl.",
-    "{i}fsaved [reply]": "Forward that replied message to Saved Messages or BOTLOGS for fsavedl.",
-    "{i}react [reply]": "Give a random react to replied message.",
-    "{i}report_spam [reply]/[in_private]/[username/mention/id]": "Report spam message from user.",
-    "{i}invite [username/id]": "Add user to the current group/channel.",
-    "{i}kickme [current/chat_id/username]/[reply]": "Leaves myself from group/channel.",
-    "{i}archive [current/chat_id/username]/[reply]": "Move the groups/channels to archive folder.",
-    "{i}unarchive [current/chat_id/username]/[reply]": "UnArchive the groups/channels from archive folder.",
-    "{i}delchannel [current/chat_id/username]/[reply]": "Delete your group/channel.",
+    "{pfx}read|{pfx}r": "Marks messages as read in current chat also clear mentions and reactions.",
+    "{pfx}del|{pfx}d|d|D|del|Del": "Delete the replied message.",
+    "{pfx}purge|{pfx}pg [reply]": "Purge messages from the replied message. This action cannot be undone!",
+    "{pfx}purgeme|{pfx}pgm [number]/[reply]": "Purge my messages from given number or from replied message.",
+    "{pfx}purgeall [reply]": "Delete all messages from replied user. This cannot be undone!",
+    "{pfx}copy [reply]": "Copy the replied message.",
+    "{pfx}nodraft": "Clear all drafts.",
+    "{pfx}noghost": "Delete all chats with deleted account users/bots.",
+    "{pfx}cleanuser": "Delete all user chats.",
+    "{pfx}nouser": "Archive all chats with users.",
+    "{pfx}nobot": "Archive all chats with bots.",
+    "{pfx}nochannel": "Archive all channels.",
+    "{pfx}nogroup": "Archive all groups.",
+    "{pfx}sd [seconds] [text]/[reply]": "Make self-destructible messages after particular time.",
+    "{pfx}sdm [seconds] [text]/[reply]": "Same as sd command above but showing a note “self-destruct message in ? seconds”.",
+    "{pfx}send|{pfx}dm [username/id] [text]/[reply]": "Send message to user or chat.",
+    "{pfx}saved [reply]": "Save that replied message to Saved Messages or BOTLOGS for savedl.",
+    "{pfx}fsaved [reply]": "Forward that replied message to Saved Messages or BOTLOGS for fsavedl.",
+    "{pfx}react [reply]": "Give a random react to replied message.",
+    "{pfx}report_spam [reply]/[in_private]/[username/mention/id]": "Report spam message from user.",
+    "{pfx}invite [username/id]": "Add user to the current group/channel.",
+    "{pfx}kickme [current/chat_id/username]/[reply]": "Leaves myself from group/channel.",
+    "{pfx}archive [current/chat_id/username]/[reply]": "Move the groups/channels to archive folder.",
+    "{pfx}unarchive [current/chat_id/username]/[reply]": "UnArchive the groups/channels from archive folder.",
+    "{pfx}delchannel [current/chat_id/username]/[reply]": "Delete your group/channel.",
 }

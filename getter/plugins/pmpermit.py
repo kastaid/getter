@@ -13,8 +13,7 @@ from telethon.tl import functions as fun, types as typ
 
 from . import (
     DEFAULT_GUCAST_BLACKLIST,
-    DEVS,
-    TZ,
+    Var,
     all_allow,
     allow_user,
     deny_all,
@@ -36,13 +35,10 @@ from . import (
     sgvar,
 )
 
-pmtotal_default = 3
-pmbye_default = "~ You are automatically {mode}!"
-pmmsg_default = """Hello {fullname} this is an automated message,
-Please wait until you got allowed to PM,
-And please Do Not Spam!
-
-You have {warn}/{total} warns until you got {mode}!"""
+_PMPERMIT_SEM = asyncio.Semaphore(2)
+_PMBYE_CACHE = cachebox.TTLCache(maxsize=1, global_ttl=60)  # 1 mins
+_PMMSG_CACHE = cachebox.TTLCache(maxsize=1, global_ttl=60)  # 1 mins
+_PMTOTAL_CACHE = cachebox.TTLCache(maxsize=1, global_ttl=60)  # 1 mins
 _TORM = {
     "`": "",
     "*": "",
@@ -50,10 +46,14 @@ _TORM = {
     "-": "",
     "~": "",
 }
-_PMPERMIT_SEM = asyncio.Semaphore(2)
-_PMBYE_CACHE = cachebox.TTLCache(maxsize=1, global_ttl=60)  # 1 mins
-_PMMSG_CACHE = cachebox.TTLCache(maxsize=1, global_ttl=60)  # 1 mins
-_PMTOTAL_CACHE = cachebox.TTLCache(maxsize=1, global_ttl=60)  # 1 mins
+
+pmtotal_default = 3
+pmbye_default = "~ You are automatically {mode}!"
+pmmsg_default = """Hello {fullname} this is an automated message,
+Please wait until you got allowed to PM,
+And please Do Not Spam!
+
+You have {warn}/{total} warns until you got {mode}!"""
 
 
 async def PMLogs(kst):
@@ -89,7 +89,7 @@ async def PMPermit(kst):
             attempts=1,
             fallbacks=DEFAULT_GUCAST_BLACKLIST,
         )
-        if user.id in {*DEVS, *GUCAST_BLACKLIST}:
+        if user.id in {*Var.DEVS, *GUCAST_BLACKLIST}:
             return
         if await is_allow(user.id, use_cache=True):
             return
@@ -104,7 +104,7 @@ async def PMPermit(kst):
                 await set_col("pmwarns", PMWARN, NESLAST)
             if is_pmlog:
                 mention = mentionuser(user.id, display_name(user), width=70)
-                antipmt = r"\\**#Anti_PM**//"
+                antipmt = "**#Anti_PM**"
                 antipmt += f"\nUser {mention} [`{user.id}`] has messaged you and got "
             await ga.report_spam(user.id)
             await ga.block(user.id)
@@ -191,14 +191,14 @@ async def PMPermit(kst):
                 await ga.block(user.id)
                 if is_pmlog:
                     warnt += "blocked due to spamming in PM !!"
-                    await sendlog(r"\\**#Blocked**//" + warnt)
+                    await sendlog("**#Blocked**" + warnt)
             else:
                 await ga.mute_chat(user.id)
                 await asyncio.sleep(0.4)
                 await ga.archive(user.id)
                 if is_pmlog:
                     warnt += "archived due to spamming in PM !!"
-                    await sendlog(r"\\**#Archived**//" + warnt)
+                    await sendlog("**#Archived**" + warnt)
             del PMWARN[towarn]
             return await set_col("pmwarns", PMWARN, NESLAST)
         if "_pmmsg" in _PMMSG_CACHE:
@@ -237,7 +237,7 @@ async def PMPermit(kst):
         )
         """
         if is_pmlog:
-            newmsgt = r"\\**#New_Message**//"
+            newmsgt = "**#New_Message**"
             newmsgt += f"\nUser {mention} [`{user.id}`] has messaged you with **{warn}/{ratelimit}** warns!"
             await sendlog(newmsgt)
             await asyncio.sleep(1)
@@ -324,11 +324,11 @@ async def _(kst):
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
         return await yy.eor("`Cannot allow to myself.`", time=3)
-    if user.id in DEVS:
+    if user.id in Var.DEVS:
         return await yy.eor("`Our devs auto allowed!`", time=3)
     if await is_allow(user.id):
         return await yy.eor("`User is already Allowed.`", time=4)
-    date = datetime.now(TZ).timestamp()
+    date = datetime.now(Var.TZ).timestamp()
     await allow_user(user.id, date, reason)
     text = f"<b><u>User {display_name(user)} allowed to PM!</u></b>\n"
     text += "<b>Date</b>: <code>{}</code>\n".format(datetime.fromtimestamp(date).strftime("%Y-%m-%d"))
@@ -555,7 +555,7 @@ async def _(kst):
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
         return await yy.eor("`Cannot block to myself.`", time=3)
-    if user.id in DEVS:
+    if user.id in Var.DEVS:
         return await yy.eor("`Forbidden to block our awesome developers.`", time=3)
     is_reported = False
     await ga.unblock(user.id)
@@ -640,7 +640,7 @@ async def _(kst):
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
         return await yy.eor("`Cannot archive to myself.`", time=3)
-    if user.id in DEVS:
+    if user.id in Var.DEVS:
         return await yy.eor("`Forbidden to archive our awesome developers.`", time=3)
     await ga.mute_chat(user.id)
     await asyncio.sleep(0.4)
@@ -686,7 +686,7 @@ async def _(kst):
 @kasta_cmd(
     pattern="delete$",
     no_chats=True,
-    chats=DEVS,
+    chats=Var.DEVS,
     private_only=True,
 )
 async def _(kst):
@@ -721,25 +721,25 @@ async def handle_pmpermit() -> None:
 
 
 plugins_help["pmpermit"] = {
-    "{i}pmguard [yes/no/on/off]": "Switch the pmpermit plugin on or off. Default: off",
-    "{i}pmlog [yes/no/on/off] [-m/media]": "When switch on all messages from user will forward to BOTLOGS! Add '-m' to forward media only! Default: off",
-    "{i}a|{i}allow|{i}acc [reply]/[in_private]/[username/mention/id]": "Allow user to PM.",
-    "{i}de|{i}deny [reply]/[in_private]/[username/mention/id]": "Delete user from allowed list.",
-    "{i}listpm": "List all allowed users to PM.",
-    "{i}denyall": "Delete all allowed users.",
-    "{i}pmblock [yes/no/on/off]": "When switch on user got reported as spam and blocked, when off user got archived. Default: off",
-    "{i}antipm [yes/no/on/off] [-d/delete]": "When switch on user got reported as spam and blocked! Except users who are not in contact book and allowed users. Add '-d' to delete the chat too (delete chat cannot be undone)! Default: off",
-    "{i}setpmbye [text]/[reply]": "Sets the goodbye message or get current text. Supports markdown with format in below.",
-    "{i}setpmmsg [text]/[reply]": "Sets the automated message or get current text. Supports markdown with format in below.",
-    "{i}setpmtotal [number]": f"Sets the total message will repeat before archived or blocked. Number must be greater than 1. Default: {pmtotal_default}",
-    "{i}resetpmbye": "Reset the pmbye to default.",
-    "{i}resetpmmg": "Reset the pmmsg to default.",
-    "{i}resetpmtotal": "Reset the pmtotal to default.",
-    "{i}block [reply]/[in_private]/[username/mention/id]": "Block user and report them as spam.",
-    "{i}unblock [reply]/[in_private]/[username/mention/id]": "Unblock user.",
-    "{i}move [reply]/[in_private]/[username/mention/id]": "Mute user then move to archive folder.",
-    "{i}unmove [reply]/[in_private]/[username/mention/id]": "Unarchive user but still muted.",
-    "{i}delete": """Delete and revoke current PM also for bots but exclude myself. This action cannot be undone!
+    "{pfx}pmguard [yes/no/on/off]": "Switch the pmpermit plugin on or off. Default: off",
+    "{pfx}pmlog [yes/no/on/off] [-m/media]": "When switch on all messages from user will forward to BOTLOGS! Add '-m' to forward media only! Default: off",
+    "{pfx}a|{pfx}allow|{pfx}acc [reply]/[in_private]/[username/mention/id]": "Allow user to PM.",
+    "{pfx}de|{pfx}deny [reply]/[in_private]/[username/mention/id]": "Delete user from allowed list.",
+    "{pfx}listpm": "List all allowed users to PM.",
+    "{pfx}denyall": "Delete all allowed users.",
+    "{pfx}pmblock [yes/no/on/off]": "When switch on user got reported as spam and blocked, when off user got archived. Default: off",
+    "{pfx}antipm [yes/no/on/off] [-d/delete]": "When switch on user got reported as spam and blocked! Except users who are not in contact book and allowed users. Add '-d' to delete the chat too (delete chat cannot be undone)! Default: off",
+    "{pfx}setpmbye [text]/[reply]": "Sets the goodbye message or get current text. Supports markdown with format in below.",
+    "{pfx}setpmmsg [text]/[reply]": "Sets the automated message or get current text. Supports markdown with format in below.",
+    "{pfx}setpmtotal [number]": f"Sets the total message will repeat before archived or blocked. Number must be greater than 1. Default: {pmtotal_default}",
+    "{pfx}resetpmbye": "Reset the pmbye to default.",
+    "{pfx}resetpmmg": "Reset the pmmsg to default.",
+    "{pfx}resetpmtotal": "Reset the pmtotal to default.",
+    "{pfx}block [reply]/[in_private]/[username/mention/id]": "Block user and report them as spam.",
+    "{pfx}unblock [reply]/[in_private]/[username/mention/id]": "Unblock user.",
+    "{pfx}move [reply]/[in_private]/[username/mention/id]": "Mute user then move to archive folder.",
+    "{pfx}unmove [reply]/[in_private]/[username/mention/id]": "Unarchive user but still muted.",
+    "{pfx}delete": """Delete and revoke current PM also for bots but exclude myself. This action cannot be undone!
 
 **Notes**:
 - The pmguard, allow, deny, denyall, pmblock, and antipm commands are automatically reboot after changes, this to apply changes!

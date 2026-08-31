@@ -16,12 +16,12 @@ from .collections_db import (
     get_cols,
     set_col,
 )
-from .engine import (
+from .connector import (
     Model,
     Session,
-    db_connect,
-    db_disconnect,
-    db_size,
+    database_connect,
+    database_disconnect,
+    database_size,
 )
 from .gban_db import (
     add_gban,
