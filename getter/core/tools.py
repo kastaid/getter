@@ -83,6 +83,7 @@ async def Runner(cmd: str) -> tuple[str, str, int, int]:
 
 async def Fetch(
     url: str,
+    *,
     head: bool = False,
     post: bool = False,
     headers: dict | None = None,
@@ -141,39 +142,6 @@ async def Fetch(
         return await resp.text()
 
 
-async def Carbon(
-    code: str,
-    url: str = "carbon/api/cook",
-    file_name: str = "carbon",
-    download: bool = False,
-    rayso: bool = False,
-    **kwargs: Any | None,
-) -> Any:
-    kwargs["code"] = code
-    if rayso:
-        url = "rayso/api"
-        kwargs["title"] = kwargs.get("title", "getter")
-        kwargs["theme"] = kwargs.get("theme", "raindrop")
-        kwargs["darkMode"] = kwargs.get("darkMode", True)
-        kwargs["background"] = kwargs.get("background", True)
-    res = await Fetch(
-        url,
-        post=True,
-        json=kwargs,
-        re_content=True,
-    )
-    if not res:
-        return
-    file_name = f"{file_name}_{get_random_hex()}.jpg"
-    if not download:
-        file = BytesIO(res)
-        file.name = file_name
-    else:
-        file = DOWNLOAD_DIR / file_name
-        await asyncio.to_thread(file.write_bytes, res)
-    return file
-
-
 async def Screenshot(
     video: str,
     duration: int,
@@ -183,3 +151,35 @@ async def Screenshot(
     cmd = f"ffmpeg -v quiet -ss {ttl} -i {video} -vframes 1 {output}"
     await Runner(cmd)
     return output if await asyncio.to_thread(Path(output).is_file) else None
+
+
+async def CodeImage(
+    code: str,
+    download: bool = False,
+) -> BytesIO | Path | None:
+    url = "https://ray.tinte.dev/api/v1/screenshot"
+    data = {
+        "code": code,
+        "theme": "one-hunter",
+        "mode": "dark",
+        "background": "sunset",
+        "fontSize": 24,
+        "padding": 24,
+        "scale": 1,
+    }
+    r = await Fetch(
+        url,
+        post=True,
+        json=data,
+        re_content=True,
+    )
+    if not r:
+        return
+    file_name = f"code_{get_random_hex()}.png"
+    if not download:
+        file = BytesIO(r)
+        file.name = file_name
+    else:
+        file = DOWNLOAD_DIR / file_name
+        await asyncio.to_thread(file.write_bytes, r)
+    return file

@@ -63,8 +63,8 @@ _GDEMOTE_LOCK = asyncio.Lock()
 _GCAST_LOCK = asyncio.Lock()
 _GUCAST_LOCK = asyncio.Lock()
 
-gban_text = r"""
-\\<b>#GBanned</b>// User {} in {}-{}={} chats!
+gban_text = """
+<b>#GBanned</b> User {} in {}-{}={} chats!
 <b>Date</b>: <code>{}</code>
 <b>Taken</b>: <code>{}</code>
 <b>Reported</b>: <code>{}</code>
@@ -72,53 +72,53 @@ gban_text = r"""
 
 <i>Added to GBanned_Watch.</i>
 """
-ungban_text = r"""
-\\<b>#UnGBanned</b>// User {} in {}-{}={} chats!
+ungban_text = """
+<b>#UnGBanned</b> User {} in {}-{}={} chats!
 <b>Taken</b>: <code>{}</code>
 
 <i>Wait for 1 minutes before released.</i>
 """
-gmute_text = r"""
-\\<b>#GMuted</b>// User {} in {}-{}={} groups!
+gmute_text = """
+<b>#GMuted</b> User {} in {}-{}={} groups!
 <b>Date</b>: <code>{}</code>
 <b>Taken</b>: <code>{}</code>
 <b>Reason</b>: {}
 
 <i>Added to GMuted_Watch.</i>
 """
-ungmute_text = r"""
-\\<b>#UnGMuted</b>// User {} in {}-{}={} groups!
+ungmute_text = """
+<b>#UnGMuted</b> User {} in {}-{}={} groups!
 <b>Taken</b>: <code>{}</code>
 
 <i>Wait for 1 minutes before released.</i>
 """
-gdel_text = r"""
-\\<b>#GDeleted</b>// User {} in chats!
+gdel_text = """
+<b>#GDeleted</b> User {} in chats!
 <b>Date</b>: <code>{}</code>
 <b>Reason</b>: {}
 """
-ungdel_text = r"""
-\\<b>#UnGDeleted</b>// User {} in chats!
+ungdel_text = """
+<b>#UnGDeleted</b> User {} in chats!
 
 <i>Wait for 30 seconds before released.</i>
 """
-reason_text = r"""
-\\<b>#{}</b>// Reason for {} updated!
+reason_text = """
+<b>#{}</b> Reason for {} updated!
 <b>Previous Reason</b>: <pre>{}</pre>
 <b>New Reason</b>: <pre>{}</pre>
 """
-gkick_text = r"""
-\\<b>#GKicked</b>// User {} in {}-{}={} chats!
+gkick_text = """
+<b>#GKicked</b> User {} in {}-{}={} chats!
 <b>Taken</b>: <code>{}</code>
 <b>Reason</b>: {}
 """
-gpromote_text = r"""
-\\<b>#GPromoted</b>// User {} in {}-{}={} {}!
+gpromote_text = """
+<b>#GPromoted</b> User {} in {}-{}={} {}!
 <b>Title</b>: <code>{}</code>
 <b>Taken</b>: <code>{}</code>
 """
-gdemote_text = r"""
-\\<b>#GDemoted</b>// User {} in {}-{}={} {}!
+gdemote_text = """
+<b>#GDemoted</b> User {} in {}-{}={} {}!
 <b>Taken</b>: <code>{}</code>
 """
 
@@ -845,7 +845,7 @@ async def _(kst):
                         error += "• " + str(err1) + "\n"
                         failed += 1
         taken = format_time(monotonic() - start_time)
-        text = r"\\**#Gcast**// {} in {}-{}={} {}.".format(
+        text = "**#Gcast** {} in {}-{}={} {}.".format(
             taken,
             success + failed,
             failed,
@@ -856,7 +856,7 @@ async def _(kst):
             with suppress(BaseException), BytesIO(str.encode(error)) as file:
                 file.name = "gcast_error.log"
                 await sendlog(
-                    r"\\**#Gcast**// Error Logs",
+                    "**#Gcast** Error Logs",
                     file=file,
                     force_document=True,
                     silent=True,
@@ -928,7 +928,7 @@ async def _(kst):
                     except BaseException:
                         failed += 1
         taken = format_time(monotonic() - start_time)
-        text = rf"\\**#Gucast**// {taken} in {success + failed}-{failed}={success} users."
+        text = f"**#Gucast** {taken} in {success + failed}-{failed}={success} users."
         await yy.eor(text)
 
 

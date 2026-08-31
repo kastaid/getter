@@ -130,7 +130,7 @@ async def _(kst):
         except BaseException:
             verif = None
         if not (verif or is_force):
-            return await yy.eor(rf"\\**#Getter**// `v{__version__} up-to-date as {UPSTREAM_BRANCH}`")
+            return await yy.eor(f"**#Getter** `v{__version__} up-to-date as {UPSTREAM_BRANCH}`")
         if not (mode or is_force):
             changelog = generate_changelog(repo, f"HEAD..origin/{UPSTREAM_BRANCH}")
             return await show_changelog(yy, changelog)
@@ -243,7 +243,7 @@ def verify(repo, diff) -> bool:
 def generate_changelog(repo, diff) -> str:
     chlog = ""
     rep = UPSTREAM_REPO.replace(".git", "")
-    ch = rf"\\<b>#Getter</b>// <b>v{__version__} New UPDATE available for <a href={rep}/tree/{UPSTREAM_BRANCH}>[{UPSTREAM_BRANCH}]</a></b>:"
+    ch = f"<b>#Getter</b> <b>v{__version__} New UPDATE available for <a href={rep}/tree/{UPSTREAM_BRANCH}>[{UPSTREAM_BRANCH}]</a></b>:"
     date = "%Y-%m-%d %H:%M:%S"
     for _ in repo.iter_commits(diff):
         chlog += f"\n\n<b>#{_.count()}</b> [<code>{_.committed_datetime.strftime(date)}</code>]\n<code>{_.hexsha}</code>\n<b><a href={rep.rstrip('/')}/commit/{_}>[{_.summary}]</a></b> ~ <code>{_.author}</code>"
@@ -259,7 +259,7 @@ async def show_changelog(kst, changelog) -> None:
         await asyncio.to_thread(file.write_text, changelog, encoding="utf-8")
         try:
             chlog = await kst.eor(
-                r"\\**#Getter**// View this file to see changelog.",
+                "**#Getter** View this file to see changelog.",
                 file=file,
                 force_document=True,
             )
@@ -275,7 +275,7 @@ async def Pulling(kst, state) -> None:
     if not Var.DEV_MODE:
         await force_pull()
         await update_packages()
-    up = rf"""\\**#Getter**// `{state}Updated Successfully...`
+    up = f"""**#Getter** `{state}Updated Successfully...`
 Wait for a few seconds, then run `{Var.PREFIX}ping` command."""
     yy = await kst.eor(up)
     try:
@@ -307,11 +307,11 @@ async def Pushing(kst, state, repo) -> None:
             msg = "HEROKU_API invalid or expired... Please re-check."
         else:
             msg = err
-        up = rf"""\\**#Getter**// **Heroku Error**:
+        up = f"""**#Getter** **Heroku Error**:
 `{msg}`"""
         return await kst.eor(up)
     await force_pull()
-    up = rf"""\\**#Getter**// `{state}Updated Successfully...`
+    up = f"""**#Getter** `{state}Updated Successfully...`
 Wait for a few minutes, then run `{Var.PREFIX}ping` command."""
     yy = await kst.eor(up)
     try:
@@ -331,7 +331,7 @@ Wait for a few minutes, then run `{Var.PREFIX}ping` command."""
         pass
     build = app.builds(order_by="created_at", sort="desc")[0]
     if build.status != "succeeded":
-        up = rf"""\\**#Getter**// `{state}Update Failed...`
+        up = f"""**#Getter** `{state}Update Failed...`
 Try again later or view logs for more info."""
         await kst.eod(up)
 

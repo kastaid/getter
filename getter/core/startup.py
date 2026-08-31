@@ -44,8 +44,8 @@ _warn = """<b>⚠️ DO NOT LEAVE OR,
 
 <b>Our Channel</b>: @kastaid
 """
-_restart_text = r"""
-\\**#Getter**// **is back and alive!**
+_restart_text = """
+**#Getter** **is back and alive!**
 ├  **Sudo**: `{}`
 ├  **PM-Guard**: `{}`
 ├  **PM-Logs**: `{}`
@@ -53,8 +53,8 @@ _restart_text = r"""
 ├  **Anti-PM**: `{}`
 └  **Version**: `{}`
 """
-_reboot_text = r"""
-\\**#Getter**// **is rebooted and applied!**
+_reboot_text = """
+**#Getter** **is rebooted and applied!**
 ├  **Sudo**: `{}`
 ├  **PM-Guard**: `{}`
 ├  **PM-Logs**: `{}`

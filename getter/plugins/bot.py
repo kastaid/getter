@@ -13,10 +13,8 @@ from typing import TYPE_CHECKING
 from telethon.tl import functions as fun
 
 from . import (
-    CARBON_PRESETS,
     DOWNLOAD_DIR,
     LOG_DIR,
-    Carbon,
     Root,
     StartTime,
     format_latency,
@@ -74,10 +72,10 @@ async def _(kst):
 
 
 @kasta_cmd(
-    pattern="logs?(?: |$)(heroku|carbon|open)?",
+    pattern="logs?(?: |$)(heroku|open)?",
 )
 @kasta_cmd(
-    pattern="glogs?(?: |$)(heroku|carbon|open)?(?: |$)(.*)",
+    pattern="glogs?(?: |$)(heroku|open)?(?: |$)(.*)",
     dev=True,
 )
 async def _(kst):
@@ -95,40 +93,19 @@ async def _(kst):
     yy = await kst.eor("`Getting...`", silent=True)
     if mode == "heroku":
         return await heroku_logs(yy)
-    if mode == "carbon":
-        theme = random.choice(tuple(CARBON_PRESETS))
-        backgroundColor = CARBON_PRESETS[theme]
-        for file in get_terminal_logs():
-            code = await asyncio.to_thread(file.read_text)
-            logs = await Carbon(
-                code.strip()[-2500:],
-                file_name="carbon-getter-log",
-                download=True,
-                fontFamily="Hack",
-                theme=theme,
-                backgroundColor=backgroundColor,
-                dropShadow=True,
-            )
-            if not logs:
-                continue
-            try:
-                await yy.eor(
-                    r"\\**#Getter**// Carbon Terminal Logs",
-                    file=logs,
-                    force_document=True,
-                )
-            except BaseException:
-                pass
-            await asyncio.to_thread(logs.unlink, missing_ok=True)
-    elif mode == "open":
+    if mode == "open":
         for file in get_terminal_logs():
             logs = await asyncio.to_thread(file.read_text)
-            await yy.sod(logs, parts=True, parse_mode=parse_pre)
+            await yy.sod(
+                logs,
+                parts=True,
+                parse_mode=parse_pre,
+            )
     else:
         try:
             for file in get_terminal_logs():
                 await yy.eor(
-                    r"\\**#Getter**// Terminal Logs",
+                    "**#Getter** Terminal Logs",
                     file=file,
                     force_document=True,
                 )
@@ -161,15 +138,15 @@ async def _(kst):
     except BaseException:
         pass
     if not hk.is_heroku:
-        await yy.eor(r"\\**#Getter**// `Restarting as locally...`")
+        await yy.eor("**#Getter** `Restarting as locally...`")
         return restart_app()
     try:
-        await yy.eor(r"\\**#Getter**// `Restarting as heroku... Wait for a few minutes.`")
+        await yy.eor("**#Getter** `Restarting as heroku... Wait for a few minutes.`")
         app = hk.heroku().app(hk.name)
         app.restart()
     except Exception as err:
         reply = await yy.eor(formatx_send(err), parse_mode="html")
-        await reply.reply(r"\\**#Getter**// `Restarting as locally...`", silent=True)
+        await reply.reply("**#Getter** `Restarting as locally...`", silent=True)
         restart_app()
 
 
@@ -203,7 +180,7 @@ async def heroku_logs(kst) -> None:
     file = DOWNLOAD_DIR / "getter-heroku.log"
     await asyncio.to_thread(file.write_text, logs, encoding="utf-8")
     await kst.eor(
-        r"\\**#Getter**// Heroku Logs",
+        "**#Getter** Heroku Logs",
         file=file,
         force_document=True,
     )
@@ -255,7 +232,6 @@ plugins_help["bot"] = {
     "{pfx}ping|ping|Ping": "Check how long it takes to ping.",
     "{pfx}logs": "Get the full terminal logs.",
     "{pfx}logs open": "Open logs as text message.",
-    "{pfx}logs carbon": "Get the carbonized terminal logs.",
     "{pfx}logs heroku": "Get the latest 100 lines of heroku logs.",
     "{pfx}restart": "Restart the bot.",
     "{pfx}sleep [seconds]/[reply]": "Sleep the bot in few seconds (max 30).",

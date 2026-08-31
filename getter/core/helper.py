@@ -103,7 +103,7 @@ async def get_botlogs() -> int:
 
 
 def formatx_send(err: Exception) -> str:
-    text = r"\\<b>#Getter_Error</b>//"
+    text = "<b>#Getter_Error</b>"
     text += f"\n<pre>{get_full_class_name(err)}: {html.escape(str(err))}</pre>"
     return text
 

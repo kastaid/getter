@@ -104,7 +104,7 @@ async def PMPermit(kst):
                 await set_col("pmwarns", PMWARN, NESLAST)
             if is_pmlog:
                 mention = mentionuser(user.id, display_name(user), width=70)
-                antipmt = r"\\**#Anti_PM**//"
+                antipmt = "**#Anti_PM**"
                 antipmt += f"\nUser {mention} [`{user.id}`] has messaged you and got "
             await ga.report_spam(user.id)
             await ga.block(user.id)
@@ -191,14 +191,14 @@ async def PMPermit(kst):
                 await ga.block(user.id)
                 if is_pmlog:
                     warnt += "blocked due to spamming in PM !!"
-                    await sendlog(r"\\**#Blocked**//" + warnt)
+                    await sendlog("**#Blocked**" + warnt)
             else:
                 await ga.mute_chat(user.id)
                 await asyncio.sleep(0.4)
                 await ga.archive(user.id)
                 if is_pmlog:
                     warnt += "archived due to spamming in PM !!"
-                    await sendlog(r"\\**#Archived**//" + warnt)
+                    await sendlog("**#Archived**" + warnt)
             del PMWARN[towarn]
             return await set_col("pmwarns", PMWARN, NESLAST)
         if "_pmmsg" in _PMMSG_CACHE:
@@ -237,7 +237,7 @@ async def PMPermit(kst):
         )
         """
         if is_pmlog:
-            newmsgt = r"\\**#New_Message**//"
+            newmsgt = "**#New_Message**"
             newmsgt += f"\nUser {mention} [`{user.id}`] has messaged you with **{warn}/{ratelimit}** warns!"
             await sendlog(newmsgt)
             await asyncio.sleep(1)

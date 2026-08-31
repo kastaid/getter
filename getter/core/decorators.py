@@ -177,7 +177,7 @@ def kasta_cmd(
                     chat_type = "group"
                 else:
                     chat_type = "channel"
-                ftext = r"\\<b>#Getter_Error</b>// Forward this to @kastaot"
+                ftext = "<b>#Getter_Error</b> Forward this to @kastaot"
                 ftext += "\n\n<b>Getter Version</b>: <code>" + str(__version__)
                 ftext += "</code>\n<b>Python Version</b>: <code>" + str(__pyversion__)
                 ftext += "</code>\n<b>Telethon Version</b>: <code>" + str(__tlversion__)
@@ -215,7 +215,7 @@ def kasta_cmd(
                         error_log = await getter_app.send_file(
                             send_to,
                             file=file,
-                            caption=r"\\<b>#Getter_Error</b>// Forward this to @kastaot",
+                            caption="<b>#Getter_Error</b> Forward this to @kastaot",
                             force_document=True,
                             reply_to=reply_to,
                             parse_mode="html",
@@ -229,7 +229,7 @@ def kasta_cmd(
                         parse_mode="html",
                     )
                 if kst.out and BOTLOGS and error_log:
-                    text = r"\\<b>#Getter_Error</b>//"
+                    text = "<b>#Getter_Error</b>"
                     text += "\n<b>An error details</b>: {}"
                     if kst.is_private:
                         text = text.format(error_log.msg_link)

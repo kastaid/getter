@@ -58,35 +58,6 @@ USERAGENTS = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.127 Safari/537.36",  # linux
 )
 
-CARBON_PRESETS = {
-    "blackboard": "#6676be",
-    "material": "#829faf",
-    "monokai": "#9e9e9e",
-    "night-owl": "#b96bff",
-    "nord": "#9ac5ef",
-    "oceanic-next": "#8db1c0",
-    "one-light": "#2b66df",
-    "seti": "#abb8c3",
-    "shades-of-purple": "#736fca",
-    "synthwave-84": "#9c77d9",
-    "solarized-light": "#bbbbbb",
-    "twilight": "#f9edd4",
-    "verminal": "#bd10e0",
-    "vscode": "#e1962f",
-    "zenburn": "#b6a291",
-}
-
-RAYSO_THEMES = (
-    "breeze",
-    "candy",
-    "crimson",
-    "falcon",
-    "meadow",
-    "midnight",
-    "raindrop",
-    "sunset",
-)
-
 LSFILES_MAP = {
     (".sh", ".bash", ".zsh", ".fish", ".bat"): "💻",
     (".py", ".pyc"): "🐍",

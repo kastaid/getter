@@ -16,11 +16,13 @@ from . import (
     DOWNLOAD_DIR,
     LSFILES_MAP,
     MAX_MESSAGE_LEN,
+    CodeImage,
     Runner,
     Var,
     format_bytes,
     formatx_send,
     get_blacklisted,
+    get_media_type,
     getter_app,
     kasta_cmd,
     parse_pre,
@@ -127,7 +129,7 @@ async def _(kst):
         file = DOWNLOAD_DIR / "ls.txt"
         await asyncio.to_thread(file.write_text, directory, encoding="utf-8")
         await yy.eor(
-            rf"\\**#Getter**// Directory {cat}",
+            f"**#Getter** Directory {cat}",
             file=file,
             force_document=True,
         )
@@ -236,6 +238,35 @@ async def _(kst):
 
 
 @kasta_cmd(
+    pattern=r"code(?:\s|$)([\s\S]*)",
+)
+async def _(kst):
+    match = kst.pattern_match.group(1)
+    if kst.is_reply:
+        reply = await kst.get_reply_message()
+        if reply.media and get_media_type(reply.media) == "text":
+            file = Path(await reply.download_media(file=DOWNLOAD_DIR))
+            code = await asyncio.to_thread(file.read_text)
+            await asyncio.to_thread(file.unlink, missing_ok=True)
+        else:
+            code = reply.message
+        if match:
+            code = match
+    else:
+        code = match
+    if not code:
+        return await kst.eod("`Reply to text message or readable file.`")
+    yy = await kst.eor("`Processing...`")
+    image = await CodeImage(code.strip())
+    if not image:
+        return await yy.eod("`Code Image API not responding.`")
+    await yy.eor(
+        file=image,
+        force_document=False,
+    )
+
+
+@kasta_cmd(
     pattern="devs$",
     for_dev=True,
 )
@@ -329,4 +360,5 @@ plugins_help["dev"] = {
 `grep -rnliF --color=auto kasta_cmd`
 `cat LICENSE`
 """,
+    "{pfx}code [code]/[reply (text or readable file)]": "Convert code into an image.",
 }
