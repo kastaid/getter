@@ -31,14 +31,14 @@ async def _(kst):
 
 
 plugins_help["fakeaction"] = {
-    "{i}ftyping [seconds]/[reply]": "Show Fake Typing action in current chat.",
-    "{i}faudio [seconds]/[reply]": "Show Fake Recording action in current chat.",
-    "{i}fvideo [seconds]/[reply]": "Show Fake Video action in current chat.",
-    "{i}fgame [seconds]/[reply]": "Show Fake Game Playing action in current chat.",
-    "{i}fsticker [seconds]/[reply]": "Show Fake Sticker Choosing action in current chat.",
-    "{i}flocation [seconds]/[reply]": "Show Fake Location action in current chat.",
-    "{i}fcontact [seconds]/[reply]": "Show Fake Contact Choosing action in current chat.",
-    "{i}fround [seconds]/[reply]": "Show Fake Video Message action in current chat.",
-    "{i}fphoto [seconds]/[reply]": "Show Fake Sending Photo action in current chat.",
-    "{i}fdocument [seconds]/[reply]": "Show Fake Sending Document action in current chat.",
+    "{pfx}ftyping [seconds]/[reply]": "Show Fake Typing action in current chat.",
+    "{pfx}faudio [seconds]/[reply]": "Show Fake Recording action in current chat.",
+    "{pfx}fvideo [seconds]/[reply]": "Show Fake Video action in current chat.",
+    "{pfx}fgame [seconds]/[reply]": "Show Fake Game Playing action in current chat.",
+    "{pfx}fsticker [seconds]/[reply]": "Show Fake Sticker Choosing action in current chat.",
+    "{pfx}flocation [seconds]/[reply]": "Show Fake Location action in current chat.",
+    "{pfx}fcontact [seconds]/[reply]": "Show Fake Contact Choosing action in current chat.",
+    "{pfx}fround [seconds]/[reply]": "Show Fake Video Message action in current chat.",
+    "{pfx}fphoto [seconds]/[reply]": "Show Fake Sending Photo action in current chat.",
+    "{pfx}fdocument [seconds]/[reply]": "Show Fake Sending Document action in current chat.",
 }

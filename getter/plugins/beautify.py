@@ -140,7 +140,7 @@ async def _(kst):
 
 
 plugins_help["beautify"] = {
-    "{i}carbon [theme] [text]/[reply (text or readable file)]": "Carboniz the text with choosing theme or random themes.",
-    "{i}rayso [theme] [text]/[reply (text or readable file)]": "Raysoniz the text with choosing theme or random themes.",
-    "{i}theme": "List all themes name.",
+    "{pfx}carbon [theme] [text]/[reply (text or readable file)]": "Carboniz the text with choosing theme or random themes.",
+    "{pfx}rayso [theme] [text]/[reply (text or readable file)]": "Raysoniz the text with choosing theme or random themes.",
+    "{pfx}theme": "List all themes name.",
 }

@@ -105,6 +105,6 @@ async def conv_tw(conv, link):
 
 
 plugins_help["downloader"] = {
-    "{i}tw [link]/[reply]": "Download high quality of video from Twitter.",
-    "{i}tt [link]/[reply]": "Download video from TikTok without watermark.",
+    "{pfx}tw [link]/[reply]": "Download high quality of video from Twitter.",
+    "{pfx}tt [link]/[reply]": "Download video from TikTok without watermark.",
 }

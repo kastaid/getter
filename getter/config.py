@@ -5,12 +5,14 @@
 from base64 import b64decode
 from os import getenv
 from string import ascii_lowercase
-from typing import Any, ClassVar
-from zoneinfo import ZoneInfo
+from typing import ClassVar
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from dotenv import find_dotenv, load_dotenv
+from dotenv import load_dotenv
 
-load_dotenv(find_dotenv())
+from . import Root
+
+load_dotenv(Root / ".env", override=True)
 
 
 def to_bool(value: str) -> bool:
@@ -33,26 +35,22 @@ class Var:
     STRING_SESSION: str = env("STRING_SESSION", "")
     DATABASE_URL: str = env("DATABASE_URL", "sqlite+aiosqlite:///./getter.db")
     BOTLOGS: int = int(env("BOTLOGS", "0"))
-    HANDLER: str = env("HANDLER", ".")
-    NO_HANDLER: bool = to_bool(env("NO_HANDLER", "false"))
-    TZ: str = env("TZ", "Asia/Jakarta")
     LANG_CODE: str = env("LANG_CODE", "id").lower()
     HEROKU_APP_NAME: str = env("HEROKU_APP_NAME", "")
     HEROKU_API: str = env("HEROKU_API", "")
-    TGCALL: Any = None
-    CALLS: ClassVar[set[int]] = set()
 
+    TIMEZONE: str = env("TIMEZONE", "Asia/Jakarta")
+    try:
+        TZ = ZoneInfo(TIMEZONE)
+    except ZoneInfoNotFoundError:
+        TIMEZONE = "Asia/Jakarta"
+        print("Unknown TIMEZONE, fallback to", TIMEZONE)
+        TZ = ZoneInfo(TIMEZONE)
 
-try:
-    TZ = ZoneInfo(Var.TZ)
-except BaseException:
-    _ = "Asia/Jakarta"
-    print("An error or unknown TZ :", Var.TZ)
-    print("Set default TZ as", _)
-    TZ = ZoneInfo(_)
-
-if not (
-    Var.HANDLER.lower().startswith(
+    HANDLER: str = env("HANDLER", ".")
+    NO_HANDLER: bool = to_bool(env("NO_HANDLER", "false"))
+    PREFIX = "" if NO_HANDLER else "".join(HANDLER.split())
+    if PREFIX and not PREFIX.lower().startswith(
         (
             "/",
             ".",
@@ -69,23 +67,11 @@ if not (
             "<",
             *tuple(ascii_lowercase),
         ),
-    )
-):
-    hl = "."
-    print(f"Your HANDLER [ {Var.HANDLER} ] is not supported.")
-    print("Set default HANDLER as dot [ .command ]")
-else:
-    hl = "".join(Var.HANDLER.split())
+    ):
+        PREFIX = "."
+        print("Invalid HANDLER, fallback to", PREFIX)
 
-BOTLOGS_CACHE: list[int] = []
-DEV_CMDS: dict[str, list[str]] = {}
-SUDO_CMDS: dict[str, list[str]] = {}
-INVITE_WORKER: dict[str, Any] = {}
-TESTER = {5215824623}
-# va, en
-DEVS = {*{int(_) for _ in b64decode("MjAwMzM2MTQxMCAxNzkyNDg2MTUw").split()}, *TESTER}
-NOCHATS = {
-    -1001699144606,
-    -1001700971911,
-}
-del b64decode, ascii_lowercase, ZoneInfo, load_dotenv, find_dotenv
+    DEV_CMDS: ClassVar[dict[str, list[str]]] = {}
+    SUDO_CMDS: ClassVar[dict[str, list[str]]] = {}
+    DEVS: ClassVar[set[int]] = {int(i) for i in b64decode("MjAwMzM2MTQxMCAxNzkyNDg2MTUw").split()}
+    NOCHATS: ClassVar[set[int]] = {-1004429397890}

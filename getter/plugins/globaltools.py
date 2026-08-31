@@ -16,8 +16,7 @@ from telethon.tl import functions as fun, types as typ
 from . import (
     DEFAULT_GCAST_BLACKLIST,
     DEFAULT_GUCAST_BLACKLIST,
-    DEVS,
-    TZ,
+    Var,
     add_gban,
     add_gdel,
     add_gmute,
@@ -51,6 +50,18 @@ from . import (
     set_gmute_reason,
     strip_emoji,
 )
+
+_GBAN_LOCK = asyncio.Lock()
+_UNGBAN_LOCK = asyncio.Lock()
+_GMUTE_LOCK = asyncio.Lock()
+_UNGMUTE_LOCK = asyncio.Lock()
+_GDEL_LOCK = asyncio.Lock()
+_UNGDEL_LOCK = asyncio.Lock()
+_GKICK_LOCK = asyncio.Lock()
+_GPROMOTE_LOCK = asyncio.Lock()
+_GDEMOTE_LOCK = asyncio.Lock()
+_GCAST_LOCK = asyncio.Lock()
+_GUCAST_LOCK = asyncio.Lock()
 
 gban_text = r"""
 \\<b>#GBanned</b>// User {} in {}-{}={} chats!
@@ -110,17 +121,6 @@ gdemote_text = r"""
 \\<b>#GDemoted</b>// User {} in {}-{}={} {}!
 <b>Taken</b>: <code>{}</code>
 """
-_GBAN_LOCK = asyncio.Lock()
-_UNGBAN_LOCK = asyncio.Lock()
-_GMUTE_LOCK = asyncio.Lock()
-_UNGMUTE_LOCK = asyncio.Lock()
-_GDEL_LOCK = asyncio.Lock()
-_UNGDEL_LOCK = asyncio.Lock()
-_GKICK_LOCK = asyncio.Lock()
-_GPROMOTE_LOCK = asyncio.Lock()
-_GDEMOTE_LOCK = asyncio.Lock()
-_GCAST_LOCK = asyncio.Lock()
-_GUCAST_LOCK = asyncio.Lock()
 
 
 @kasta_cmd(
@@ -148,11 +148,11 @@ async def _(kst):
             return await yy.eor("`Reply to message or add username/id.`", time=5)
         if user.id == ga.uid:
             return await yy.eor("`Cannot gban to myself.`", time=3)
-        if user.id in DEVS:
+        if user.id in Var.DEVS:
             return await yy.eor("`Forbidden to gban our awesome developers.`", time=3)
         if await is_gban(user.id):
             return await yy.eor("`User is already GBanned.`", time=4)
-        start_time, date = monotonic(), datetime.now(TZ).timestamp()
+        start_time, date = monotonic(), datetime.now(Var.TZ).timestamp()
         success, failed = 0, 0
         is_reported = False
         await ga.unblock(user.id)
@@ -303,11 +303,11 @@ async def _(kst):
             return await yy.eor("`Reply to message or add username/id.`", time=5)
         if user.id == ga.uid:
             return await yy.eor("`Cannot gmute to myself.`", time=3)
-        if user.id in DEVS:
+        if user.id in Var.DEVS:
             return await yy.eor("`Forbidden to gmute our awesome developers.`", time=3)
         if await is_gmute(user.id):
             return await yy.eor("`User is already GMuted.`", time=4)
-        start_time, date = monotonic(), datetime.now(TZ).timestamp()
+        start_time, date = monotonic(), datetime.now(Var.TZ).timestamp()
         success, failed = 0, 0
         if ga._dialogs:
             dialog = ga._dialogs
@@ -429,11 +429,11 @@ async def _(kst):
             return await yy.eor("`Reply to message or add username/id.`", time=5)
         if user.id == ga.uid:
             return await yy.eor("`Cannot gdel to myself.`", time=3)
-        if user.id in DEVS:
+        if user.id in Var.DEVS:
             return await yy.eor("`Forbidden to gdel our awesome developers.`", time=3)
         if await is_gdel(user.id):
             return await yy.eor("`User is already GDeleted.`", time=4)
-        date = datetime.now(TZ).timestamp()
+        date = datetime.now(Var.TZ).timestamp()
         await add_gdel(user.id, date, reason)
         text = gdel_text.format(
             mentionuser(user.id, display_name(user), width=15, html=True),
@@ -489,7 +489,7 @@ async def _(kst):
         return await yy.eor("`Reply to message or add username/id.`", time=5)
     if user.id == ga.uid:
         return await yy.eor(f"`Cannot set {cmd} reason to myself.`", time=3)
-    if user.id in DEVS:
+    if user.id in Var.DEVS:
         return await yy.eor(f"`Forbidden to set {cmd} reason for our awesome developers.`", time=3)
     if cmd == "gban":
         mode = "GBanned"
@@ -612,7 +612,7 @@ async def _(kst):
             return await yy.eor("`Reply to message or add username/id.`", time=5)
         if user.id == ga.uid:
             return await yy.eor("`Cannot gkick to myself.`", time=3)
-        if user.id in DEVS:
+        if user.id in Var.DEVS:
             return await yy.eor("`Forbidden to gkick our awesome developers.`", time=3)
         start_time, success, failed = monotonic(), 0, 0
         if ga._dialogs:
@@ -895,7 +895,7 @@ async def _(kst):
             attempts=6,
             fallbacks=DEFAULT_GUCAST_BLACKLIST,
         )
-        gblack = {*DEVS, *GUCAST_BLACKLIST, *(await jdata.gblacklist())}
+        gblack = {*Var.DEVS, *GUCAST_BLACKLIST, *(await jdata.gblacklist())}
         if ga._dialogs:
             dialog = ga._dialogs
         else:
@@ -977,7 +977,7 @@ async def gblacklisted(kst, mode):
         attempts=6,
         fallbacks=DEFAULT_GUCAST_BLACKLIST,
     )
-    system_gblack = {*GCAST_BLACKLIST, *DEVS, *GUCAST_BLACKLIST}
+    system_gblack = {*GCAST_BLACKLIST, *Var.DEVS, *GUCAST_BLACKLIST}
     gblack = await jdata.gblack()
     if mode == "add":
         if chat_id in system_gblack:
@@ -990,7 +990,7 @@ async def gblacklisted(kst, mode):
             title = "None"
         chatdata = {
             "title": title,
-            "date": datetime.now(TZ).timestamp(),
+            "date": datetime.now(Var.TZ).timestamp(),
         }
         gblack[str(chat_id)] = chatdata
         await set_col("gblack", gblack)
@@ -1036,31 +1036,31 @@ async def _(kst):
 
 
 plugins_help["globaltools"] = {
-    "{i}gban [reply]/[in_private]/[username/mention/id] [reason]": "Globally Banned user in groups/channels permanently, possible also blocked, archived and report them as spam. Watcher per-id is cached in 1 minutes.",
-    "{i}ungban [reply]/[in_private]/[username/mention/id]": "Release user from gbanwatch also force unban globally.",
-    "{i}gmute [reply]/[in_private]/[username/mention/id] [reason]": "Globally Muted user in groups permanently. Watcher per-id is cached in 1 minutes.",
-    "{i}ungmute [reply]/[in_private]/[username/mention/id]": "Release user from gmutewatch also force unmute globally.",
-    "{i}gdel [reply]/[in_private]/[username/mention/id] [reason]": "Globally Delete user messages in chats every send. Watcher per-id is cached in 30 seconds.",
-    "{i}ungdel [reply]/[in_private]/[username/mention/id]": "Release user from gdel.",
-    "{i}setgban [reply]/[in_private]/[username/mention/id] [reason]": "Update gban reason.",
-    "{i}setgmute [reply]/[in_private]/[username/mention/id] [reason]": "Update gmute reason.",
-    "{i}setgdel [reply]/[in_private]/[username/mention/id] [reason]": "Update gdel reason.",
-    "{i}isgban [reply]/[in_private]/[username/mention/id]": "Check if user is GBanned.",
-    "{i}isgmute [reply]/[in_private]/[username/mention/id]": "Check if user is GMuted.",
-    "{i}isgdel [reply]/[in_private]/[username/mention/id]": "Check if user is GDeleted.",
-    "{i}listgban [json]": "List all GBanned users.",
-    "{i}listgmute [json]": "List all GMuted users.",
-    "{i}listgdel [json]": "List all GDeleted users.",
-    "{i}gkick [reply]/[in_private]/[username/mention/id] [reason]": "Globally Kick user in groups/channels temporarily.",
-    "{i}gpromote [reply]/[in_private]/[username/mention/id] [channel/group] [title]": "Globally Promote user where you are admin. Choose type of chats to promote user by add 'channel' or 'group' or 'all' (default: all). The title must be less than 16 characters and emoji are not allowed, or use the default localized title.",
-    "{i}gdemote [reply]/[in_private]/[username/mention/id] [channel/group/all]": "Globally Demote user where you are admin.",
-    "{i}gcast [text]/[reply]": "Send broadcast messages to all groups.",
-    "{i}gadmincast [text]/[reply]": "Same as above, but only in where you are admin.",
-    "{i}gucast [text]/[reply]": "Send broadcast messages to all pm users.",
-    "{i}gblack [current/chat_id/username]": "Add chat to gblacklist and ignores global broadcast. Both for gcast and gucast!",
-    "{i}rmgblack [current/chat_id/username]": "Remove the chat from gblacklist.",
-    "{i}listgblack": "List all gblacklist chats.",
-    "{i}rmallgblack": """Remove all gblacklist chats.
+    "{pfx}gban [reply]/[in_private]/[username/mention/id] [reason]": "Globally Banned user in groups/channels permanently, possible also blocked, archived and report them as spam. Watcher per-id is cached in 1 minutes.",
+    "{pfx}ungban [reply]/[in_private]/[username/mention/id]": "Release user from gbanwatch also force unban globally.",
+    "{pfx}gmute [reply]/[in_private]/[username/mention/id] [reason]": "Globally Muted user in groups permanently. Watcher per-id is cached in 1 minutes.",
+    "{pfx}ungmute [reply]/[in_private]/[username/mention/id]": "Release user from gmutewatch also force unmute globally.",
+    "{pfx}gdel [reply]/[in_private]/[username/mention/id] [reason]": "Globally Delete user messages in chats every send. Watcher per-id is cached in 30 seconds.",
+    "{pfx}ungdel [reply]/[in_private]/[username/mention/id]": "Release user from gdel.",
+    "{pfx}setgban [reply]/[in_private]/[username/mention/id] [reason]": "Update gban reason.",
+    "{pfx}setgmute [reply]/[in_private]/[username/mention/id] [reason]": "Update gmute reason.",
+    "{pfx}setgdel [reply]/[in_private]/[username/mention/id] [reason]": "Update gdel reason.",
+    "{pfx}isgban [reply]/[in_private]/[username/mention/id]": "Check if user is GBanned.",
+    "{pfx}isgmute [reply]/[in_private]/[username/mention/id]": "Check if user is GMuted.",
+    "{pfx}isgdel [reply]/[in_private]/[username/mention/id]": "Check if user is GDeleted.",
+    "{pfx}listgban [json]": "List all GBanned users.",
+    "{pfx}listgmute [json]": "List all GMuted users.",
+    "{pfx}listgdel [json]": "List all GDeleted users.",
+    "{pfx}gkick [reply]/[in_private]/[username/mention/id] [reason]": "Globally Kick user in groups/channels temporarily.",
+    "{pfx}gpromote [reply]/[in_private]/[username/mention/id] [channel/group] [title]": "Globally Promote user where you are admin. Choose type of chats to promote user by add 'channel' or 'group' or 'all' (default: all). The title must be less than 16 characters and emoji are not allowed, or use the default localized title.",
+    "{pfx}gdemote [reply]/[in_private]/[username/mention/id] [channel/group/all]": "Globally Demote user where you are admin.",
+    "{pfx}gcast [text]/[reply]": "Send broadcast messages to all groups.",
+    "{pfx}gadmincast [text]/[reply]": "Same as above, but only in where you are admin.",
+    "{pfx}gucast [text]/[reply]": "Send broadcast messages to all pm users.",
+    "{pfx}gblack [current/chat_id/username]": "Add chat to gblacklist and ignores global broadcast. Both for gcast and gucast!",
+    "{pfx}rmgblack [current/chat_id/username]": "Remove the chat from gblacklist.",
+    "{pfx}listgblack": "List all gblacklist chats.",
+    "{pfx}rmallgblack": """Remove all gblacklist chats.
 
 **DWYOR ~ Do With Your Own Risk**""",
 }

@@ -36,13 +36,7 @@ from getter import (
     __tlversion__,
     __version__,
 )
-from getter.config import (
-    DEV_CMDS,
-    DEVS,
-    SUDO_CMDS,
-    Var,
-    hl,
-)
+from getter.config import Var
 
 from .constants import MAX_MESSAGE_LEN
 from .db import gvar
@@ -100,7 +94,7 @@ def kasta_cmd(
             kst.is_sudo = False
             if not kst.out:
                 sendby = kst.sender_id
-                if dev and sendby in DEVS:
+                if dev and sendby in Var.DEVS:
                     kst.is_dev = True
                 if sudo and not await gvar("_sudo", use_cache=True):
                     return
@@ -109,7 +103,7 @@ def kasta_cmd(
             chat = kst.chat
             chat_id = kst.chat_id
             myself = kst.client.uid
-            if myself not in DEVS:
+            if myself not in Var.DEVS:
                 KASTA_BLACKLIST = await get_blacklisted(
                     url="https://raw.githubusercontent.com/kastaid/resources/main/kastablacklist.py",
                     attempts=3,
@@ -122,7 +116,7 @@ def kasta_cmd(
                 not (for_dev or dev)
                 and "#noub" in chat.title.lower()
                 and not (chat.admin_rights or chat.creator)
-                and myself not in DEVS
+                and myself not in Var.DEVS
             ):
                 return
             if private_only and not kst.is_private:
@@ -262,7 +256,7 @@ def kasta_cmd(
             elif Var.NO_HANDLER:
                 handler = " "
             else:
-                handler = hl
+                handler = Var.PREFIX
             cmd = compile_pattern(
                 pattern=pattern,
                 handler=handler,
@@ -278,7 +272,7 @@ def kasta_cmd(
                     incoming=True if superuser else None,
                     outgoing=True if not superuser else None,
                     forwards=None if for_dev or dev else False,
-                    from_users=DEVS if for_dev or dev else (jdata.CACHE_DATA.get("sudo") if sudo else users),
+                    from_users=Var.DEVS if for_dev or dev else (jdata.CACHE_DATA.get("sudo") if sudo else users),
                     func=lambda e: (
                         not e.via_bot_id and func(e) and not (e.is_channel and e.chat.broadcast)
                         if func is not None
@@ -295,14 +289,14 @@ def kasta_cmd(
                 incoming=True if superuser else None,
                 outgoing=True if not superuser else None,
                 forwards=None if for_dev or dev else False,
-                from_users=DEVS if for_dev or dev else (jdata.CACHE_DATA.get("sudo") if sudo else users),
+                from_users=Var.DEVS if for_dev or dev else (jdata.CACHE_DATA.get("sudo") if sudo else users),
                 func=lambda e: not e.via_bot_id and func(e) if func is not None else not e.via_bot_id,
             ),
         )
         if (pattern and for_dev) or dev or sudo:
             matches = re.split(r"[$(?].*", pattern)
             cmd_name = "".join(matches) if not (for_dev or dev) else pattern
-            cmds = DEV_CMDS if for_dev or dev else SUDO_CMDS
+            cmds = Var.DEV_CMDS if for_dev or dev else Var.SUDO_CMDS
             file = Path(stack(0)[1].filename)
             if cmds.get(file.stem):
                 cmds[file.stem].append(cmd_name)

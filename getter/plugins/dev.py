@@ -13,12 +13,11 @@ from telethon.tl import functions, types
 
 from . import (
     DEFAULT_SHELL_BLACKLIST,
-    DEV_CMDS,
-    DEVS,
     DOWNLOAD_DIR,
     LSFILES_MAP,
     MAX_MESSAGE_LEN,
     Runner,
+    Var,
     format_bytes,
     formatx_send,
     get_blacklisted,
@@ -210,7 +209,7 @@ async def _(kst):
         attempts=6,
         fallbacks=DEFAULT_SHELL_BLACKLIST,
     )
-    if any(_.startswith(tuple(SHELL_BLACKLIST)) for _ in cmd.lower().split()) and kst.client.uid not in DEVS:
+    if any(_.startswith(tuple(SHELL_BLACKLIST)) for _ in cmd.lower().split()) and kst.client.uid not in Var.DEVS:
         return await yy.eod("`Command not allowed.`")
     stdout, stderr, ret, _ = await Runner(cmd)
     icon = "❯" if ret == 0 else "❮"
@@ -241,7 +240,9 @@ async def _(kst):
     for_dev=True,
 )
 async def _(kst):
-    cmds = "**Developer Commands**:\n" + "\n".join(["- {}: {}".format(x, ", ".join(y)) for x, y in DEV_CMDS.items()])
+    cmds = "**Developer Commands**:\n" + "\n".join(
+        ["- {}: {}".format(k, ", ".join(v)) for k, v in Var.DEV_CMDS.items()]
+    )
     await kst.sod(cmds)
 
 
@@ -294,11 +295,11 @@ async def aexec(code, event):
 
 
 plugins_help["dev"] = {
-    "{i}raw [reply]": "Get the raw data of message object.",
-    "{i}json [reply]": "Raw data with json format.",
-    "{i}ls [path]/[reply]": "View all files and folders inside a directory.",
-    "{i}eval [code]/[reply]": "Evaluate Python code.",
-    "{i}exec [code]/[reply]": """Execute Python code.
+    "{pfx}raw [reply]": "Get the raw data of message object.",
+    "{pfx}json [reply]": "Raw data with json format.",
+    "{pfx}ls [path]/[reply]": "View all files and folders inside a directory.",
+    "{pfx}eval [code]/[reply]": "Evaluate Python code.",
+    "{pfx}exec [code]/[reply]": """Execute Python code.
 **Exec Shortcuts**:
 `fun = telethon.tl.functions`
 `typ = telethon.tl.types`
@@ -308,7 +309,7 @@ plugins_help["dev"] = {
 `reply = await event.get_reply_message()`
 `chat = event.chat_id`
 """,
-    "{i}shell|{i}sh [command]/[reply]": """Run the linux commands.
+    "{pfx}shell|{pfx}sh [command]/[reply]": """Run the linux commands.
 **Shell Command Snippets**:
 `echo Hello, World!`
 `python3 --version`

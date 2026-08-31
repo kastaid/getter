@@ -250,13 +250,13 @@ def restart_app() -> None:
 
 
 plugins_help["bot"] = {
-    "{i}alive": "Just showing alive.",
-    "{i}uptime|{i}up": "Check current uptime.",
-    "{i}ping|ping|Ping": "Check how long it takes to ping.",
-    "{i}logs": "Get the full terminal logs.",
-    "{i}logs open": "Open logs as text message.",
-    "{i}logs carbon": "Get the carbonized terminal logs.",
-    "{i}logs heroku": "Get the latest 100 lines of heroku logs.",
-    "{i}restart": "Restart the bot.",
-    "{i}sleep [seconds]/[reply]": "Sleep the bot in few seconds (max 30).",
+    "{pfx}alive": "Just showing alive.",
+    "{pfx}uptime|{pfx}up": "Check current uptime.",
+    "{pfx}ping|ping|Ping": "Check how long it takes to ping.",
+    "{pfx}logs": "Get the full terminal logs.",
+    "{pfx}logs open": "Open logs as text message.",
+    "{pfx}logs carbon": "Get the carbonized terminal logs.",
+    "{pfx}logs heroku": "Get the latest 100 lines of heroku logs.",
+    "{pfx}restart": "Restart the bot.",
+    "{pfx}sleep [seconds]/[reply]": "Sleep the bot in few seconds (max 30).",
 }

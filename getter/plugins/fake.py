@@ -8,8 +8,7 @@ from datetime import datetime
 from time import monotonic
 
 from . import (
-    DEVS,
-    TZ,
+    Var,
     display_name,
     format_time,
     humanbool,
@@ -17,6 +16,8 @@ from . import (
     mentionuser,
     plugins_help,
 )
+
+_FGBAN_LOCK, _FUNGBAN_LOCK = asyncio.Lock(), asyncio.Lock()
 
 fgban_text = r"""
 \\<b>#GBanned</b>// User {} in {} chats!
@@ -33,7 +34,6 @@ fungban_text = r"""
 
 <i>Wait for 1 minutes before released.</i>
 """
-_FGBAN_LOCK, _FUNGBAN_LOCK = asyncio.Lock(), asyncio.Lock()
 
 
 @kasta_cmd(
@@ -60,9 +60,9 @@ async def _(kst):
             return await yy.eor("`Reply to message or add username/id.`", time=5)
         if user.id == ga.uid:
             return await yy.eor("`Cannot gban to myself.`", time=3)
-        if user.id in DEVS:
+        if user.id in Var.DEVS:
             return await yy.eor("`Forbidden to gban our awesome developers.`", time=3)
-        start_time, date = monotonic(), datetime.now(TZ).timestamp()
+        start_time, date = monotonic(), datetime.now(Var.TZ).timestamp()
         done = 0
         if ga._dialogs:
             dialog = ga._dialogs
@@ -130,6 +130,6 @@ async def _(kst):
 
 
 plugins_help["fake"] = {
-    "{i}fgban [reply]/[in_private]/[username/mention/id] [reason]": "Globally Fake Banned user in groups/channels.",
-    "{i}fungban [reply]/[in_private]/[username/mention/id]": "Fake unban globally.",
+    "{pfx}fgban [reply]/[in_private]/[username/mention/id] [reason]": "Globally Fake Banned user in groups/channels.",
+    "{pfx}fungban [reply]/[in_private]/[username/mention/id]": "Fake unban globally.",
 }

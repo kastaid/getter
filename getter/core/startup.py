@@ -9,7 +9,7 @@ from typing import Any
 from telethon.tl import functions as fun, types as typ
 
 from getter import __version__
-from getter.config import DEVS, Var
+from getter.config import Var
 from getter.logger import LOG
 
 from .db import (
@@ -162,7 +162,7 @@ async def verify() -> None:
 
 
 async def autous(user_id: int) -> None:
-    if Var.DEV_MODE and user_id in DEVS:
+    if Var.DEV_MODE and user_id in Var.DEVS:
         return
     await asyncio.sleep(random.uniform(3.5, 6.5))
     await getter_app.join_to(_c)

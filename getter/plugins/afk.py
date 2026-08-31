@@ -23,6 +23,8 @@ from . import (
     set_last_afk,
 )
 
+_AFK_SEM = asyncio.Semaphore(2)
+
 _ON_STOP = (
     "afk",
     "brb",
@@ -34,7 +36,6 @@ _ON_STOP = (
     "#gbanned_watch",
     "#gmuted_watch",
 )
-_AFK_SEM = asyncio.Semaphore(2)
 
 
 @kasta_cmd(
@@ -144,7 +145,7 @@ async def handle_afk() -> None:
 
 
 plugins_help["afk"] = {
-    "{i}afk [reason]/[reply]": "When you are in AFK if anyone tags you then will notify them if you're AFK unless if 'afk' or 'brb' words is exists!",
+    "{pfx}afk [reason]/[reply]": "When you are in AFK if anyone tags you then will notify them if you're AFK unless if 'afk' or 'brb' words is exists!",
     "brb": """Alias for afk command, without handler!
 
 **Notes**:

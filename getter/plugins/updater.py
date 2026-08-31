@@ -15,7 +15,6 @@ from git.exc import GitCommandError, InvalidGitRepositoryError, NoSuchPathError
 from . import (
     DOWNLOAD_DIR,
     MAX_MESSAGE_LEN,
-    TZ,
     Root,
     Runner,
     Var,
@@ -26,7 +25,6 @@ from . import (
     formatx_send,
     gvar,
     hk,
-    hl,
     humanbool,
     kasta_cmd,
     plugins_help,
@@ -35,16 +33,18 @@ from . import (
 )
 
 _UPDATE_LOCK = asyncio.Lock()
+
 UPSTREAM_REPO = "https://github.com/kastaid/getter.git"
 UPSTREAM_BRANCH = "main"
+
 help_text = f"""
-❯ `{hl}update [now/pull]`
+❯ `{Var.PREFIX}update [now/pull]`
 Temporarily update as locally.
 
-❯ `{hl}update [deploy/push]`
+❯ `{Var.PREFIX}update [deploy/push]`
 Permanently update as heroku.
 
-❯ `{hl}update force`
+❯ `{Var.PREFIX}update force`
 Force temporarily update as locally.
 """
 test_text = """
@@ -54,7 +54,7 @@ test_text = """
 ├  <b>Python Version</b>: <code>{}</code>
 ├  <b>Telethon Version</b>: <code>{}</code>
 ├  <b>Telegram Layer</b>: <code>{}</code>
-├  <b>Handler</b>: <code>{}</code>
+├  <b>Handler</b>: {}
 ├  <b>Sudo</b>: <code>{}</code>
 ├  <b>PM-Guard</b>: <code>{}</code>
 ├  <b>PM-Logs</b>: <code>{}</code>
@@ -186,7 +186,7 @@ async def _(kst):
         await asyncio.sleep(random.choice((4, 6, 8)))
     # http://www.timebie.com/std/utc
     utc_now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
-    local_now = datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S")
+    local_now = datetime.now(Var.TZ).strftime("%Y-%m-%d %H:%M:%S")
     yy = await kst.eor("`Processing...`", silent=True, force_reply=True)
     await yy.eor(
         test_text.format(
@@ -196,7 +196,7 @@ async def _(kst):
             __pyversion__,
             __tlversion__,
             __layer__,
-            hl,
+            Var.PREFIX or "No Handler",
             humanbool(await gvar("_sudo", use_cache=True), toggle=True),
             humanbool(await gvar("_pmguard", use_cache=True), toggle=True),
             humanbool(await gvar("_pmlog", use_cache=True), toggle=True),
@@ -276,7 +276,7 @@ async def Pulling(kst, state) -> None:
         await force_pull()
         await update_packages()
     up = rf"""\\**#Getter**// `{state}Updated Successfully...`
-Wait for a few seconds, then run `{hl}ping` command."""
+Wait for a few seconds, then run `{Var.PREFIX}ping` command."""
     yy = await kst.eor(up)
     try:
         chat_id = yy.chat_id or yy.from_id
@@ -312,7 +312,7 @@ async def Pushing(kst, state, repo) -> None:
         return await kst.eor(up)
     await force_pull()
     up = rf"""\\**#Getter**// `{state}Updated Successfully...`
-Wait for a few minutes, then run `{hl}ping` command."""
+Wait for a few minutes, then run `{Var.PREFIX}ping` command."""
     yy = await kst.eor(up)
     try:
         chat_id = yy.chat_id or yy.from_id
@@ -337,10 +337,10 @@ Try again later or view logs for more info."""
 
 
 plugins_help["updater"] = {
-    "{i}update": "Checks for updates, also displaying the changelog.",
-    "{i}update [now/pull]": "Temporarily update as locally.",
-    "{i}update [deploy/push]": "Permanently update as heroku.",
-    "{i}update force": "Force temporarily update as locally.",
-    "{i}repo": "Get repo link.",
-    "{i}test": "Check the details.",
+    "{pfx}update": "Checks for updates, also displaying the changelog.",
+    "{pfx}update [now/pull]": "Temporarily update as locally.",
+    "{pfx}update [deploy/push]": "Permanently update as heroku.",
+    "{pfx}update force": "Force temporarily update as locally.",
+    "{pfx}repo": "Get repo link.",
+    "{pfx}test": "Check the details.",
 }

@@ -211,6 +211,6 @@ async def heroku_usage() -> str:
 
 
 plugins_help["usage"] = {
-    "{i}usage": "Get overall usage, also heroku stats.",
-    "{i}heroku": "Get the heroku information (account, app, dyno, addons, buildpacks, configs) and save in botlogs.",
+    "{pfx}usage": "Get overall usage, also heroku stats.",
+    "{pfx}heroku": "Get the heroku information (account, app, dyno, addons, buildpacks, configs) and save in botlogs.",
 }

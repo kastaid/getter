@@ -9,6 +9,6 @@ services:
       BOTLOGS: $BOTLOGS
       HANDLER: $HANDLER
       NO_HANDLER: $NO_HANDLER
-      TZ: $TZ
+      TIMEZONE: $TIMEZONE
       LANG_CODE: $LANG_CODE
     restart: unless-stopped

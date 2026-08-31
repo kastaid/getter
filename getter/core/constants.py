@@ -5,14 +5,8 @@
 MAX_MESSAGE_LEN = 4096
 
 DEFAULT_GCAST_BLACKLIST = (
-    -1001699144606,  # @kastaot
-    -1001700971911,  # @kastaup
-    -1001596433756,  # @MFIChat
+    -1004429397890,  # @kastaot
     -1001109500936,  # @TelethonChat
-    -1001235155926,  # @RoseSupportChat
-    -1001421589523,  # @tdspya
-    -1001360494801,  # @OFIOpenChat
-    -1001275084637,  # @OFIChat
 )
 
 DEFAULT_GUCAST_BLACKLIST = (
@@ -20,6 +14,10 @@ DEFAULT_GUCAST_BLACKLIST = (
     4247000,  # @notoscam
     431415000,  # @BotSupport
     454000,  # @dmcatelegram
+    460000,  # Volunteer Support
+    4245000,  # @AbuseNotifications
+    42435000,  # @AdSupport
+    7308887716,  # @monk
 )
 
 DEFAULT_SHELL_BLACKLIST = (

@@ -19,6 +19,8 @@ from . import (
     sendlog,
 )
 
+_WATCHER_SEM = asyncio.Semaphore(2)
+
 gbanned_text = r"""
 \\<b>#GBanned_Watch</b>// User {} joined and quickly banned!
 <b>Reported</b>: <code>{}</code>
@@ -28,7 +30,6 @@ gmuted_text = r"""
 \\<b>#GMuted_Watch</b>// User {} joined and quickly muted!
 <b>Reason</b>: {}
 """
-_WATCHER_SEM = asyncio.Semaphore(2)
 
 
 @getter_app.on(

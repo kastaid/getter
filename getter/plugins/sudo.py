@@ -7,8 +7,7 @@ import random
 from datetime import datetime
 
 from . import (
-    SUDO_CMDS,
-    TZ,
+    Var,
     del_col,
     dgvar,
     display_name,
@@ -60,7 +59,7 @@ async def _(kst):
     pattern="sudos$",
 )
 async def _(kst):
-    cmds = "**Sudo Commands**:\n" + "\n".join(["- {}: {}".format(x, ", ".join(y)) for x, y in SUDO_CMDS.items()])
+    cmds = "**Sudo Commands**:\n" + "\n".join(["- {}: {}".format(k, ", ".join(v)) for k, v in Var.SUDO_CMDS.items()])
     await kst.sod(cmds, parts=True)
 
 
@@ -87,7 +86,7 @@ async def _(kst):
     userdata = {
         "full_name": full_name,
         "username": "@" + user.username if user.username else "none",
-        "date": datetime.now(TZ).timestamp(),
+        "date": datetime.now(Var.TZ).timestamp(),
     }
     sudos = await jdata.sudos()
     sudos[str(user.id)] = userdata
@@ -156,12 +155,12 @@ async def _(kst):
 
 
 plugins_help["sudo"] = {
-    "{i}sudo [yes/no/on/off]": "Switch the sudo commands on or off. Default: off",
-    "{i}sudos": "List all sudo commands.",
-    "{i}addsudo [reply]/[in_private]/[username/mention/id]": "Add user to sudo list.",
-    "{i}delsudo [reply]/[in_private]/[username/mention/id]": "Delete user from sudo list.",
-    "{i}listsudo": "List all sudo users.",
-    "{i}delallsudos": """Delete all sudo users.
+    "{pfx}sudo [yes/no/on/off]": "Switch the sudo commands on or off. Default: off",
+    "{pfx}sudos": "List all sudo commands.",
+    "{pfx}addsudo [reply]/[in_private]/[username/mention/id]": "Add user to sudo list.",
+    "{pfx}delsudo [reply]/[in_private]/[username/mention/id]": "Delete user from sudo list.",
+    "{pfx}listsudo": "List all sudo users.",
+    "{pfx}delallsudos": """Delete all sudo users.
 
 **Notes**:
 - Handler for sudo commands is [ , ] comma. E.g: `,test`

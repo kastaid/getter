@@ -197,11 +197,11 @@ def exclude_user(x) -> bool:
 
 
 plugins_help["mention"] = {
-    "{i}all|@all": "Mention the lucky members in current group.",
-    "{i}atag [or reply] [caption]": "Mention all members in current group.",
-    "{i}acancel": "Stop the current process of {i}atag.",
-    "{i}etag [or reply] [caption]": "Mention all members in current group with random emoji.",
-    "{i}ecancel": "Stop the current process of {i}etag.",
-    "{i}report [reply]": "Report reply messages to admin.",
-    "{i}mention|{i}men [reply]/[username/mention/id] [text]": "Tags that person with the given custom text.",
+    "{pfx}all|@all": "Mention the lucky members in current group.",
+    "{pfx}atag [or reply] [caption]": "Mention all members in current group.",
+    "{pfx}acancel": "Stop the current process of {pfx}atag.",
+    "{pfx}etag [or reply] [caption]": "Mention all members in current group with random emoji.",
+    "{pfx}ecancel": "Stop the current process of {pfx}etag.",
+    "{pfx}report [reply]": "Report reply messages to admin.",
+    "{pfx}mention|{pfx}men [reply]/[username/mention/id] [text]": "Tags that person with the given custom text.",
 }

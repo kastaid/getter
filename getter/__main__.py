@@ -19,7 +19,7 @@ from . import (
     __tlversion__,
     __version__,
 )
-from .config import Var, hl
+from .config import Var
 from .core.db import db_connect
 from .core.helper import jdata, plugins_help
 from .core.kasta import getter_app
@@ -78,7 +78,7 @@ async def main() -> None:
     do_not_remove_credit()
     python_msg = f"> Python Version - {__pyversion__}"
     telethon_msg = f"> Telethon Version - {__tlversion__} [Layer: {__layer__}]"
-    launch_msg = f"> 🚀 Getter v{__version__} launch ({getter_app.full_name} - {getter_app.uid}) in {getter_app.uptime} with handler [ {hl}ping ]"
+    launch_msg = f"> 🚀 Getter v{__version__} launch ({getter_app.full_name} - {getter_app.uid}) in {getter_app.uptime} with handler [ {Var.PREFIX}ping ]"
     LOG.info(python_msg)
     LOG.info(telethon_msg)
     LOG.info(launch_msg)

@@ -15,14 +15,12 @@ from telethon.errors import (
 from . import (
     Var,
     get_username,
-    hl,
     is_telegram_link,
     kasta_cmd,
     normalize_chat_id,
     plugins_help,
 )
 
-PREFIX = "" if Var.NO_HANDLER else hl
 DS_RANGE = range(10)
 DS_PATTERN = rf"ds({'|'.join(map(str, DS_RANGE[1:]))}|)"
 DS_DELAY_MIN = 2
@@ -53,7 +51,7 @@ async def _(kst):
             message = await kst.get_reply_message()
             await kst.try_delete()
         except BaseException:
-            return await kst.eor(f"`{PREFIX}{ds_name} [delay] [count] [reply] [to=chat]`", time=6)
+            return await kst.eor(f"`{Var.PREFIX}{ds_name} [delay] [count] [reply] [to=chat]`", time=6)
     else:
         try:
             args = text.split(" ", 3)
@@ -62,7 +60,7 @@ async def _(kst):
             message = str(args[3])
             await kst.try_delete()
         except BaseException:
-            return await kst.eor(f"`{PREFIX}{ds_name} [delay] [count] [text] [to=chat]`", time=6)
+            return await kst.eor(f"`{Var.PREFIX}{ds_name} [delay] [count] [text] [to=chat]`", time=6)
     delay = max(DS_DELAY_MIN, delay)
     task = asyncio.create_task(
         run_ds(
@@ -194,24 +192,24 @@ async def parse_target(
 
 
 plugins_help["delayspam"] = {
-    f"{PREFIX}ds [delay] [count] [text] [to=chat]": f"Spam a chat in seconds (min {DS_DELAY_MIN} seconds).",
-    f"{PREFIX}ds [delay] [count] [reply] [to=chat]": "Spam a replied message to a chat.",
+    "{pfx}ds [delay] [count] [text] [to=chat]": f"Spam a chat in seconds (min {DS_DELAY_MIN} seconds).",
+    "{pfx}ds [delay] [count] [reply] [to=chat]": "Spam a replied message to a chat.",
     **{
-        f"{PREFIX}ds{x} [delay] [count] [text/reply] [to=chat]": f"Same as above, different message as {x}."
+        f"{{pfx}}ds{x} [delay] [count] [text/reply] [to=chat]": f"Same as above, different message as {x}."
         for x in DS_RANGE[1:]
     },
-    f"{PREFIX}dscancel [to=chat]": "To cancel `{PREFIX}ds` in a chat.",
-    **{f"{PREFIX}ds{x}cancel [to=chat]": f"To cancel `{PREFIX}ds{x}` in a chat." for x in DS_RANGE[1:]},
-    f"{PREFIX}dsstop": "To stop `{PREFIX}ds` in all chats.",
-    **{f"{PREFIX}ds{x}stop": f"To stop `{PREFIX}ds{x}` in all chats." for x in DS_RANGE[1:]},
-    f"{PREFIX}dsclear": f"""To clear and stop all ds*.
+    "{pfx}dscancel [to=chat]": "To cancel `{pfx}ds` in a chat.",
+    **{f"{{pfx}}ds{x}cancel [to=chat]": f"To cancel `{{pfx}}ds{x}` in a chat." for x in DS_RANGE[1:]},
+    "{pfx}dsstop": "To stop `{pfx}ds` in all chats.",
+    **{f"{{pfx}}ds{x}stop": f"To stop `{{pfx}}ds{x}` in all chats." for x in DS_RANGE[1:]},
+    "{pfx}dsclear": """To clear and stop all ds*.
 
 **Notes**:
 - `[to=chat]` is optional and can be placed anywhere.
 - Without `[to=chat]`, commands use the current chat.
 - With `[to=chat]`, commands use the target chat.
 - `chat` can be a chat ID, username, or Telegram link.
-- Examples: `{PREFIX}ds 5 10 hello`, `{PREFIX}ds 5 10 hello to=username`
+- Examples: `{pfx}ds 5 10 hello`, `{pfx}ds 5 10 hello to=username`
 - Chat examples: `to=-1001234567890`, `to=username`, `to=https://t.me/username`
 """,
 }

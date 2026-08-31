@@ -27,7 +27,7 @@
             "required": false,
             "value": "False"
         },
-        "TZ": {
+        "TIMEZONE": {
             "description": "Set local timezone: Continent/Country. Get the list from \"gist.github.com/illvart/0d2fcba7b8a7b337bfe0ad58c6f4d4dd\". Default: Asia/Jakarta",
             "required": false,
             "value": "Asia/Jakarta"

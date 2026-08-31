@@ -150,5 +150,5 @@ def check_media(reply):
 
 
 plugins_help["deepfry"] = {
-    "{i}ugly [1-9] [reply]": "Uglying any image/sticker/animation/gif/video and make it look ugly (default level 1).",
+    "{pfx}ugly [1-9] [reply]": "Uglying any image/sticker/animation/gif/video and make it look ugly (default level 1).",
 }

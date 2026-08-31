@@ -10,7 +10,6 @@ from telethon.tl import functions as fun
 from telethon.utils import get_peer_id
 
 from . import (
-    Var,
     display_name,
     humanbool,
     import_lib,
@@ -19,6 +18,8 @@ from . import (
     mentionuser,
     plugins_help,
 )
+
+CALLS: set[int] = set()
 
 
 @kasta_cmd(
@@ -45,7 +46,7 @@ async def _(kst):
         )
     except BaseException:
         return await yy.eor("`An error occurred. Try again now!`", time=3)
-    Var.CALLS.discard(chat_id)
+    CALLS.discard(chat_id)
     if not is_silent:
         return await yy.eor("`Video chat started.`", time=3)
     await yy.try_delete()
@@ -73,7 +74,7 @@ async def _(kst):
         res = await ga(fun.phone.DiscardGroupCallRequest(call))
     except BaseException:
         return await yy.eor("`An error occurred. Try again now!`", time=3)
-    Var.CALLS.discard(chat_id)
+    CALLS.discard(chat_id)
     if not is_silent:
         return await yy.eor("`Video chat stopped.`", time=3)
     await yy.try_delete()
@@ -215,14 +216,14 @@ async def _(kst):
     call = await get_call(ga, chat_id)
     if not call:
         return await yy.eor("`No video chat!`", time=3)
-    if chat_id not in Var.CALLS:
+    if chat_id not in CALLS:
         try:
             tgcall = await get_tgcall(ga)
             if not tgcall:
                 return await yy.eor("`Cannot initialize PyTgCalls!`", time=3)
             await tgcall.play(chat_id)
             await tgcall.mute(chat_id)
-            Var.CALLS.add(chat_id)
+            CALLS.add(chat_id)
             text = "`Joined video chat.`"
         except BaseException:
             if is_termux():
@@ -256,15 +257,17 @@ async def _(kst):
     call = await get_call(ga, chat_id)
     if not call:
         return await yy.eor("`No video chat!`", time=3)
-    if chat_id in Var.CALLS:
-        try:
-            await Var.TGCALL.leave_call(chat_id)
-        except BaseException:
-            pass
+    if chat_id in CALLS:
+        tgcall = await get_tgcall(ga)
+        if tgcall:
+            try:
+                await tgcall.leave_call(chat_id)
+            except BaseException:
+                pass
         text = "`Left video chat.`"
     else:
         text = "`Not in video chat!`"
-    Var.CALLS.discard(chat_id)
+    CALLS.discard(chat_id)
     await yy.eor(text, time=3)
 
 
@@ -272,9 +275,9 @@ async def _(kst):
     pattern="listvc$",
 )
 async def _(kst):
-    if len(Var.CALLS) > 0:
-        text = f"<b><u>{len(Var.CALLS)} Video Chats</u></b>\n"
-        for x in Var.CALLS:
+    if len(CALLS) > 0:
+        text = f"<b><u>{len(CALLS)} Video Chats</u></b>\n"
+        for x in CALLS:
             text += f"<code>{x}</code>\n"
         return await kst.eor(text, parts=True, parse_mode="html")
     text = "`No joined video chats!`"
@@ -308,8 +311,8 @@ async def get_call_id(message, group=1):
 
 
 async def get_tgcall(client):
-    if Var.TGCALL:
-        return Var.TGCALL
+    if hasattr(get_tgcall, "cache"):
+        return get_tgcall.cache
     try:
         from pytgcalls import PyTgCalls
     except ImportError:
@@ -327,7 +330,7 @@ async def get_tgcall(client):
         client.log.info("Start PyTgCalls...")
         tgcall = PyTgCalls(client)
         await tgcall.start()
-        Var.TGCALL = tgcall
+        get_tgcall.cache = tgcall
         client.log.success("PyTgCalls Started.")
         return tgcall
     except Exception:
@@ -335,13 +338,13 @@ async def get_tgcall(client):
 
 
 plugins_help["vctools"] = {
-    "{i}startvc [-s/silent] [title]": "Start or restart the video chat in current group/channel. Add '-s' to started silently.",
-    "{i}stopvc [-s/silent]": "Stop the video chat in current group/channel. Add '-s' to stopped silently.",
-    "{i}vctitle [title]/[reply]": "Change the video chat title or reset to default (without title) in current group/channel.",
-    "{i}invitevc [reply]/[username/mention/id]": "Invite user to current video chat.",
-    # "{i}vcinviteall": "Invite all members to current video chat. **(YOU MUST BE JOINED)**",
-    "{i}vcinfo": "Get information of current video chat.",
-    "{i}joinvc [current/chat_id/username]/[reply]": "Join the video chat in group/channel. Alias: jvc.",
-    "{i}leavevc [current/chat_id/username]/[reply]": "Leave the video chat in group/channel. Alias: lvc.",
-    "{i}listvc": "List all joined video chats.",
+    "{pfx}startvc [-s/silent] [title]": "Start or restart the video chat in current group/channel. Add '-s' to started silently.",
+    "{pfx}stopvc [-s/silent]": "Stop the video chat in current group/channel. Add '-s' to stopped silently.",
+    "{pfx}vctitle [title]/[reply]": "Change the video chat title or reset to default (without title) in current group/channel.",
+    "{pfx}invitevc [reply]/[username/mention/id]": "Invite user to current video chat.",
+    # "{pfx}vcinviteall": "Invite all members to current video chat. **(YOU MUST BE JOINED)**",
+    "{pfx}vcinfo": "Get information of current video chat.",
+    "{pfx}joinvc [current/chat_id/username]/[reply]": "Join the video chat in group/channel. Alias: jvc.",
+    "{pfx}leavevc [current/chat_id/username]/[reply]": "Leave the video chat in group/channel. Alias: lvc.",
+    "{pfx}listvc": "List all joined video chats.",
 }

@@ -166,23 +166,23 @@ def get_translator():
 
 
 plugins_help["translate"] = {
-    "{i}tr [lang_code] [text]/[reply]": f"Translate the message to required language. Default lang_code for all is `{Var.LANG_CODE}`.",
-    "{i}tl [lang_code] [text]/[reply]": "Send or reply message as translated.",
-    "{i}tts [lang_code] [text]/[reply]": "Text to speech.",
-    "{i}ts [lang_code] [text]/[reply]": "Translate the message then text to speech.",
-    "{i}lang": """List all language code.
+    "{pfx}tr [lang_code] [text]/[reply]": f"Translate the message to required language. Default lang_code for all is `{Var.LANG_CODE}`.",
+    "{pfx}tl [lang_code] [text]/[reply]": "Send or reply message as translated.",
+    "{pfx}tts [lang_code] [text]/[reply]": "Text to speech.",
+    "{pfx}ts [lang_code] [text]/[reply]": "Translate the message then text to speech.",
+    "{pfx}lang": """List all language code.
 
 **Examples**:
 - Use default lang_code.
--> `{i}tr ready`
+-> `{pfx}tr ready`
 - With choosing lang_code.
--> `{i}tr en siap`
+-> `{pfx}tr en siap`
 
 - Translate the replied message.
--> `{i}tr [reply]`
--> `{i}tr en [reply]`
+-> `{pfx}tr [reply]`
+-> `{pfx}tr en [reply]`
 - Reply a message with translated text (must have lang_code).
--> `{i}tr en siap`
+-> `{pfx}tr en siap`
 
 Examples above both for all commands!
 """,

@@ -41,8 +41,6 @@ from .property import do_not_remove_credit, get_blacklisted
 from .tools import (
     Carbon,
     Fetch,
-    MyIp,
-    Pinger,
     Runner,
     Screenshot,
     import_lib,
