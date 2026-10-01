@@ -320,7 +320,7 @@ async def get_tgcall(client):
             client.log.info("Installing PyTgCalls...")
             PyTgCalls = import_lib(
                 lib_name="pytgcalls",
-                pkg_name="py-tgcalls==2.3.3",
+                pkg_name="py-tgcalls==3.0.0",
             ).PyTgCalls
             client.log.success("PyTgCalls installed.")
         except Exception:

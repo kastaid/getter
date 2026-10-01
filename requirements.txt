@@ -1,20 +1,20 @@
 Telethon==1.45.0
 cryptg==0.6.0
 
-SQLAlchemy==2.0.52
+SQLAlchemy==2.1.1
 asyncpg==0.31.0
 aiosqlite==0.22.1
 
-GitPython==3.1.62
+GitPython==3.2.0
 
 Pillow==12.3.0
-emoji==2.15.0
+emoji==2.16.0
 
 aiohttp[speedups]==3.14.3
 cachebox==6.2.7
 
 loguru==0.7.3
-python-dotenv==1.2.3
-uvloop==0.22.1
+python-dotenv==1.2.4
+uvloop==0.23.0
 orjson==3.12.0
 psutil==7.2.2
