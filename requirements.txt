@@ -1,17 +1,17 @@
 Telethon==1.45.0
 cryptg==0.6.0
 
-SQLAlchemy[asyncio]==2.1.4
+SQLAlchemy[asyncio]==2.1.6
 asyncpg==0.32.0
 aiosqlite==0.22.1
 
-GitPython==3.2.0
+GitPython==3.2.1
 
-Pillow==12.3.0
+Pillow==13.0.0
 emoji==2.16.0
 
-aiohttp[speedups]==3.14.4
-cachebox==6.2.8
+aiohttp[speedups]==3.14.5
+cachebox==6.2.10
 
 loguru==0.7.3
 python-dotenv==1.2.4
