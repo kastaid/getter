@@ -16,7 +16,12 @@ from telethon.client.telegramclient import TelegramClient as BaseClient
 from telethon.errors import (
     ApiIdInvalidError,
     AuthKeyDuplicatedError,
+    AuthKeyUnregisteredError,
     PhoneNumberInvalidError,
+    SessionExpiredError,
+    SessionRevokedError,
+    UserDeactivatedBanError,
+    UserDeactivatedError,
 )
 from telethon.sessions.string import CURRENT_VERSION, StringSession
 
@@ -40,6 +45,16 @@ if TYPE_CHECKING:
 
     from loguru._logger import Logger
     from telethon.tl import types as typ
+
+SESSION_DEAD = (
+    AuthKeyUnregisteredError,
+    AuthKeyDuplicatedError,
+    SessionExpiredError,
+    SessionRevokedError,
+    UserDeactivatedError,
+    UserDeactivatedBanError,
+    EOFError,
+)
 
 PLUGIN_DIR = Root / "getter/plugins"
 CUSTOM_PLUGIN_DIR = Root / "getter/plugins/custom"
@@ -119,21 +134,20 @@ class KastaClient(BaseClient):
                 )
                 if self.uid in KASTA_BLACKLIST:
                     self.log.error(f"({me} - {self.uid}) YOU ARE BLACKLISTED !!")
-                    sys.exit(1)
+                    sys.exit(0)
             self.log.success(f"Logged in as {me} [{self.uid}]")
         except (
             ValueError,
             ApiIdInvalidError,
         ):
             self.log.critical("API_ID and API_HASH combination does not match, please re-check! Quitting...")
-            sys.exit(1)
+            sys.exit(0)
         except (
-            AuthKeyDuplicatedError,
+            *SESSION_DEAD,
             PhoneNumberInvalidError,
-            EOFError,
         ):
             self.log.critical("STRING_SESSION expired, please create new! Quitting...")
-            sys.exit(1)
+            sys.exit(0)
         except Exception:
             self.log.exception("[KastaClient] failed to start.")
             sys.exit(1)
@@ -215,9 +229,9 @@ _ssn = Var.STRING_SESSION
 if _ssn:
     if _ssn.startswith(CURRENT_VERSION) and len(_ssn) != 353:
         LOG.critical("STRING_SESSION wrong. Copy paste correctly! Quitting...")
-        sys.exit(1)
+        sys.exit(0)
 else:
     LOG.critical("STRING_SESSION empty. Please filling! Quitting...")
-    sys.exit(1)
+    sys.exit(0)
 
 getter_app = KastaClient()

@@ -1,7 +1,7 @@
 Telethon==1.45.0
 cryptg==0.6.0
 
-SQLAlchemy[asyncio]==2.1.6
+SQLAlchemy[asyncio]==2.1.8
 asyncpg==0.32.0
 aiosqlite==0.22.1
 

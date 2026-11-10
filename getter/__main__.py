@@ -25,7 +25,7 @@ from .core.db import (
     database_disconnect,
 )
 from .core.helper import jdata, plugins_help
-from .core.kasta import getter_app
+from .core.kasta import SESSION_DEAD, getter_app
 from .core.property import do_not_remove_credit
 from .core.startup import (
     autopilot,
@@ -109,6 +109,9 @@ if __name__ == "__main__":
         )
     except KeyboardInterrupt:
         LOG.info("[APP] shutdown signal received")
+    except SESSION_DEAD:
+        LOG.critical("[APP] session dead, stopping without restart")
+        sys.exit(0)
     except Exception:
         LOG.exception("[APP] unhandled exception")
         sys.exit(1)
