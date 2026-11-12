@@ -156,6 +156,7 @@ async def database_disconnect() -> None:
         await State.engine.dispose()
         State.engine = None
         State.sessionmaker = None
+        State.is_sqlite = False
 
 
 async def database_size() -> int:
