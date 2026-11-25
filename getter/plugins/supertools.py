@@ -4,7 +4,10 @@
 
 import asyncio
 
-from telethon.errors import FloodWaitError
+from telethon.errors import (
+    FloodPremiumWaitError,
+    FloodWaitError,
+)
 
 from . import Var, kasta_cmd
 
@@ -36,7 +39,10 @@ async def _(kst):
                 await ga.edit_permissions(chat_id, x.id)
                 await asyncio.sleep(0.5)
                 success += 1
-            except FloodWaitError as fw:
+            except (
+                FloodWaitError,
+                FloodPremiumWaitError,
+            ) as fw:
                 await asyncio.sleep(fw.seconds + 10)
                 try:
                     crying = await ga.edit_permissions(chat_id, x.id, view_messages=False)
@@ -81,7 +87,10 @@ async def _(kst):
                         await ga.delete_messages(chat_id, cry)
                 await asyncio.sleep(0.5)
                 success += 1
-            except FloodWaitError as fw:
+            except (
+                FloodWaitError,
+                FloodPremiumWaitError,
+            ) as fw:
                 await asyncio.sleep(fw.seconds + 10)
                 try:
                     crying = await ga.edit_permissions(chat_id, x.id, view_messages=False)

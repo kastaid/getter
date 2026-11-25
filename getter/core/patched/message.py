@@ -8,15 +8,7 @@ from io import BytesIO
 from typing import TYPE_CHECKING
 
 import telethon.tl.custom
-from telethon import hints
-from telethon.errors import (
-    ChatSendMediaForbiddenError,
-    FloodWaitError,
-    MediaCaptionTooLongError,
-    MessageIdInvalidError,
-    MessageNotModifiedError,
-    MessageTooLongError,
-)
+from telethon import errors, hints
 from telethon.tl import types as typ
 
 from getter.core.patcher import patch, patchable
@@ -85,11 +77,11 @@ class Message:
                             link_preview=link_preview,
                             **args,
                         )
-            except MessageIdInvalidError:  # keep functions running
+            except errors.MessageIdInvalidError:  # keep functions running
                 return
-            except MessageNotModifiedError:
+            except errors.MessageNotModifiedError:
                 yy = self
-            except MediaCaptionTooLongError:
+            except errors.MediaCaptionTooLongError:
                 try:
                     yy = await self._client.send_file(
                         self.chat_id,
@@ -100,7 +92,7 @@ class Message:
                     )
                 except Exception:
                     return
-            except MessageTooLongError:
+            except errors.MessageTooLongError:
                 await self.delete()
                 with suppress(Exception), BytesIO(str.encode(text)) as file:
                     file.name = "message.txt"
@@ -114,8 +106,9 @@ class Message:
                     )
                 return
             except (
-                ChatSendMediaForbiddenError,
-                FloodWaitError,
+                errors.ChatSendMediaForbiddenError,
+                errors.FloodWaitError,
+                errors.FloodPremiumWaitError,
             ):
                 raise
             except Exception:
@@ -148,7 +141,7 @@ class Message:
                             reply_to=reply_to,
                             **args,
                         )
-            except MediaCaptionTooLongError:
+            except errors.MediaCaptionTooLongError:
                 try:
                     yy = await self._client.send_file(
                         self.chat_id,
@@ -159,7 +152,7 @@ class Message:
                     )
                 except Exception:
                     return
-            except MessageTooLongError:
+            except errors.MessageTooLongError:
                 with suppress(Exception), BytesIO(str.encode(text)) as file:
                     file.name = "message.txt"
                     return await self.respond(
@@ -172,8 +165,9 @@ class Message:
                     )
                 return
             except (
-                ChatSendMediaForbiddenError,
-                FloodWaitError,
+                errors.ChatSendMediaForbiddenError,
+                errors.FloodWaitError,
+                errors.FloodPremiumWaitError,
             ):
                 raise
             except Exception:
@@ -245,7 +239,7 @@ class Message:
                         reply_to=reply_to,
                         **args,
                     )
-        except MediaCaptionTooLongError:
+        except errors.MediaCaptionTooLongError:
             try:
                 yy = await self._client.send_file(
                     chat_id,
@@ -256,7 +250,7 @@ class Message:
                 )
             except Exception:
                 return
-        except MessageTooLongError:
+        except errors.MessageTooLongError:
             if self.out:
                 await self.delete()
             with suppress(Exception), BytesIO(str.encode(text)) as file:
@@ -271,8 +265,9 @@ class Message:
                 )
             return
         except (
-            ChatSendMediaForbiddenError,
-            FloodWaitError,
+            errors.ChatSendMediaForbiddenError,
+            errors.FloodWaitError,
+            errors.FloodPremiumWaitError,
         ):
             raise
         except Exception:

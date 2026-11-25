@@ -12,17 +12,8 @@ from inspect import getmembers
 from time import monotonic
 from typing import TYPE_CHECKING, NoReturn
 
+from telethon import errors
 from telethon.client.telegramclient import TelegramClient as BaseClient
-from telethon.errors import (
-    ApiIdInvalidError,
-    AuthKeyDuplicatedError,
-    AuthKeyUnregisteredError,
-    PhoneNumberInvalidError,
-    SessionExpiredError,
-    SessionRevokedError,
-    UserDeactivatedBanError,
-    UserDeactivatedError,
-)
 from telethon.sessions.string import CURRENT_VERSION, StringSession
 
 from getter import (
@@ -47,12 +38,12 @@ if TYPE_CHECKING:
     from telethon.tl import types as typ
 
 SESSION_DEAD = (
-    AuthKeyUnregisteredError,
-    AuthKeyDuplicatedError,
-    SessionExpiredError,
-    SessionRevokedError,
-    UserDeactivatedError,
-    UserDeactivatedBanError,
+    errors.AuthKeyUnregisteredError,
+    errors.AuthKeyDuplicatedError,
+    errors.SessionExpiredError,
+    errors.SessionRevokedError,
+    errors.UserDeactivatedError,
+    errors.UserDeactivatedBanError,
     EOFError,
 )
 
@@ -121,7 +112,7 @@ class KastaClient(BaseClient):
         do_not_remove_credit()
         try:
             await asyncio.sleep(random.uniform(3.5, 6.5))
-            await self.start()
+            await self.start(bot_token=None)
             await asyncio.sleep(3)
             self.me = await self.get_me()
             self.me.phone = None
@@ -138,13 +129,13 @@ class KastaClient(BaseClient):
             self.log.success(f"Logged in as {me} [{self.uid}]")
         except (
             ValueError,
-            ApiIdInvalidError,
+            errors.ApiIdInvalidError,
         ):
             self.log.critical("API_ID and API_HASH combination does not match, please re-check! Quitting...")
             sys.exit(0)
         except (
             *SESSION_DEAD,
-            PhoneNumberInvalidError,
+            errors.PhoneNumberInvalidError,
         ):
             self.log.critical("STRING_SESSION expired, please create new! Quitting...")
             sys.exit(0)

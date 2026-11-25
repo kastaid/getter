@@ -6,16 +6,7 @@ import asyncio
 import random
 import re
 
-from telethon.errors import (
-    BadRequestError,
-    ChannelInvalidError,
-    ChannelPrivateError,
-    ChatWriteForbiddenError,
-    FloodPremiumWaitError,
-    FloodWaitError,
-    SlowModeWaitError,
-    UserBannedInChannelError,
-)
+from telethon import errors
 
 from . import (
     Var,
@@ -183,7 +174,7 @@ async def run_ds(
                     link_preview=not disable_link_preview,
                     silent=True,
                 )
-            except BadRequestError as err:
+            except errors.BadRequestError as err:
                 if err.message != "CHAT_SEND_WEBPAGE_FORBIDDEN":
                     raise
                 disable_link_preview = True
@@ -196,21 +187,21 @@ async def run_ds(
                 )
             error_count = 0
             await asyncio.sleep(delay)
-        except SlowModeWaitError as err:
+        except errors.SlowModeWaitError as err:
             kst.client.log.warning(f"Delayspam {ds} slowmode wait: {err.seconds}s")
             await asyncio.sleep(err.seconds + 5)
         except (
-            FloodWaitError,
-            FloodPremiumWaitError,
+            errors.FloodWaitError,
+            errors.FloodPremiumWaitError,
         ) as err:
             wait = err.seconds + random.uniform(15, 30)
             kst.client.log.warning(f"Delayspam {ds} flood wait: {err.seconds}s, sleeping {wait:.1f}s")
             await asyncio.sleep(wait)
         except (
-            ChannelInvalidError,
-            ChannelPrivateError,
-            ChatWriteForbiddenError,
-            UserBannedInChannelError,
+            errors.ChannelInvalidError,
+            errors.ChannelPrivateError,
+            errors.ChatWriteForbiddenError,
+            errors.UserBannedInChannelError,
         ) as err:
             kst.client.log.warning(f"Delayspam {get_ds_name(ds)} stopped in chat {chat_id}: {err}")
             delete_task(ds, chat_id)

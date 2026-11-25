@@ -35,6 +35,7 @@ from . import (
     sgvar,
 )
 
+_PMLOGS_LOCK = asyncio.Lock()
 _PMPERMIT_SEM = asyncio.Semaphore(2)
 _PMBYE_CACHE = cachebox.TTLCache(maxsize=1, global_ttl=60)  # 1 mins
 _PMMSG_CACHE = cachebox.TTLCache(maxsize=1, global_ttl=60)  # 1 mins
@@ -48,53 +49,68 @@ _TORM = {
 }
 
 pmtotal_default = 3
-pmbye_default = "~ You are automatically {mode}!"
-pmmsg_default = """Hello {fullname} this is an automated message,
-Please wait until you got allowed to PM,
-And please Do Not Spam!
+pmbye_default = "~ You have been automatically {mode}."
+pmmsg_default = """Hi {fullname}, this is an automated message.
 
-You have {warn}/{total} warns until you got {mode}!"""
+Please wait until you are allowed to PM me and do not spam!
+
+You have {warn}/{total} warnings before you will be {mode}."""
+
+
+def is_ignored_user(
+    user,
+    *,
+    exclude_contact=False,
+):
+    return (
+        getattr(user, "deleted", False)
+        or getattr(user, "bot", False)
+        or getattr(user, "is_self", False)
+        or getattr(user, "support", False)
+        or getattr(user, "verified", False)
+        or getattr(user, "id", None) == 777000
+        or (exclude_contact and getattr(user, "contact", False))
+    )
+
+
+async def send_pmlog(
+    message,
+    *,
+    forward=False,
+):
+    async with _PMLOGS_LOCK:
+        await asyncio.sleep(random.uniform(1, 2))
+        await sendlog(message, forward=forward)
 
 
 async def PMLogs(kst):
     user = await kst.get_sender()
-    if (
-        getattr(user, "bot", False)
-        or getattr(user, "is_self", False)
-        or getattr(user, "support", False)
-        or getattr(user, "verified", False)
-    ):
+    if is_ignored_user(user):
         return
     pmlog = await gvar("_pmlog", use_cache=True)
-    if pmlog == "media":
-        if kst.message.media:
-            return await sendlog(kst.message, forward=True)
+    message = kst.message
+    if pmlog == "media" and not message.media:
         return
-    await sendlog(kst.message, forward=True)
+    await send_pmlog(message, forward=True)
 
 
 async def PMPermit(kst):
     async with _PMPERMIT_SEM:
         user = await kst.get_sender()
-        if (
-            getattr(user, "bot", False)
-            or getattr(user, "is_self", False)
-            or getattr(user, "support", False)
-            or getattr(user, "verified", False)
-            or getattr(user, "contact", False)
-        ):
+        if is_ignored_user(user, exclude_contact=True):
             return
         GUCAST_BLACKLIST = await get_blacklisted(
             url="https://raw.githubusercontent.com/kastaid/resources/main/gucastblacklist.py",
             attempts=1,
             fallbacks=DEFAULT_GUCAST_BLACKLIST,
         )
-        if user.id in {*Var.DEVS, *GUCAST_BLACKLIST}:
+        user_id = user.id
+        if user_id in {*Var.DEVS, *GUCAST_BLACKLIST}:
             return
-        if await is_allow(user.id, use_cache=True):
+        if await is_allow(user_id, use_cache=True):
             return
         ga = kst.client
-        towarn = str(user.id)
+        towarn = str(user_id)
         PMWARN, NESLAST = await jdata.pmwarns(), await jdata.pmlasts()
         antipm = await gvar("_antipm", use_cache=True)
         is_pmlog = await gvar("_pmlog", use_cache=True)
@@ -103,21 +119,21 @@ async def PMPermit(kst):
                 del PMWARN[towarn]
                 await set_col("pmwarns", PMWARN, NESLAST)
             if is_pmlog:
-                mention = mentionuser(user.id, display_name(user), width=70)
+                mention = mentionuser(user_id, display_name(user), width=70)
                 antipmt = "**#Anti_PM**"
-                antipmt += f"\nUser {mention} [`{user.id}`] has messaged you and got "
-            await ga.report_spam(user.id)
-            await ga.block(user.id)
+                antipmt += f"\nUser {mention} [`{user_id}`] has messaged you and got "
+            await ga.report_spam(user_id)
+            await ga.block(user_id)
             if antipm == "del":
                 if is_pmlog:
                     antipmt += "blocked and deleted!"
-                    await sendlog(antipmt)
-                    await sendlog(kst.message, forward=True)
-                await ga.delete_chat(user.id, revoke=True)
+                    await send_pmlog(antipmt)
+                    await send_pmlog(kst.message, forward=True)
+                await ga.delete_chat(user_id, revoke=True)
             else:
                 if is_pmlog:
                     antipmt += "blocked!"
-                    await sendlog(antipmt)
+                    await send_pmlog(antipmt)
             return
         if towarn not in PMWARN:
             PMWARN[towarn] = 0
@@ -131,7 +147,7 @@ async def PMPermit(kst):
         name = " ".join(replace_all(user.first_name, _TORM).split())
         last = " ".join(replace_all(user.last_name, _TORM).split()) if user.last_name else ""
         fullname = f"{name} {last}".rstrip()
-        mention = mentionuser(user.id, fullname, width=70)
+        mention = mentionuser(user_id, fullname, width=70)
         username = f"@{user.username}" if user.username else mention
         me, my_id = ga.me, ga.uid
         my_name = " ".join(replace_all(me.first_name, _TORM).split())
@@ -143,9 +159,9 @@ async def PMPermit(kst):
         mode = "blocked" if is_block else "archived"
         if PMWARN[towarn] > ratelimit:
             if is_pmlog:
-                warnt = f"\nUser {mention} [`{user.id}`] has been "
+                log_text = f"\nUser {mention} [`{user_id}`] has been "
             try:
-                await ga.delete_messages(user.id, [NESLAST[towarn]])
+                await ga.delete_messages(user_id, [NESLAST[towarn]])
             except Exception:
                 pass
             if "_pmbye" in _PMBYE_CACHE:
@@ -154,7 +170,7 @@ async def PMPermit(kst):
                 pmbye = await gvar("_pmbye") or pmbye_default
                 _PMBYE_CACHE["_pmbye"] = pmbye
             text = pmbye.format(
-                id=user.id,
+                id=user_id,
                 name=name,
                 fullname=fullname,
                 mention=mention,
@@ -174,31 +190,31 @@ async def PMPermit(kst):
                 pass
             if is_block:
                 await ga.read(
-                    entity=user.id,
+                    entity=user_id,
                     clear_mentions=True,
                     clear_reactions=True,
                 )
                 try:
                     await ga(
                         fun.account.ReportPeerRequest(
-                            user.id,
+                            user_id,
                             reason=typ.InputReportReasonSpam(),
                             message="Sends spam messages to my account. I ask Telegram to ban such user.",
                         )
                     )
                 except Exception:
                     pass
-                await ga.block(user.id)
+                await ga.block(user_id)
                 if is_pmlog:
-                    warnt += "blocked due to spamming in PM !!"
-                    await sendlog("**#Blocked**" + warnt)
+                    log_text += "blocked due to spamming in PM !!"
+                    await send_pmlog("**#Blocked**" + log_text)
             else:
-                await ga.mute_chat(user.id)
-                await asyncio.sleep(0.4)
-                await ga.archive(user.id)
+                await ga.mute_chat(user_id)
+                await asyncio.sleep(0.5)
+                await ga.archive(user_id)
                 if is_pmlog:
-                    warnt += "archived due to spamming in PM !!"
-                    await sendlog("**#Archived**" + warnt)
+                    log_text += "archived due to spamming in PM !!"
+                    await send_pmlog("**#Archived**" + log_text)
             del PMWARN[towarn]
             return await set_col("pmwarns", PMWARN, NESLAST)
         if "_pmmsg" in _PMMSG_CACHE:
@@ -207,7 +223,7 @@ async def PMPermit(kst):
             pmmsg = await gvar("_pmmsg") or pmmsg_default
             _PMMSG_CACHE["_pmmsg"] = pmmsg
         text = pmmsg.format(
-            id=user.id,
+            id=user_id,
             name=name,
             fullname=fullname,
             mention=mention,
@@ -222,7 +238,7 @@ async def PMPermit(kst):
             mode=mode,
         )
         try:
-            await ga.delete_messages(user.id, [NESLAST[towarn]])
+            await ga.delete_messages(user_id, [NESLAST[towarn]])
         except Exception:
             pass
         await asyncio.sleep(1)
@@ -231,17 +247,16 @@ async def PMPermit(kst):
         await set_col("pmwarns", PMWARN, NESLAST)
         """
         await ga.read(
-            entity=user.id,
+            entity=user_id,
             clear_mentions=True,
             clear_reactions=True,
         )
         """
         if is_pmlog:
             newmsgt = "**#New_Message**"
-            newmsgt += f"\nUser {mention} [`{user.id}`] has messaged you with **{warn}/{ratelimit}** warns!"
-            await sendlog(newmsgt)
-            await asyncio.sleep(1)
-            await sendlog(kst.message, forward=True)
+            newmsgt += f"\nUser {mention} [`{user_id}`] has messaged you with **{warn}/{ratelimit}** warns!"
+            await send_pmlog(newmsgt)
+            await send_pmlog(kst.message, forward=True)
 
 
 @kasta_cmd(
@@ -322,19 +337,20 @@ async def _(kst):
     user, reason = await ga.get_user(kst, group=2)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
-    if user.id == ga.uid:
+    user_id = user.id
+    if user_id == ga.uid:
         return await yy.eor("`Cannot allow to myself.`", time=3)
-    if user.id in Var.DEVS:
+    if user_id in Var.DEVS:
         return await yy.eor("`Our devs auto allowed!`", time=3)
-    if await is_allow(user.id):
+    if await is_allow(user_id):
         return await yy.eor("`User is already Allowed.`", time=4)
     date = datetime.now(Var.TZ).timestamp()
-    await allow_user(user.id, date, reason)
+    await allow_user(user_id, date, reason)
     text = f"<b><u>User {display_name(user)} allowed to PM!</u></b>\n"
     text += "<b>Date</b>: <code>{}</code>\n".format(datetime.fromtimestamp(date).strftime("%Y-%m-%d"))
     text += "<b>Reason</b>: {}".format(f"<pre>{reason}</pre>" if reason else "None given.")
     done = await yy.eor(text, parse_mode="html")
-    towarn, PMWARN = str(user.id), await jdata.pmwarns()
+    towarn, PMWARN = str(user_id), await jdata.pmwarns()
     if towarn in PMWARN:
         del PMWARN[towarn]
         await set_col("pmwarns", PMWARN, await jdata.pmlasts())
@@ -357,9 +373,10 @@ async def _(kst):
     user, _ = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
-    if user.id == ga.uid:
+    user_id = user.id
+    if user_id == ga.uid:
         return await yy.eor("`Cannot deny to myself.`", time=3)
-    await deny_user(user.id)
+    await deny_user(user_id)
     done = await yy.eor(f"<code>User {display_name(user)} disallowed to PM!</code>", parse_mode="html")
     msg = await done.reply("`Rebooting to apply...`", silent=True)
     await kst.client.reboot(msg)
@@ -553,17 +570,18 @@ async def _(kst):
     user, _ = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
-    if user.id == ga.uid:
+    user_id = user.id
+    if user_id == ga.uid:
         return await yy.eor("`Cannot block to myself.`", time=3)
-    if user.id in Var.DEVS:
+    if user_id in Var.DEVS:
         return await yy.eor("`Forbidden to block our awesome developers.`", time=3)
     is_reported = False
-    await ga.unblock(user.id)
+    await ga.unblock(user_id)
     try:
         if kst.is_private:
             is_reported = await ga(
                 fun.account.ReportPeerRequest(
-                    user.id,
+                    user_id,
                     reason=typ.InputReportReasonSpam(),
                     message="Sends spam messages to my account. I ask Telegram to ban such user.",
                 )
@@ -572,17 +590,17 @@ async def _(kst):
             is_reported = await ga(
                 fun.channels.ReportSpamRequest(
                     chat_id,
-                    participant=user.id,
+                    participant=user_id,
                     id=[kst.reply_to_msg_id],
                 )
             )
         else:
-            is_reported = await ga.report_spam(user.id)
+            is_reported = await ga.report_spam(user_id)
     except Exception:
         pass
-    is_block = await ga.block(user.id)
+    is_block = await ga.block(user_id)
     text = "`User blocked and {} reported!`".format("was" if is_reported else "not") if is_block else "`Cannot Block!`"
-    towarn, PMWARN = str(user.id), await jdata.pmwarns()
+    towarn, PMWARN = str(user_id), await jdata.pmwarns()
     if towarn in PMWARN:
         del PMWARN[towarn]
         await set_col("pmwarns", PMWARN, await jdata.pmlasts())
@@ -610,9 +628,10 @@ async def _(kst):
     user, _ = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
-    if user.id == ga.uid:
+    user_id = user.id
+    if user_id == ga.uid:
         return await yy.eor("`Cannot unblock to myself.`", time=3)
-    is_unblock = await ga.unblock(user.id)
+    is_unblock = await ga.unblock(user_id)
     text = "`User UnBlocked!`" if is_unblock else "`Cannot UnBlock!`"
     if kst.is_dev or kst.is_sudo:
         return await yy.eor(text)
@@ -638,15 +657,16 @@ async def _(kst):
     user, _ = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
-    if user.id == ga.uid:
+    user_id = user.id
+    if user_id == ga.uid:
         return await yy.eor("`Cannot archive to myself.`", time=3)
-    if user.id in Var.DEVS:
+    if user_id in Var.DEVS:
         return await yy.eor("`Forbidden to archive our awesome developers.`", time=3)
-    await ga.mute_chat(user.id)
-    await asyncio.sleep(0.4)
-    is_archive = await ga.archive(user.id)
+    await ga.mute_chat(user_id)
+    await asyncio.sleep(0.5)
+    is_archive = await ga.archive(user_id)
     text = "`Archived!`" if is_archive is not None else "`Cannot Archive!`"
-    towarn, PMWARN = str(user.id), await jdata.pmwarns()
+    towarn, PMWARN = str(user_id), await jdata.pmwarns()
     if towarn in PMWARN:
         del PMWARN[towarn]
         await set_col("pmwarns", PMWARN, await jdata.pmlasts())
@@ -674,9 +694,10 @@ async def _(kst):
     user, _ = await ga.get_user(kst)
     if not user:
         return await yy.eor("`Reply to message or add username/id.`", time=5)
-    if user.id == ga.uid:
+    user_id = user.id
+    if user_id == ga.uid:
         return await yy.eor("`Cannot unarchive to myself.`", time=3)
-    is_unarchive = await ga.unarchive(user.id)
+    is_unarchive = await ga.unarchive(user_id)
     text = "`UnArchived!`" if is_unarchive is not None else "`Cannot UnArchive!`"
     if kst.is_dev or kst.is_sudo:
         return await yy.eor(text)

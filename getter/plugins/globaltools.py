@@ -10,7 +10,10 @@ from datetime import datetime
 from io import BytesIO
 from time import monotonic
 
-from telethon.errors import FloodWaitError
+from telethon.errors import (
+    FloodPremiumWaitError,
+    FloodWaitError,
+)
 from telethon.tl import functions as fun, types as typ
 
 from . import (
@@ -188,7 +191,10 @@ async def _(kst):
                     await ga.edit_permissions(gg.id, user.id, view_messages=False)
                     success += 1
                     await asyncio.sleep(random.uniform(0.5, 1.5))
-                except FloodWaitError as fw:
+                except (
+                    FloodWaitError,
+                    FloodPremiumWaitError,
+                ) as fw:
                     await asyncio.sleep(fw.seconds + 10)
                     try:
                         await ga.edit_permissions(gg.id, user.id, view_messages=False)
@@ -254,7 +260,10 @@ async def _(kst):
                     await ga.edit_permissions(gg.id, user.id)
                     success += 1
                     await asyncio.sleep(random.uniform(0.5, 1.5))
-                except FloodWaitError as fw:
+                except (
+                    FloodWaitError,
+                    FloodPremiumWaitError,
+                ) as fw:
                     await asyncio.sleep(fw.seconds + 10)
                     try:
                         await ga.edit_permissions(gg.id, user.id)
@@ -320,7 +329,10 @@ async def _(kst):
                     await ga.edit_permissions(gg.id, user.id, send_messages=False)
                     success += 1
                     await asyncio.sleep(random.uniform(0.5, 1.5))
-                except FloodWaitError as fw:
+                except (
+                    FloodWaitError,
+                    FloodPremiumWaitError,
+                ) as fw:
                     await asyncio.sleep(fw.seconds + 10)
                     try:
                         await ga.edit_permissions(gg.id, user.id, send_messages=False)
@@ -383,7 +395,10 @@ async def _(kst):
                     await ga.edit_permissions(gg.id, user.id, send_messages=True)
                     success += 1
                     await asyncio.sleep(random.uniform(0.5, 1.5))
-                except FloodWaitError as fw:
+                except (
+                    FloodWaitError,
+                    FloodPremiumWaitError,
+                ) as fw:
                     await asyncio.sleep(fw.seconds + 10)
                     try:
                         await ga.edit_permissions(gg.id, user.id, send_messages=True)
@@ -626,7 +641,10 @@ async def _(kst):
                     await ga.kick_participant(gg.id, user.id)
                     success += 1
                     await asyncio.sleep(random.uniform(0.5, 1.5))
-                except FloodWaitError as fw:
+                except (
+                    FloodWaitError,
+                    FloodPremiumWaitError,
+                ) as fw:
                     await asyncio.sleep(fw.seconds + 10)
                     try:
                         await ga.kick_participant(gg.id, user.id)
@@ -828,7 +846,10 @@ async def _(kst):
                         )
                         success += 1
                         await asyncio.sleep(random.uniform(2.5, 5.5))
-                    except FloodWaitError as fw:
+                    except (
+                        FloodWaitError,
+                        FloodPremiumWaitError,
+                    ) as fw:
                         await asyncio.sleep(fw.seconds + 10)
                         try:
                             await ga.send_message(
@@ -859,7 +880,6 @@ async def _(kst):
                     "**#Gcast** Error Logs",
                     file=file,
                     force_document=True,
-                    silent=True,
                 )
         await yy.eor(text)
 
@@ -913,7 +933,10 @@ async def _(kst):
                         )
                         success += 1
                         await asyncio.sleep(random.uniform(2.5, 5.5))
-                    except FloodWaitError as fw:
+                    except (
+                        FloodWaitError,
+                        FloodPremiumWaitError,
+                    ) as fw:
                         await asyncio.sleep(fw.seconds + 10)
                         try:
                             await ga.send_message(

@@ -9,7 +9,11 @@ from time import monotonic
 
 import cachebox
 from telethon import events
-from telethon.errors import FloodWaitError, YouBlockedUserError
+from telethon.errors import (
+    FloodPremiumWaitError,
+    FloodWaitError,
+    YouBlockedUserError,
+)
 from telethon.tl import custom, functions as fun, types as typ
 
 from . import (
@@ -127,7 +131,10 @@ async def _(kst):
             limit=0,
             from_user=from_user,
         )
-    except FloodWaitError as fw:
+    except (
+        FloodWaitError,
+        FloodPremiumWaitError,
+    ) as fw:
         await asyncio.sleep(fw.seconds + 10)
         msg = await ga.get_messages(
             chat,

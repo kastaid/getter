@@ -16,18 +16,10 @@ from pathlib import Path
 from traceback import format_exc
 from typing import TYPE_CHECKING
 
-from telethon import events, hints
-from telethon.errors import (
-    AuthKeyDuplicatedError,
-    ChatSendGifsForbiddenError,
-    ChatSendInlineForbiddenError,
-    ChatSendMediaForbiddenError,
-    ChatSendStickersForbiddenError,
-    ChatWriteForbiddenError,
-    FloodWaitError,
-    MessageDeleteForbiddenError,
-    MessageIdInvalidError,
-    MessageNotModifiedError,
+from telethon import (
+    errors,
+    events,
+    hints,
 )
 
 from getter import (
@@ -144,26 +136,29 @@ def kasta_cmd(
                 return await kst.eod("`Use in group/channel.`")
             try:
                 await fun(kst)
-            except FloodWaitError as fw:
+            except (
+                errors.FloodWaitError,
+                errors.FloodPremiumWaitError,
+            ) as fw:
                 FLOOD_WAIT = fw.seconds + random.uniform(10, 15)
                 FLOOD_WAIT_HUMAN = format_time(FLOOD_WAIT)
                 kst.client.log.warning(f"FloodWait {FLOOD_WAIT}. Sleeping for {FLOOD_WAIT_HUMAN} before retrying.")
                 await asyncio.sleep(FLOOD_WAIT)
                 return  # safety first
             except (
-                MessageIdInvalidError,
-                MessageNotModifiedError,
-                MessageDeleteForbiddenError,
-                ChatWriteForbiddenError,
-                ChatSendMediaForbiddenError,
-                ChatSendGifsForbiddenError,
-                ChatSendStickersForbiddenError,
-                ChatSendInlineForbiddenError,
+                errors.MessageIdInvalidError,
+                errors.MessageNotModifiedError,
+                errors.MessageDeleteForbiddenError,
+                errors.ChatWriteForbiddenError,
+                errors.ChatSendMediaForbiddenError,
+                errors.ChatSendGifsForbiddenError,
+                errors.ChatSendStickersForbiddenError,
+                errors.ChatSendInlineForbiddenError,
                 ConnectionError,
                 KeyboardInterrupt,
             ):
                 pass
-            except AuthKeyDuplicatedError:
+            except errors.AuthKeyDuplicatedError:
                 kst.client.log.critical("STRING_SESSION expired, please create new! Quitting...")
                 sys.exit(0)
             except events.StopPropagation:
@@ -227,6 +222,7 @@ def kasta_cmd(
                         link_preview=False,
                         reply_to=reply_to,
                         parse_mode="html",
+                        silent=True,
                     )
                 if kst.out and BOTLOGS and error_log:
                     text = "<b>#Getter_Error</b>"
@@ -311,33 +307,35 @@ async def sendlog(
     message: hints.MessageLike,
     forward: bool = False,
     fallback: bool = False,
-    **args,
+    **kwargs,
 ) -> Message | None:
     BOTLOGS = await get_botlogs()
     if not BOTLOGS and fallback:
         BOTLOGS = getter_app.uid
     if not BOTLOGS and not fallback:
         return
-    try:
-        if not forward:
-            return await getter_app.send_message(
+    kwargs.setdefault("silent", True)
+    for attempt in range(2):
+        try:
+            if not forward:
+                return await getter_app.send_message(
+                    entity=BOTLOGS,
+                    message=message,
+                    **kwargs,
+                )
+            return await getter_app.forward_messages(
                 entity=BOTLOGS,
-                message=message,
-                **args,
+                messages=message,
+                **kwargs,
             )
-        return await getter_app.forward_messages(
-            entity=BOTLOGS,
-            messages=message,
-            **args,
-        )
-    except FloodWaitError as fw:
-        await asyncio.sleep(fw.seconds + random.uniform(10, 15))
-        return await sendlog(
-            message=message,
-            forward=forward,
-            fallback=fallback,
-            **args,
-        )
-    except Exception:
-        getter_app.log.exception("Failed to send log.")
-        return
+        except (
+            errors.FloodWaitError,
+            errors.FloodPremiumWaitError,
+        ) as fw:
+            if attempt == 1:
+                getter_app.log.warning(f"Send log failed after 2 attempts: {fw}")
+                return
+            await asyncio.sleep(fw.seconds + random.uniform(10, 15))
+        except Exception:
+            getter_app.log.exception("Failed to send log.")
+            return

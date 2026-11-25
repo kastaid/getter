@@ -9,17 +9,7 @@ from datetime import datetime
 from io import StringIO
 from time import monotonic
 
-from telethon import events
-from telethon.errors import (
-    ChannelPrivateError,
-    FloodWaitError,
-    InputUserDeactivatedError,
-    UserAlreadyParticipantError,
-    UserChannelsTooMuchError,
-    UserKickedError,
-    UserNotMutualContactError,
-    UserPrivacyRestrictedError,
-)
+from telethon import errors, events
 from telethon.tl import functions as fun, types as typ
 
 from . import (
@@ -259,15 +249,15 @@ async def _(kst):
                             parse_mode="html",
                         )
                     except (
-                        InputUserDeactivatedError,
-                        UserAlreadyParticipantError,
-                        UserNotMutualContactError,
-                        UserPrivacyRestrictedError,
-                        UserKickedError,
-                        UserChannelsTooMuchError,
+                        errors.InputUserDeactivatedError,
+                        errors.UserAlreadyParticipantError,
+                        errors.UserNotMutualContactError,
+                        errors.UserPrivacyRestrictedError,
+                        errors.UserKickedError,
+                        errors.UserChannelsTooMuchError,
                     ):
                         failed += 1
-                    except ChannelPrivateError as err:
+                    except errors.ChannelPrivateError as err:
                         if INVITE_WORKER.get(chat_id):
                             INVITE_WORKER.pop(chat_id)
                         taken = format_time(
@@ -581,7 +571,10 @@ async def _(kst):
                 success += 1
                 INVITE_WORKER[chat_id].update({"success": success})
                 await yy.eor(f"`Adding {success} {mode}...`")
-            except FloodWaitError as fw:
+            except (
+                errors.FloodWaitError,
+                errors.FloodPremiumWaitError,
+            ) as fw:
                 await asyncio.sleep(fw.seconds + 10)
                 try:
                     adding = typ.InputPeerUser(
@@ -597,11 +590,11 @@ async def _(kst):
                     success += 1
                     INVITE_WORKER[chat_id].update({"success": success})
                     await yy.eor(f"`Adding {success} {mode}...`")
-                except ChannelPrivateError:
+                except errors.ChannelPrivateError:
                     break
                 except Exception:
                     pass
-            except ChannelPrivateError:
+            except errors.ChannelPrivateError:
                 break
             except Exception:
                 pass
